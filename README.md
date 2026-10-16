@@ -405,10 +405,10 @@ example labels. File discovery is build-only.
 <!-- size-comparison:start -->
 | Browser exports | Gzip bytes |
 | --- | ---: |
-| `smolter/react` | 2448 |
-| `smolter/preact` | 2449 |
-| `smolter/react + smolter/client` | 2787 |
-| `smolter/preact + smolter/client` | 2788 |
+| `smolter/react` | 2445 |
+| `smolter/preact` | 2445 |
+| `smolter/react + smolter/client` | 2782 |
+| `smolter/preact + smolter/client` | 2781 |
 | `wouter@3.13.0` | 3091 |
 | `wouter-preact@3.13.0` | 2450 |
 | `react-router@8.4.0` | 60994 |

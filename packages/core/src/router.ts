@@ -24,8 +24,9 @@ export function createRouter(
   options: RouterOptions = {},
 ): Router {
   const browser = options.browser && typeof window !== "undefined";
+  let initialized = options.hydrationData?.state === "idle";
   const initial: Snapshot = {
-    loaded: options.hydrationData?.state === "idle",
+    loaded: initialized,
     ...(options.hydrationData ?? {
       url: new URL(
         options.url ?? (browser ? location.href : "/"),
@@ -194,7 +195,6 @@ export function createRouter(
   };
   const main = channel(initial);
   let started = 0;
-  let initialized = options.hydrationData?.state === "idle";
   const pop = () => {
     void main.load(location.href, undefined, undefined, false);
   };

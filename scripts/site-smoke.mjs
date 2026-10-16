@@ -41,6 +41,20 @@ page.on("pageerror", (error) => errors.push(error.message));
 
 const result = await (async () => {
   await page.goto(`${origin}/smolter/react/`);
+  assert.equal(
+    await page
+      .getByRole("link", { name: "Tasks", exact: true })
+      .getAttribute("href"),
+    "/smolter/react/tasks",
+  );
+
+  const native = await browser.newPage();
+
+  await native.goto(
+    `${origin}${await page.getByRole("link", { name: "Tasks", exact: true }).getAttribute("href")}`,
+  );
+  await native.getByRole("heading", { name: "Tasks", exact: true }).waitFor();
+  await native.close();
   await page.getByRole("button", { name: "Add one +", exact: true }).click();
   await page.getByRole("link", { name: "Tasks", exact: true }).click();
   await page.getByRole("button", { name: "Fetch task 1" }).click();
@@ -51,6 +65,12 @@ const result = await (async () => {
   await page.getByRole("heading", { name: "Tasks", exact: true }).waitFor();
 
   assert.equal(page.url(), `${origin}/smolter/preact/tasks`);
+  assert.equal(
+    await page
+      .getByRole("link", { name: "Read the route", exact: true })
+      .getAttribute("href"),
+    "/smolter/preact/tasks/1",
+  );
 
   await page.getByLabel("New task").fill("Check a deep link");
   await page.getByRole("button", { name: "Create task", exact: true }).click();

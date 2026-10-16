@@ -1,6 +1,7 @@
 import { ui } from "@smolter/ui/react";
 import { createElement as h } from "react";
 import { Link, useFetcher, useLoaderData } from "smolter/react";
+import { siteHref } from "../../../../../scripts/site-history";
 import type { clientLoader as taskLoader } from "../tasks.$id/loader";
 import type { clientAction } from "./action";
 import type { clientLoader } from "./loader";
@@ -19,7 +20,7 @@ export default function Tasks() {
     tasks: data?.tasks ?? [],
     state: fetcher.state,
     message: fetcher.error?.message ?? fetcher.data?.message,
-    link: (href, children) => h(Link, { href }, children),
+    link: (href, children) => h(Link, { href: siteHref(href) }, children),
     form: (children) =>
       h(fetcher.Form, { action: "/tasks", method: "post" }, ...children),
   });
