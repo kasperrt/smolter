@@ -18,27 +18,28 @@ export function matchRoutes(
   for (const route of routes) {
     const parts = route.path.replace(/\/$/, "").split("/");
     const params: Params = {};
-    const matched = parts.every((part, index) => {
-      const value = segments[index];
+    const matched =
+      (parts.at(-1) === "*" || parts.length === segments.length) &&
+      parts.every((part, index) => {
+        const value = segments[index];
 
-      if (part === "*") {
-        params["*"] = segments.slice(index).join("/");
+        if (part === "*") {
+          params["*"] = segments.slice(index).join("/");
 
-        return true;
-      }
+          return true;
+        }
 
-      if (part[0] === ":" && value) {
-        params[part.slice(1)] = new URLSearchParams(
-          `=${value.replace(/[+&]/g, encodeURIComponent)}`,
-        ).get("")!;
+        if (part[0] === ":" && value) {
+          params[part.slice(1)] = new URLSearchParams(
+            `=${value.replace(/[+&]/g, encodeURIComponent)}`,
+          ).get("")!;
 
-        return true;
-      }
+          return true;
+        }
 
-      return part === value;
-    });
+        return part === value;
+      });
 
-    if (matched && (parts.at(-1) === "*" || parts.length === segments.length))
-      return { route, params };
+    if (matched) return { route, params };
   }
 }

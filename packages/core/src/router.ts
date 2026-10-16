@@ -53,17 +53,19 @@ export function createRouter(
     ): Promise<Result> => {
       abort();
 
-      const current = new AbortController();
-      const { signal } = current;
-      controller = current;
-      controllers.add(current);
+      controller = new AbortController();
+
+      const { signal } = controller;
+      controllers.add(controller);
 
       const url = internalURL(main.getSnapshot().url, href);
       const match = url && matchRoutes(routes, url.pathname);
       const commit = () => {
         if (local || !url) return;
 
-        if (browser && (operation.push || body) && snapshot.url !== url.href)
+        const changed = snapshot.url !== url.href;
+
+        if (browser && (operation.push || body) && changed)
           window.history[operation.replace ? "replaceState" : "pushState"](
             null,
             "",
@@ -74,7 +76,7 @@ export function createRouter(
           url: url.href,
           path: match?.route.path,
           params: match?.params ?? {},
-          ...(url.href !== snapshot.url && {
+          ...(changed && {
             actionData: undefined,
             data: undefined,
           }),
