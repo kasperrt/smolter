@@ -187,6 +187,25 @@ Handlers receive `{ request, params, signal }`. Server callbacks add the typed
 call-through functions. A client-only handler can instead use browser storage
 or call an unrelated API itself; components do not need to fetch.
 
+A new navigation aborts the previous navigation's signal. Pass `signal` (or
+`request.signal`) to your own `fetch` calls so the underlying request is cancelled:
+
+```ts
+// loader.ts
+import type { DataArgs } from "smolter/react";
+
+export async function clientLoader({ signal }: DataArgs) {
+  const response = await fetch("/api/tasks", { signal });
+
+  return await response.json();
+}
+```
+
+Server transport forwards this signal automatically, including calls through
+`serverLoader()`. Cancelled requests cannot overwrite the current page's data
+or error state. Aborting a request does not undo a mutation already processed
+by the server.
+
 Keep server handlers in separate files and re-export them as shown. The plugin
 removes these re-exports from browser modules and inserts transport functions.
 It rejects inline server handlers and `export *` rather than risking server code

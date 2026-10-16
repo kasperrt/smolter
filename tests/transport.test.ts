@@ -2,8 +2,57 @@ import { serverRoute } from "@smolter/client";
 import { createRouter, defineRoute } from "@smolter/core";
 import { handleRequest } from "@smolter/server";
 import { afterEach, expect, it, vi } from "vitest";
+import { deferred } from "./helpers/deferred";
 
 afterEach(() => vi.unstubAllGlobals());
+
+it.each([false, true])(
+  "navigation aborts server fetches with client call-through: %s",
+  async (callThrough) => {
+    const started = deferred<AbortSignal>();
+    const aborted = vi.fn();
+
+    vi.stubGlobal("fetch", (_url: string, options: RequestInit) => {
+      const signal = options.signal!;
+
+      return new Promise<Response>((_resolve, reject) => {
+        signal.addEventListener("abort", () => {
+          aborted();
+          reject(signal.reason);
+        });
+
+        started.resolve(signal);
+      });
+    });
+
+    const router = createRouter([
+      serverRoute("/slow", {
+        ...(callThrough && {
+          clientLoader: ({ serverLoader }) => serverLoader(),
+        }),
+      }),
+      defineRoute("/next", { loader: () => "Current page" }),
+    ]);
+    const previous = router.navigate("/slow");
+    const signal = await started.promise;
+
+    expect(signal.aborted).toBe(false);
+
+    await router.navigate("/next");
+    await previous;
+
+    expect(signal.aborted).toBe(true);
+    expect(aborted).toHaveBeenCalledOnce();
+    expect(router.getSnapshot()).toMatchObject({
+      url: "http://localhost/next",
+      data: "Current page",
+      state: "idle",
+    });
+    expect(router.getSnapshot().error).toBeUndefined();
+
+    router.dispose();
+  },
+);
 
 it("connects client callbacks to registered server handlers and keeps fetcher reads local", async () => {
   let reads = 0;
