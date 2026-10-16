@@ -21,7 +21,8 @@
     "smoke:production": "node scripts/production-smoke.mjs",
     "jsr:check": "node scripts/jsr.mjs",
     "build:site": "node scripts/build-site.mjs",
-    "smoke:site": "node scripts/site-smoke.mjs"
+    "smoke:site": "node scripts/site-smoke.mjs",
+    "docs:badges": "node scripts/readme-badges.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

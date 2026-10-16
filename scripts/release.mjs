@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { withSizeBadges } from "./badges.mjs";
 
 const directory = new URL("../packages/smolter/", import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL("package.json", directory)));
@@ -80,6 +81,14 @@ if (mode === "publish") {
   );
   const jsrExists = await published(
     `https://jsr.io/${jsr.name}/${jsr.version}_meta.json`,
+  );
+
+  // Registry README badges become visible only when this version is published.
+  const readme = new URL("README.md", directory);
+
+  writeFileSync(
+    readme,
+    withSizeBadges(readFileSync(readme, "utf8"), manifest.version),
   );
 
   if (!npmExists) {

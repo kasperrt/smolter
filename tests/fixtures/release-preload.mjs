@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import childProcess from "node:child_process";
+import fs from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 
 const scenario = process.env.RELEASE_TEST_SCENARIO;
@@ -38,6 +39,12 @@ childProcess.execFileSync = (binary, args, options) => {
   publications++;
 
   return "";
+};
+
+fs.writeFileSync = (file, contents) => {
+  assert.ok(String(file).endsWith("/packages/smolter/README.md"));
+  assert.ok(contents.includes("<!-- bundlejs:start -->"));
+  assert.ok(contents.includes("deno.bundlejs.com"));
 };
 
 syncBuiltinESMExports();

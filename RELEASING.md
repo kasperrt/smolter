@@ -60,3 +60,15 @@ Restore branch protection with the checked-in policy:
 gh api --method PUT repos/kasperrt/smolter/branches/main/protection \
   --input .github/main-protection.json
 ```
+
+## Published size badges
+
+The release workflow adds BundleJS badges to the registry README immediately
+before publishing its artifact. Each badge measures all exports of the published
+React or Preact entry, pins the released version, and excludes the framework.
+
+After both registries confirm the version, run `pnpm docs:badges` and commit the
+README updates to GitHub. This command refuses to expose badges before both
+versions exist. Each badge links to its reproducible BundleJS configuration.
+BundleJS uses its own bundler settings; its displayed size is independent of our
+local CI measurement. The local size gate remains authoritative for releases.
