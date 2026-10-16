@@ -190,9 +190,11 @@ export function routerPlugin({
       };
 
       server.watcher.on("add", refresh);
+      server.watcher.on("change", refresh);
       server.watcher.on("unlink", refresh);
       server.httpServer?.once("close", () => {
         server.watcher.off("add", refresh);
+        server.watcher.off("change", refresh);
         server.watcher.off("unlink", refresh);
       });
 
