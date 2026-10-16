@@ -12,6 +12,10 @@ export function serverRendering(): Plugin {
           if (request.method !== "GET" || request.url?.startsWith("/_smolter"))
             return next();
 
+          const controller = new AbortController();
+
+          response.once("close", () => controller.abort());
+
           const render = async () => {
             const entry = await server.ssrLoadModule("/src/server.ts");
             const template = await server.transformIndexHtml(
@@ -22,6 +26,7 @@ export function serverRendering(): Plugin {
               `http://${request.headers.host}${request.url}`,
               {
                 headers: { cookie: request.headers.cookie ?? "" },
+                signal: controller.signal,
               },
             );
             const html = await entry.render(incoming, template);

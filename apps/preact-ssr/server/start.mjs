@@ -13,6 +13,10 @@ const types = {
 };
 
 createServer((incoming, outgoing) => {
+  const controller = new AbortController();
+
+  outgoing.once("close", () => controller.abort());
+
   const handle = async () => {
     const origin = `http://${incoming.headers.host}`;
     const url = new URL(incoming.url, origin);
@@ -62,10 +66,6 @@ createServer((incoming, outgoing) => {
 
       for await (const chunk of incoming) chunks.push(chunk);
 
-      const controller = new AbortController();
-
-      outgoing.once("close", () => controller.abort());
-
       const request = new Request(new URL(target, origin), {
         signal: controller.signal,
         method: incoming.method,
@@ -83,7 +83,9 @@ createServer((incoming, outgoing) => {
     }
 
     outgoing.setHeader("Content-Type", "text/html; charset=utf-8");
-    outgoing.end(await render(new Request(url, { headers }), template));
+    const request = new Request(url, { headers, signal: controller.signal });
+
+    outgoing.end(await render(request, template));
   };
 
   void handle().catch(() => {
