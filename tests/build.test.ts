@@ -109,3 +109,28 @@ it("publishes only renderer entries and browser-safe utilities", () => {
   expect(manifest.sideEffects).toBe(false);
   expect(manifest.version).toBe(jsr.version);
 });
+
+it("bundles hydration serialization without server dispatch or a renderer", async () => {
+  const result = await bundleBrowser({
+    stdin: {
+      contents: 'export { serialize } from "./packages/smolter/dist/utils.js";',
+      resolveDir: process.cwd(),
+    },
+    bundle: true,
+    platform: "browser",
+    format: "esm",
+    minify: true,
+    metafile: true,
+    write: false,
+  });
+  const modules = Object.values(result.metafile.outputs).flatMap((output) =>
+    Object.entries(output.inputs)
+      .filter(([, input]) => input.bytesInOutput > 0)
+      .map(([name]) => name),
+  );
+
+  expect(modules).toEqual(["packages/smolter/dist/internal/core/serialize.js"]);
+  expect(result.outputFiles[0].text).not.toMatch(
+    /handleRequest|loadRouter|node:|react|preact/,
+  );
+});

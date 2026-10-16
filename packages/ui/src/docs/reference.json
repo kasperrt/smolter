@@ -905,16 +905,6 @@
     "source": "packages/smolter/src/internal/server/index.ts"
   },
   {
-    "slug": "serialize",
-    "title": "serialize",
-    "entries": ["react/server", "preact/server"],
-    "kind": "API",
-    "summary": "Safe inside a script element. Data must be JSON serializable; error stacks and causes are omitted.",
-    "signature": "function serialize(snapshot: Snapshot): string;",
-    "fields": [],
-    "source": "packages/smolter/src/internal/server/index.ts"
-  },
-  {
     "slug": "handleRequest",
     "title": "handleRequest",
     "entries": ["react/server", "preact/server"],
@@ -923,6 +913,16 @@
     "signature": "function handleRequest(\n  routes: readonly Route[],\n  request: Request,\n): Promise<Response>;",
     "fields": [],
     "source": "packages/smolter/src/internal/server/index.ts"
+  },
+  {
+    "slug": "serialize",
+    "title": "serialize",
+    "entries": ["react/server", "preact/server", "utils"],
+    "kind": "API",
+    "summary": "Safe inside a script element. Data must be JSON serializable; error stacks and causes are omitted.",
+    "signature": "function serialize(snapshot: Snapshot): string;",
+    "fields": [],
+    "source": "packages/smolter/src/internal/core/serialize.ts"
   },
   {
     "slug": "routerPlugin",
