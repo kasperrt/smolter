@@ -9,6 +9,18 @@ loader; `shouldRevalidate` decides when that work is needed.
 Inspired by [wouter](https://github.com/molefrog/wouter)
 and [React Router](https://reactrouter.com/).
 
+## Contents
+
+- [Try the four standalone examples](#try-the-four-standalone-examples)
+- [Choose file routing or manual routes](#choose-file-routing-or-manual-routes)
+- [Server and client handlers](#server-and-client-handlers)
+- [Fetchers read and mutate](#fetchers-read-and-mutate)
+- [Decide when to revalidate](#decide-when-to-revalidate)
+- [Types follow the handler](#types-follow-the-handler)
+- [Server rendering](#server-rendering)
+- [Package entries](#package-entries)
+- [Size and checks](#size-and-checks)
+
 ## Try the four standalone examples
 
 ```sh
