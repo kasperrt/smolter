@@ -96,7 +96,8 @@ export function createRouter(
         return (fn as DataFunction | undefined)?.({
           request: new Request(url, {
             signal,
-            ...(body && { method: operation.method ?? "POST", body }),
+            method: body && (operation.method ?? "POST"),
+            body,
           }),
           params: match.params,
           signal,
@@ -128,7 +129,7 @@ export function createRouter(
       emit({
         [key]: result.data,
         error: result.error,
-        state: body && local && !result.error ? "loading" : "idle",
+        state: body && !result.error ? "loading" : "idle",
       });
 
       if (body && !result.error) {
@@ -139,7 +140,7 @@ export function createRouter(
           actionResult: result.data,
         });
 
-        if (local && !signal.aborted) emit({ state: "idle" });
+        if (!signal.aborted) emit({ state: "idle" });
       }
 
       return result;

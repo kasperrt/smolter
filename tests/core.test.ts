@@ -661,3 +661,48 @@ it("does not notify a stale fetcher after its redirect finishes", async () => {
 
   router.dispose();
 });
+
+for (const revalidate of [true, false]) {
+  it(`keeps a page action pending until revalidation settles (enabled: ${revalidate})`, async () => {
+    const started = deferred<void>();
+    const loaded = deferred<string>();
+    let reads = 0;
+    const router = createRouter([
+      defineRoute("/", {
+        loader: () => {
+          if (reads++ === 0) return "initial";
+
+          started.resolve();
+
+          return loaded.promise;
+        },
+        action: () => "saved",
+        shouldRevalidate: () => revalidate,
+      }),
+    ]);
+
+    await router.navigate("/");
+
+    const states: string[] = [];
+    router.subscribe(() => states.push(router.getSnapshot().state));
+
+    const submission = router.submit("/", body());
+
+    if (revalidate) {
+      await started.promise;
+
+      expect(router.getSnapshot().state).toBe("loading");
+      expect(states).not.toContain("idle");
+
+      loaded.resolve("updated");
+    }
+
+    await submission;
+
+    expect(router.getSnapshot().state).toBe("idle");
+    expect(router.getSnapshot().actionData).toBe("saved");
+    expect(router.getSnapshot().data).toBe(revalidate ? "updated" : "initial");
+
+    router.dispose();
+  });
+}

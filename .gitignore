@@ -9,3 +9,5 @@ test-results/
 /site/
 
 /packages/smolter/src/internal/
+
+.vitest/
