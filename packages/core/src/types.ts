@@ -78,8 +78,8 @@ export interface Snapshot {
   url: string;
   path?: string;
   params: Params;
-  data: unknown;
-  actionData: unknown;
+  data?: unknown;
+  actionData?: unknown;
   error?: Error;
   state: "idle" | "loading" | "submitting";
 }

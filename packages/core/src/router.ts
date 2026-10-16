@@ -31,8 +31,6 @@ export function createRouter(
       "http://localhost",
     ).href,
     params: {},
-    data: undefined,
-    actionData: undefined,
     state: "idle",
   };
   const pending = new Set<AbortController>();
@@ -84,9 +82,7 @@ export function createRouter(
       emit({ state: body ? "submitting" : "loading", error: undefined });
 
       const result = await safeWrapAsync(() => {
-        if (!url) return new Error("External URL");
-
-        if (!match) return new Error("No route");
+        if (!match) return new Error(url ? "No route" : "External URL");
 
         const fn =
           match.route[body ? "clientAction" : "clientLoader"] ||
