@@ -1,4 +1,4 @@
-import { defineRoute } from "smolter/react";
+import { defineRoute } from "@kasperrt/smolter/react";
 import * as home from "./routes/_index/route";
 import * as about from "./routes/about/route";
 import * as tasks from "./routes/tasks._index/route";

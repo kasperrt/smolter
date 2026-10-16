@@ -1,6 +1,6 @@
+import { useLocation } from "@kasperrt/smolter/react";
 import { ui } from "@smolter/ui/react";
 import { useState } from "react";
-import { useLocation } from "smolter/react";
 import fileRoutes from "./examples/routes.tsx.txt?raw";
 import manualRoutes from "./manual-routes.ts?raw";
 

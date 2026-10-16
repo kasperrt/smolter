@@ -1,7 +1,7 @@
 import routes from "virtual:smolter/routes";
+import { deserialize } from "@kasperrt/smolter/client";
+import { createRouter } from "@kasperrt/smolter/preact";
 import { hydrate } from "preact";
-import { deserialize } from "smolter/client";
-import { createRouter } from "smolter/preact";
 import { app } from "./app";
 import "@smolter/ui/style.css";
 

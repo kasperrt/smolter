@@ -2,7 +2,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { expect, it } from "vitest";
 
 for (const scenario of ["new", "existing", "published"]) {
-  it(`uses the correct publishing credentials for a ${scenario} npm package`, () => {
+  it(`uses only OIDC for a ${scenario} npm package`, () => {
     execFileSync(
       process.execPath,
       [
@@ -57,3 +57,24 @@ for (const scenario of [
     );
   });
 }
+
+it("does not report a staged npm upload as a released version", () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      "--import",
+      "./tests/fixtures/release-preload.mjs",
+      "scripts/release.mjs",
+      "publish",
+    ],
+    {
+      env: { GITHUB_ACTIONS: "true", RELEASE_TEST_SCENARIO: "staged" },
+      encoding: "utf8",
+    },
+  );
+
+  expect(result.status).toBe(1);
+  expect(result.stderr).toContain(
+    "A staged npm upload is not a released version",
+  );
+});

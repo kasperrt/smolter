@@ -1,6 +1,6 @@
+import { Link, useFetcher, useLoaderData } from "@kasperrt/smolter/preact";
 import { ui } from "@smolter/ui/preact";
 import { h } from "preact";
-import { Link, useFetcher, useLoaderData } from "smolter/preact";
 import { siteHref } from "../../../../../scripts/site-history";
 import type { clientLoader as taskLoader } from "../tasks.$id/loader";
 import type { clientAction } from "./action";

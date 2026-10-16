@@ -1,6 +1,6 @@
 import routes from "virtual:smolter/routes";
+import { createRouter } from "@kasperrt/smolter/preact";
 import { render } from "preact";
-import { createRouter } from "smolter/preact";
 import { siteHistory, siteRoute } from "../../../scripts/site-history";
 import { app } from "./app";
 import "@smolter/ui/style.css";

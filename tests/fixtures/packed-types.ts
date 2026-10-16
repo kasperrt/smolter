@@ -5,7 +5,7 @@ import {
   useActionData,
   useFetcher,
   useLoaderData,
-} from "smolter/react";
+} from "@kasperrt/smolter/react";
 
 const route = defineRoute("/tasks/:id", {
   loader: () => ({ count: 1 }),

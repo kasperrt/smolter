@@ -1,6 +1,6 @@
+import { useFetcher, useLoaderData } from "@kasperrt/smolter/react";
 import { ui } from "@smolter/ui/react";
 import { createElement as h } from "react";
-import { useFetcher, useLoaderData } from "smolter/react";
 import type { action } from "./action";
 import type { loader } from "./loader";
 

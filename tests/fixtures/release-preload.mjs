@@ -15,7 +15,9 @@ globalThis.fetch = async (input) => {
 
   const packageLookup = url.pathname === "/@kasperrt/smolter";
   const exists =
-    scenario === "published" || (packageLookup && scenario === "existing");
+    scenario === "published" ||
+    (publications > 0 && scenario !== "staged") ||
+    (packageLookup && scenario === "existing");
 
   return new Response(null, { status: exists ? 200 : 404 });
 };
@@ -31,10 +33,7 @@ childProcess.execFileSync = (binary, args, options) => {
     "next",
   ]);
   assert.equal(options.env.SMOLTER_NPM_BOOTSTRAP_TOKEN, undefined);
-  assert.equal(
-    options.env.NODE_AUTH_TOKEN,
-    scenario === "new" ? "test-only-bootstrap" : undefined,
-  );
+  assert.equal(options.env.NODE_AUTH_TOKEN, undefined);
 
   publications++;
 

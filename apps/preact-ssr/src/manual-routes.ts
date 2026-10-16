@@ -1,4 +1,4 @@
-import { defineRoute } from "smolter/preact";
+import { defineRoute } from "@kasperrt/smolter/preact";
 import * as home from "./routes/_index/route";
 import * as about from "./routes/about/route";
 import * as tasks from "./routes/tasks._index/route";

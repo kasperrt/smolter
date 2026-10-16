@@ -15,13 +15,13 @@ all four standalone examples.
 | `packages/files` | `@smolter/files` | Flat route discovery |
 | `packages/vite` | `@smolter/vite` | Route module generation and development transport |
 | `packages/ui` | `@smolter/ui` | Shared example UI |
-| `packages/smolter` | `smolter/react`, `smolter/preact`, etc. | Published package and public entry points |
+| `packages/smolter` | `@kasperrt/smolter/react`, `@kasperrt/smolter/preact`, etc. | Published package and public entry points |
 
 Implementation packages are private workspace packages. Keep changes in their
 `src` directories. The publish build assembles portable source modules under
 `packages/smolter/src/internal` and emits JavaScript and declarations into `dist`.
 Both directories are generated. The published package has no workspace or runtime
-dependencies, and consumers continue to choose `smolter/react` or `smolter/preact`.
+dependencies, and consumers continue to choose `@kasperrt/smolter/react` or `@kasperrt/smolter/preact`.
 
 Examples use the public imports to exercise the same API consumers install.
 Their workspace names are `@smolter/example-react`, `@smolter/example-preact`,

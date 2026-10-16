@@ -1,7 +1,7 @@
 import routes from "virtual:smolter/routes";
+import { deserialize } from "@kasperrt/smolter/client";
+import { createRouter } from "@kasperrt/smolter/react";
 import { hydrateRoot } from "react-dom/client";
-import { deserialize } from "smolter/client";
-import { createRouter } from "smolter/react";
 import { app } from "./app";
 import "@smolter/ui/style.css";
 

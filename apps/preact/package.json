@@ -7,7 +7,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "smolter": "workspace:@kasperrt/smolter@*",
+    "@kasperrt/smolter": "workspace:*",
     "@smolter/ui": "workspace:*",
     "preact": "catalog:"
   }

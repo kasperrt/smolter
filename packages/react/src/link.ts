@@ -1,5 +1,5 @@
 /**
- * React components and typed data hooks. Import from smolter/react.
+ * React components and typed data hooks. Import from @kasperrt/smolter/react.
  * @module
  */
 

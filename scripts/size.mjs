@@ -19,10 +19,10 @@ if (!process.argv.includes("--write-only")) {
     })),
   );
   const rows = [
-    ["smolter/react", sizes.react],
-    ["smolter/preact", sizes.preact],
-    ["smolter/react + smolter/client", sizes.reactServer],
-    ["smolter/preact + smolter/client", sizes.preactServer],
+    ["@kasperrt/smolter/react", sizes.react],
+    ["@kasperrt/smolter/preact", sizes.preact],
+    ["@kasperrt/smolter/react + @kasperrt/smolter/client", sizes.reactServer],
+    ["@kasperrt/smolter/preact + @kasperrt/smolter/client", sizes.preactServer],
     ...references.map(({ name, version, bytes }) => [
       `${name}@${version}`,
       bytes,

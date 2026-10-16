@@ -1,6 +1,10 @@
+import {
+  useFetcher,
+  useLoaderData,
+  useRevalidator,
+} from "@kasperrt/smolter/preact";
 import { ui } from "@smolter/ui/preact";
 import { h } from "preact";
-import { useFetcher, useLoaderData, useRevalidator } from "smolter/preact";
 import type { action } from "./action";
 import type { loader } from "./loader";
 

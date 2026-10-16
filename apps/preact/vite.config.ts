@@ -1,4 +1,4 @@
-import { fileRouter } from "smolter/vite";
+import { fileRouter } from "@kasperrt/smolter/vite";
 import { defineConfig } from "vite";
 import { demoAssets } from "../../scripts/demo-assets.ts";
 import { measuredSize } from "../../scripts/size-plugin.ts";

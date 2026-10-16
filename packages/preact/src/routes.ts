@@ -1,5 +1,5 @@
 /**
- * Preact components and typed data hooks. Import from smolter/preact.
+ * Preact components and typed data hooks. Import from @kasperrt/smolter/preact.
  * @module
  */
 

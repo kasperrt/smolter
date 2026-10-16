@@ -43,7 +43,7 @@ export function configureTransport(
       });
       const [{ default: routes }, { handleRequest }] = await Promise.all([
         server.ssrLoadModule(publicId),
-        server.ssrLoadModule("smolter/server"),
+        server.ssrLoadModule("@kasperrt/smolter/server"),
       ]);
       const response: Response = await handleRequest(routes, request);
 

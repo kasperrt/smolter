@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
-import { createElement } from "react";
-import { renderToString } from "react-dom/server";
 import {
   defineRoute,
   RouterProvider,
   Routes,
   useLoaderData,
-} from "smolter/react";
-import { loadRouter } from "smolter/server";
+} from "@kasperrt/smolter/react";
+import { loadRouter } from "@kasperrt/smolter/server";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 
 const route = defineRoute("/", {
   loader: () => "packed package works",

@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
-import { h } from "preact";
-import { render } from "preact-render-to-string";
 import {
   defineRoute,
   RouterProvider,
   Routes,
   useLoaderData,
-} from "smolter/preact";
-import { loadRouter } from "smolter/server";
+} from "@kasperrt/smolter/preact";
+import { loadRouter } from "@kasperrt/smolter/server";
+import { h } from "preact";
+import { render } from "preact-render-to-string";
 
 const route = defineRoute("/", {
   loader: () => "packed package works",

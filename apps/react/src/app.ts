@@ -1,12 +1,12 @@
-import { ui } from "@smolter/ui/react";
-import { createElement as h } from "react";
 import {
   Link,
   type Router,
   RouterProvider,
   Routes,
   useLocation,
-} from "smolter/react";
+} from "@kasperrt/smolter/react";
+import { ui } from "@smolter/ui/react";
+import { createElement as h } from "react";
 
 import { siteHref } from "../../../scripts/site-history";
 import { Source } from "./source";

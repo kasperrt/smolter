@@ -1,4 +1,4 @@
-import type { RevalidationArgs } from "smolter/core";
+import type { RevalidationArgs } from "@kasperrt/smolter/core";
 
 export function shouldRevalidate({
   actionResult,

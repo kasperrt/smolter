@@ -1,6 +1,10 @@
+import {
+  useFetcher,
+  useLoaderData,
+  useRevalidator,
+} from "@kasperrt/smolter/react";
 import { ui } from "@smolter/ui/react";
 import { createElement as h } from "react";
-import { useFetcher, useLoaderData, useRevalidator } from "smolter/react";
 import type { clientAction } from "./action";
 import type { clientLoader } from "./loader";
 

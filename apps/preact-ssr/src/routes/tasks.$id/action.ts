@@ -1,4 +1,4 @@
-import type { DataArgs } from "smolter/preact";
+import type { DataArgs } from "@kasperrt/smolter/preact";
 import { readStore } from "../../data/store.server";
 
 export async function action({ request, params }: DataArgs) {

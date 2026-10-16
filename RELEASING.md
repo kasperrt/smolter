@@ -35,18 +35,16 @@ The next push to `main` starts CI; Pages and Release wait for its success.
 
 ## Registry setup
 
-Both npm and JSR publish `@kasperrt/smolter`. The examples install the npm
-package under the alias `smolter`, preserving `smolter/react` imports.
+Both npm and JSR publish `@kasperrt/smolter`. All consumer
+imports use the full scope, including `@kasperrt/smolter/react`.
 
 Configure npm trusted publishing for GitHub owner `kasperrt`, repository
 `smolter`, workflow `release.yml`, and environment `release`. Allow publishing.
-For the initial publication, add a short-lived npm publishing token as
-`NPM_TOKEN` in the GitHub `release` environment. The workflow uses it only when
-the npm package does not exist. Subsequent publications use OIDC even if the
-bootstrap secret is still present.
-
-After the initial publication, configure the trusted publisher above, revoke
-the bootstrap token in npm, and delete the `NPM_TOKEN` environment secret.
+The one-time bootstrap upload has registered the npm package. The workflow now
+uses OIDC only and ignores publishing tokens. The GitHub bootstrap secret has
+been removed; revoke its original token in npm after configuring the publisher.
+A successful upload is not sufficient: both registry versions must be available
+before the workflow creates a GitHub release.
 
 Create the JSR package and link it to `kasperrt/smolter` in its settings.
 GitHub Actions uses OIDC to publish with provenance; no JSR token is needed.

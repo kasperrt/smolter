@@ -1,6 +1,6 @@
+import { useLocation } from "@kasperrt/smolter/preact";
 import { ui } from "@smolter/ui/preact";
 import { useState } from "preact/hooks";
-import { useLocation } from "smolter/preact";
 import fileRoutes from "./examples/routes.tsx.txt?raw";
 import manualRoutes from "./manual-routes.ts?raw";
 

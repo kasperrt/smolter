@@ -1,12 +1,12 @@
-import { ui } from "@smolter/ui/preact";
-import { h } from "preact";
 import {
   Link,
   type Router,
   RouterProvider,
   Routes,
   useLocation,
-} from "smolter/preact";
+} from "@kasperrt/smolter/preact";
+import { ui } from "@smolter/ui/preact";
+import { h } from "preact";
 
 import { Source } from "./source";
 

@@ -172,7 +172,9 @@ export function routerPlugin({
         !options?.ssr &&
         definitions.some((definition) => definition.startsWith("serverRoute("))
       )
-        imports.unshift('import { serverRoute } from "smolter/client";');
+        imports.unshift(
+          'import { serverRoute } from "@kasperrt/smolter/client";',
+        );
 
       return `${imports.join("\n")}\nexport default [${definitions.join(",\n")}];\n`;
     },

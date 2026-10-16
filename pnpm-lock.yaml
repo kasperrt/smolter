@@ -107,18 +107,21 @@ importers:
 
   apps/preact:
     dependencies:
+      '@kasperrt/smolter':
+        specifier: workspace:*
+        version: link:../../packages/smolter
       '@smolter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       preact:
         specifier: 'catalog:'
         version: 11.0.1(preact-render-to-string@6.8.1)
-      smolter:
-        specifier: workspace:@kasperrt/smolter@*
-        version: link:../../packages/smolter
 
   apps/preact-ssr:
     dependencies:
+      '@kasperrt/smolter':
+        specifier: workspace:*
+        version: link:../../packages/smolter
       '@smolter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -128,12 +131,12 @@ importers:
       preact-render-to-string:
         specifier: 6.8.1
         version: 6.8.1(preact@11.0.1)
-      smolter:
-        specifier: workspace:@kasperrt/smolter@*
-        version: link:../../packages/smolter
 
   apps/react:
     dependencies:
+      '@kasperrt/smolter':
+        specifier: workspace:*
+        version: link:../../packages/smolter
       '@smolter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -143,12 +146,12 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.3.1(react@19.3.1)
-      smolter:
-        specifier: workspace:@kasperrt/smolter@*
-        version: link:../../packages/smolter
 
   apps/react-ssr:
     dependencies:
+      '@kasperrt/smolter':
+        specifier: workspace:*
+        version: link:../../packages/smolter
       '@smolter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -158,9 +161,6 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.3.1(react@19.3.1)
-      smolter:
-        specifier: workspace:@kasperrt/smolter@*
-        version: link:../../packages/smolter
 
   packages/client:
     dependencies:
