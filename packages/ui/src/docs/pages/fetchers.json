@@ -12,16 +12,61 @@
     {
       "title": "Mutate a registered route",
       "body": "Fetcher forms support POST, PUT, PATCH, and DELETE. Actions target registered routes, not arbitrary unregistered API URLs. A successful action revalidates the active page loader unless shouldRevalidate opts out.",
-      "code": "const editor = useFetcher<typeof taskAction>();\nconst busy = editor.state !== \"idle\";\n\n<editor.Form action=\"/tasks/1\" method=\"patch\">\n  <input name=\"title\" defaultValue=\"New title\" />\n  <button disabled={busy}>Save</button>\n</editor.Form>"
+      "code": "const editor = useFetcher<typeof taskAction>();\nconst busy = editor.state !== \"idle\";\n\n<editor.Form action=\"/tasks/1\" method=\"patch\">\n  <input name=\"title\" defaultValue=\"New title\" />\n  <button disabled={busy}>Save</button>\n</editor.Form>;"
     },
     {
       "title": "State and ownership",
-      "body": "A fetcher transitions idle \u2192 loading \u2192 idle for a read; idle \u2192 submitting \u2192 loading \u2192 idle for a successful mutation and revalidation. Each useFetcher instance owns independent data and cancellation. Its data persists during subsequent requests. Errors are exposed as fetcher.error.",
+      "body": "A fetcher transitions idle → loading → idle for a read; idle → submitting → loading → idle for a successful mutation and revalidation. Each useFetcher instance owns independent data and cancellation. Its data persists during subsequent requests. Errors are exposed as fetcher.error.",
       "code": ""
     },
     {
       "title": "Navigation versus fetcher",
       "body": "Form and Link navigate. fetcher.Form, fetcher.load, and fetcher.submit keep the URL, except when a handler returns a redirect. Existing fetchers are not globally cached or automatically refetched after another fetcher writes. Reload previews explicitly when needed.",
+      "code": ""
+    },
+    {
+      "title": "load(url): independent reads",
+      "body": "load selects the loader on a registered route. It changes this fetcher from idle to loading, then back to idle. The returned loader value goes to fetcher.data. It does not navigate or refresh the current page loader. A missing URL defaults to the bound route or current location.",
+      "code": "import { useFetcher } from \"@kasperrt/smolter/react\";\nimport type { clientLoader } from \"../tasks.$id/loader\";\n\nexport default function TaskPreview() {\n  const preview = useFetcher<typeof clientLoader>();\n  const busy = preview.state !== \"idle\";\n\n  return (\n    <section aria-busy={busy}>\n      <button onClick={() => preview.load(\"/tasks/42\")} disabled={busy}>\n        Preview task\n      </button>\n      {preview.data && <p>{preview.data.title}</p>}\n      {preview.error && <p role=\"alert\">{preview.error.message}</p>}\n    </section>\n  );\n}"
+    },
+    {
+      "title": "GET Form: independent search",
+      "body": "A fetcher GET form serializes fields into the target URL and loads that route. The browser address does not change. Render the returned search results from this fetcher, rather than useLoaderData. The target loader reads q from request.url.",
+      "code": "const search = useFetcher<typeof clientLoader>();\n\nreturn (\n  <section>\n    <search.Form action=\"/tasks/search\" method=\"get\">\n      <label>Query <input name=\"q\" /></label>\n      <button>Find tasks</button>\n    </search.Form>\n    {search.data?.results.map((task) => <p key={task.id}>{task.title}</p>)}\n  </section>\n);"
+    },
+    {
+      "title": "submit(body, options): mutations",
+      "body": "Pass FormData, an optional action URL, and an uppercase method. The default method is POST. The action result goes to fetcher.data. Successful mutations revalidate the active page loader subject to shouldRevalidate. The returned Promise resolves to a Result with data or error; use fetcher.data for the hook’s inferred result type.",
+      "code": "const body = new FormData();\nbody.set(\"title\", \"Updated task\");\n\nawait fetcher.submit(body, { action: \"/tasks/42\", method: \"PATCH\" });\n\n// DELETE uses the same registered route action.\nawait fetcher.submit(new FormData(), {\n  action: \"/tasks/42\",\n  method: \"DELETE\",\n});"
+    },
+    {
+      "title": "Form: declarative mutations",
+      "body": "The bound Form accepts the same props as Form, including action and lowercase method. It uses this fetcher’s state and data rather than page actionData. Standard named fields and the selected submit button become FormData.",
+      "code": "<fetcher.Form action=\"/tasks/42\" method=\"patch\">\n  <label>\n    Title <input name=\"title\" required />\n  </label>\n  <button disabled={fetcher.state !== \"idle\"}>Save</button>\n</fetcher.Form>;"
+    },
+    {
+      "title": "state: pending UI",
+      "body": "idle means this channel has no work pending. loading means a read is pending, or page data is being revalidated after an action. submitting means the mutation is pending. A successful write normally moves submitting → loading → idle. Keep controls stable and show a separate status message. Each useFetcher call has independent state.",
+      "code": ""
+    },
+    {
+      "title": "data and error: ownership and lifetime",
+      "body": "data is initially undefined and retains the previous result while another request is pending. A validation object is data, while an Error is exposed through error. An action result is not the same as the page’s freshly loaded data. There is no global keyed fetcher registry and no automatic refresh of every previously loaded fetcher after a mutation; call load again when that preview must refresh.",
+      "code": ""
+    },
+    {
+      "title": "Types and dynamic URLs",
+      "body": "useFetcher<typeof handler>() derives its data from a specific loader or action. useFetcher(typedRoute) derives a union of the route’s read and mutation results. Narrow that union before reading operation-specific fields. For a bound /tasks/:id route that is not active, pass a concrete URL such as /tasks/42; the router cannot invent id.",
+      "code": ""
+    },
+    {
+      "title": "Concurrency and cleanup",
+      "body": "Starting another request on the same fetcher aborts its previous request and ignores late completion. Separate fetchers can run concurrently. The framework hook disposes its channel when unmounted. Forward signal from the handler to fetch so cancellation reaches the network. Cancellation does not roll back a write already processed by a backend.",
+      "code": ""
+    },
+    {
+      "title": "Differences to keep in mind",
+      "body": "This API does not expose React Router’s fetcher.formData, formAction, formMethod, keyed fetchers, or a reset method. Keep any optimistic draft in your own component state and reconcile it with the confirmed result. A redirect returned by an action navigates even though an ordinary fetcher submission stays on the current page.",
       "code": ""
     }
   ]

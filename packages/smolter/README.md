@@ -16,6 +16,8 @@ and [React Router](https://reactrouter.com/).
 
 [Read the documentation](https://kasperrt.github.io/smolter/react/docs/) for guides and the complete API reference. The site itself uses smolter routes.
 
+Start with [loaders](https://kasperrt.github.io/smolter/react/docs/loaders/), [actions](https://kasperrt.github.io/smolter/react/docs/actions/), [forms and validation](https://kasperrt.github.io/smolter/react/docs/forms/), or [fetcher reads and mutations](https://kasperrt.github.io/smolter/react/docs/fetchers/). Each guide connects the handler to an actual route URL and its consuming view.
+
 ## Contents
 
 - [Install](#install)
