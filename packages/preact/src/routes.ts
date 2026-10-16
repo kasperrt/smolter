@@ -6,7 +6,7 @@
 import type { Route as RouteDefinition, RouteModule } from "@smolter/core";
 import { useRouter, useSnapshot } from "./context.ts";
 import type { ComponentType, ReactNode } from "./runtime.ts";
-import { createElement } from "./runtime.ts";
+import { createElement, useMemo } from "./runtime.ts";
 
 /** Renderable route module with optional loading and error components. */
 export interface ViewModule extends RouteModule {
@@ -37,10 +37,14 @@ export function Routes({ fallback = null }: RoutesProps): ReactNode {
       ? module?.HydrateFallback
       : module?.default;
 
-  if (component)
-    return createElement(component as ComponentType<ErrorProps>, {
-      error: state.error!,
-    });
+  const element = useMemo(
+    () =>
+      component &&
+      createElement(component as ComponentType<ErrorProps>, {
+        error: state.error!,
+      }),
+    [component, state.error],
+  );
 
-  return state.error?.message ?? fallback;
+  return element ?? state.error?.message ?? fallback;
 }

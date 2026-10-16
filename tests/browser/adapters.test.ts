@@ -21,7 +21,8 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     let value = 1;
     let dataRenders = 0;
     let locationRenders = 0;
-    const route = api.defineRoute("/", { loader: () => value });
+    let pageRenders = 0;
+    const route = api.defineRoute("/", { loader: () => value, default: Page });
     const router = api.createRouter([route]);
     const container = document.createElement("div");
     const root = mount(container);
@@ -32,6 +33,12 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       router.dispose();
       container.remove();
     });
+
+    function Page() {
+      pageRenders++;
+
+      return h("section", null, h(DataReader), h(LocationReader));
+    }
 
     function DataReader() {
       const data = api.useLoaderData(route);
@@ -50,13 +57,12 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     }
 
     await router.navigate("/");
-    root.render(
-      h(api.RouterProvider, { router }, h(DataReader), h(LocationReader)),
-    );
+    root.render(h(api.RouterProvider, { router }, h(api.Routes)));
     await expect
       .poll(() => container.querySelector("#selected-data")?.textContent)
       .toBe("1");
 
+    const initialPageRenders = pageRenders;
     const initialDataRenders = dataRenders;
     const initialLocationRenders = locationRenders;
 
@@ -64,6 +70,7 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     await new Promise(requestAnimationFrame);
     await new Promise(requestAnimationFrame);
 
+    expect(pageRenders).toBe(initialPageRenders);
     expect(dataRenders).toBe(initialDataRenders);
     expect(locationRenders).toBe(initialLocationRenders);
 
@@ -73,6 +80,7 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       .poll(() => container.querySelector("#selected-data")?.textContent)
       .toBe("2");
 
+    expect(pageRenders).toBe(initialPageRenders);
     expect(dataRenders).toBe(initialDataRenders + 1);
     expect(locationRenders).toBe(initialLocationRenders);
   });

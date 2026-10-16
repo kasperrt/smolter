@@ -42,9 +42,7 @@ export function Form({
     ).submitter as HTMLButtonElement | null;
     const target = internalURL(
       router.getSnapshot().url,
-      submitter?.getAttribute("formaction") ??
-        action ??
-        router.getSnapshot().url,
+      submitter?.getAttribute("formaction") ?? action,
     );
 
     if (!target) return;
