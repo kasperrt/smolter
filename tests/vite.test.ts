@@ -28,7 +28,8 @@ it("refreshes server transport when route handler exports change", async (contex
     resolve: {
       alias: { "smolter/client": resolve("packages/smolter/src/client.ts") },
     },
-    server: { port: 0, watch: { usePolling: true, interval: 20 } },
+    // Keep separate edits outside the watcher's 100 ms change-event throttle.
+    server: { port: 0, watch: { usePolling: true, interval: 150 } },
   });
 
   context.onTestFinished(() => server.close());
@@ -45,9 +46,9 @@ it("refreshes server transport when route handler exports change", async (contex
     `${view}export { loader, action } from "../../handlers.ts";\n`,
   );
 
-  await expect.poll(source).toContain("serverRoute(");
+  await expect.poll(source, { timeout: 3000 }).toContain("serverRoute(");
 
   await writeFile(route, view);
 
-  await expect.poll(source).not.toContain("serverRoute(");
+  await expect.poll(source, { timeout: 3000 }).not.toContain("serverRoute(");
 });
