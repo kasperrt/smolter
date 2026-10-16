@@ -5,6 +5,18 @@ import { syncBuiltinESMExports } from "node:module";
 import timers from "node:timers/promises";
 
 const scenario = process.env.RELEASE_TEST_SCENARIO;
+const version = process.env.RELEASE_TEST_VERSION || "0.0.1-rc.1";
+const readFileSync = fs.readFileSync;
+
+fs.readFileSync = (file, ...args) => {
+  const contents = readFileSync(file, ...args);
+
+  if (/\/packages\/smolter\/(package|jsr)\.json$/.test(String(file)))
+    return JSON.stringify({ ...JSON.parse(contents), version });
+
+  return contents;
+};
+
 let publications = 0;
 let waits = 0;
 
@@ -39,7 +51,7 @@ childProcess.execFileSync = (binary, args, options) => {
     "public",
     "--provenance",
     "--tag",
-    "next",
+    version.includes("-") ? "next" : "latest",
   ]);
   assert.equal(options.env.SMOLTER_NPM_BOOTSTRAP_TOKEN, undefined);
   assert.equal(options.env.NODE_AUTH_TOKEN, undefined);

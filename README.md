@@ -32,7 +32,7 @@ and [React Router](https://reactrouter.com/).
 Install the scoped npm package and choose your framework explicitly:
 
 ```sh
-pnpm add @kasperrt/smolter@next
+pnpm add @kasperrt/smolter
 ```
 
 ```ts
@@ -467,7 +467,7 @@ To test a local package build in another project:
 
 ```sh
 pnpm --dir packages/smolter pack --pack-destination ../..
-pnpm add /absolute/path/to/kasperrt-smolter-0.0.1-rc.2.tgz
+pnpm add /absolute/path/to/kasperrt-smolter-0.0.1.tgz
 ```
 
 Workspace structure and rendering checks are documented in [CONTRIBUTING.md](./CONTRIBUTING.md).
