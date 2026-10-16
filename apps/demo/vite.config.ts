@@ -21,7 +21,9 @@ export default defineConfig({
           void server
             .ssrLoadModule("/src/server.tsx")
             .then(async (module) => {
-              const html = await module.render("http://127.0.0.1:4173/ssr");
+              const html = await module.render(
+                `http://${request.headers.host}/ssr`,
+              );
               response.setHeader("Content-Type", "text/html");
               response.end(await server.transformIndexHtml("/ssr", html));
             })

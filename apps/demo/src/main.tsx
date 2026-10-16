@@ -68,7 +68,7 @@ function App() {
           <aside>
             <span className="eyebrow">THE WHOLE IDEA</span>
             <pre>
-              <code>{`import { useFetcher,\n  useLoaderData } from "smolter";\n\nexport { loader } from "./loader";\nexport { action } from "./action";\n\nfunction Counter() {\n  const data =\n    useLoaderData<typeof loader>();\n  const fetcher =\n    useFetcher<typeof action>();\n\n  return <fetcher.Form>\n    <button>{data?.count}</button>\n  </fetcher.Form>;\n}`}</code>
+              <code>{`import { useFetcher,\n  useLoaderData } from "smolter";\n\nimport type { loader } from "./loader";\nimport type { action } from "./action";\nexport { loader } from "./loader";\nexport { action } from "./action";\n\nfunction Counter() {\n  const data =\n    useLoaderData<typeof loader>();\n  const fetcher =\n    useFetcher<typeof action>();\n\n  return <fetcher.Form>\n    <button>{data?.count}</button>\n  </fetcher.Form>;\n}`}</code>
             </pre>
             <p>
               No full page refresh.
