@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
+import { setTimeout } from "node:timers/promises";
 import { withSizeBadges } from "./badges.mjs";
 
 const directory = new URL("../packages/smolter/", import.meta.url);
@@ -118,15 +119,25 @@ if (mode === "publish") {
 
   if (!jsrExists) command("node", ["scripts/jsr.mjs", "--publish"]);
 
-  if (
-    !(await published(
-      `https://registry.npmjs.org/${manifest.name}/${manifest.version}`,
-    )) ||
-    !(await published(`https://jsr.io/${jsr.name}/${jsr.version}_meta.json`))
-  )
-    fail(
-      "Registry publication is incomplete. A staged npm upload is not a released version.",
-    );
+  // Registries can accept a publication before their read endpoints expose it.
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const available = await Promise.all([
+      published(
+        `https://registry.npmjs.org/${manifest.name}/${manifest.version}`,
+      ),
+      published(`https://jsr.io/${jsr.name}/${jsr.version}_meta.json`),
+    ]);
+
+    if (available.every(Boolean)) break;
+
+    if (attempt === 19)
+      fail(
+        "Registry publication is incomplete. A staged npm upload is not a released version.",
+      );
+
+    console.log("Waiting for registry publication to become available...");
+    await setTimeout(15_000);
+  }
 }
 
 if (mode === "tag") {

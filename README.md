@@ -1,5 +1,10 @@
 # smolter _
 
+<!-- bundlejs:start -->
+[![react gzip size](https://deno.bundlejs.com/?q=%40kasperrt%2Fsmolter%400.0.1-rc.2%2Freact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22react%22%2C%22react%2F*%22%5D%7D%7D&badge)](https://bundlejs.com/?q=%40kasperrt%2Fsmolter%400.0.1-rc.2%2Freact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22react%22%2C%22react%2F*%22%5D%7D%7D&bundle)
+[![preact gzip size](https://deno.bundlejs.com/?q=%40kasperrt%2Fsmolter%400.0.1-rc.2%2Fpreact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22preact%22%2C%22preact%2F*%22%5D%7D%7D&badge)](https://bundlejs.com/?q=%40kasperrt%2Fsmolter%400.0.1-rc.2%2Fpreact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22preact%22%2C%22preact%2F*%22%5D%7D%7D&bundle)
+<!-- bundlejs:end -->
+
 A typed data router for React and Preact. **Zero runtime dependencies.**
 
 Loaders read. Actions mutate. Components render. Fetchers read or submit to a

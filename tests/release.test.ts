@@ -1,7 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { expect, it } from "vitest";
 
-for (const scenario of ["new", "existing", "published"]) {
+for (const scenario of ["new", "existing", "published", "delayed"]) {
   it(`uses only OIDC for a ${scenario} npm package`, () => {
     execFileSync(
       process.execPath,

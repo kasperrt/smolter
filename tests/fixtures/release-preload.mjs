@@ -2,9 +2,16 @@ import assert from "node:assert/strict";
 import childProcess from "node:child_process";
 import fs from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
+import timers from "node:timers/promises";
 
 const scenario = process.env.RELEASE_TEST_SCENARIO;
 let publications = 0;
+let waits = 0;
+
+timers.setTimeout = async (delay) => {
+  assert.equal(delay, 15_000);
+  waits++;
+};
 
 globalThis.fetch = async (input) => {
   const url = new URL(input);
@@ -16,7 +23,9 @@ globalThis.fetch = async (input) => {
   const packageLookup = url.pathname === "/@kasperrt/smolter";
   const exists =
     scenario === "published" ||
-    (publications > 0 && scenario !== "staged") ||
+    (publications > 0 &&
+      scenario !== "staged" &&
+      (scenario !== "delayed" || waits >= 2)) ||
     (packageLookup && scenario === "existing");
 
   return new Response(null, { status: exists ? 200 : 404 });
@@ -50,4 +59,8 @@ syncBuiltinESMExports();
 
 process.on("exit", (code) => {
   if (code === 0) assert.equal(publications, scenario === "published" ? 0 : 1);
+  assert.equal(
+    waits,
+    scenario === "delayed" ? 2 : scenario === "staged" ? 19 : 0,
+  );
 });
