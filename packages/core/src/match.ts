@@ -29,8 +29,8 @@ export function matchRoutes(
 
       if (part[0] === ":" && value) {
         params[part.slice(1)] = new URLSearchParams(
-          `v=${value.replace(/\+/g, "%2B")}`,
-        ).get("v")!;
+          `=${value.replace(/[+&]/g, encodeURIComponent)}`,
+        ).get("")!;
 
         return true;
       }

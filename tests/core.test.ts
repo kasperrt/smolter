@@ -20,6 +20,14 @@ describe("data router", () => {
       name: "Jørn",
     });
 
+    expect(matchRoutes(routes, "/people/a&b+c=d")?.params).toEqual({
+      name: "a&b+c=d",
+    });
+
+    expect(matchRoutes(routes, "/people/%26%2B%3D%2F")?.params).toEqual({
+      name: "&+=/",
+    });
+
     expect(matchRoutes(routes, "/files/a/b")?.params).toEqual({ "*": "a/b" });
 
     expect(matchRoutes(routes, "/people")).toBeUndefined();
