@@ -100,7 +100,7 @@ export function matchRoutes(
         return true;
       }
 
-      if (part.startsWith(":") && value) {
+      if (part[0] === ":" && value) {
         params[part.slice(1)] = new URLSearchParams(
           `v=${value.replace(/\+/g, "%2B")}`,
         ).get("v")!;
@@ -224,12 +224,11 @@ export function createRouter(
   options: RouterOptions = {},
 ): Router {
   const browser = options.browser && typeof window !== "undefined";
-  const initialUrl = new URL(
-    options.url ?? (browser ? window.location.href : "/"),
-    "http://localhost",
-  ).href;
   const initial: Snapshot = options.hydrationData ?? {
-    url: initialUrl,
+    url: new URL(
+      options.url ?? (browser ? window.location.href : "/"),
+      "http://localhost",
+    ).href,
     params: {},
     data: undefined,
     actionData: undefined,
@@ -311,22 +310,19 @@ export function createRouter(
       const redirectTo =
         result.data instanceof Response && result.data.headers.get("Location");
 
-      if (redirectTo) {
-        if ((operation.hops ?? 0) >= 10)
-          result.error = new Error("Redirect loop");
+      if (redirectTo && (operation.hops ?? 0) < 10) {
+        await main.load(new URL(redirectTo, url!).href, undefined, {
+          push: true,
+          replace: true,
+          hops: (operation.hops ?? 0) + 1,
+        });
 
-        if (!result.error) {
-          await main.load(new URL(redirectTo, url!).href, undefined, {
-            push: true,
-            replace: true,
-            hops: (operation.hops ?? 0) + 1,
-          });
+        if (local) emit({ state: "idle" });
 
-          if (local) emit({ state: "idle" });
-
-          return result;
-        }
+        return result;
       }
+
+      if (redirectTo) result.error = new Error("Redirect loop");
 
       if (body && !result.error) commit();
 
