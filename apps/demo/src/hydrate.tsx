@@ -1,6 +1,6 @@
+import { ui } from "@smolter/ui/react";
 import { hydrateRoot } from "react-dom/client";
 import { createRouter, RouterProvider, Routes } from "smolter";
-import { SiteHeader } from "./components/site-header";
 import { routes } from "./ssr-routes";
 
 const element = document.getElementById("root");
@@ -13,8 +13,7 @@ if (element && data?.textContent) {
   hydrateRoot(
     element,
     <RouterProvider router={router}>
-      <SiteHeader />
-      <Routes />
+      {ui.Shell({ mode: "SSR", content: <Routes /> })}
     </RouterProvider>,
   );
 }

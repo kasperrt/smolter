@@ -1,6 +1,6 @@
 {
   "name": "@kasperrt/smolter",
-  "version": "0.1.1",
+  "version": "0.0.1",
   "exports": {
     ".": "./src/react.ts",
     "./preact": "./src/preact.ts",

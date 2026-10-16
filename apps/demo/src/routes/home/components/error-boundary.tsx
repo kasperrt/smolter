@@ -1,4 +1,8 @@
-import type { ErrorProps } from "smolter";
+import { ui } from "@smolter/ui/react";
+
+interface ErrorProps {
+  error: Error;
+}
 export function ErrorBoundary({ error }: ErrorProps) {
-  return <p role="alert">{error.message}</p>;
+  return ui.ErrorPanel(error);
 }

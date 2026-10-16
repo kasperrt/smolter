@@ -1,0 +1,16 @@
+{
+  "name": "@smolter/ui",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.ts",
+    "./preact": "./src/preact.ts",
+    "./style.css": "./src/style.css"
+  },
+  "dependencies": {
+    "react": "catalog:",
+    "preact": "catalog:"
+  }
+}

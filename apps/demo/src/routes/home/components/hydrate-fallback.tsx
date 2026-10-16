@@ -1,3 +1,2 @@
-export function HydrateFallback() {
-  return <p role="status">Loading your playground…</p>;
-}
+import { ui } from "@smolter/ui/react";
+export const HydrateFallback = ui.CounterFallback;

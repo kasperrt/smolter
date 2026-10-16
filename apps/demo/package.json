@@ -10,6 +10,7 @@
     "smolter": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "preact": "catalog:"
+    "preact": "catalog:",
+    "@smolter/ui": "workspace:*"
   }
 }

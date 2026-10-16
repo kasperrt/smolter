@@ -21,13 +21,13 @@ for a server-rendered page with hydration. The counter uses a local development 
 sends POST /api/counter; revalidation sends GET /api/counter. Data survives page
 navigation and reloads until the dev server restarts. No external backend or credentials are needed.
 
-This private repository contains version **0.1.1**. It is not published to npm
+This private repository contains version **0.0.1**. It is not published to npm
 or JSR. To test in another project:
 
 ```sh
 pnpm --dir packages/smolter pack --pack-destination ../..
 # In your app:
-pnpm add /absolute/path/to/smolter-0.1.1.tgz
+pnpm add /absolute/path/to/smolter-0.0.1.tgz
 ```
 
 ## Imports
@@ -282,3 +282,8 @@ pnpm smoke        # real browser forms, navigation, and SSR hydration
 
 GitHub Actions runs checks and packed installs on Node 22 and 24, plus Chromium
 smoke tests. See [RELEASING.md](./RELEASING.md) for versioning and JSR preparation.
+
+The demo UI lives in the private `packages/ui` workspace package. React, Preact,
+and SSR share its layout, controls, branding, loading states, and stylesheet.
+It is not a dependency of the published router. Keep UI markup there; route
+components only connect loaders, actions, and router hooks to shared views.

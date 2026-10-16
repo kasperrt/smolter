@@ -6,8 +6,7 @@ interface Counter {
   reads: number;
 }
 const counters = new Map<string, Counter>();
-/** Development-only API. Isolated by browser cookie; no external backend. */
-export async function counterApi(
+export function ensureSession(
   request: IncomingMessage,
   response: ServerResponse,
 ) {
@@ -20,6 +19,15 @@ export async function counterApi(
       "Set-Cookie",
       `smolter-demo=${id}; HttpOnly; SameSite=Strict; Path=/`,
     );
+  request.headers.cookie = `smolter-demo=${id}`;
+  return id;
+}
+/** Development-only API. Isolated by browser cookie; no external backend. */
+export async function counterApi(
+  request: IncomingMessage,
+  response: ServerResponse,
+) {
+  const id = ensureSession(request, response);
   const counter = counters.get(id) ?? { count: 0, reads: 0 };
   counters.set(id, counter);
   response.setHeader("Content-Type", "application/json");

@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
-import { counterApi } from "./server/counter.ts";
+import { counterApi, ensureSession } from "./server/counter.ts";
 export default defineConfig({
   build: {
     rollupOptions: {
@@ -26,8 +26,11 @@ export default defineConfig({
           void server
             .ssrLoadModule("/src/server.tsx")
             .then(async (module) => {
+              ensureSession(request, response);
               const html = await module.render(
-                `http://${request.headers.host}/ssr`,
+                new Request(`http://${request.headers.host}/ssr`, {
+                  headers: { cookie: request.headers.cookie ?? "" },
+                }),
               );
               response.setHeader("Content-Type", "text/html");
               response.end(await server.transformIndexHtml("/ssr", html));

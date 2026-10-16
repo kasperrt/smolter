@@ -2,7 +2,9 @@
 
 The package is currently private source and has not been published to a registry.
 
-1. Run `pnpm version:patch` or `pnpm version:minor` from the root. This updates
+Keep the version at **0.0.1** during development. Only change it when preparing an actual release.
+
+1. For a subsequent release, run `pnpm version:patch` or `pnpm version:minor` from the root. This updates
    the npm manifest and JSR manifest together. For a major release, edit both.
 2. Update `CHANGELOG.md`, documentation, and the demo version label.
 3. Run `pnpm fix`, `pnpm check`, `pnpm pack:smoke`, and `pnpm smoke`.
