@@ -8,6 +8,7 @@ export interface FileRouterOptions {
   directory?: string;
   clientRoutes?: string;
   serverRoutes?: string;
+  framework?: "react" | "preact";
 }
 
 /** Build-time flat route discovery and the optional server data transport. */
@@ -15,6 +16,7 @@ export function routerPlugin({
   directory = "src/routes",
   clientRoutes,
   serverRoutes,
+  framework = "react",
 }: FileRouterOptions = {}): Plugin {
   let root: string;
   let projectRoot: string;
@@ -173,7 +175,7 @@ export function routerPlugin({
         definitions.some((definition) => definition.startsWith("serverRoute("))
       )
         imports.unshift(
-          'import { serverRoute } from "@kasperrt/smolter/client";',
+          `import { serverRoute } from "@kasperrt/smolter/${framework}/client";`,
         );
 
       return `${imports.join("\n")}\nexport default [${definitions.join(",\n")}];\n`;
@@ -201,7 +203,7 @@ export function routerPlugin({
         server.watcher.off("unlink", refresh);
       });
 
-      configureTransport(server, publicId);
+      configureTransport(server, publicId, framework);
     },
   };
 }

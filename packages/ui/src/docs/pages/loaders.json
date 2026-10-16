@@ -7,7 +7,7 @@
     {
       "title": "Define the read once",
       "body": "A loader receives the URL, decoded path params, and a cancellation signal. Return the data the view needs. clientLoader runs in the browser; a server loader runs on the server when connected through the Vite integration or serverRoute. A plain manually registered function executes in the environment where that router runs.",
-      "code": "// routes/tasks.$id/loader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/core\";\nimport { tasks } from \"../../data/tasks\";\n\nexport async function clientLoader({ params, signal }: DataArgs) {\n  return tasks.read(params.id, { signal });\n}"
+      "code": "// routes/tasks.$id/loader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\nimport { tasks } from \"../../data/tasks\";\n\nexport async function clientLoader({ params, signal }: DataArgs) {\n  return tasks.read(params.id, { signal });\n}"
     },
     {
       "title": "Register and render the route",
@@ -32,7 +32,7 @@
     {
       "title": "Server loader with a client wrapper",
       "body": "Keep loader and clientLoader as separate named exports. During SSR the server loader supplies the HTML data. Later browser loads use clientLoader, which may call serverLoader. A hydrated loaded snapshot avoids an automatic duplicate initial read. A client-only route with no server data loads in the browser.",
-      "code": "// client-loader.ts\nimport type { ClientLoaderArgs } from \"@kasperrt/smolter/core\";\nimport type { loader } from \"./loader\";\n\nexport async function clientLoader({\n  serverLoader,\n}: ClientLoaderArgs<typeof loader>) {\n  const data = await serverLoader();\n\n  return { ...data, compact: localStorage.getItem(\"compact\") === \"true\" };\n}\n\n// route.ts\nexport { loader } from \"./loader\";\nexport { clientLoader } from \"./client-loader\";\nexport { default } from \"./view\";"
+      "code": "// client-loader.ts\nimport type { ClientLoaderArgs } from \"@kasperrt/smolter/react\";\nimport type { loader } from \"./loader\";\n\nexport async function clientLoader({\n  serverLoader,\n}: ClientLoaderArgs<typeof loader>) {\n  const data = await serverLoader();\n\n  return { ...data, compact: localStorage.getItem(\"compact\") === \"true\" };\n}\n\n// route.ts\nexport { loader } from \"./loader\";\nexport { clientLoader } from \"./client-loader\";\nexport { default } from \"./view\";"
     },
     {
       "title": "Load without navigating",

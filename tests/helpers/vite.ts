@@ -30,8 +30,12 @@ export async function viteFixture(
     plugins: [fileRouter(options)],
     resolve: {
       alias: {
-        "@kasperrt/smolter/client": resolve("packages/client/src/index.ts"),
-        "@kasperrt/smolter/server": resolve("packages/server/src/index.ts"),
+        "@kasperrt/smolter/react/client": resolve(
+          "packages/client/src/index.ts",
+        ),
+        "@kasperrt/smolter/react/server": resolve(
+          "packages/server/src/index.ts",
+        ),
       },
     },
     // Keep separate edits outside the watcher's 100 ms change-event throttle.

@@ -1,4 +1,4 @@
-import type { ClientActionArgs } from "@kasperrt/smolter/client";
+import type { ClientActionArgs } from "@kasperrt/smolter/preact/client";
 import type { action } from "./action";
 
 export async function clientAction({

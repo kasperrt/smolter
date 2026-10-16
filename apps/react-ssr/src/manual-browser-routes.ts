@@ -1,4 +1,4 @@
-import { serverRoute } from "@kasperrt/smolter/client";
+import { serverRoute } from "@kasperrt/smolter/react/client";
 import { ErrorBoundary, HydrateFallback } from "./boundaries";
 import Home from "./routes/_index/view";
 import About from "./routes/about/route";

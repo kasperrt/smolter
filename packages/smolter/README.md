@@ -85,7 +85,7 @@ or filename parser enters the browser bundle.
 ```ts
 // vite.config.ts
 import { defineConfig } from "vite";
-import { fileRouter } from "@kasperrt/smolter/vite";
+import { fileRouter } from "@kasperrt/smolter/react/vite";
 
 export default defineConfig({
   plugins: [fileRouter({ directory: "src/routes" })],
@@ -125,12 +125,12 @@ For the virtual module, add this declaration to your app:
 // env.d.ts
 // Include vite/client in your tsconfig types as usual.
 declare module "virtual:smolter/routes" {
-  const routes: import("@kasperrt/smolter/core").Route[];
+  const routes: import("@kasperrt/smolter/react").Route[];
   export default routes;
 }
 ```
 
-Outside Vite, `flatRoutes(directory)` from `@kasperrt/smolter/files` returns
+Outside Vite, `flatRoutes(directory)` from `@kasperrt/smolter/react/vite` returns
 `{ path, file }[] | Error` for your build tool to turn into imports.
 
 ### Manual routes
@@ -188,7 +188,7 @@ With the optional server integration:
 
 ```ts
 // client-loader.ts
-import type { ClientLoaderArgs } from "@kasperrt/smolter/client";
+import type { ClientLoaderArgs } from "@kasperrt/smolter/react/client";
 import type { loader } from "./loader";
 
 export async function clientLoader({ serverLoader }: ClientLoaderArgs<typeof loader>) {
@@ -198,7 +198,7 @@ export async function clientLoader({ serverLoader }: ClientLoaderArgs<typeof loa
 
 ```ts
 // client-action.ts
-import type { ClientActionArgs } from "@kasperrt/smolter/client";
+import type { ClientActionArgs } from "@kasperrt/smolter/react/client";
 import type { action } from "./action";
 
 export async function clientAction({ serverAction }: ClientActionArgs<typeof action>) {
@@ -238,17 +238,17 @@ in a client bundle. Type-only imports from server handlers are safe. Do not
 import server code directly into client views or client handlers.
 
 The Vite dev plugin mounts `/_smolter?url=...`. Production hosts dispatch that
-endpoint through `handleRequest(routes, request)` from `@kasperrt/smolter/server`, using
+endpoint through `handleRequest(routes, request)` from `@kasperrt/smolter/react/server`, using
 the requested route URL. Both SSR examples include a working host. The host
 owns authentication, session cookies, HTTP policy, and deployment.
 
 Manual server routes use `serverRoute<typeof import("./route")>(path, clientModule)`
-from `@kasperrt/smolter/client` in the browser and `defineRoute` on the server. This keeps
+from `@kasperrt/smolter/react/client` in the browser and `defineRoute` on the server. This keeps
 the type connection without importing server code at runtime. To use manual
 tables with the dev transport:
 
 ```ts
-import { routerPlugin } from "@kasperrt/smolter/vite";
+import { routerPlugin } from "@kasperrt/smolter/react/vite";
 
 routerPlugin({
   clientRoutes: "src/manual-browser-routes.ts",
@@ -370,7 +370,7 @@ remount the fallback during revalidation. Return a `Response` with a `Location` 
 ## Server rendering
 
 ```tsx
-import { loadRouter, serialize } from "@kasperrt/smolter/server";
+import { loadRouter, serialize } from "@kasperrt/smolter/react/server";
 
 const router = await loadRouter(routes, incomingRequest);
 const html = renderToString(
@@ -380,13 +380,13 @@ const hydrationJSON = serialize(router.getSnapshot());
 ```
 
 Create a fresh router per request. Embed the serialized snapshot in a JSON
-script, restore it with `deserialize` from `@kasperrt/smolter/client`, and pass it as
+script, restore it with `deserialize` from `@kasperrt/smolter/react/client`, and pass it as
 `hydrationData` to `createRouter`. This preserves loader errors through hydration
 without exposing server stacks or causes. Error boundaries should display the
 error message, not its stack.
 
 ```ts
-import { deserialize } from "@kasperrt/smolter/client";
+import { deserialize } from "@kasperrt/smolter/react/client";
 import { createRouter } from "@kasperrt/smolter/react";
 import routes from "virtual:smolter/routes";
 
@@ -407,15 +407,31 @@ The SSR examples use the same server route definitions for HTML and data request
 ## Package entries
 
 Use `@kasperrt/smolter/react` for React 18+ and `@kasperrt/smolter/preact` for Preact 10.25+.
-The root `@kasperrt/smolter` entry (also available as `@kasperrt/smolter/core`) is framework-independent.
-Server helpers live in `@kasperrt/smolter/server`; optional browser transport in `@kasperrt/smolter/client`;
-flat file routing in `@kasperrt/smolter/vite` and `@kasperrt/smolter/files`.
+Choose one renderer for your application. Both expose the same routing API:
+
+| Purpose | React | Preact |
+| --- | --- | --- |
+| Components, hooks, router, data types | `@kasperrt/smolter/react` | `@kasperrt/smolter/preact` |
+| Optional browser transport | `@kasperrt/smolter/react/client` | `@kasperrt/smolter/preact/client` |
+| SSR and HTTP data dispatch | `@kasperrt/smolter/react/server` | `@kasperrt/smolter/preact/server` |
+| Vite plugin and flat-file discovery | `@kasperrt/smolter/react/vite` | `@kasperrt/smolter/preact/vite` |
+
+`@kasperrt/smolter/utils` contains browser-safe matching and error helpers.
+The main renderer entries never import server or build modules. Named imports
+are tree-shaken; optional transport is included only when you import `/client`.
+Server entries do not import either UI renderer. Vite entries are build-time only.
+
+**Migrating to 0.2.0:** replace `/core` imports for types, `createRouter`, and
+`defineRoute` with your renderer entry. Use `/utils` for `matchRoutes`,
+`internalURL` and `safeWrapAsync`. Move `/client`, `/server`,
+`/files`, and `/vite` imports to the corresponding renderer-prefixed path above.
+The bare package root and old top-level subpaths are no longer exported.
 
 On JSR, install `@kasperrt/smolter` using the
 [JSR package instructions](https://jsr.io/docs/npm-compatibility) and import
 `@kasperrt/smolter/react` or `@kasperrt/smolter/preact`. Its `core`, `client`,
 `server`, and `files` subpaths match npm. The Vite plugin is npm-only:
-use `@kasperrt/smolter/vite` from the npm package when adding file routing.
+use `@kasperrt/smolter/react/vite` from the npm package when adding file routing.
 
 ## Size and checks
 
@@ -430,8 +446,8 @@ example labels. File discovery is build-only.
 | --- | ---: |
 | `@kasperrt/smolter/react` | 2445 |
 | `@kasperrt/smolter/preact` | 2445 |
-| `@kasperrt/smolter/react + @kasperrt/smolter/client` | 2782 |
-| `@kasperrt/smolter/preact + @kasperrt/smolter/client` | 2781 |
+| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 2782 |
+| `@kasperrt/smolter/preact + @kasperrt/smolter/preact/client` | 2781 |
 | `wouter@3.13.0` | 3091 |
 | `wouter-preact@3.13.0` | 2450 |
 | `react-router@8.4.0` | 60994 |
@@ -442,7 +458,7 @@ using production ESM bundles, esbuild, Terser, and gzip level 9. React, React DO
 and Preact are external in every bundle. Transitive library dependencies are
 included. React Router provides a broader API; this compares complete entry
 sizes, not equivalent feature sets or the minimum code for one route.
-`@kasperrt/smolter/client` adds browser transport for server loaders/actions; server-only
+`@kasperrt/smolter/react/client` adds browser transport for server loaders/actions; server-only
 rendering code and the Vite plugin are not shipped to the browser.
 
 Exact current measurements are generated in

@@ -10,28 +10,35 @@
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "paths": {
-      "@kasperrt/smolter/core": ["./packages/core/src/index.ts"],
       "@smolter/core": ["./packages/core/src/index.ts"],
-      "@kasperrt/smolter/react": ["./packages/react/src/index.ts"],
       "@smolter/react": ["./packages/react/src/index.ts"],
-      "@kasperrt/smolter/preact": ["./packages/preact/src/index.ts"],
       "@smolter/preact": ["./packages/preact/src/index.ts"],
-      "@kasperrt/smolter/client": ["./packages/client/src/index.ts"],
       "@smolter/client": ["./packages/client/src/index.ts"],
-      "@kasperrt/smolter/server": ["./packages/server/src/index.ts"],
       "@smolter/server": ["./packages/server/src/index.ts"],
-      "@kasperrt/smolter/files": ["./packages/files/src/index.ts"],
       "@smolter/files": ["./packages/files/src/index.ts"],
-      "@kasperrt/smolter/vite": ["./packages/vite/src/index.ts"],
       "@smolter/vite": ["./packages/vite/src/index.ts"],
-      "@kasperrt/smolter": ["./packages/core/src/index.ts"]
+      "@kasperrt/smolter/react": ["./packages/react/src/index.ts"],
+      "@kasperrt/smolter/react/server": [
+        "./packages/smolter/src/react-server.ts"
+      ],
+      "@kasperrt/smolter/react/vite": ["./packages/smolter/src/react-vite.ts"],
+      "@kasperrt/smolter/preact": ["./packages/preact/src/index.ts"],
+      "@kasperrt/smolter/preact/server": [
+        "./packages/smolter/src/preact-server.ts"
+      ],
+      "@kasperrt/smolter/preact/vite": [
+        "./packages/smolter/src/preact-vite.ts"
+      ],
+      "@kasperrt/smolter/react/client": [
+        "./packages/smolter/src/react-client.ts"
+      ],
+      "@kasperrt/smolter/preact/client": [
+        "./packages/smolter/src/preact-client.ts"
+      ],
+      "@kasperrt/smolter/utils": ["./packages/smolter/src/utils.ts"]
     },
     "types": ["node", "vite/client"]
   },
-  "include": ["packages", "apps", "tests", "*.ts"],
-  "exclude": [
-    "packages/smolter/src/internal",
-    "packages/smolter/src",
-    "packages/smolter/dist"
-  ]
+  "include": ["packages", "apps", "tests", "*.ts", "packages/smolter/src/*.ts"],
+  "exclude": ["packages/smolter/src/internal", "packages/smolter/dist"]
 }

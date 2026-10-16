@@ -5,7 +5,7 @@ import {
   Routes,
   useLoaderData,
 } from "@kasperrt/smolter/react";
-import { loadRouter } from "@kasperrt/smolter/server";
+import { loadRouter } from "@kasperrt/smolter/react/server";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 

@@ -1,5 +1,9 @@
 import routes from "virtual:smolter/routes";
-import { handleRequest, loadRouter, serialize } from "@kasperrt/smolter/server";
+import {
+  handleRequest,
+  loadRouter,
+  serialize,
+} from "@kasperrt/smolter/react/server";
 import { renderToString } from "react-dom/server";
 import { app } from "./app";
 

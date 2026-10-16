@@ -1,14 +1,14 @@
 {
   "name": "@kasperrt/smolter",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "exports": {
-    ".": "./src/core.ts",
+    "./react": "./src/react.ts",
+    "./react/server": "./src/react-server.ts",
     "./preact": "./src/preact.ts",
-    "./core": "./src/core.ts",
-    "./server": "./src/server.ts",
-    "./client": "./src/client.ts",
-    "./files": "./src/files.ts",
-    "./react": "./src/react.ts"
+    "./preact/server": "./src/preact-server.ts",
+    "./react/client": "./src/react-client.ts",
+    "./preact/client": "./src/preact-client.ts",
+    "./utils": "./src/utils.ts"
   },
   "imports": {
     "react": "npm:react@19.3.1",
@@ -16,7 +16,12 @@
   },
   "publish": {
     "include": ["src", "README.md", "LICENSE", "jsr.json"],
-    "exclude": ["src/vite.ts", "src/internal/vite"]
+    "exclude": [
+      "src/vite.ts",
+      "src/react-vite.ts",
+      "src/preact-vite.ts",
+      "src/internal/vite"
+    ]
   },
   "license": "MIT",
   "compatibility": {

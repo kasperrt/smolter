@@ -1,6 +1,6 @@
 // vite.config.ts
 import { defineConfig } from "vite";
-import { fileRouter } from "@kasperrt/smolter/vite";
+import { fileRouter } from "@kasperrt/smolter/react/vite";
 
 export default defineConfig({
   plugins: [fileRouter({ directory: "src/routes" })],

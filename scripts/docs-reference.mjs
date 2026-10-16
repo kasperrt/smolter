@@ -9,15 +9,21 @@ const checker = program.getTypeChecker();
 const pages = new Map();
 
 for (const entry of [
-  "core",
   "react",
   "preact",
-  "client",
-  "server",
-  "files",
-  "vite",
+  "react/client",
+  "preact/client",
+  "react/server",
+  "preact/server",
+  "react/vite",
+  "preact/vite",
+  "utils",
 ]) {
-  const source = program.getSourceFile(`packages/${entry}/src/index.ts`);
+  const filename =
+    entry.includes("/") || entry === "utils"
+      ? `packages/smolter/src/${entry.replace("/", "-")}.ts`
+      : `packages/${entry}/src/index.ts`;
+  const source = program.getSourceFile(filename);
   const module = checker.getSymbolAtLocation(source);
 
   for (const exported of checker.getExportsOfModule(module)) {

@@ -5,7 +5,7 @@ import {
   Routes,
   useLoaderData,
 } from "@kasperrt/smolter/preact";
-import { loadRouter } from "@kasperrt/smolter/server";
+import { loadRouter } from "@kasperrt/smolter/preact/server";
 import { h } from "preact";
 import { render } from "preact-render-to-string";
 

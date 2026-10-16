@@ -1,38 +1,8 @@
 [
   {
-    "slug": "safeWrapAsync",
-    "title": "safeWrapAsync",
-    "entries": ["core"],
-    "kind": "API",
-    "summary": "Resolve returned or rejected errors into Error values without losing their cause.",
-    "signature": "function safeWrapAsync<T>(\n  work: () => T | Promise<T>,\n): Promise<Result<T>>;",
-    "fields": [],
-    "source": "packages/core/src/errors.ts"
-  },
-  {
-    "slug": "defineRoute",
-    "title": "defineRoute",
-    "entries": ["core", "react", "preact"],
-    "kind": "API",
-    "summary": "Associate a URL pattern with a module while retaining its inferred handler types.",
-    "signature": "function defineRoute<const M extends RouteModule>(\n  path: string,\n  module: M,\n): Route<M>;",
-    "fields": [],
-    "source": "packages/core/src/match.ts"
-  },
-  {
-    "slug": "matchRoutes",
-    "title": "matchRoutes",
-    "entries": ["core"],
-    "kind": "API",
-    "summary": "Static segments, :params and a terminal * wildcard; first match wins.",
-    "signature": "function matchRoutes(\n  routes: readonly Route[],\n  pathname: string,\n): Match | undefined;",
-    "fields": [],
-    "source": "packages/core/src/match.ts"
-  },
-  {
     "slug": "createRouter",
     "title": "createRouter",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "API",
     "summary": "Create an isolated router. Use browser: true for browser history, or loadRouter for SSR.",
     "signature": "function createRouter(\n  routes: readonly Route[],\n  options: RouterOptions = {},\n): Router;",
@@ -40,9 +10,60 @@
     "source": "packages/core/src/router.ts"
   },
   {
+    "slug": "defineRoute",
+    "title": "defineRoute",
+    "entries": ["react", "preact", "utils"],
+    "kind": "API",
+    "summary": "Associate a URL pattern with a module while retaining its inferred handler types.",
+    "signature": "function defineRoute<const M extends RouteModule>(\n  path: string,\n  module: M,\n): Route<M>;",
+    "fields": [],
+    "source": "packages/core/src/match.ts"
+  },
+  {
+    "slug": "RouterProvider",
+    "title": "RouterProvider",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Provide a router to descendant hooks and connect its browser lifecycle.",
+    "signature": "function RouterProvider({\n  router,\n  children,\n}: RouterProviderProps): ReactNode;",
+    "fields": [],
+    "source": "packages/react/src/context.ts"
+  },
+  {
+    "slug": "RouterProviderProps",
+    "title": "RouterProviderProps",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Router instance and children rendered within its context.",
+    "signature": "interface RouterProviderProps {\n  router: Router;\n  children?: ReactNode;\n}",
+    "fields": [
+      {
+        "name": "router",
+        "signature": "router: Router;",
+        "summary": ""
+      },
+      {
+        "name": "children",
+        "signature": "children?: ReactNode;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/context.ts"
+  },
+  {
+    "slug": "useRouter",
+    "title": "useRouter",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Hooks require a RouterProvider.",
+    "signature": "function useRouter(): Router;",
+    "fields": [],
+    "source": "packages/react/src/context.ts"
+  },
+  {
     "slug": "Params",
     "title": "Params",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Framework-independent data routing. No global request state.",
     "signature": "type Params = Record<string, string>;",
@@ -52,7 +73,7 @@
   {
     "slug": "DataArgs",
     "title": "DataArgs",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Request, path parameters, and cancellation signal passed to a data handler.",
     "signature": "interface DataArgs {\n  request: Request;\n  params: Params;\n  signal: AbortSignal;\n}",
@@ -78,7 +99,7 @@
   {
     "slug": "DataFunction",
     "title": "DataFunction",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "A loader or action that returns data, a Response, or an Error value.",
     "signature": "type DataFunction = (args: DataArgs) => unknown;",
@@ -88,7 +109,7 @@
   {
     "slug": "AnyDataFunction",
     "title": "AnyDataFunction",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "A handler signature used to infer data from specialized loader and action arguments.",
     "signature": "type AnyDataFunction = (...args: never[]) => unknown;",
@@ -98,7 +119,7 @@
   {
     "slug": "ClientLoaderArgs",
     "title": "ClientLoaderArgs",
-    "entries": ["core", "react", "preact", "client"],
+    "entries": ["react", "preact", "react/client", "preact/client"],
     "kind": "Types",
     "summary": "Client loader arguments, including a typed call to the server loader.",
     "signature": "interface ClientLoaderArgs<L extends AnyDataFunction = DataFunction>\n  extends DataArgs {\n  serverLoader: () => Promise<DataOf<L>>;\n}",
@@ -114,7 +135,7 @@
   {
     "slug": "ClientActionArgs",
     "title": "ClientActionArgs",
-    "entries": ["core", "react", "preact", "client"],
+    "entries": ["react", "preact", "react/client", "preact/client"],
     "kind": "Types",
     "summary": "Client action arguments, including a typed call to the server action.",
     "signature": "interface ClientActionArgs<A extends AnyDataFunction = DataFunction>\n  extends DataArgs {\n  serverAction: () => Promise<DataOf<A>>;\n}",
@@ -130,7 +151,7 @@
   {
     "slug": "DataOf",
     "title": "DataOf",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "The resolved data returned by a handler, excluding Error values.",
     "signature": "type DataOf<F> = F extends AnyDataFunction\n  ? Exclude<Awaited<ReturnType<F>>, Error>\n  : undefined;",
@@ -140,7 +161,7 @@
   {
     "slug": "RevalidationContext",
     "title": "RevalidationContext",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Mutation details supplied when deciding whether to reload route data.",
     "signature": "interface RevalidationContext {\n  formMethod?: string;\n  formAction?: string;\n  formData?: FormData;\n  actionResult?: unknown;\n}",
@@ -171,7 +192,7 @@
   {
     "slug": "RevalidationArgs",
     "title": "RevalidationArgs",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Current URL, mutation result, and reason passed to shouldRevalidate.",
     "signature": "interface RevalidationArgs extends RevalidationContext {\n  currentUrl: URL;\n  nextUrl: URL;\n  defaultShouldRevalidate: boolean;\n  url: URL;\n  reason: \"manual\" | \"action\" | \"navigation\";\n}",
@@ -207,7 +228,7 @@
   {
     "slug": "RouteModule",
     "title": "RouteModule",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "A route component and its optional server and client data handlers.",
     "signature": "interface RouteModule {\n  default?: unknown;\n  HydrateFallback?: unknown;\n  ErrorBoundary?: unknown;\n  loader?: DataFunction;\n  action?: DataFunction;\n  clientLoader?(args: ClientLoaderArgs): unknown;\n  clientAction?(args: ClientActionArgs): unknown;\n  shouldRevalidate?: (args: RevalidationArgs) => boolean;\n}",
@@ -258,7 +279,7 @@
   {
     "slug": "Route",
     "title": "Route",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "A route module associated with an explicit URL pattern.",
     "signature": "type Route<M extends RouteModule = RouteModule> = M & { path: string };",
@@ -268,7 +289,7 @@
   {
     "slug": "Match",
     "title": "Match",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "The first matching route and its decoded path parameters.",
     "signature": "interface Match {\n  route: Route;\n  params: Params;\n}",
@@ -289,7 +310,7 @@
   {
     "slug": "Snapshot",
     "title": "Snapshot",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Immutable current route state observed by framework hooks.",
     "signature": "interface Snapshot {\n  url: string;\n  path?: string;\n  params: Params;\n  data?: unknown;\n  /** Whether this route has completed a loader, including an undefined result. */\n  loaded?: boolean;\n  actionData?: unknown;\n  error?: Error;\n  state: \"idle\" | \"loading\" | \"submitting\";\n}",
@@ -340,7 +361,7 @@
   {
     "slug": "RouterOptions",
     "title": "RouterOptions",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Initial URL, browser history, and hydration configuration.",
     "signature": "interface RouterOptions {\n  url?: string;\n  /** Explicitly opt into browser history; leave off for SSR and tests. */\n  browser?: boolean;\n  hydrationData?: Snapshot;\n}",
@@ -366,7 +387,7 @@
   {
     "slug": "NavigateOptions",
     "title": "NavigateOptions",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Options for replacing rather than appending a browser history entry.",
     "signature": "interface NavigateOptions {\n  replace?: boolean;\n}",
@@ -382,7 +403,7 @@
   {
     "slug": "SubmitOptions",
     "title": "SubmitOptions",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "HTTP method for a route action submission; defaults to POST.",
     "signature": "interface SubmitOptions {\n  method?: \"POST\" | \"PUT\" | \"PATCH\" | \"DELETE\";\n}",
@@ -398,7 +419,7 @@
   {
     "slug": "Result",
     "title": "Result",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "A resolved operation result, with either data or a normalized Error.",
     "signature": "interface Result<T = unknown> {\n  data?: T;\n  error?: Error;\n}",
@@ -419,7 +440,7 @@
   {
     "slug": "FetcherSnapshot",
     "title": "FetcherSnapshot",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Independent fetcher data, error, and pending state.",
     "signature": "interface FetcherSnapshot extends Result {\n  state: Snapshot[\"state\"];\n}",
@@ -435,7 +456,7 @@
   {
     "slug": "Fetcher",
     "title": "Fetcher",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "An independent loader/action channel that does not navigate the page.",
     "signature": "interface Fetcher {\n  getSnapshot: () => FetcherSnapshot;\n  subscribe: (listener: () => void) => () => void;\n  load: (url: string) => Promise<Result>;\n  submit: (\n    url: string,\n    body: FormData,\n    options?: SubmitOptions,\n  ) => Promise<Result>;\n  /** Abort work and release subscriptions when this imperative fetcher is no longer used. */\n  dispose: () => void;\n}",
@@ -471,7 +492,7 @@
   {
     "slug": "Router",
     "title": "Router",
-    "entries": ["core", "react", "preact"],
+    "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Route navigation, subscriptions, fetchers, and loader revalidation.",
     "signature": "interface Router {\n  routes: readonly Route[];\n  getSnapshot: () => Snapshot;\n  subscribe: (listener: () => void) => () => void;\n  start: () => () => void;\n  navigate: (url: string, options?: NavigateOptions) => Promise<void>;\n  revalidate: (\n    reason?: RevalidationArgs[\"reason\"],\n    context?: RevalidationContext,\n  ) => Promise<void>;\n  submit: (\n    url: string,\n    body: FormData,\n    options?: SubmitOptions,\n  ) => Promise<Result>;\n  /** Create an independent fetcher. Framework useFetcher hooks manage disposal automatically. */\n  createFetcher: () => Fetcher;\n  dispose: () => void;\n}",
@@ -523,57 +544,6 @@
       }
     ],
     "source": "packages/core/src/types.ts"
-  },
-  {
-    "slug": "internalURL",
-    "title": "internalURL",
-    "entries": ["core"],
-    "kind": "API",
-    "summary": "Resolve an internal URL; external links remain the browser's responsibility.",
-    "signature": "function internalURL(base: string, href = base): URL | undefined;",
-    "fields": [],
-    "source": "packages/core/src/url.ts"
-  },
-  {
-    "slug": "RouterProvider",
-    "title": "RouterProvider",
-    "entries": ["react", "preact"],
-    "kind": "API",
-    "summary": "Provide a router to descendant hooks and connect its browser lifecycle.",
-    "signature": "function RouterProvider({\n  router,\n  children,\n}: RouterProviderProps): ReactNode;",
-    "fields": [],
-    "source": "packages/react/src/context.ts"
-  },
-  {
-    "slug": "RouterProviderProps",
-    "title": "RouterProviderProps",
-    "entries": ["react", "preact"],
-    "kind": "Types",
-    "summary": "Router instance and children rendered within its context.",
-    "signature": "interface RouterProviderProps {\n  router: Router;\n  children?: ReactNode;\n}",
-    "fields": [
-      {
-        "name": "router",
-        "signature": "router: Router;",
-        "summary": ""
-      },
-      {
-        "name": "children",
-        "signature": "children?: ReactNode;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/react/src/context.ts"
-  },
-  {
-    "slug": "useRouter",
-    "title": "useRouter",
-    "entries": ["react", "preact"],
-    "kind": "API",
-    "summary": "Hooks require a RouterProvider.",
-    "signature": "function useRouter(): Router;",
-    "fields": [],
-    "source": "packages/react/src/context.ts"
   },
   {
     "slug": "useFetcher",
@@ -845,27 +815,27 @@
   {
     "slug": "serverRoute",
     "title": "serverRoute",
-    "entries": ["client"],
+    "entries": ["react/client", "preact/client"],
     "kind": "API",
     "summary": "Browser transport for server routes. File-router builds generate this call.",
     "signature": "function serverRoute<M extends RouteModule = RouteModule>(\n  path: string,\n  module: ClientRouteModule,\n  handlers: ServerHandlers = { loader: true, action: true },\n): Route<M>;",
     "fields": [],
-    "source": "packages/client/src/index.ts"
+    "source": "packages/smolter/src/internal/client/index.ts"
   },
   {
     "slug": "deserialize",
     "title": "deserialize",
-    "entries": ["client"],
+    "entries": ["react/client", "preact/client"],
     "kind": "API",
     "summary": "Restore a trusted snapshot produced by",
     "signature": "function deserialize(json: string): Snapshot;",
     "fields": [],
-    "source": "packages/client/src/deserialize.ts"
+    "source": "packages/smolter/src/internal/client/deserialize.ts"
   },
   {
     "slug": "ClientRouteModule",
     "title": "ClientRouteModule",
-    "entries": ["client"],
+    "entries": ["react/client", "preact/client"],
     "kind": "Types",
     "summary": "Browser-safe route exports, excluding server implementation code.",
     "signature": "interface ClientRouteModule {\n  default?: unknown;\n  HydrateFallback?: unknown;\n  ErrorBoundary?: unknown;\n  clientLoader?(args: ClientLoaderArgs): unknown;\n  clientAction?(args: ClientActionArgs): unknown;\n  shouldRevalidate?: RouteModule[\"shouldRevalidate\"];\n}",
@@ -901,12 +871,12 @@
         "summary": ""
       }
     ],
-    "source": "packages/client/src/index.ts"
+    "source": "packages/smolter/src/internal/client/index.ts"
   },
   {
     "slug": "ServerHandlers",
     "title": "ServerHandlers",
-    "entries": ["client"],
+    "entries": ["react/client", "preact/client"],
     "kind": "Types",
     "summary": "Select the server loader and action proxies available on a browser route.",
     "signature": "interface ServerHandlers {\n  loader?: boolean;\n  action?: boolean;\n}",
@@ -922,86 +892,55 @@
         "summary": ""
       }
     ],
-    "source": "packages/client/src/index.ts"
+    "source": "packages/smolter/src/internal/client/index.ts"
   },
   {
     "slug": "loadRouter",
     "title": "loadRouter",
-    "entries": ["server"],
+    "entries": ["react/server", "preact/server"],
     "kind": "API",
     "summary": "Create one router per server request, await this, then render the provider.",
     "signature": "function loadRouter(\n  routes: readonly Route[],\n  input: string | Request,\n): Promise<Router>;",
     "fields": [],
-    "source": "packages/server/src/index.ts"
+    "source": "packages/smolter/src/internal/server/index.ts"
   },
   {
     "slug": "serialize",
     "title": "serialize",
-    "entries": ["server"],
+    "entries": ["react/server", "preact/server"],
     "kind": "API",
     "summary": "Safe inside a script element. Data must be JSON serializable; error stacks and causes are omitted.",
     "signature": "function serialize(snapshot: Snapshot): string;",
     "fields": [],
-    "source": "packages/server/src/index.ts"
+    "source": "packages/smolter/src/internal/server/index.ts"
   },
   {
     "slug": "handleRequest",
     "title": "handleRequest",
-    "entries": ["server"],
+    "entries": ["react/server", "preact/server"],
     "kind": "API",
     "summary": "Dispatch an HTTP data request to a registered server loader or action.",
     "signature": "function handleRequest(\n  routes: readonly Route[],\n  request: Request,\n): Promise<Response>;",
     "fields": [],
-    "source": "packages/server/src/index.ts"
-  },
-  {
-    "slug": "flatRoutes",
-    "title": "flatRoutes",
-    "entries": ["files"],
-    "kind": "API",
-    "summary": "Read only flat files and immediate route folders. Colocated helpers are ignored.",
-    "signature": "function flatRoutes(\n  directory: string,\n): Promise<RouteFile[] | Error>;",
-    "fields": [],
-    "source": "packages/files/src/index.ts"
-  },
-  {
-    "slug": "RouteFile",
-    "title": "RouteFile",
-    "entries": ["files"],
-    "kind": "Types",
-    "summary": "A discovered flat route pattern and its module file path.",
-    "signature": "interface RouteFile {\n  path: string;\n  file: string;\n}",
-    "fields": [
-      {
-        "name": "path",
-        "signature": "path: string;",
-        "summary": ""
-      },
-      {
-        "name": "file",
-        "signature": "file: string;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/files/src/index.ts"
+    "source": "packages/smolter/src/internal/server/index.ts"
   },
   {
     "slug": "routerPlugin",
     "title": "routerPlugin",
-    "entries": ["vite"],
+    "entries": ["react/vite", "preact/vite"],
     "kind": "API",
-    "summary": "Build-time flat route discovery and the optional server data transport.",
-    "signature": "function routerPlugin({\n  directory = \"src/routes\",\n  clientRoutes,\n  serverRoutes,\n}: FileRouterOptions = {}): Plugin;",
+    "summary": "Configure flat routes and server transport for React.",
+    "signature": "function routerPlugin(options: FileRouterOptions = {}): Plugin;",
     "fields": [],
-    "source": "packages/vite/src/index.ts"
+    "source": "packages/smolter/src/react-vite.ts"
   },
   {
     "slug": "FileRouterOptions",
     "title": "FileRouterOptions",
-    "entries": ["vite"],
+    "entries": ["react/vite", "preact/vite"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface FileRouterOptions {\n  directory?: string;\n  clientRoutes?: string;\n  serverRoutes?: string;\n}",
+    "signature": "interface FileRouterOptions {\n  directory?: string;\n  clientRoutes?: string;\n  serverRoutes?: string;\n  framework?: \"react\" | \"preact\";\n}",
     "fields": [
       {
         "name": "directory",
@@ -1017,18 +956,84 @@
         "name": "serverRoutes",
         "signature": "serverRoutes?: string;",
         "summary": ""
+      },
+      {
+        "name": "framework",
+        "signature": "framework?: \"react\" | \"preact\";",
+        "summary": ""
       }
     ],
-    "source": "packages/vite/src/index.ts"
+    "source": "packages/smolter/src/internal/vite/index.ts"
   },
   {
     "slug": "fileRouter",
     "title": "fileRouter",
-    "entries": ["vite"],
+    "entries": ["react/vite", "preact/vite"],
     "kind": "API",
     "summary": "File routing is the default; this alias keeps configuration explicit.",
-    "signature": "const fileRouter: ({ directory, clientRoutes, serverRoutes, }?: FileRouterOptions) => Plugin;",
+    "signature": "const fileRouter: (options?: FileRouterOptions) => Plugin;",
     "fields": [],
-    "source": "packages/vite/src/index.ts"
+    "source": "packages/smolter/src/react-vite.ts"
+  },
+  {
+    "slug": "flatRoutes",
+    "title": "flatRoutes",
+    "entries": ["react/vite", "preact/vite"],
+    "kind": "API",
+    "summary": "Read only flat files and immediate route folders. Colocated helpers are ignored.",
+    "signature": "function flatRoutes(\n  directory: string,\n): Promise<RouteFile[] | Error>;",
+    "fields": [],
+    "source": "packages/smolter/src/internal/files/index.ts"
+  },
+  {
+    "slug": "RouteFile",
+    "title": "RouteFile",
+    "entries": ["react/vite", "preact/vite"],
+    "kind": "Types",
+    "summary": "A discovered flat route pattern and its module file path.",
+    "signature": "interface RouteFile {\n  path: string;\n  file: string;\n}",
+    "fields": [
+      {
+        "name": "path",
+        "signature": "path: string;",
+        "summary": ""
+      },
+      {
+        "name": "file",
+        "signature": "file: string;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/smolter/src/internal/files/index.ts"
+  },
+  {
+    "slug": "safeWrapAsync",
+    "title": "safeWrapAsync",
+    "entries": ["utils"],
+    "kind": "API",
+    "summary": "Resolve returned or rejected errors into Error values without losing their cause.",
+    "signature": "function safeWrapAsync<T>(\n  work: () => T | Promise<T>,\n): Promise<Result<T>>;",
+    "fields": [],
+    "source": "packages/smolter/src/internal/core/errors.ts"
+  },
+  {
+    "slug": "matchRoutes",
+    "title": "matchRoutes",
+    "entries": ["utils"],
+    "kind": "API",
+    "summary": "Static segments, :params and a terminal * wildcard; first match wins.",
+    "signature": "function matchRoutes(\n  routes: readonly Route[],\n  pathname: string,\n): Match | undefined;",
+    "fields": [],
+    "source": "packages/smolter/src/internal/core/match.ts"
+  },
+  {
+    "slug": "internalURL",
+    "title": "internalURL",
+    "entries": ["utils"],
+    "kind": "API",
+    "summary": "Resolve an internal URL; external links remain the browser's responsibility.",
+    "signature": "function internalURL(base: string, href = base): URL | undefined;",
+    "fields": [],
+    "source": "packages/smolter/src/internal/core/url.ts"
   }
 ]

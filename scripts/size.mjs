@@ -21,8 +21,14 @@ if (!process.argv.includes("--write-only")) {
   const rows = [
     ["@kasperrt/smolter/react", sizes.react],
     ["@kasperrt/smolter/preact", sizes.preact],
-    ["@kasperrt/smolter/react + @kasperrt/smolter/client", sizes.reactServer],
-    ["@kasperrt/smolter/preact + @kasperrt/smolter/client", sizes.preactServer],
+    [
+      "@kasperrt/smolter/react + @kasperrt/smolter/react/client",
+      sizes.reactServer,
+    ],
+    [
+      "@kasperrt/smolter/preact + @kasperrt/smolter/preact/client",
+      sizes.preactServer,
+    ],
     ...references.map(({ name, version, bytes }) => [
       `${name}@${version}`,
       bytes,

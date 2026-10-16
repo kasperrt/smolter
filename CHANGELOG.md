@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Breaking: choose `@kasperrt/smolter/react` or `@kasperrt/smolter/preact` for routing APIs and types.
+- Move optional transport, SSR, and build tools under the selected renderer’s `/client`, `/server`, and `/vite` subpaths. Remove root and top-level core/client/server/files/vite exports.
+- Keep browser-safe helpers in `@kasperrt/smolter/utils`.
+- Verify unused exports and server/build modules are removed from browser bundles.
+
 ## 0.0.1
 
 - First stable release of `@kasperrt/smolter` for React and Preact.

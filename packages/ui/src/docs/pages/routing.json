@@ -17,7 +17,7 @@
     {
       "title": "Enable the plugin",
       "body": "Install Vite 8 or newer. Import the generated route table from the virtual module. Re-export server handlers from separate files so server implementation code can be excluded from browser builds.",
-      "code": "import { defineConfig } from \"vite\";\nimport { fileRouter } from \"@kasperrt/smolter/vite\";\n\nexport default defineConfig({\n  plugins: [fileRouter({ directory: \"src/routes\" })],\n});\n\n// main.ts\nimport routes from \"virtual:smolter/routes\";"
+      "code": "import { defineConfig } from \"vite\";\nimport { fileRouter } from \"@kasperrt/smolter/react/vite\";\n\nexport default defineConfig({\n  plugins: [fileRouter({ directory: \"src/routes\" })],\n});\n\n// main.ts\nimport routes from \"virtual:smolter/routes\";"
     },
     {
       "title": "Limits",
