@@ -1,0 +1,13 @@
+{
+  "slug": "RouteModule",
+  "title": "RouteModule",
+  "summary": "The data and rendering exports belonging to a route.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "The data and rendering exports belonging to a route. loader/action are server handlers with transport; clientLoader/clientAction are browser handlers. Rendering uses default, HydrateFallback, and ErrorBoundary. A manual browser table executes functions locally unless serverRoute supplies proxies.",
+      "code": "import * as module from \"./routes/tasks/route\";\nconst route = defineRoute(\"/tasks\", module);"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "slug": "defineRoute",
+  "title": "defineRoute",
+  "summary": "Bind a path to a route module while retaining its exact handler types.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "path is a URL pattern. module contains handlers, view exports, and an optional shouldRevalidate function.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "A new route object containing the module exports and path.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "import * as task from \"./routes/task/route\";\nconst taskRoute = defineRoute(\"/tasks/:id\", task);\nconst data = useLoaderData(taskRoute);"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "The supplied path wins over any path field on the module. This helper does not register a route globally; include the result in the table passed to createRouter.",
+      "code": ""
+    }
+  ]
+}

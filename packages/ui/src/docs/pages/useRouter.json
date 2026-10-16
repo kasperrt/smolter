@@ -1,0 +1,28 @@
+{
+  "slug": "useRouter",
+  "title": "useRouter",
+  "summary": "Access the provider\u2019s Router instance.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "No arguments.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "The current Router.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const router = useRouter();\nconst snapshot = router.getSnapshot();\n\nawait router.navigate(\"/tasks\");"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "This hook reads context only; it does not subscribe to state changes. Use useLoaderData, useLocation, or useParams to render reactive values. Calling outside a provider is unsupported.",
+      "code": ""
+    }
+  ]
+}

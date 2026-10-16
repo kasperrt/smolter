@@ -1,0 +1,13 @@
+{
+  "slug": "ErrorProps",
+  "title": "ErrorProps",
+  "summary": "Props passed to a route ErrorBoundary.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Props passed to a route ErrorBoundary. error is the normalized Error. Hydration preserves its name and message but intentionally omits server stack and cause.",
+      "code": "export function ErrorBoundary({ error }: ErrorProps) {\n  return <p role=\"alert\">{error.message}</p>;\n}"
+    }
+  ]
+}

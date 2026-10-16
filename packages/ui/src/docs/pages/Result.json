@@ -1,0 +1,13 @@
+{
+  "slug": "Result",
+  "title": "Result",
+  "summary": "A normalized operation result containing data or error.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "A normalized operation result containing data or error. Check error before reading data. A successful result can contain undefined; this object is not a discriminated success boolean.",
+      "code": "const result = await fetcher.load(\"/tasks/1\");\n\nif (result.error) return result.error;\nreturn result.data;"
+    }
+  ]
+}

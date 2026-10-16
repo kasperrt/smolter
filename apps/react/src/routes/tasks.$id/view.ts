@@ -1,6 +1,7 @@
-import { useFetcher, useLoaderData } from "@kasperrt/smolter/react";
+import { Link, useFetcher, useLoaderData } from "@kasperrt/smolter/react";
 import { ui } from "@smolter/ui/react";
 import { createElement as h } from "react";
+import { siteHref } from "../../../../../scripts/site-history";
 import type { clientAction } from "./action";
 import type { clientLoader } from "./loader";
 
@@ -10,6 +11,7 @@ export default function Task() {
 
   return ui.TaskDetail({
     task: data,
+    link: (href, children) => h(Link, { href: siteHref(href) }, children),
     state: fetcher.state,
     message:
       fetcher.error?.message ??

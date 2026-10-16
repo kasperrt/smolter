@@ -1,0 +1,28 @@
+{
+  "slug": "Routes",
+  "title": "Routes",
+  "summary": "Render the active route component, fallback, or error boundary.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "fallback is optional content for cases where no route component can render. It defaults to null.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "The active module default export, HydrateFallback, ErrorBoundary, error message, or fallback.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "<Routes fallback={<p>No page here.</p>} />"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "The component reads the router from RouterProvider. It renders one matched module, not a nested outlet tree. Completed page content stays mounted through revalidation. Components receive no automatic loaderData prop: use the data hooks.",
+      "code": ""
+    }
+  ]
+}

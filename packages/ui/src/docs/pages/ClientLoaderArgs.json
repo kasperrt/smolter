@@ -1,0 +1,13 @@
+{
+  "slug": "ClientLoaderArgs",
+  "title": "ClientLoaderArgs",
+  "summary": "Extends DataArgs with serverLoader.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Extends DataArgs with serverLoader. The callback is supplied by serverRoute or the generated browser route table. It invokes the paired server handler using the current request and signal.",
+      "code": "export async function clientLoader({ serverLoader }: ClientLoaderArgs) {\n  const data = await serverLoader();\n\n  return { data };\n}"
+    }
+  ]
+}

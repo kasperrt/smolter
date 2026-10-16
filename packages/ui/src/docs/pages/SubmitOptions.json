@@ -1,0 +1,13 @@
+{
+  "slug": "SubmitOptions",
+  "title": "SubmitOptions",
+  "summary": "Method options for imperative mutations.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Method options for imperative mutations. Methods are uppercase POST, PUT, PATCH, and DELETE. The default is POST. For GET reads, use navigate or fetcher.load.",
+      "code": "await router.submit(\"/tasks/1\", formData, { method: \"PATCH\" });"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "slug": "LinkProps",
+  "title": "LinkProps",
+  "summary": "Native anchor props plus a required href and optional replace.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Native anchor props plus a required href and optional replace. Link preserves downloads, modified clicks, non-self targets, and external links. onClick can prevent router navigation.",
+      "code": "<Link href=\"/tasks\" replace>Tasks</Link>"
+    }
+  ]
+}

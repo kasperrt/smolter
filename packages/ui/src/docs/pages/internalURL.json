@@ -1,0 +1,28 @@
+{
+  "slug": "internalURL",
+  "title": "internalURL",
+  "summary": "Resolve a same-origin URL.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "base is an absolute URL string. href defaults to base and is resolved with the URL constructor.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "A URL if its origin matches base, otherwise undefined.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const url = internalURL(\"https://example.com/tasks\", \"/tasks/1\");"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "This low-level core helper does not navigate or validate route registration. Invalid URL syntax can throw. Different protocols or ports produce a different origin and are rejected.",
+      "code": ""
+    }
+  ]
+}

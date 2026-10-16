@@ -1,0 +1,28 @@
+{
+  "slug": "useFetcher",
+  "title": "useFetcher",
+  "summary": "Own an independent route request channel.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Optionally pass a typed route definition to bind the default target and infer loader/action results. Otherwise provide a handler type generic.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "data, error, state, Form, load(url?), and submit(formData, { action?, method? }).",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const fetcher = useFetcher<typeof loader>();\n\n<button onClick={() => fetcher.load(\"/tasks/1\")}>Load task</button>\n<p>{fetcher.data?.title}</p>"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "load reads a registered loader into fetcher.data. submit defaults to POST and does not navigate unless the action redirects. A bound dynamic pattern uses the concrete active URL only when that route is active; otherwise provide a concrete URL. Unmounting aborts the fetcher. Reads do not revalidate the page; successful writes do.",
+      "code": ""
+    }
+  ]
+}

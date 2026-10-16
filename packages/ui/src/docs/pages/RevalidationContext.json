@@ -1,0 +1,13 @@
+{
+  "slug": "RevalidationContext",
+  "title": "RevalidationContext",
+  "summary": "Optional action context passed into revalidation: formMethod, formAction, formData, and actionResult.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Optional action context passed into revalidation: formMethod, formAction, formData, and actionResult. These fields may be absent for manual refreshes and navigation.",
+      "code": "await router.revalidate(\"action\", {\n  formMethod: \"PATCH\",\n  formAction: \"/tasks/1\",\n  actionResult: { changed: true },\n});"
+    }
+  ]
+}

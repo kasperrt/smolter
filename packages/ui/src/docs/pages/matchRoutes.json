@@ -1,0 +1,28 @@
+{
+  "slug": "matchRoutes",
+  "title": "matchRoutes",
+  "summary": "Find the first route whose pattern matches a pathname.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "routes is ordered. pathname is only the URL pathname, excluding query and hash.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "{ route, params } or undefined.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const match = matchRoutes(routes, new URL(request.url).pathname);\nconsole.log(match?.params.id);"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "Matching is case-sensitive. One trailing slash is ignored. Supports static segments, :parameters, and terminal *. Invalid percent sequences are decoded using URLSearchParams replacement behavior rather than throwing. Static routes must precede dynamic ones in a manual table.",
+      "code": ""
+    }
+  ]
+}

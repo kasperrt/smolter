@@ -1,0 +1,13 @@
+{
+  "slug": "Match",
+  "title": "Match",
+  "summary": "The first matching Route and the decoded parameter record.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "The first matching Route and the decoded parameter record. matchRoutes returns undefined when no pattern matches. Match does not contain loader data and does not execute handlers.",
+      "code": "const match = matchRoutes(routes, \"/tasks/1\");\nconst id = match?.params.id;"
+    }
+  ]
+}

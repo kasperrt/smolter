@@ -1,0 +1,13 @@
+{
+  "slug": "NavigateOptions",
+  "title": "NavigateOptions",
+  "summary": "History options for navigation.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "History options for navigation. replace updates the current entry instead of pushing another one. It does not skip loading or bypass shouldRevalidate.",
+      "code": "await router.navigate(\"/tasks?q=edit\", { replace: true });"
+    }
+  ]
+}

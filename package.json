@@ -23,7 +23,9 @@
     "jsr:check": "node scripts/jsr.mjs",
     "build:site": "node scripts/build-site.mjs",
     "smoke:site": "node scripts/site-smoke.mjs",
-    "docs:badges": "node scripts/readme-badges.mjs"
+    "docs:badges": "node scripts/readme-badges.mjs",
+    "docs:reference": "node scripts/docs-reference.mjs",
+    "docs:check": "node scripts/docs-reference.mjs --check"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

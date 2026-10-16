@@ -1,0 +1,13 @@
+{
+  "slug": "ActionData",
+  "title": "ActionData",
+  "summary": "The inferred awaited action result.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "The inferred awaited action result. For a module it combines action and clientAction results. Page action hooks and independent fetchers store results separately.",
+      "code": "type Saved = ActionData<typeof action>;"
+    }
+  ]
+}

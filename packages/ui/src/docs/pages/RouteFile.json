@@ -1,0 +1,13 @@
+{
+  "slug": "RouteFile",
+  "title": "RouteFile",
+  "summary": "Build-time route discovery result.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Build-time route discovery result. path is the URL pattern and file is an absolute route module filename. It does not contain imported module exports or data.",
+      "code": "const discovered = await flatRoutes(\"src/routes\");"
+    }
+  ]
+}

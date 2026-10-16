@@ -45,6 +45,8 @@ function routeName(path: string) {
 
   if (path === "/tasks") return "tasks._index";
 
+  if (path === "/tasks/search") return "tasks.search";
+
   if (path.startsWith("/tasks/")) return "tasks.$id";
 
   return "about";

@@ -1,0 +1,28 @@
+{
+  "slug": "createRouter",
+  "title": "createRouter",
+  "summary": "Create an isolated data router.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "routes is an ordered readonly route table. options accepts url, browser, and hydrationData. browser defaults to false.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "A Router with start, navigate, revalidate, submit, createFetcher, subscribe, getSnapshot, dispose, and routes.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const router = createRouter(routes, { browser: true });\nawait router.navigate(\"/tasks/1\");\nawait router.revalidate();"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "Creating a router does not immediately load data. RouterProvider calls start. Imperative consumers call start or navigate themselves. dispose aborts pending channels and removes the history listener. Prefer one browser router per app and one server router per request.",
+      "code": ""
+    }
+  ]
+}

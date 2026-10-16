@@ -1,0 +1,28 @@
+{
+  "slug": "useLocation",
+  "title": "useLocation",
+  "summary": "Read the current path, search, and hash, plus a navigation function.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "No arguments.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "A readonly [location, navigate] tuple. navigate accepts a URL and optional { replace: true }.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const [location, navigate] = useLocation();\n\n<button onClick={() => navigate(\"/tasks\")}>All tasks</button>\n<code>{location}</code>"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "The location omits the origin. Navigation runs the destination loader and aborts superseded work. External URLs are rejected by the router; use a normal anchor or browser navigation for another origin.",
+      "code": ""
+    }
+  ]
+}

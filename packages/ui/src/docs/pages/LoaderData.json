@@ -1,0 +1,13 @@
+{
+  "slug": "LoaderData",
+  "title": "LoaderData",
+  "summary": "The inferred awaited loader result.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "The inferred awaited loader result. For a module it combines loader and clientLoader results; for a function it uses DataOf. The hook adds undefined because data may not yet be available.",
+      "code": "type Data = LoaderData<typeof routeModule>;"
+    }
+  ]
+}

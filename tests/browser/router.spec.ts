@@ -23,6 +23,85 @@ const examples = [
 for (const example of examples) {
   const origin = `http://127.0.0.1:${example.port}`;
 
+  test(`${example.name}: documentation is routed and links to every API`, async ({
+    page,
+  }) => {
+    await page.goto(origin);
+    await page.evaluate(() => {
+      document.documentElement.dataset.docs = "mounted";
+    });
+    await page.getByRole("link", { name: "Docs", exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: "Getting started", exact: true }),
+    ).toBeVisible();
+    await page
+      .getByRole("navigation", { name: "Documentation", exact: true })
+      .getByRole("link", { name: "useFetcher", exact: true })
+      .click();
+
+    await expect(page).toHaveURL(`${origin}/docs/useFetcher`);
+    await expect(
+      page.getByRole("heading", { name: "Parameters", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByLabel("useFetcher signature")).toContainText(
+      "TypedFetcher",
+    );
+    await expect(
+      page
+        .getByRole("navigation", { name: "Documentation", exact: true })
+        .getByRole("link"),
+    ).toHaveCount(67);
+    await expect(page.getByTestId("source-panel")).toHaveCount(0);
+    expect(
+      await page.evaluate(() => document.documentElement.dataset.docs),
+    ).toBe("mounted");
+
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: "useFetcher", exact: true }),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  });
+
+  test(`${example.name}: route search, deep links, and back navigation`, async ({
+    page,
+  }) => {
+    await page.goto(origin);
+    await page.evaluate(() => {
+      document.documentElement.dataset.mounted = "once";
+    });
+    await page.getByRole("link", { name: "Search", exact: true }).click();
+    await page.getByLabel("Search query").fill("Edit");
+    await page
+      .getByRole("button", { name: "Search tasks", exact: true })
+      .click();
+
+    await expect(page).toHaveURL(`${origin}/tasks/search?q=Edit`);
+    await expect(
+      page.getByRole("link", { name: "Edit a task", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Read the route", exact: true }),
+    ).toHaveCount(0);
+    await page.getByRole("link", { name: "Edit a task", exact: true }).click();
+    await expect(page).toHaveURL(`${origin}/tasks/2`);
+    await page.getByRole("link", { name: "← All tasks", exact: true }).click();
+    await expect(page).toHaveURL(`${origin}/tasks`);
+    expect(
+      await page.evaluate(() => document.documentElement.dataset.mounted),
+    ).toBe("once");
+
+    await page.goBack();
+    await expect(page).toHaveURL(`${origin}/tasks/2`);
+    await page.goto(`${origin}/tasks/search?q=Edit`);
+    await expect(page.getByLabel("Search query")).toHaveValue("Edit");
+  });
+
   test(`${example.name}: counter, stable controls, and measured size`, async ({
     page,
   }) => {

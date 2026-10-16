@@ -1,0 +1,28 @@
+{
+  "slug": "types",
+  "title": "Type inference",
+  "summary": "Infer data from a handler or a route object; do not duplicate the response interface.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Handler inference",
+      "body": "Pass typeof loader as the hook generic. TypeScript cannot infer a nearby exported function just because it lives in the same file. The generic is erased at runtime. Data may be undefined before the first completed load.",
+      "code": "import type { clientLoader } from \"./loader\";\nimport type { clientAction } from \"./action\";\n\nconst data = useLoaderData<typeof clientLoader>();\nconst fetcher = useFetcher<typeof clientAction>();\nconst revalidate = useRevalidator();\nconst busy = fetcher.state !== \"idle\";"
+    },
+    {
+      "title": "Route inference",
+      "body": "Passing a typed defineRoute result allows automatic inference with no hook generic. A bound data hook returns undefined if a different route is active.",
+      "code": "const taskRoute = defineRoute(\"/tasks/:id\", taskModule);\n\nconst data = useLoaderData(taskRoute);\nconst fetcher = useFetcher(taskRoute);"
+    },
+    {
+      "title": "Mixed results",
+      "body": "A fetcher bound to a route can both load and submit, so its data type includes the loader and action results. Narrow that union before reading fields unique to one result. LoaderData and ActionData similarly include server and client handler results.",
+      "code": ""
+    },
+    {
+      "title": "Transport boundary",
+      "body": "Server data must survive JSON serialization. Dates become strings; functions and class instances do not retain behavior. serverLoader and serverAction return unknown at the raw transport boundary: validate or narrow the payload before using it.",
+      "code": ""
+    }
+  ]
+}

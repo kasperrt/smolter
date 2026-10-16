@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./react": "./src/react.ts",
     "./preact": "./src/preact.ts",
-    "./style.css": "./src/style.css"
+    "./style.css": "./src/style.css",
+    "./docs": "./src/docs/index.ts"
   },
   "peerDependencies": {
     "react": ">=18",

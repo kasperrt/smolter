@@ -1,0 +1,28 @@
+{
+  "slug": "getting-started",
+  "title": "Getting started",
+  "summary": "Choose React or Preact, register your routes, and mount the provider.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Install",
+      "body": "Install the router and the framework you use. Framework peers are optional; choosing React does not install Preact.",
+      "code": "pnpm add @kasperrt/smolter react react-dom\n# Or: pnpm add @kasperrt/smolter preact"
+    },
+    {
+      "title": "Register a route",
+      "body": "Keep the data handler beside the page. defineRoute retains its handler types. Manual routes use the first matching pattern, so put static paths before dynamic paths.",
+      "code": "import { createRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as tasks from \"./routes/tasks/route\";\nimport * as task from \"./routes/task/route\";\n\nexport const router = createRouter([\n  defineRoute(\"/tasks\", tasks),\n  defineRoute(\"/tasks/:id\", task),\n], { browser: true });"
+    },
+    {
+      "title": "Render",
+      "body": "Create the router outside render. The provider starts its initial load and attaches history listeners. Routes renders the matching module.",
+      "code": "import { RouterProvider, Routes } from \"@kasperrt/smolter/react\";\nimport { router } from \"./router\";\n\nexport function App() {\n  return <RouterProvider router={router}>\n    <Routes fallback={<p>Page not found.</p>} />\n  </RouterProvider>;\n}"
+    },
+    {
+      "title": "Try the demo",
+      "body": "Counter shows actions and revalidation. Tasks shows POST creation and independent fetcher reads. A task detail route uses :id with PATCH and DELETE. Search uses a GET form and shareable query parameters. The URL bar is driven by useLocation.",
+      "code": ""
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "slug": "routing",
+  "title": "Routing",
+  "summary": "Choose a manual route table or flat files. Both produce the same route objects.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Manual paths",
+      "body": "Static segments match exactly; :id captures one non-empty segment; a terminal * captures the remaining path. One trailing slash is ignored. Query strings do not select routes. First match wins.",
+      "code": "const routes = [\n  defineRoute(\"/tasks/search\", search),\n  defineRoute(\"/tasks/:id\", detail),\n  defineRoute(\"/files/*\", files),\n];"
+    },
+    {
+      "title": "Flat files",
+      "body": "The Vite plugin discovers immediate route folders or flat module files. Dots create URL segments, $id creates a parameter, and a terminal $ creates a splat. _index is an index route. Leading underscore segments are pathless; trailing underscores are removed. These are URL conventions, not nested component layouts.",
+      "code": "src/routes/_index/route.ts          \u2192 /\nsrc/routes/tasks._index/route.ts    \u2192 /tasks\nsrc/routes/tasks.search/route.ts    \u2192 /tasks/search\nsrc/routes/tasks.$id/route.ts       \u2192 /tasks/:id\nsrc/routes/files.$/route.ts         \u2192 /files/*"
+    },
+    {
+      "title": "Enable the plugin",
+      "body": "Install Vite 8 or newer. Import the generated route table from the virtual module. Re-export server handlers from separate files so server implementation code can be excluded from browser builds.",
+      "code": "import { defineConfig } from \"vite\";\nimport { fileRouter } from \"@kasperrt/smolter/vite\";\n\nexport default defineConfig({\n  plugins: [fileRouter({ directory: \"src/routes\" })],\n});\n\n// main.ts\nimport routes from \"virtual:smolter/routes\";"
+    },
+    {
+      "title": "Limits",
+      "body": "File routing does not support arbitrary directory nesting, optional segments, parentheses, bracket escapes, or nested layout rendering. Duplicate or ambiguous parameter patterns return an error. Manual ordering remains your responsibility; file discovery sorts static routes ahead of dynamic routes.",
+      "code": ""
+    }
+  ]
+}

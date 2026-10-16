@@ -1,0 +1,28 @@
+{
+  "slug": "loadRouter",
+  "title": "loadRouter",
+  "summary": "Load a server route before rendering.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "routes contains server route modules. input is an absolute URL string or a Request.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "A Promise resolving to a request-scoped Router whose initial navigation has completed.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const router = await loadRouter(routes, request);\nconst snapshot = router.getSnapshot();"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "Server execution ignores clientLoader and clientAction. A Request forwards headers and combines its abort signal with router cancellation. Handle response status and redirects in your server adapter. Client-only loader routes produce a fallback snapshot for hydration.",
+      "code": ""
+    }
+  ]
+}

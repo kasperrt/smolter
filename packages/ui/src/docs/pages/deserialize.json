@@ -1,0 +1,28 @@
+{
+  "slug": "deserialize",
+  "title": "deserialize",
+  "summary": "Restore a serialized hydration snapshot.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "value is the JSON text produced by serialize.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "A Snapshot with any serialized error restored to an Error object.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const snapshot = deserialize(element.textContent!);\nconst router = createRouter(routes, { hydrationData: snapshot });"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "Use trusted snapshot text from your server. Invalid JSON throws; this function does not validate arbitrary input. Restored errors preserve their name and message without exposing server stack traces.",
+      "code": ""
+    }
+  ]
+}

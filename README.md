@@ -14,6 +14,8 @@ loader; `shouldRevalidate` decides when that work is needed.
 Inspired by [wouter](https://github.com/molefrog/wouter)
 and [React Router](https://reactrouter.com/).
 
+[Read the documentation](https://kasperrt.github.io/smolter/react/docs/) for guides and the complete API reference. The site itself uses smolter routes.
+
 ## Contents
 
 - [Install](#install)

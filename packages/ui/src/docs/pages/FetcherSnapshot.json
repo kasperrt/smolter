@@ -1,0 +1,13 @@
+{
+  "slug": "FetcherSnapshot",
+  "title": "FetcherSnapshot",
+  "summary": "Independent fetcher state: data, error, and idle/loading/submitting state.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Independent fetcher state: data, error, and idle/loading/submitting state. It does not contain a route URL or page params. Existing data is retained while a subsequent request runs.",
+      "code": "const snapshot = fetcher.getSnapshot();\nconsole.log(snapshot.state, snapshot.data);"
+    }
+  ]
+}

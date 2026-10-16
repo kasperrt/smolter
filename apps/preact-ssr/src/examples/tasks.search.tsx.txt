@@ -1,0 +1,19 @@
+import { Form, Link, useLoaderData } from "@kasperrt/smolter/preact";
+import type { loader } from "./loader";
+
+export default function SearchTasks() {
+  const data = useLoaderData<typeof loader>();
+
+  return <>
+    <Form action="/tasks/search" method="get">
+      <input name="q" defaultValue={data?.query} />
+      <button>Search tasks</button>
+    </Form>
+
+    {data?.tasks.map((task) => (
+      <Link key={task.id} href={`/tasks/${task.id}`}>
+        {task.title}
+      </Link>
+    ))}
+  </>;
+}

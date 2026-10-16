@@ -1,0 +1,13 @@
+{
+  "slug": "ViewModule",
+  "title": "ViewModule",
+  "summary": "A RouteModule with typed rendering exports.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "A RouteModule with typed rendering exports. default and HydrateFallback take no automatic data props. ErrorBoundary receives ErrorProps. Hooks read the route state from context.",
+      "code": "export { default } from \"./view\";\nexport { ErrorBoundary } from \"./components/error\";"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 // vite.config.ts
 import { defineConfig } from "vite";
-import { fileRouter } from "smolter/vite";
+import { fileRouter } from "@kasperrt/smolter/vite";
 
 export default defineConfig({
   plugins: [fileRouter({ directory: "src/routes" })],
@@ -9,12 +9,13 @@ export default defineConfig({
 // Flat route folders → URL paths
 // src/routes/_index/route.ts       → /
 // src/routes/tasks._index/route.ts → /tasks
+// src/routes/tasks.search/route.ts → /tasks/search?q=edit
 // src/routes/tasks.$id/route.ts    → /tasks/:id
 // src/routes/about/route.ts        → /about
 
 // main.ts
 import routes from "virtual:smolter/routes";
-import { createRouter, RouterProvider, Routes } from "smolter/react";
+import { createRouter, RouterProvider, Routes } from "@kasperrt/smolter/react";
 
 const router = createRouter(routes, { browser: true });
 

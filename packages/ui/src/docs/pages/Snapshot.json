@@ -1,0 +1,13 @@
+{
+  "slug": "Snapshot",
+  "title": "Snapshot",
+  "summary": "The router store state.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "The router store state. url is absolute; path is the registered pattern. data is the loader result and actionData is the navigating action result. loaded distinguishes a successful undefined result from an unfinished initial load. Treat snapshots as immutable.",
+      "code": "const snapshot = router.getSnapshot();\nconst hydration = serialize(snapshot);"
+    }
+  ]
+}

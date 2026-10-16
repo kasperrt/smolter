@@ -1,4 +1,5 @@
 import { version } from "../../smolter/package.json";
+import { createDocumentation } from "./documentation";
 import { highlight } from "./highlight";
 import sizes from "./size.json";
 
@@ -70,7 +71,15 @@ export interface TaskPreviewProps {
   load: () => void;
 }
 
+export interface TaskSearchProps<N> {
+  query: string;
+  tasks: TaskData[];
+  form: (children: N[]) => N;
+  link: LinkFactory<N>;
+}
+
 export interface TaskDetailProps<N> extends TaskProps<N> {
+  link: LinkFactory<N>;
   task?: TaskData;
 }
 
@@ -158,7 +167,13 @@ export function createUI<N>(h: ElementFactory<N>) {
     );
   }
 
-  function TaskDetail({ task, state, message, form }: TaskDetailProps<N>) {
+  function TaskDetail({
+    task,
+    state,
+    message,
+    form,
+    link: renderLink,
+  }: TaskDetailProps<N>) {
     return Panel(
       "tasks.$id/route.ts",
       h(
@@ -190,7 +205,55 @@ export function createUI<N>(h: ElementFactory<N>) {
           ),
         ]),
         h("p", { role: "status" }, message ?? `PATCH /tasks/${task?.id ?? ""}`),
-        link("/tasks", "← All tasks"),
+        renderLink("/tasks", "← All tasks"),
+      ),
+    );
+  }
+
+  function TaskSearch({
+    query,
+    tasks,
+    form,
+    link: renderLink,
+  }: TaskSearchProps<N>) {
+    return Panel(
+      "tasks.search/route.ts",
+      h(
+        "div",
+        { className: "task-body" },
+        h("h2", null, "Search tasks"),
+        h(
+          "p",
+          null,
+          "A GET form updates the URL. The route loader filters the results.",
+        ),
+        form([
+          h(
+            "label",
+            null,
+            "Search query",
+            h("input", {
+              key: query,
+              name: "q",
+              defaultValue: query,
+              placeholder: "Try edit",
+            }),
+          ),
+          Button({ type: "submit" }, "Search tasks"),
+        ]),
+        h("p", { role: "status" }, `${tasks.length} results`),
+        h(
+          "ul",
+          { className: "task-list" },
+          ...tasks.map((task) =>
+            h(
+              "li",
+              { key: task.id },
+              renderLink(`/tasks/${task.id}`, task.title),
+            ),
+          ),
+        ),
+        renderLink("/tasks", "← All tasks"),
       ),
     );
   }
@@ -213,7 +276,7 @@ export function createUI<N>(h: ElementFactory<N>) {
     );
   }
 
-  function Header(renderLink = link) {
+  function Header(renderLink = link, routePath = "/") {
     return h(
       "header",
       null,
@@ -221,9 +284,27 @@ export function createUI<N>(h: ElementFactory<N>) {
       h(
         "nav",
         { "aria-label": "Main navigation" },
-        renderLink("/", "Counter"),
-        renderLink("/tasks", "Tasks"),
-        renderLink("/about", "The idea"),
+        renderLink("/", "Counter", routePath === "/" ? "active" : undefined),
+        renderLink(
+          "/tasks",
+          "Tasks",
+          routePath === "/tasks" ? "active" : undefined,
+        ),
+        renderLink(
+          "/tasks/search",
+          "Search",
+          routePath.startsWith("/tasks/search") ? "active" : undefined,
+        ),
+        renderLink(
+          "/about",
+          "The idea",
+          routePath === "/about" ? "active" : undefined,
+        ),
+        renderLink(
+          "/docs",
+          "Docs",
+          routePath.startsWith("/docs") ? "active" : undefined,
+        ),
         link("https://github.com/kasperrt/smolter", "GitHub ↗"),
         h("span", { className: "version" }, `v${version}`),
       ),
@@ -324,10 +405,35 @@ export function createUI<N>(h: ElementFactory<N>) {
     );
   }
 
+  function LoadingPanel(label: string) {
+    return Panel(
+      "loading",
+      h("div", { className: "about-body", role: "status" }, label),
+    );
+  }
+
   function ErrorPanel(error: Error) {
     return Panel(
       "error",
       h("div", { className: "about-body", role: "alert" }, error.message),
+    );
+  }
+
+  function CodeBlock(source: string, label: string) {
+    return h(
+      "pre",
+      { tabIndex: 0, "aria-label": label },
+      h(
+        "code",
+        null,
+        ...highlight(source).map((token, index) =>
+          h(
+            "span",
+            { key: index, className: token.kind && `syntax-${token.kind}` },
+            token.text,
+          ),
+        ),
+      ),
     );
   }
 
@@ -350,21 +456,7 @@ export function createUI<N>(h: ElementFactory<N>) {
           ),
         ),
       ),
-      h(
-        "pre",
-        { tabIndex: 0, "aria-label": `${active} source code` },
-        h(
-          "code",
-          null,
-          ...highlight(files[active] ?? "").map((token, index) =>
-            h(
-              "span",
-              { key: index, className: token.kind && `syntax-${token.kind}` },
-              token.text,
-            ),
-          ),
-        ),
-      ),
+      CodeBlock(files[active] ?? "", `${active} source code`),
       h(
         "div",
         { className: "code-footer" },
@@ -391,6 +483,7 @@ export function createUI<N>(h: ElementFactory<N>) {
     hosted = false,
     link: renderLink = link,
   }: ShellProps<N>) {
+    const documentation = routePath.startsWith("/docs");
     const size = mode.startsWith("Preact")
       ? mode.includes("SSR")
         ? sizes.preactServer
@@ -402,13 +495,13 @@ export function createUI<N>(h: ElementFactory<N>) {
     return h(
       "div",
       { className: "app-shell" },
-      Header(renderLink),
+      Header(renderLink, routePath),
       h(
         "main",
         null,
         h(
           "div",
-          { className: "intro" },
+          { className: "intro", hidden: documentation },
           h(
             "div",
             null,
@@ -435,13 +528,13 @@ export function createUI<N>(h: ElementFactory<N>) {
         ),
         h(
           "div",
-          { className: "workspace" },
+          { className: documentation ? "docs-workspace" : "workspace" },
           h(
             "div",
             { className: "demo-column" },
             h(
               "div",
-              { className: "panel-tabs" },
+              { className: "panel-tabs", hidden: documentation },
               ...(
                 [
                   ["React", `http://127.0.0.1:${basePort}/`],
@@ -469,19 +562,31 @@ export function createUI<N>(h: ElementFactory<N>) {
                 ),
               ),
             ),
+            h(
+              "div",
+              {
+                className: "route-address",
+                "aria-label": "Current route",
+                hidden: documentation,
+              },
+              h("span", null, "URL"),
+              h("code", null, routePath),
+            ),
             content,
           ),
-          ...(source ? [source] : []),
+          ...(source && !documentation ? [source] : []),
         ),
       ),
       h(
         "footer",
         null,
         h("span", null, "Load → act → revalidate."),
-        link("https://github.com/kasperrt/smolter#readme", "Read the docs ↗"),
+        renderLink("/docs", "Read the docs →"),
       ),
     );
   }
+
+  const Documentation = createDocumentation(h, CodeBlock, link);
 
   return {
     Button,
@@ -493,10 +598,14 @@ export function createUI<N>(h: ElementFactory<N>) {
     CounterFallback,
     Article,
     ErrorPanel,
+    LoadingPanel,
     CodePanel,
+    CodeBlock,
+    Documentation,
     Shell,
     TaskList,
     TaskPreview,
     TaskDetail,
+    TaskSearch,
   };
 }

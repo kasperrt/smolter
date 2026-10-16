@@ -1,0 +1,23 @@
+{
+  "slug": "errors",
+  "title": "Errors and pending UI",
+  "summary": "Keep initial loading, route errors, and independent fetcher errors distinct.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Route modules",
+      "body": "Re-export fallback and boundary components beside handlers. The error boundary gets an Error prop. Error messages are rendered when no boundary is provided.",
+      "code": "export { loader } from \"./loader\";\nexport { action } from \"./action\";\nexport { HydrateFallback } from \"./components/fallback\";\nexport { ErrorBoundary } from \"./components/error-boundary\";\nexport { default } from \"./view\";"
+    },
+    {
+      "title": "Successful undefined data",
+      "body": "A loader can return undefined successfully. That still counts as loaded and should not remount the fallback during later revalidation. Use fetcher.state for button loading indicators.",
+      "code": ""
+    },
+    {
+      "title": "Returned errors and Responses",
+      "body": "Return an Error for failure or allow a rejected promise to be normalized. A Response carrying Location redirects internally. Other Response values are passed through; the client server transport expects JSON response bodies.",
+      "code": ""
+    }
+  ]
+}

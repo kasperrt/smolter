@@ -1,0 +1,28 @@
+{
+  "slug": "serverRoute",
+  "title": "serverRoute",
+  "summary": "Build browser-safe proxies for server handlers.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "path is the registered route pattern. module contains only browser-safe exports. handlers selects loader/action proxies; both default to true.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "A typed Route with remote handlers and optional client call-through.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "import { serverRoute } from \"@kasperrt/smolter/client\";\nimport Task from \"./view\";\n\nconst route = serverRoute<typeof import(\"./route\")>(\n  \"/tasks/:id\",\n  { default: Task },\n  { loader: true, action: true },\n);"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "Requests use /_smolter?url=... on the current origin. GET runs loader; mutation methods run action. Pass an empty handlers object for a view-only manual browser route. The generated Vite routes supply the exact server exports. JSON is the transport format; runtime validation remains application-owned.",
+      "code": ""
+    }
+  ]
+}

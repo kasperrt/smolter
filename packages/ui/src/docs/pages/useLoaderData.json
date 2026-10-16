@@ -1,0 +1,28 @@
+{
+  "slug": "useLoaderData",
+  "title": "useLoaderData",
+  "summary": "Read the active loader result.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Optionally pass a typed route object, or specify typeof loader / typeof clientLoader as the generic.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Inferred handler data or undefined.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const data = useLoaderData<typeof clientLoader>();\n\nreturn <p>{data?.title}</p>;"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "A route argument limits reads to that active path. The hook subscribes to the selected data; unrelated state changes do not force a data subscriber update. It does not start a request. A successful loader may itself return undefined.",
+      "code": ""
+    }
+  ]
+}

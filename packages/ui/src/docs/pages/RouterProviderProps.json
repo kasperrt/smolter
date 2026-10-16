@@ -1,0 +1,13 @@
+{
+  "slug": "RouterProviderProps",
+  "title": "RouterProviderProps",
+  "summary": "Props for the framework provider.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Props for the framework provider. router should remain stable across renders. children can contain navigation, Routes, and components reading data hooks.",
+      "code": "<RouterProvider router={router}><Routes /></RouterProvider>"
+    }
+  ]
+}

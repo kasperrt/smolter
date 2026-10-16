@@ -6,7 +6,7 @@ export interface Token {
 /** Small display-only lexer. Text stays escaped by the renderer. */
 export function highlight(source: string): Token[] {
   const pattern =
-    /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|(\b(?:import|from|export|default|function|return|const|let|type|interface|async|await|if|new|typeof|undefined|true|false)\b)|(\b\d+\b)|(\b[A-Za-z_$][\w$]*(?=\s*\())/g;
+    /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|(\b(?:import|from|export|default|function|return|const|let|type|interface|async|await|if|new|typeof|undefined|true|false|extends|keyof|readonly|unknown|void|never|in|boolean|string|number)\b)|(\b\d+\b)|(\b[A-Za-z_$][\w$]*(?=\s*\())/g;
   const tokens: Token[] = [];
   let offset = 0;
 

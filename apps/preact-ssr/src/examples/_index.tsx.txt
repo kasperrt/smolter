@@ -1,4 +1,4 @@
-import { useFetcher, useLoaderData, useRevalidator } from "smolter/preact";
+import { useFetcher, useLoaderData, useRevalidator } from "@kasperrt/smolter/preact";
 import type { loader } from "./loader";
 import type { action } from "./action";
 

@@ -1,0 +1,13 @@
+{
+  "slug": "ClientRouteModule",
+  "title": "ClientRouteModule",
+  "summary": "Browser-safe exports accepted by serverRoute.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Browser-safe exports accepted by serverRoute. It deliberately excludes server loader and action implementations. Use clientLoader/clientAction with their call-through callbacks when browser-side coordination is needed.",
+      "code": "const browserModule = { default: Task, clientLoader, clientAction };\nconst route = serverRoute(\"/tasks/:id\", browserModule);"
+    }
+  ]
+}
