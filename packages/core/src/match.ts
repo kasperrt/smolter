@@ -19,7 +19,7 @@ export function matchRoutes(
     const parts = route.path.replace(/\/$/, "").split("/");
     const params: Params = {};
     const matched =
-      (parts.at(-1) === "*" || parts.length === segments.length) &&
+      (parts.length === segments.length || parts.at(-1) === "*") &&
       parts.every((part, index) => {
         const value = segments[index];
 

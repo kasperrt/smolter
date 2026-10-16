@@ -706,3 +706,34 @@ for (const revalidate of [true, false]) {
     router.dispose();
   });
 }
+
+it("hydrates an undefined server result without invoking the paired client loader", async () => {
+  let serverReads = 0;
+  let clientReads = 0;
+  const route = defineRoute("/", {
+    loader: () => {
+      serverReads++;
+    },
+    clientLoader: () => {
+      clientReads++;
+
+      return "client data";
+    },
+  });
+  const server = await loadRouter([route], "https://test.dev/");
+  const client = createRouter([route], {
+    hydrationData: JSON.parse(serialize(server.getSnapshot())),
+  });
+  const stop = client.start();
+
+  await Promise.resolve();
+
+  expect(serverReads).toBe(1);
+  expect(clientReads).toBe(0);
+  expect(client.getSnapshot().state).toBe("idle");
+  expect(client.getSnapshot().data).toBeUndefined();
+
+  stop();
+  client.dispose();
+  server.dispose();
+});

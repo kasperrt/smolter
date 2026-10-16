@@ -47,7 +47,10 @@ export async function loadRouter(
   if (
     !snapshot.error &&
     snapshot.data === undefined &&
-    routes.some((route) => route.path === snapshot.path && route.clientLoader)
+    routes.some(
+      (route) =>
+        route.path === snapshot.path && route.clientLoader && !route.loader,
+    )
   ) {
     return createRouter(serverRoutes, {
       url,
