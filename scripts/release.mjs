@@ -68,7 +68,18 @@ if (mode === "publish") {
     `https://jsr.io/${jsr.name}/${jsr.version}_meta.json`,
   );
 
-  if (!npmExists)
+  if (!npmExists) {
+    const packageExists = await published(
+      `https://registry.npmjs.org/${manifest.name}`,
+    );
+    const env = { ...process.env };
+
+    delete env.SMOLTER_NPM_BOOTSTRAP_TOKEN;
+    delete env.NODE_AUTH_TOKEN;
+
+    if (!packageExists && process.env.SMOLTER_NPM_BOOTSTRAP_TOKEN)
+      env.NODE_AUTH_TOKEN = process.env.SMOLTER_NPM_BOOTSTRAP_TOKEN;
+
     command(
       "npm",
       [
@@ -81,8 +92,10 @@ if (mode === "publish") {
       ],
       {
         cwd: directory,
+        env,
       },
     );
+  }
 
   if (!jsrExists) command("node", ["scripts/jsr.mjs", "--publish"]);
 }

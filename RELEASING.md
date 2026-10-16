@@ -21,7 +21,13 @@ The npm package is `smolter`; the JSR package is `@kasperrt/smolter`.
 
 Configure npm trusted publishing for GitHub owner `kasperrt`, repository
 `smolter`, workflow `release.yml`, and environment `release`. Allow publishing.
-Publishing uses OIDC only. No npm access token is used or stored in GitHub.
+For the initial publication, add a short-lived npm publishing token as
+`NPM_TOKEN` in the GitHub `release` environment. The workflow uses it only when
+the npm package does not exist. Subsequent publications use OIDC even if the
+bootstrap secret is still present.
+
+After the initial publication, configure the trusted publisher above, revoke
+the bootstrap token in npm, and delete the `NPM_TOKEN` environment secret.
 
 Create the JSR package and link it to `kasperrt/smolter` in its settings.
 GitHub Actions uses OIDC to publish with provenance; no JSR token is needed.

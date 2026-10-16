@@ -44,6 +44,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Publish registry versions
+        env:
+          SMOLTER_NPM_BOOTSTRAP_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: node scripts/release.mjs publish
       - name: Create GitHub release
         env:
