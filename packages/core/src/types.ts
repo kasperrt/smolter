@@ -50,7 +50,7 @@ export interface RevalidationArgs extends RevalidationContext {
   nextUrl: URL;
   defaultShouldRevalidate: boolean;
   url: URL;
-  reason: "manual" | "action";
+  reason: "manual" | "action" | "navigation";
 }
 
 /** A route component and its optional server and client data handlers. */

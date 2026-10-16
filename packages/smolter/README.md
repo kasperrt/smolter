@@ -308,12 +308,18 @@ export function shouldRevalidate({ actionResult, defaultShouldRevalidate }: Reva
 }
 ```
 
-The callback receives `reason` (`"action"` or `"manual"`), `currentUrl`, `nextUrl`,
-`formMethod`, `formAction`, `formData`, `actionResult`, and `defaultShouldRevalidate`.
-`url` is retained as an alias for the current URL. This controls loader refreshes
-after actions and manual refreshes; navigation loads its destination. It does not
-rerun actions or reload the document. Existing page data stays visible while a
-refresh runs.
+The callback receives `reason` (`"action"`, `"manual"`, or `"navigation"`),
+`currentUrl`, `nextUrl`, `formMethod`, `formAction`, `formData`, `actionResult`,
+and `defaultShouldRevalidate`. `url` is an alias for `nextUrl`.
+
+For an already-loaded route, returning `false` also retains its data when navigating
+to a different query string or parameter, including back/forward navigation. The URL
+and params still update. Compare `currentUrl` with `nextUrl` before skipping a reload
+when the destination needs different data. First visits, retries after loader errors,
+and explicit `fetcher.load()` calls always load their destination.
+
+This controls loader refreshes; it does not rerun actions or reload the document.
+Existing page data stays visible during manual and post-action refreshes.
 
 `const revalidate = useRevalidator(); await revalidate()` requests a manual refresh.
 The task-detail examples return `{ changed: false }` for an unchanged title;

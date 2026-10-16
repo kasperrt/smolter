@@ -51,7 +51,7 @@ export function createRouter(
       href: string,
       body?: FormData,
       operation: OperationOptions = {},
-      push = false,
+      navigation?: "push" | "pop",
     ): Promise<Result> => {
       controller?.abort();
 
@@ -60,6 +60,7 @@ export function createRouter(
       const { signal } = controller;
       disposers.add(dispose);
 
+      const previous = snapshot;
       const url = internalURL(main.getSnapshot().url, href);
       const match = url && matchRoutes(routes, url.pathname);
       const commit = () => {
@@ -69,7 +70,7 @@ export function createRouter(
 
         if (!changed && snapshot.path !== undefined) return;
 
-        if (browser && (push || body) && changed)
+        if (browser && (navigation === "push" || body) && changed)
           history[operation.replace ? "replaceState" : "pushState"](
             null,
             "",
@@ -81,7 +82,7 @@ export function createRouter(
           path: match?.route.path,
           params: match?.params ?? {},
           actionData: undefined,
-          data: undefined,
+          data: snapshot.path === match?.route.path ? snapshot.data : undefined,
         };
       };
 
@@ -90,6 +91,22 @@ export function createRouter(
 
       const result = await safeWrapAsync(() => {
         if (!match) return new Error(url ? "No route" : "External URL");
+
+        if (
+          navigation &&
+          !body &&
+          previous.state === "idle" &&
+          !previous.error &&
+          previous.path === match.route.path &&
+          match.route.shouldRevalidate?.({
+            url,
+            currentUrl: new URL(previous.url!),
+            nextUrl: url,
+            defaultShouldRevalidate: true,
+            reason: "navigation",
+          }) === false
+        )
+          return previous.data;
 
         const fn =
           match.route[body ? "clientAction" : "clientLoader"] ||
@@ -121,7 +138,7 @@ export function createRouter(
             replace: true,
             hops: (operation.hops ?? 0) + 1,
           },
-          true,
+          "push",
         );
 
         if (!signal.aborted) emit({ state: "idle" });
@@ -172,7 +189,7 @@ export function createRouter(
   let started = 0;
   let initialized = options.hydrationData?.state === "idle";
   const pop = () => {
-    void main.load(location.href);
+    void main.load(location.href, undefined, undefined, "pop");
   };
   const router: Router = {
     ...main,
@@ -191,7 +208,7 @@ export function createRouter(
     },
     async navigate(url, operation) {
       initialized = true;
-      await main.load(url, undefined, operation, true);
+      await main.load(url, undefined, operation, "push");
     },
     async revalidate(reason = "manual", context = {}) {
       const url = new URL(main.getSnapshot().url);

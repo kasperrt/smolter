@@ -783,3 +783,105 @@ it("disposing one fetcher leaves another request active", async () => {
 
   expect(signals.get("second")?.aborted).toBe(true);
 });
+
+it("lets an active route retain data across navigation without skipping first visits", async () => {
+  let reads = 0;
+  const decisions: string[][] = [];
+  const router = createRouter([
+    defineRoute("/items/:id", {
+      loader: ({ params }) => ({ id: params.id, reads: ++reads }),
+      shouldRevalidate: ({ currentUrl, nextUrl, reason }) => {
+        decisions.push([currentUrl.href, nextUrl.href, reason]);
+
+        return false;
+      },
+    }),
+    defineRoute("/other", {
+      loader: () => "Other page",
+      shouldRevalidate: () => false,
+    }),
+  ]);
+
+  await router.navigate("/items/1");
+
+  expect(reads).toBe(1);
+  expect(decisions).toEqual([]);
+
+  await router.navigate("/items/1?sort=name");
+  await router.navigate("/items/2");
+
+  expect(reads).toBe(1);
+  expect(router.getSnapshot()).toMatchObject({
+    url: "http://localhost/items/2",
+    params: { id: "2" },
+    data: { id: "1", reads: 1 },
+    state: "idle",
+  });
+  expect(decisions).toEqual([
+    [
+      "http://localhost/items/1",
+      "http://localhost/items/1?sort=name",
+      "navigation",
+    ],
+    [
+      "http://localhost/items/1?sort=name",
+      "http://localhost/items/2",
+      "navigation",
+    ],
+  ]);
+
+  const fetcher = router.createFetcher();
+
+  await fetcher.load("/items/2");
+
+  expect(fetcher.getSnapshot().data).toEqual({ id: "2", reads: 2 });
+
+  await router.navigate("/other");
+
+  expect(router.getSnapshot().data).toBe("Other page");
+
+  router.dispose();
+});
+
+it("does not skip a destination loader while an earlier navigation is pending", async () => {
+  const pending = deferred<string>();
+  const router = createRouter([
+    defineRoute("/items/:id", {
+      loader: ({ params }) =>
+        params.id === "1" ? pending.promise : "Second item",
+      shouldRevalidate: () => false,
+    }),
+  ]);
+  const first = router.navigate("/items/1");
+
+  await Promise.resolve();
+  await router.navigate("/items/2");
+  pending.resolve("Stale item");
+  await first;
+
+  expect(router.getSnapshot().data).toBe("Second item");
+
+  router.dispose();
+});
+
+it("retries failed navigation even when a route opts out of revalidation", async () => {
+  let reads = 0;
+  const router = createRouter([
+    defineRoute("/", {
+      loader: () =>
+        ++reads === 1 ? new Error("Temporary failure") : "Recovered",
+      shouldRevalidate: () => false,
+    }),
+  ]);
+
+  await router.navigate("/");
+
+  expect(router.getSnapshot().error?.message).toBe("Temporary failure");
+
+  await router.navigate("/");
+
+  expect(router.getSnapshot().data).toBe("Recovered");
+  expect(router.getSnapshot().error).toBeUndefined();
+
+  router.dispose();
+});

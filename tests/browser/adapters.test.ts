@@ -25,6 +25,7 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     let paramsRenders = 0;
     const route = api.defineRoute("/items/:id", {
       loader: () => value,
+      shouldRevalidate: ({ reason }) => reason !== "navigation",
       default: Page,
     });
     const router = api.createRouter([route]);
@@ -108,6 +109,8 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     await expect
       .poll(() => container.querySelector("#selected-params")?.textContent)
       .toBe("2");
+    expect(pageRenders).toBe(initialPageRenders);
+    expect(paramsRenders).toBe(initialParamsRenders + 1);
   });
 
   it(`${name} connects data hooks, forms, links, and independent fetchers`, async (context) => {
@@ -297,4 +300,39 @@ it("integrates browser history and cancels in-flight work on disposal", async (c
   await pending;
 
   expect(router.getSnapshot().data).not.toBe("Stale");
+});
+
+it("honors navigation revalidation for back and forward without adding history entries", async (context) => {
+  const original = location.href;
+  let reads = 0;
+  const router = react.createRouter(
+    [
+      react.defineRoute("/history-items", {
+        loader: () => ++reads,
+        shouldRevalidate: () => false,
+      }),
+    ],
+    { browser: true },
+  );
+
+  context.onTestFinished(() => {
+    router.dispose();
+    history.replaceState(null, "", original);
+  });
+
+  await router.navigate("/history-items?page=1");
+
+  const stop = router.start();
+  const entries = history.length;
+
+  context.onTestFinished(stop);
+  history.replaceState(null, "", "/history-items?page=2");
+  dispatchEvent(new PopStateEvent("popstate"));
+
+  await expect.poll(() => router.getSnapshot().state).toBe("idle");
+
+  expect(router.getSnapshot().url).toBe(location.href);
+  expect(router.getSnapshot().data).toBe(1);
+  expect(reads).toBe(1);
+  expect(history.length).toBe(entries);
 });
