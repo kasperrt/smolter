@@ -16,8 +16,8 @@
     },
     {
       "title": "Usage",
-      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
-      "code": "import { serverRoute } from \"@kasperrt/smolter/client\";\nimport Task from \"./view\";\n\nconst route = serverRoute<typeof import(\"./route\")>(\n  \"/tasks/:id\",\n  { default: Task },\n  { loader: true, action: true },\n);"
+      "body": "Import this API from one of the entry points listed above. Keep server and build helpers in their dedicated subpaths.",
+      "code": "import { serverRoute } from \"@kasperrt/smolter/react/client\";\nimport Task from \"./view\";\n\nconst route = serverRoute<typeof import(\"./route\")>(\n  \"/tasks/:id\",\n  { default: Task },\n  { loader: true, action: true },\n);"
     },
     {
       "title": "Behavior and edge cases",

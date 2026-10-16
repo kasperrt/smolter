@@ -1,4 +1,4 @@
-import { fileRouter } from "@kasperrt/smolter/vite";
+import { fileRouter } from "@kasperrt/smolter/react/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { demoAssets } from "../../scripts/demo-assets.ts";

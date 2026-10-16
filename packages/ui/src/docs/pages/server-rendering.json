@@ -7,12 +7,12 @@
     {
       "title": "Load on the server",
       "body": "Create a router per request. Passing a Request forwards headers and cancellation. Avoid sharing router state or user data between requests.",
-      "code": "import { loadRouter, serialize } from \"@kasperrt/smolter/server\";\n\nconst router = await loadRouter(serverRoutes, request);\nconst html = renderToString(<RouterProvider router={router}><Routes /></RouterProvider>);\nconst hydration = serialize(router.getSnapshot());\n// Embed hydration as script text in the HTML response."
+      "code": "import { loadRouter, serialize } from \"@kasperrt/smolter/react/server\";\n\nconst router = await loadRouter(serverRoutes, request);\nconst html = renderToString(<RouterProvider router={router}><Routes /></RouterProvider>);\nconst hydration = serialize(router.getSnapshot());\n// Embed hydration as script text in the HTML response."
     },
     {
       "title": "Hydrate",
       "body": "deserialize restores Error objects. A successful hydration snapshot avoids a duplicate initial loader request. Client-only routes render their fallback on the server and load in the browser.",
-      "code": "import { deserialize } from \"@kasperrt/smolter/client\";\n\nconst hydrationData = deserialize(\n  document.querySelector(\"#smolter-data\")!.textContent!,\n);\nconst router = createRouter(browserRoutes, { browser: true, hydrationData });\n\nhydrateRoot(document.querySelector(\"#app\")!,\n  <RouterProvider router={router}><Routes /></RouterProvider>,\n);"
+      "code": "import { deserialize } from \"@kasperrt/smolter/react/client\";\n\nconst hydrationData = deserialize(\n  document.querySelector(\"#smolter-data\")!.textContent!,\n);\nconst router = createRouter(browserRoutes, { browser: true, hydrationData });\n\nhydrateRoot(document.querySelector(\"#app\")!,\n  <RouterProvider router={router}><Routes /></RouterProvider>,\n);"
     },
     {
       "title": "Production transport",

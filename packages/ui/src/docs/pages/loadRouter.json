@@ -16,7 +16,7 @@
     },
     {
       "title": "Usage",
-      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "body": "Import this API from one of the entry points listed above. Keep server and build helpers in their dedicated subpaths.",
       "code": "const router = await loadRouter(routes, request);\nconst snapshot = router.getSnapshot();"
     },
     {

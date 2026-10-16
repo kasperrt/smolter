@@ -8,7 +8,7 @@
     "dev": "pnpm build && node scripts/dev.mjs",
     "fix": "biome check --write .",
     "lint": "biome check .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "pnpm build && tsc --noEmit",
     "test": "pnpm build && vitest run --project unit",
     "coverage": "pnpm build && vitest run --coverage",
     "smoke": "playwright test",
@@ -24,8 +24,8 @@
     "build:site": "node scripts/build-site.mjs",
     "smoke:site": "node scripts/site-smoke.mjs",
     "docs:badges": "node scripts/readme-badges.mjs",
-    "docs:reference": "node scripts/docs-reference.mjs",
-    "docs:check": "node scripts/docs-reference.mjs --check"
+    "docs:reference": "pnpm build && node scripts/docs-reference.mjs",
+    "docs:check": "pnpm build && node scripts/docs-reference.mjs --check"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

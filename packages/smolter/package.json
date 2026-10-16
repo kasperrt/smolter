@@ -1,6 +1,6 @@
 {
   "name": "@kasperrt/smolter",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "A tiny typed data router for React and Preact.",
   "type": "module",
   "sideEffects": false,
@@ -11,38 +11,41 @@
     "directory": "packages/smolter"
   },
   "exports": {
-    ".": {
-      "types": "./dist/core.d.ts",
-      "import": "./dist/core.js"
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
+    },
+    "./react/server": {
+      "types": "./dist/react-server.d.ts",
+      "import": "./dist/react-server.js"
+    },
+    "./react/vite": {
+      "types": "./dist/react-vite.d.ts",
+      "import": "./dist/react-vite.js"
     },
     "./preact": {
       "types": "./dist/preact.d.ts",
       "import": "./dist/preact.js"
     },
-    "./core": {
-      "types": "./dist/core.d.ts",
-      "import": "./dist/core.js"
+    "./preact/server": {
+      "types": "./dist/preact-server.d.ts",
+      "import": "./dist/preact-server.js"
     },
-    "./server": {
-      "types": "./dist/server.d.ts",
-      "import": "./dist/server.js"
+    "./preact/vite": {
+      "types": "./dist/preact-vite.d.ts",
+      "import": "./dist/preact-vite.js"
     },
-    "./files": {
-      "types": "./dist/files.d.ts",
-      "import": "./dist/files.js"
+    "./react/client": {
+      "types": "./dist/react-client.d.ts",
+      "import": "./dist/react-client.js"
     },
-    "./vite": {
-      "types": "./dist/vite.d.ts",
-      "import": "./dist/vite.js"
+    "./preact/client": {
+      "types": "./dist/preact-client.d.ts",
+      "import": "./dist/preact-client.js"
     },
-    "./client": {
-      "types": "./dist/client.d.ts",
-      "import": "./dist/client.js"
-    },
-    "./package.json": "./package.json",
-    "./react": {
-      "types": "./dist/react.d.ts",
-      "import": "./dist/react.js"
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.js"
     }
   },
   "files": [
@@ -87,8 +90,6 @@
     "ssr",
     "file-routing"
   ],
-  "main": "./dist/core.js",
-  "types": "./dist/core.d.ts",
   "publishConfig": {
     "access": "public",
     "provenance": true

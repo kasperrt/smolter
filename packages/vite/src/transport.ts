@@ -3,6 +3,7 @@ import type { ViteDevServer } from "vite";
 export function configureTransport(
   server: ViteDevServer,
   publicId: string,
+  framework: "react" | "preact" = "react",
 ): void {
   server.middlewares.use((incoming, outgoing, next) => {
     if (!incoming.url?.startsWith("/_smolter?")) return next();
@@ -43,7 +44,7 @@ export function configureTransport(
       });
       const [{ default: routes }, { handleRequest }] = await Promise.all([
         server.ssrLoadModule(publicId),
-        server.ssrLoadModule("@kasperrt/smolter/server"),
+        server.ssrLoadModule(`@kasperrt/smolter/${framework}/server`),
       ]);
       const response: Response = await handleRequest(routes, request);
 

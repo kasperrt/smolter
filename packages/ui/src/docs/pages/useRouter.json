@@ -1,7 +1,7 @@
 {
   "slug": "useRouter",
   "title": "useRouter",
-  "summary": "Access the provider\u2019s Router instance.",
+  "summary": "Access the provider’s Router instance.",
   "kind": "API",
   "sections": [
     {
@@ -16,7 +16,7 @@
     },
     {
       "title": "Usage",
-      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "body": "Import this API from one of the entry points listed above. Keep server and build helpers in their dedicated subpaths.",
       "code": "const router = useRouter();\nconst snapshot = router.getSnapshot();\n\nawait router.navigate(\"/tasks\");"
     },
     {

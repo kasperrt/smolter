@@ -16,7 +16,7 @@
     },
     {
       "title": "Usage",
-      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "body": "Import this API from one of the entry points listed above. Keep server and build helpers in their dedicated subpaths.",
       "code": "<Form action=\"/tasks/search\" method=\"get\">\n  <input name=\"q\" />\n  <button>Search</button>\n</Form>;"
     },
     {
@@ -27,7 +27,7 @@
     {
       "title": "GET search with a shareable URL",
       "body": "Use named fields and method=\"get\". Submission replaces the target query string with the successful form fields. Include hidden fields for query values that must survive. The loader reads request.url, and useLoaderData reads its result. GET does not invoke an action.",
-      "code": "// routes/tasks.search/view.tsx\n<Form action=\"/tasks/search\" method=\"get\">\n  <label htmlFor=\"q\">Search tasks</label>\n  <input id=\"q\" name=\"q\" type=\"search\" />\n  <input name=\"sort\" type=\"hidden\" value=\"recent\" />\n  <button>Search</button>\n</Form>;\n\n// routes/tasks.search/loader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/core\";\nimport { tasks } from \"../../data/tasks\";\n\nexport async function clientLoader({ request }: DataArgs) {\n  const q = new URL(request.url).searchParams.get(\"q\") ?? \"\";\n  const results = await tasks.search(q);\n\n  return { q, results };\n}"
+      "code": "// routes/tasks.search/view.tsx\n<Form action=\"/tasks/search\" method=\"get\">\n  <label htmlFor=\"q\">Search tasks</label>\n  <input id=\"q\" name=\"q\" type=\"search\" />\n  <input name=\"sort\" type=\"hidden\" value=\"recent\" />\n  <button>Search</button>\n</Form>;\n\n// routes/tasks.search/loader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\nimport { tasks } from \"../../data/tasks\";\n\nexport async function clientLoader({ request }: DataArgs) {\n  const q = new URL(request.url).searchParams.get(\"q\") ?? \"\";\n  const results = await tasks.search(q);\n\n  return { q, results };\n}"
     },
     {
       "title": "Save without leaving the page",
@@ -42,7 +42,7 @@
     {
       "title": "Validate in the handler",
       "body": "required, minLength, and type=\"email\" provide browser feedback, but handlers must validate submitted values too. Return a discriminated result such as { ok: false, error } for a correctable input problem. Connect field messages with aria-describedby and render async feedback in a status or alert region. Unexpected request failures belong in fetcher.error or a route error boundary.",
-      "code": "// routes/settings/action.ts\nimport type { DataArgs } from \"@kasperrt/smolter/core\";\n\nexport async function clientAction({ request }: DataArgs) {\n  const form = await request.formData();\n  const displayName = String(form.get(\"displayName\") ?? \"\").trim();\n\n  if (displayName.length < 2) {\n    return { ok: false as const, error: \"Use at least two characters.\" };\n  }\n\n  localStorage.setItem(\"displayName\", displayName);\n\n  return { ok: true as const, displayName };\n}"
+      "code": "// routes/settings/action.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\n\nexport async function clientAction({ request }: DataArgs) {\n  const form = await request.formData();\n  const displayName = String(form.get(\"displayName\") ?? \"\").trim();\n\n  if (displayName.length < 2) {\n    return { ok: false as const, error: \"Use at least two characters.\" };\n  }\n\n  localStorage.setItem(\"displayName\", displayName);\n\n  return { ok: true as const, displayName };\n}"
     },
     {
       "title": "Target another route and method",

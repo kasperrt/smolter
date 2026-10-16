@@ -16,12 +16,12 @@
     },
     {
       "title": "Usage",
-      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "body": "Import this API from one of the entry points listed above. Keep server and build helpers in their dedicated subpaths.",
       "code": "const revalidate = useRevalidator();\n\n<button onClick={() => void revalidate()}>Refresh</button>"
     },
     {
       "title": "Behavior and edge cases",
-      "body": "Calling without arguments uses reason manual. shouldRevalidate can return false even for manual refresh. It refreshes the active page loader, not every fetcher. This API returns a function, unlike React Router\u2019s object-shaped revalidator.",
+      "body": "Calling without arguments uses reason manual. shouldRevalidate can return false even for manual refresh. It refreshes the active page loader, not every fetcher. This API returns a function, unlike React Router’s object-shaped revalidator.",
       "code": ""
     }
   ]

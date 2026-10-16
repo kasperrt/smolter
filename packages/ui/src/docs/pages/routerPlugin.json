@@ -16,8 +16,8 @@
     },
     {
       "title": "Usage",
-      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
-      "code": "import { fileRouter } from \"@kasperrt/smolter/vite\";\n\nexport default defineConfig({\n  plugins: [fileRouter({ directory: \"src/routes\" })],\n});"
+      "body": "Import this API from one of the entry points listed above. Keep server and build helpers in their dedicated subpaths.",
+      "code": "import { fileRouter } from \"@kasperrt/smolter/react/vite\";\n\nexport default defineConfig({\n  plugins: [fileRouter({ directory: \"src/routes\" })],\n});"
     },
     {
       "title": "Behavior and edge cases",

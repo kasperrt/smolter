@@ -1,4 +1,4 @@
 declare module "virtual:smolter/routes" {
-  const routes: import("@kasperrt/smolter/core").Route[];
+  const routes: import("@kasperrt/smolter/preact").Route[];
   export default routes;
 }

@@ -9,7 +9,6 @@ import {
   matchRoutes,
   type Route,
   type Router,
-  type Snapshot,
   safeWrapAsync,
 } from "@smolter/core";
 /** Create one router per server request, await this, then render the provider. */
@@ -61,19 +60,7 @@ export async function loadRouter(
 
   return router;
 }
-/** Safe inside a script element. Data must be JSON serializable; error stacks and causes are omitted. */
-export function serialize(snapshot: Snapshot): string {
-  return JSON.stringify({
-    ...snapshot,
-    error: snapshot.error && {
-      name: snapshot.error.name,
-      message: snapshot.error.message,
-    },
-  })
-    .replace(/</g, "\\u003c")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
-}
+export { serialize } from "@smolter/core";
 
 /** Dispatch an HTTP data request to a registered server loader or action. */
 export async function handleRequest(

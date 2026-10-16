@@ -1,5 +1,9 @@
 import routes from "virtual:smolter/routes";
-import { handleRequest, loadRouter, serialize } from "@kasperrt/smolter/server";
+import {
+  handleRequest,
+  loadRouter,
+  serialize,
+} from "@kasperrt/smolter/preact/server";
 import { render as renderToString } from "preact-render-to-string";
 import { app } from "./app";
 
