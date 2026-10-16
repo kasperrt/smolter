@@ -5,10 +5,10 @@
 
 import {
   createRouter,
+  type DataFunction,
   matchRoutes,
   type Route,
   type Router,
-  type RouterOptions,
   type Snapshot,
   safeWrapAsync,
 } from "@smolter/core";
@@ -18,12 +18,27 @@ export async function loadRouter(
   input: string | Request,
 ): Promise<Router> {
   const url = typeof input === "string" ? input : input.url;
-  const options: RouterOptions = {
-    url,
-    server: true,
-    ...(typeof input !== "string" && { request: input }),
+  const wrap = (handler?: DataFunction): DataFunction | undefined => {
+    if (!handler || typeof input === "string") return handler;
+
+    return (args) => {
+      const request = new Request(args.request);
+
+      input.headers.forEach((value, name) => {
+        if (!request.headers.has(name)) request.headers.set(name, value);
+      });
+
+      return handler({ ...args, request });
+    };
   };
-  const router = createRouter(routes, options);
+  const serverRoutes = routes.map((route) => ({
+    ...route,
+    clientLoader: undefined,
+    clientAction: undefined,
+    loader: wrap(route.loader),
+    action: wrap(route.action),
+  }));
+  const router = createRouter(serverRoutes, { url });
 
   await router.navigate(url);
 
@@ -34,8 +49,8 @@ export async function loadRouter(
     snapshot.data === undefined &&
     routes.some((route) => route.path === snapshot.path && route.clientLoader)
   ) {
-    return createRouter(routes, {
-      ...options,
+    return createRouter(serverRoutes, {
+      url,
       hydrationData: { ...snapshot, state: "loading" },
     });
   }

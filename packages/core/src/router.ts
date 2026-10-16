@@ -12,6 +12,8 @@ import type {
 } from "./types.ts";
 import { internalURL } from "./url.ts";
 
+type ChannelSnapshot = Partial<Snapshot> & Pick<Snapshot, "state">;
+
 interface OperationOptions extends SubmitOptions, NavigateOptions {
   push?: boolean;
   hops?: number;
@@ -34,7 +36,7 @@ export function createRouter(
     state: "idle",
   };
   const pending = new Set<AbortController>();
-  const channel = (initial: Snapshot, local = false) => {
+  const channel = <S extends ChannelSnapshot>(initial: S, local = false) => {
     let snapshot = initial;
     let controller: AbortController | undefined;
     const listeners = new Set<() => void>();
@@ -86,8 +88,7 @@ export function createRouter(
         if (!match) return new Error("No route");
 
         const fn =
-          (!options.server &&
-            match.route[body ? "clientAction" : "clientLoader"]) ||
+          match.route[body ? "clientAction" : "clientLoader"] ||
           match.route[body ? "action" : "loader"];
 
         if (body && !fn) return new Error("No action");
@@ -95,7 +96,6 @@ export function createRouter(
         return (fn as DataFunction | undefined)?.({
           request: new Request(url, {
             signal: current.signal,
-            headers: options.request?.headers,
             ...(body && { method: operation.method ?? "POST", body }),
           }),
           params: match.params,
@@ -165,7 +165,7 @@ export function createRouter(
   };
   const main = channel(initial);
   let started = 0;
-  let initialized = options.hydrationData?.data !== undefined;
+  let initialized = options.hydrationData?.state === "idle";
   const pop = () => {
     void main.load(window.location.href);
   };
@@ -207,7 +207,7 @@ export function createRouter(
     },
 
     createFetcher() {
-      return channel({ ...initial, data: undefined }, true);
+      return channel({ state: "idle" }, true);
     },
 
     dispose() {

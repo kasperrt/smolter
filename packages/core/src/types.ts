@@ -84,13 +84,9 @@ export interface Snapshot {
   state: "idle" | "loading" | "submitting";
 }
 
-/** Initial URL, server request, browser history, and hydration configuration. */
+/** Initial URL, browser history, and hydration configuration. */
 export interface RouterOptions {
   url?: string;
-  /** Skip browser-only handlers during server rendering. Set by loadRouter. */
-  server?: boolean;
-  /** Incoming server request headers are forwarded to data handlers. */
-  request?: Request;
   /** Explicitly opt into browser history; leave off for SSR and tests. */
   browser?: boolean;
   hydrationData?: Snapshot;

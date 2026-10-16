@@ -30,10 +30,10 @@ pnpm dev
 
 | App | Open | Data |
 | --- | --- | --- |
-| [React SPA](./apps/react) | http://127.0.0.1:5173 | Client loaders/actions, localStorage |
-| [Preact SPA](./apps/preact) | http://127.0.0.1:5174 | Client loaders/actions, localStorage |
-| [React SSR](./apps/react-ssr) | http://127.0.0.1:5175 | Server loaders/actions, hydration |
-| [Preact SSR](./apps/preact-ssr) | http://127.0.0.1:5176 | Server loaders/actions, hydration |
+| [React SPA](https://github.com/kasperrt/smolter/tree/main/apps/react) | http://127.0.0.1:5173 | Client loaders/actions, localStorage |
+| [Preact SPA](https://github.com/kasperrt/smolter/tree/main/apps/preact) | http://127.0.0.1:5174 | Client loaders/actions, localStorage |
+| [React SSR](https://github.com/kasperrt/smolter/tree/main/apps/react-ssr) | http://127.0.0.1:5175 | Server loaders/actions, hydration |
+| [Preact SSR](https://github.com/kasperrt/smolter/tree/main/apps/preact-ssr) | http://127.0.0.1:5176 | Server loaders/actions, hydration |
 
 Each app has its own entrypoints, routes, and data code. Only UI components are
 shared. Preact examples do not import React. Each includes:
@@ -355,7 +355,7 @@ target. Optional server transport is measured separately and included in SSR
 example labels. File discovery is build-only.
 
 Exact current measurements are generated in
-[`packages/ui/src/size.json`](./packages/ui/src/size.json).
+[`packages/ui/src/size.json`](https://github.com/kasperrt/smolter/blob/main/packages/ui/src/size.json).
 
 ```sh
 pnpm fix               # Formatting

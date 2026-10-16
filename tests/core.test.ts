@@ -433,10 +433,12 @@ it("loads a client-only route after its empty SSR snapshot is hydrated", async (
 
   expect(server.getSnapshot().data).toBeUndefined();
 
+  const hydrationData = server.getSnapshot();
+
   expect((await server.submit("/", body())).error?.message).toBe("No action");
 
   const client = createRouter([route], {
-    hydrationData: { ...server.getSnapshot(), error: undefined },
+    hydrationData,
   });
   const loaded = new Promise<void>((resolve) =>
     client.subscribe(() => {
@@ -468,20 +470,21 @@ for (const server of [false, true]) {
             title: (await request.formData()).get("title"),
           };
         };
-      const router = createRouter(
-        [
-          defineRoute("/tasks", { loader: () => ++reads }),
-          defineRoute("/tasks/:id", {
-            loader: () => ({ source: "loader" }),
-            clientLoader: () => ({ source: "clientLoader" }),
-            action: handler("action"),
-            clientAction: handler("clientAction"),
-          }),
-        ],
-        { server, url: "https://test.dev/tasks" },
-      );
+      const routes = [
+        defineRoute("/tasks", { loader: () => ++reads }),
+        defineRoute("/tasks/:id", {
+          loader: () => ({ source: "loader" }),
+          clientLoader: () => ({ source: "clientLoader" }),
+          action: handler("action"),
+          clientAction: handler("clientAction"),
+        }),
+      ];
+      const url = "https://test.dev/tasks";
+      const router = server
+        ? await loadRouter(routes, url)
+        : createRouter(routes, { url });
 
-      await router.navigate("/tasks");
+      if (!server) await router.navigate("/tasks");
 
       const fetcher = router.createFetcher();
 
@@ -514,3 +517,72 @@ for (const server of [false, true]) {
     });
   }
 }
+
+it("keeps fetchers independent from a hydrated page error", () => {
+  const router = createRouter([], {
+    hydrationData: {
+      url: "https://test.dev/",
+      params: {},
+      data: "page data",
+      actionData: "page action",
+      error: new Error("Page failed"),
+      state: "idle",
+    },
+  });
+  const fetcher = router.createFetcher();
+
+  expect(fetcher.getSnapshot().state).toBe("idle");
+  expect(fetcher.getSnapshot().data).toBeUndefined();
+  expect(fetcher.getSnapshot().error).toBeUndefined();
+
+  router.dispose();
+});
+
+it("preserves multipart boundaries while forwarding SSR request headers", async () => {
+  const route = defineRoute("/", {
+    loader: () => "ready",
+    action: async ({ request }) => ({
+      cookie: request.headers.get("cookie"),
+      title: (await request.formData()).get("title"),
+    }),
+  });
+  const router = await loadRouter(
+    [route],
+    new Request("https://test.dev/", {
+      headers: { cookie: "session=example" },
+    }),
+  );
+  const data = new FormData();
+
+  data.set("title", "Keep the boundary");
+
+  const result = await router.submit("/", data);
+
+  expect(result.error).toBeUndefined();
+  expect(result.data).toEqual({
+    cookie: "session=example",
+    title: "Keep the boundary",
+  });
+  router.dispose();
+});
+
+it("does not reload a completed SSR loader just because it returned undefined", async () => {
+  let calls = 0;
+  const route = defineRoute("/", {
+    loader: () => {
+      calls++;
+    },
+  });
+  const server = await loadRouter([route], "https://test.dev/");
+  const client = createRouter([route], { hydrationData: server.getSnapshot() });
+  const stop = client.start();
+
+  await Promise.resolve();
+
+  expect(calls).toBe(1);
+  expect(client.getSnapshot().state).toBe("idle");
+
+  stop();
+  client.dispose();
+  server.dispose();
+});
