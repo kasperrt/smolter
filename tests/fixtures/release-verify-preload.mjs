@@ -34,6 +34,32 @@ childProcess.execFileSync = (binary, args) => {
         : [],
     );
 
+  if (args[1].includes("/pulls?")) {
+    const candidate = {
+      merged_at: scenario === "unmerged" ? null : "2026-10-16",
+      base: {
+        ref: scenario === "wrong-base" ? "other" : "main",
+        repo: {
+          full_name:
+            scenario === "wrong-repo" ? "other/smolter" : "kasperrt/smolter",
+        },
+      },
+      merge_commit_sha: scenario === "wrong-sha" ? "other-sha" : sha,
+    };
+
+    return JSON.stringify(
+      [
+        "unindexed",
+        "unmerged",
+        "wrong-sha",
+        "wrong-base",
+        "wrong-repo",
+      ].includes(scenario)
+        ? [candidate]
+        : [],
+    );
+  }
+
   assert.equal(args[1], "repos/kasperrt/smolter/git/ref/heads/main");
 
   return JSON.stringify({

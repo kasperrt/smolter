@@ -32,6 +32,11 @@ for (const scenario of [
   "partial",
   "retry",
   "merged",
+  "unindexed",
+  "unmerged",
+  "wrong-sha",
+  "wrong-base",
+  "wrong-repo",
   "released",
   "registry-error",
   "stale",
@@ -56,7 +61,17 @@ for (const scenario of [
     );
 
     expect(result.status).toBe(
-      ["released", "registry-error", "stale"].includes(scenario) ? 1 : 0,
+      [
+        "released",
+        "registry-error",
+        "stale",
+        "unmerged",
+        "wrong-sha",
+        "wrong-base",
+        "wrong-repo",
+      ].includes(scenario)
+        ? 1
+        : 0,
     );
   });
 }

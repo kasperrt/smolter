@@ -43,13 +43,18 @@ if (mode === "verify") {
     fail("Release requires GitHub Actions.");
 
   const pulls = github(`repos/${repository}/commits/${sha}/pulls`);
-  const merged = pulls.some(
-    (pr) =>
-      pr.merged_at &&
-      pr.base.ref === "main" &&
-      pr.base.repo.full_name === repository &&
-      pr.merge_commit_sha === sha,
-  );
+  const matchesMerge = (pr) =>
+    pr.merged_at &&
+    pr.base.ref === "main" &&
+    pr.base.repo.full_name === repository &&
+    pr.merge_commit_sha === sha;
+
+  // GitHub can confirm a merged PR before its commit association is indexed.
+  const merged =
+    pulls.some(matchesMerge) ||
+    github(
+      `repos/${repository}/pulls?state=closed&base=main&sort=updated&direction=desc&per_page=100`,
+    ).some(matchesMerge);
 
   if (!merged) {
     const npm = await fetch(
