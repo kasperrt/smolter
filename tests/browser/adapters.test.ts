@@ -1,10 +1,10 @@
+import * as preact from "@smolter/preact";
+import * as react from "@smolter/react";
 import { createElement as preactElement } from "preact/compat";
 import { createRoot as preactRoot } from "preact/compat/client";
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it } from "vitest";
-import * as preact from "../../packages/smolter/src/preact";
-import * as react from "../../packages/smolter/src/react";
 
 const frameworks = [
   { name: "React", api: react, element: createElement, root: createRoot },
@@ -17,6 +17,66 @@ const frameworks = [
 ];
 
 for (const { name, api, element: h, root: mount } of frameworks) {
+  it(`${name} only rerenders data and location readers when their selected value changes`, async (context) => {
+    let value = 1;
+    let dataRenders = 0;
+    let locationRenders = 0;
+    const route = api.defineRoute("/", { loader: () => value });
+    const router = api.createRouter([route]);
+    const container = document.createElement("div");
+    const root = mount(container);
+
+    document.body.append(container);
+    context.onTestFinished(() => {
+      root.unmount();
+      router.dispose();
+      container.remove();
+    });
+
+    function DataReader() {
+      const data = api.useLoaderData(route);
+
+      dataRenders++;
+
+      return h("output", { id: "selected-data" }, data);
+    }
+
+    function LocationReader() {
+      const [location] = api.useLocation();
+
+      locationRenders++;
+
+      return h("output", { id: "selected-location" }, location);
+    }
+
+    await router.navigate("/");
+    root.render(
+      h(api.RouterProvider, { router }, h(DataReader), h(LocationReader)),
+    );
+    await expect
+      .poll(() => container.querySelector("#selected-data")?.textContent)
+      .toBe("1");
+
+    const initialDataRenders = dataRenders;
+    const initialLocationRenders = locationRenders;
+
+    await router.revalidate();
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+
+    expect(dataRenders).toBe(initialDataRenders);
+    expect(locationRenders).toBe(initialLocationRenders);
+
+    value = 2;
+    await router.revalidate();
+    await expect
+      .poll(() => container.querySelector("#selected-data")?.textContent)
+      .toBe("2");
+
+    expect(dataRenders).toBe(initialDataRenders + 1);
+    expect(locationRenders).toBe(initialLocationRenders);
+  });
+
   it(`${name} connects data hooks, forms, links, and independent fetchers`, async (context) => {
     let count = 0;
     let fetcher: ReturnType<typeof api.useFetcher>;

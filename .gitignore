@@ -7,3 +7,5 @@ test-results/
 .DS_Store
 
 /site/
+
+/packages/smolter/src/internal/

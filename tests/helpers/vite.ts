@@ -1,12 +1,9 @@
 import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { type FileRouterOptions, fileRouter } from "@smolter/vite";
 import { createServer } from "vite";
 import type { TestContext } from "vitest";
-import {
-  type FileRouterOptions,
-  fileRouter,
-} from "../../packages/smolter/src/vite";
 
 export async function viteFixture(
   context: TestContext,
@@ -33,8 +30,8 @@ export async function viteFixture(
     plugins: [fileRouter(options)],
     resolve: {
       alias: {
-        "smolter/client": resolve("packages/smolter/src/client.ts"),
-        "smolter/server": resolve("packages/smolter/src/server.ts"),
+        "smolter/client": resolve("packages/client/src/index.ts"),
+        "smolter/server": resolve("packages/server/src/index.ts"),
       },
     },
     // Keep separate edits outside the watcher's 100 ms change-event throttle.

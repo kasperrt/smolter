@@ -6,7 +6,9 @@
     "rootDir": "src",
     "outDir": "dist",
     "rewriteRelativeImportExtensions": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {}
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": []
 }

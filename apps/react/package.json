@@ -1,5 +1,5 @@
 {
-  "name": "@smolter/react",
+  "name": "@smolter/example-react",
   "private": true,
   "type": "module",
   "scripts": {

@@ -7,7 +7,7 @@ const children = apps.map((name, index) =>
     "pnpm",
     [
       "--filter",
-      `@smolter/${name}`,
+      `@smolter/example-${name}`,
       "dev",
       "--port",
       String(basePort + index),

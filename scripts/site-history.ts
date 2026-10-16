@@ -1,4 +1,4 @@
-import type { Router } from "../packages/smolter/src/core";
+import type { Router } from "@smolter/core";
 
 export function siteRoute(base: string): string {
   const restored = new URLSearchParams(location.search).get("__route");

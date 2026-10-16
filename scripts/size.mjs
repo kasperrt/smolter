@@ -22,9 +22,7 @@ if (!process.argv.includes("--write-only")) {
     if (actual >= reference || actual >= 2100) process.exitCode = 1;
   }
 
-  console.log(
-    `core: ${await measure("./packages/smolter/src/core.ts")} B gzip`,
-  );
+  console.log(`core: ${await measure("@smolter/core")} B gzip`);
   console.log(
     "All exports, identical minifiers, gzip level 9. Frameworks excluded. File discovery runs at build time.",
   );

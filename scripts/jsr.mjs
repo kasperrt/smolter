@@ -10,6 +10,8 @@ if (publish && process.env.GITHUB_ACTIONS !== "true") {
   process.exit(1);
 }
 
+execFileSync("pnpm", ["build"], { stdio: "inherit" });
+
 const source = new URL("../packages/smolter/", import.meta.url);
 const directory = mkdtempSync(join(tmpdir(), "smolter-jsr-"));
 

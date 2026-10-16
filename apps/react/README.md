@@ -5,8 +5,8 @@ Only UI components are shared through `@smolter/ui`.
 
 ```sh
 pnpm install # repository root
-pnpm --filter @smolter/react dev
-pnpm --filter @smolter/react build
+pnpm --filter @smolter/example-react dev
+pnpm --filter @smolter/example-react build
 ```
 
 Open http://127.0.0.1:5173.
@@ -23,4 +23,4 @@ To use manual routes, import `{ routes }` from `./manual-routes` in `src/main.ts
 
 Version remains 0.0.1.
 
-Use `SMOLTER_ROUTES=manual pnpm --filter @smolter/react dev` to select the explicit route tables. File routing is the default.
+Use `SMOLTER_ROUTES=manual pnpm --filter @smolter/example-react dev` to select the explicit route tables. File routing is the default.

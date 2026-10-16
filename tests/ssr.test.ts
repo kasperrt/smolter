@@ -1,11 +1,11 @@
+import * as preact from "@smolter/preact";
+import * as react from "@smolter/react";
+import { loadRouter } from "@smolter/server";
 import { h } from "preact";
 import { render } from "preact-render-to-string";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { expect, it } from "vitest";
-import * as preact from "../packages/smolter/src/preact";
-import * as react from "../packages/smolter/src/react";
-import { loadRouter } from "../packages/smolter/src/server";
 
 it("server renders React data without browser globals", async () => {
   const route = react.defineRoute("/", {

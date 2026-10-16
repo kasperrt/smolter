@@ -1,3 +1,4 @@
+import react from "@vitejs/plugin-react";
 import { fileRouter } from "smolter/vite";
 import { defineConfig } from "vite";
 import { demoAssets } from "../../scripts/demo-assets.ts";
@@ -18,6 +19,10 @@ export default defineConfig({
   optimizeDeps: { include: ["react", "react-dom/client"] },
 
   plugins: [
+    react({
+      compiler: true,
+      include: /\/apps\/react(?:-ssr)?\/src\/.*\.[jt]sx?(?:\?.*)?$/,
+    }),
     demoAssets(),
     sessions(),
     fileRouter(routing),

@@ -26,16 +26,10 @@ export async function measure(entry) {
 
 export async function measureAdapters() {
   const [react, preact, reactServer, preactServer] = await Promise.all([
-    measure("./packages/smolter/src/react.ts"),
-    measure("./packages/smolter/src/preact.ts"),
-    measure([
-      "./packages/smolter/src/react.ts",
-      "./packages/smolter/src/client.ts",
-    ]),
-    measure([
-      "./packages/smolter/src/preact.ts",
-      "./packages/smolter/src/client.ts",
-    ]),
+    measure("@smolter/react"),
+    measure("@smolter/preact"),
+    measure(["@smolter/react", "@smolter/client"]),
+    measure(["@smolter/preact", "@smolter/client"]),
   ]);
 
   return { react, preact, reactServer, preactServer };

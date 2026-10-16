@@ -10,16 +10,28 @@
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "paths": {
-      "smolter": ["./packages/smolter/src/core.ts"],
-      "smolter/core": ["./packages/smolter/src/core.ts"],
-      "smolter/preact": ["./packages/smolter/src/preact.ts"],
-      "smolter/server": ["./packages/smolter/src/server.ts"],
-      "smolter/files": ["./packages/smolter/src/files.ts"],
-      "smolter/vite": ["./packages/smolter/src/vite.ts"],
-      "smolter/client": ["./packages/smolter/src/client.ts"],
-      "smolter/react": ["./packages/smolter/src/react.ts"]
+      "smolter/core": ["./packages/core/src/index.ts"],
+      "@smolter/core": ["./packages/core/src/index.ts"],
+      "smolter/react": ["./packages/react/src/index.ts"],
+      "@smolter/react": ["./packages/react/src/index.ts"],
+      "smolter/preact": ["./packages/preact/src/index.ts"],
+      "@smolter/preact": ["./packages/preact/src/index.ts"],
+      "smolter/client": ["./packages/client/src/index.ts"],
+      "@smolter/client": ["./packages/client/src/index.ts"],
+      "smolter/server": ["./packages/server/src/index.ts"],
+      "@smolter/server": ["./packages/server/src/index.ts"],
+      "smolter/files": ["./packages/files/src/index.ts"],
+      "@smolter/files": ["./packages/files/src/index.ts"],
+      "smolter/vite": ["./packages/vite/src/index.ts"],
+      "@smolter/vite": ["./packages/vite/src/index.ts"],
+      "smolter": ["./packages/core/src/index.ts"]
     },
     "types": ["node", "vite/client"]
   },
-  "include": ["packages", "apps", "tests", "*.ts"]
+  "include": ["packages", "apps", "tests", "*.ts"],
+  "exclude": [
+    "packages/smolter/src/internal",
+    "packages/smolter/src",
+    "packages/smolter/dist"
+  ]
 }

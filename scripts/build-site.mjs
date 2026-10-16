@@ -15,7 +15,7 @@ for (const framework of ["react", "preact"]) {
     "pnpm",
     [
       "--filter",
-      `@smolter/${framework}`,
+      `@smolter/example-${framework}`,
       "build",
       "--base",
       `/smolter/${framework}/`,

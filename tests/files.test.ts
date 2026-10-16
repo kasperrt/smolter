@@ -1,8 +1,8 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { flatRoutes } from "@smolter/files";
 import { afterEach, expect, it } from "vitest";
-import { flatRoutes } from "../packages/smolter/src/files";
 
 const directories: string[] = [];
 

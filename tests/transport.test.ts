@@ -1,7 +1,7 @@
+import { serverRoute } from "@smolter/client";
+import { createRouter, defineRoute } from "@smolter/core";
+import { handleRequest } from "@smolter/server";
 import { afterEach, expect, it, vi } from "vitest";
-import { serverRoute } from "../packages/smolter/src/client";
-import { createRouter, defineRoute } from "../packages/smolter/src/core";
-import { handleRequest } from "../packages/smolter/src/server";
 
 afterEach(() => vi.unstubAllGlobals());
 

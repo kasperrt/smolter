@@ -356,11 +356,14 @@ SMOLTER_ROUTES=manual SMOLTER_TEST_PORT=4473 pnpm smoke
 pnpm smoke:production  # Built SSR servers, hydration, reads, mutations
 ```
 
-GitHub Actions checks every PR and merge. The required `coverage` check enforces
-100% line coverage for every file in `packages/smolter/src`, including the Vite
-integration and both framework adapters. Reports are uploaded as CI artifacts.
-Registry publishing requires a merged PR
-and passing checks. [Release workflow](https://github.com/kasperrt/smolter/blob/main/RELEASING.md).
+GitHub Actions checks every PR and push to main. Coverage must remain at 100%
+for every implementation file across the core, adapters, transport, and routing
+packages. Reports are uploaded as CI artifacts.
+
+Publishing requires passing CI, including the strict size gate. Direct commits
+to main are allowed until 0.0.1 exists on npm and JSR; subsequent changes require
+PRs. [Release workflow](https://github.com/kasperrt/smolter/blob/main/RELEASING.md).
+
 To test a local package build in another project:
 
 ```sh

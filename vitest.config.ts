@@ -26,7 +26,9 @@ export default defineConfig({
     ],
     coverage: {
       provider: "v8",
-      include: ["packages/smolter/src/**/*.ts"],
+      include: [
+        "packages/{core,react,preact,client,server,files,vite}/src/**/*.ts",
+      ],
       reporter: ["text", "json", "json-summary", "html", "lcov"],
       thresholds: { lines: 100, perFile: true },
     },

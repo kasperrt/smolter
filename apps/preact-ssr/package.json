@@ -1,5 +1,5 @@
 {
-  "name": "@smolter/preact-ssr",
+  "name": "@smolter/example-preact-ssr",
   "private": true,
   "type": "module",
   "scripts": {

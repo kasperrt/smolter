@@ -1,16 +1,19 @@
 # Releasing smolter
 
-Releases are made by GitHub Actions after a pull request merges into `main`.
+Releases are made by GitHub Actions after CI succeeds on `main`.
+Direct commits are allowed until 0.0.1 is published to both npm and JSR.
+After that, changes must go through pull requests.
 Local publishing, tag pushes, and manual workflow dispatch are not release paths.
 
 ## Release requirements
 
 - npm and JSR manifests contain the same version.
 - Formatting, types, unit tests, package smoke tests, browser tests, production
-  SSR tests, JSR validation, and the size gate pass for the merged commit.
+  SSR tests, JSR validation, and the size gate pass for the release commit.
 - The required `coverage` check reports 100% line coverage for every file in
-  `packages/smolter/src`, combining unit tests with real Chromium adapter tests.
-- The commit is the merge commit of a pull request targeting `main`.
+  the core, React, Preact, client, server, files, and Vite workspace packages, combining unit tests with real Chromium adapter tests.
+- The commit is the current `main` commit. After 0.0.1 exists on both registries,
+  it must be a PR merge, except retries of the original 0.0.1 release commit.
 - The repository is public and the GitHub Pages build passes.
 
 The first candidate is **0.0.1-rc.1**, published with the npm `next` tag and
@@ -45,3 +48,15 @@ GitHub Actions uses OIDC to publish with provenance; no JSR token is needed.
 A registry failure can be retried by rerunning the failed workflow. The release
 checks registry responses explicitly; a network or authorization error is not
 interpreted as an unpublished version.
+
+After 0.0.1 is available on both registries, restore required PRs and the
+`checks (22)`, `checks (24)`, `browser`, `jsr`, `site`, and `coverage` status checks
+on `main`. Coverage remains 100% per file; the browser gzip limit stays below
+2,100 bytes throughout bootstrapping.
+
+Restore branch protection with the checked-in policy:
+
+```sh
+gh api --method PUT repos/kasperrt/smolter/branches/main/protection \
+  --input .github/main-protection.json
+```

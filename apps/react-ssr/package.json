@@ -1,5 +1,5 @@
 {
-  "name": "@smolter/react-ssr",
+  "name": "@smolter/example-react-ssr",
   "private": true,
   "type": "module",
   "scripts": {

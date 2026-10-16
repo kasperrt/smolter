@@ -16,7 +16,7 @@
   },
   "publish": {
     "include": ["src", "README.md", "LICENSE", "jsr.json"],
-    "exclude": ["src/vite.ts"]
+    "exclude": ["src/vite.ts", "src/internal/vite"]
   },
   "license": "MIT",
   "compatibility": {

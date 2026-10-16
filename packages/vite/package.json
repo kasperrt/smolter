@@ -1,0 +1,14 @@
+{
+  "name": "@smolter/vite",
+  "version": "0.0.1-rc.1",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@smolter/files": "workspace:*",
+    "vite": "8.3.4"
+  }
+}

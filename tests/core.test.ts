@@ -1,12 +1,12 @@
-import { describe, expect, expectTypeOf, it } from "vitest";
 import {
   createRouter,
   type DataOf,
   defineRoute,
   matchRoutes,
-} from "../packages/smolter/src/core";
-import type { ActionData, LoaderData } from "../packages/smolter/src/react";
-import { loadRouter, serialize } from "../packages/smolter/src/server";
+} from "@smolter/core";
+import type { ActionData, LoaderData } from "@smolter/react";
+import { loadRouter, serialize } from "@smolter/server";
+import { describe, expect, expectTypeOf, it } from "vitest";
 
 const body = () => new FormData();
 describe("data router", () => {
@@ -450,10 +450,7 @@ for (const server of [false, true]) {
       const calls: string[] = [];
       const handler =
         (source: string) =>
-        async ({
-          request,
-          params,
-        }: import("../packages/smolter/src/core").DataArgs) => {
+        async ({ request, params }: import("@smolter/core").DataArgs) => {
           calls.push(source);
 
           return {

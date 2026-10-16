@@ -17,9 +17,9 @@ export function measuredSize(): Plugin {
     buildStart: update,
 
     configureServer(server) {
-      server.watcher.add(resolve(root, "packages/smolter/src"));
+      server.watcher.add(resolve(root, "packages"));
       server.watcher.on("change", (file) => {
-        if (file.startsWith(resolve(root, "packages/smolter/src"))) update();
+        if (/packages\/(core|react|preact|client)\/src\//.test(file)) update();
       });
     },
   };

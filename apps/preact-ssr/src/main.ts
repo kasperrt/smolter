@@ -11,4 +11,7 @@ const router = createRouter(routes, {
   hydrationData: data?.textContent ? JSON.parse(data.textContent) : undefined,
 });
 
-if (root) hydrate(app(router), root);
+if (root) {
+  hydrate(app(router), root);
+  root.inert = false;
+}

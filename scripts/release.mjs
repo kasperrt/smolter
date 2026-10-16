@@ -49,7 +49,21 @@ if (mode === "verify") {
       pr.merge_commit_sha === sha,
   );
 
-  if (!merged) fail("Release commit must come from a merged PR to main.");
+  if (!merged) {
+    const npm = await fetch("https://registry.npmjs.org/smolter/0.0.1");
+
+    if (!npm.ok && npm.status !== 404)
+      fail(`Registry check failed: ${npm.status}`);
+
+    const jsrReleased = await published(
+      "https://jsr.io/@kasperrt/smolter/0.0.1_meta.json",
+    );
+    const npmRelease = npm.ok ? await npm.json() : undefined;
+
+    // Allow the initial release commit to finish Pages or retry a partial release.
+    if (npmRelease && jsrReleased && npmRelease.gitHead !== sha)
+      fail("After 0.0.1, release commits must come from a merged PR to main.");
+  }
 
   const main = github(`repos/${repository}/git/ref/heads/main`);
 

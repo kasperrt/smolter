@@ -1,5 +1,5 @@
-import { execFileSync } from "node:child_process";
-import { it } from "vitest";
+import { execFileSync, spawnSync } from "node:child_process";
+import { expect, it } from "vitest";
 
 for (const scenario of ["new", "existing", "published"]) {
   it(`uses the correct publishing credentials for a ${scenario} npm package`, () => {
@@ -20,6 +20,40 @@ for (const scenario of ["new", "existing", "published"]) {
         },
         stdio: "pipe",
       },
+    );
+  });
+}
+
+for (const scenario of [
+  "bootstrap",
+  "partial",
+  "retry",
+  "merged",
+  "released",
+  "registry-error",
+  "stale",
+]) {
+  it(`enforces the ${scenario} release policy`, () => {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--import",
+        "./tests/fixtures/release-verify-preload.mjs",
+        "scripts/release.mjs",
+        "verify",
+      ],
+      {
+        env: {
+          GITHUB_ACTIONS: "true",
+          RELEASE_SHA: "current-sha",
+          RELEASE_TEST_SCENARIO: scenario,
+        },
+        encoding: "utf8",
+      },
+    );
+
+    expect(result.status).toBe(
+      ["released", "registry-error", "stale"].includes(scenario) ? 1 : 0,
     );
   });
 }

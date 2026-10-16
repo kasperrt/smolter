@@ -1,5 +1,5 @@
 {
-  "name": "@smolter/preact",
+  "name": "@smolter/example-preact",
   "private": true,
   "type": "module",
   "scripts": {

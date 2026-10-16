@@ -31,6 +31,10 @@ for (const name of ["react", "preact", "react-ssr", "preact-ssr"]) {
     }
 
     if (name.startsWith("react")) {
+      expect(
+        modules.some((module) => module.includes("react-compiler-runtime")),
+      ).toBe(true);
+
       expect(modules.some((module) => /\/preact(?:@|\/)/.test(module))).toBe(
         false,
       );
