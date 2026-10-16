@@ -124,7 +124,7 @@ export function createRouter(
           true,
         );
 
-        if (local && !signal.aborted) emit({ state: "idle" });
+        if (!signal.aborted) emit({ state: "idle" });
 
         return result;
       }
