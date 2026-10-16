@@ -1,0 +1,78 @@
+{
+  "slug": "actions",
+  "title": "Actions",
+  "summary": "Define mutations beside the route, submit to its URL, and let the router refresh the page data.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Choose where the action runs",
+      "body": "clientAction executes in the browser. It can call your API, write browser storage, or perform another client operation. With the Vite server-route integration, action stays on the server and the browser calls it through the transport. Both exports may exist on one route. A clientAction takes precedence in the browser and decides whether to call serverAction. SSR does not execute clientAction.",
+      "code": ""
+    },
+    {
+      "title": "Start with a complete client action",
+      "body": "This settings example stores a display name in the browser. The handler receives a Request, decoded route params, and an AbortSignal. Read the submitted fields with request.formData(). A validation failure is ordinary returned data so the form can show it without replacing the entire route.",
+      "code": "// routes/settings/action.ts\nimport type { DataArgs } from \"@kasperrt/smolter/core\";\n\nexport async function clientAction({ request }: DataArgs) {\n  const form = await request.formData();\n  const displayName = String(form.get(\"displayName\") ?? \"\").trim();\n\n  if (displayName.length < 2) {\n    return { ok: false as const, error: \"Use at least two characters.\" };\n  }\n\n  localStorage.setItem(\"displayName\", displayName);\n\n  return { ok: true as const, displayName };\n}"
+    },
+    {
+      "title": "Read the saved value",
+      "body": "The loader owns the saved value displayed by the page. After a successful action, the router runs the active page loader again unless shouldRevalidate opts out. Returning a validation object also counts as a completed action; use shouldRevalidate if that result should skip the read.",
+      "code": "// routes/settings/loader.ts\nexport function clientLoader() {\n  return { displayName: localStorage.getItem(\"displayName\") ?? \"\" };\n}"
+    },
+    {
+      "title": "Export the route module",
+      "body": "Keep the handler implementations in their own files. In file-router mode, routes/settings/route.ts maps to /settings. In manual mode, associate this same module with an explicit path in your route table.",
+      "code": "// routes/settings/route.ts\nexport { clientLoader } from \"./loader\";\nexport { clientAction } from \"./action\";\nexport { default } from \"./view\";"
+    },
+    {
+      "title": "Register the actual URL",
+      "body": "The form targets /settings because that path is registered here. A fetcher is a route client: an arbitrary API URL without a matching route is not a substitute for registration. For Preact, change the framework imports in these examples to @kasperrt/smolter/preact.",
+      "code": "// router.ts\nimport { createRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as settings from \"./routes/settings/route\";\n\nexport const settingsRoute = defineRoute(\"/settings\", settings);\nexport const router = createRouter([settingsRoute], { browser: true });\n\n// app.tsx\nimport { RouterProvider, Routes } from \"@kasperrt/smolter/react\";\nimport { router } from \"./router\";\n\nexport function App() {\n  return (\n    <RouterProvider router={router}>\n      <Routes />\n    </RouterProvider>\n  );\n}"
+    },
+    {
+      "title": "Submit and display the result",
+      "body": "The fetcher owns the submission result, pending state, and unexpected error. The page loader owns the saved name. The URL stays /settings during this submission, and the document is not reloaded. This deliberately uses ordinary HTML so the data flow is visible without a UI library.",
+      "code": "// routes/settings/view.tsx\nimport { useFetcher, useLoaderData } from \"@kasperrt/smolter/react\";\nimport type { clientAction } from \"./action\";\nimport type { clientLoader } from \"./loader\";\n\nexport default function Settings() {\n  const data = useLoaderData<typeof clientLoader>();\n  const fetcher = useFetcher<typeof clientAction>();\n  const busy = fetcher.state !== \"idle\";\n\n  return (\n    <section>\n      <h1>Settings</h1>\n      <p>Saved name: {data?.displayName}</p>\n      <fetcher.Form action=\"/settings\" method=\"post\" aria-busy={busy}>\n        <label htmlFor=\"displayName\">Display name</label>\n        <input\n          id=\"displayName\"\n          name=\"displayName\"\n          defaultValue={data?.displayName}\n          required\n          minLength={2}\n        />\n        <button disabled={busy}>Save name</button>\n        <p role=\"status\">{busy && \"Saving\u2026\"}</p>\n        {fetcher.data?.ok === false && <p role=\"alert\">{fetcher.data.error}</p>}\n        {fetcher.data?.ok === true && <p role=\"status\">Saved.</p>}\n        {fetcher.error && <p role=\"alert\">{fetcher.error.message}</p>}\n      </fetcher.Form>\n    </section>\n  );\n}"
+    },
+    {
+      "title": "Navigation submissions",
+      "body": "Use Form when completing the mutation should commit navigation to the target route. Its result is read with useActionData. useActionData does not receive fetcher submissions: those belong to the fetcher that made them.",
+      "code": "import { Form, useActionData } from \"@kasperrt/smolter/react\";\nimport type { clientAction } from \"./action\";\n\nexport default function SettingsForm() {\n  const result = useActionData<typeof clientAction>();\n\n  return (\n    <Form action=\"/settings\" method=\"post\">\n      <label>\n        Display name <input name=\"displayName\" required />\n      </label>\n      <button>Save</button>\n      {result?.ok === false && <p role=\"alert\">{result.error}</p>}\n    </Form>\n  );\n}"
+    },
+    {
+      "title": "POST, PUT, PATCH, and DELETE",
+      "body": "Every mutation method reaches the action on the matching route. Dispatch on request.method when one route supports several operations. Form method values are lowercase; imperative submit options use uppercase. The application defines what each method does; smolter does not infer database operations.",
+      "code": "// Inside a task action, after validating params.id:\nif (request.method === \"DELETE\") {\n  await tasks.remove(params.id);\n\n  return { deleted: true };\n}\n\nif (request.method !== \"PATCH\") return new Error(\"Unsupported task operation\");\n\nconst form = await request.formData();\n\nreturn tasks.rename(params.id, String(form.get(\"title\") ?? \"\"));"
+    },
+    {
+      "title": "Multiple intents on one route",
+      "body": "Named submit buttons contribute the selected button value to FormData. An intent is useful when multiple operations share the same HTTP method. Validate the intent in the action before writing anything.",
+      "code": "<fetcher.Form action=\"/tasks/42\" method=\"post\">\n  <button name=\"intent\" value=\"complete\">Complete</button>\n  <button name=\"intent\" value=\"reopen\">Reopen</button>\n</fetcher.Form>\n\n// In the action:\nconst form = await request.formData();\nconst intent = form.get(\"intent\");\n\nif (intent !== \"complete\" && intent !== \"reopen\") {\n  return new Error(\"Unknown task intent\");\n}\n\nreturn tasks.setCompleted(params.id, intent === \"complete\");"
+    },
+    {
+      "title": "Implement the server action",
+      "body": "For server-backed settings, replace the localStorage implementation with a server action. The settings service below represents your application\u2019s authenticated persistence layer: it must identify the user from the request and authorize the write. Its saveForRequest method returns the persisted settings or an Error. The Vite plugin removes this named server re-export from the browser module. Manually configured applications must use serverRoute in the browser and handleRequest on the server; merely naming a function action does not create an HTTP endpoint.",
+      "code": "// routes/settings/action.ts\nimport type { DataArgs } from \"@kasperrt/smolter/core\";\nimport { settings } from \"../../server/settings\";\n\nexport async function action({ request, signal }: DataArgs) {\n  const form = await request.formData();\n  const displayName = String(form.get(\"displayName\") ?? \"\").trim();\n\n  if (displayName.length < 2) {\n    return { ok: false as const, error: \"Use at least two characters.\" };\n  }\n\n  const saved = await settings.saveForRequest(request, { displayName, signal });\n\n  if (saved instanceof Error) return saved;\n\n  return { ok: true as const, displayName: saved.displayName };\n}"
+    },
+    {
+      "title": "Server action and client action together",
+      "body": "With the Vite plugin, re-export action from its server implementation file and clientAction from a browser-safe file. The client wrapper may inspect the form and then call serverAction. The transport preserves a copy of the request body for that call. Import the server handler only as a type in browser code; never import your database implementation there.",
+      "code": "// routes/settings/client-action.ts\nimport type { ClientActionArgs } from \"@kasperrt/smolter/core\";\nimport type { action } from \"./action\";\n\nexport async function clientAction({\n  serverAction,\n}: ClientActionArgs<typeof action>) {\n  const result = await serverAction();\n\n  if (result.ok) sessionStorage.removeItem(\"settings-draft\");\n\n  return result;\n}\n\n// routes/settings/route.ts\nexport { action } from \"./action\";\nexport { clientAction } from \"./client-action\";\nexport { loader } from \"./loader\";\nexport { default } from \"./view\";"
+    },
+    {
+      "title": "Redirect after a mutation",
+      "body": "Return a Response with a Location header to navigate after saving. A redirect also navigates when the submission came from a fetcher. Use an internal destination registered in the router. There is no smolter redirect helper to import.",
+      "code": "return new Response(null, {\n  status: 303,\n  headers: { Location: \"/tasks\" },\n});"
+    },
+    {
+      "title": "Failures and cancellation",
+      "body": "Return an Error for an operation failure, rather than a field validation result. Fetcher failures appear in fetcher.error; navigation failures can render the route ErrorBoundary. Pass signal to fetch calls in client handlers. Aborting a request prevents stale UI results but cannot undo a mutation already accepted by a server. Enforce authorization and write consistency in your backend.",
+      "code": ""
+    },
+    {
+      "title": "Skip reads after validation failures",
+      "body": "Put shouldRevalidate beside the route and re-export it from the route module. The action result is unknown because the active page may be refreshed by a different route\u2019s action. Narrow it before inspecting fields. Returning false retains the currently loaded page data; it does not cancel the action, suppress errors, or reload independent fetchers.",
+      "code": "// routes/settings/should-revalidate.ts\nimport type { RevalidationArgs } from \"@kasperrt/smolter/core\";\n\nexport function shouldRevalidate({\n  reason,\n  actionResult,\n  defaultShouldRevalidate,\n}: RevalidationArgs) {\n  if (\n    reason === \"action\" &&\n    actionResult !== null &&\n    typeof actionResult === \"object\" &&\n    \"ok\" in actionResult &&\n    actionResult.ok === false\n  ) {\n    return false;\n  }\n\n  return defaultShouldRevalidate;\n}\n\n// Add to routes/settings/route.ts:\nexport { shouldRevalidate } from \"./should-revalidate\";"
+    }
+  ]
+}

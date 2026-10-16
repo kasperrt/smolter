@@ -51,7 +51,7 @@ for (const example of examples) {
       page
         .getByRole("navigation", { name: "Documentation", exact: true })
         .getByRole("link"),
-    ).toHaveCount(67);
+    ).toHaveCount(70);
     await expect(page.getByTestId("source-panel")).toHaveCount(0);
     expect(
       await page.evaluate(() => document.documentElement.dataset.docs),
@@ -67,6 +67,22 @@ for (const example of examples) {
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
+    for (const title of ["Actions", "Forms", "Loaders"]) {
+      await page
+        .getByRole("navigation", { name: "Documentation", exact: true })
+        .getByRole("link", { name: title, exact: true })
+        .click();
+      await expect(
+        page.getByRole("heading", { name: title, exact: true }),
+      ).toBeVisible();
+      await expect(page.locator(".docs-article pre").first()).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+
     await page.getByRole("link", { name: "Search", exact: true }).click();
     await expect(page).toHaveTitle(originalTitle);
   });
