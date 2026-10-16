@@ -13,7 +13,7 @@ globalThis.fetch = async (input) => {
 
   assert.equal(url.hostname, "registry.npmjs.org");
 
-  const packageLookup = url.pathname === "/smolter";
+  const packageLookup = url.pathname === "/@kasperrt/smolter";
   const exists =
     scenario === "published" || (packageLookup && scenario === "existing");
 

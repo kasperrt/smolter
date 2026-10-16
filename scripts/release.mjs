@@ -51,7 +51,9 @@ if (mode === "verify") {
   );
 
   if (!merged) {
-    const npm = await fetch("https://registry.npmjs.org/smolter/0.0.1");
+    const npm = await fetch(
+      `https://registry.npmjs.org/${manifest.name}/0.0.1`,
+    );
 
     if (!npm.ok && npm.status !== 404)
       fail(`Registry check failed: ${npm.status}`);

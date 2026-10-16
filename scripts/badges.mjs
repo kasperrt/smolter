@@ -4,7 +4,7 @@ const end = "<!-- bundlejs:end -->";
 export function withSizeBadges(markdown, version) {
   const badges = ["react", "preact"].map((framework) => {
     const query = new URLSearchParams({
-      q: `smolter@${version}/${framework}`,
+      q: `@kasperrt/smolter@${version}/${framework}`,
       treeshake: "[*]",
       config: JSON.stringify({
         compression: "gzip",

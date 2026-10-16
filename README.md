@@ -11,6 +11,7 @@ and [React Router](https://reactrouter.com/).
 
 ## Contents
 
+- [Install](#install)
 - [Try the four standalone examples](#try-the-four-standalone-examples)
 - [Choose file routing or manual routes](#choose-file-routing-or-manual-routes)
 - [Server and client handlers](#server-and-client-handlers)
@@ -20,6 +21,19 @@ and [React Router](https://reactrouter.com/).
 - [Server rendering](#server-rendering)
 - [Package entries](#package-entries)
 - [Size and checks](#size-and-checks)
+
+## Install
+
+The npm package is `@kasperrt/smolter`. Install it with an alias to use the
+short imports shown throughout these examples:
+
+```sh
+pnpm add smolter@npm:@kasperrt/smolter@next
+```
+
+Choose your framework explicitly: `smolter/react` or `smolter/preact`.
+You can also install `@kasperrt/smolter@next` directly and import from
+`@kasperrt/smolter/react` or `@kasperrt/smolter/preact` instead.
 
 ## Try the four standalone examples
 
@@ -448,7 +462,7 @@ To test a local package build in another project:
 
 ```sh
 pnpm --dir packages/smolter pack --pack-destination ../..
-pnpm add /absolute/path/to/smolter-0.0.1-rc.1.tgz
+pnpm add smolter@file:/absolute/path/to/kasperrt-smolter-0.0.1-rc.1.tgz
 ```
 
 Workspace structure and rendering checks are documented in [CONTRIBUTING.md](./CONTRIBUTING.md).

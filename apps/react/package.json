@@ -7,7 +7,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "smolter": "workspace:*",
+    "smolter": "workspace:@kasperrt/smolter@*",
     "@smolter/ui": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"

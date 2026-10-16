@@ -20,7 +20,10 @@ execFileSync(
 const manifest = JSON.parse(
   readFileSync("packages/smolter/package.json", "utf8"),
 );
-const tarball = join(directory, `smolter-${manifest.version}.tgz`);
+const tarball = join(
+  directory,
+  `${manifest.name.replace(/^@/, "").replace("/", "-")}-${manifest.version}.tgz`,
+);
 
 const cases = [
   { framework: "react", version: "18.0.0" },
@@ -34,7 +37,14 @@ for (const { framework, version } of cases) {
   const cwd = mkdtempSync(join(tmpdir(), `smolter-${framework}-`));
   writeFileSync(
     join(cwd, "package.json"),
-    JSON.stringify({ private: true, type: "module" }),
+    JSON.stringify({
+      private: true,
+      type: "module",
+      dependencies: {
+        smolter: `file:${tarball}`,
+        [manifest.name]: `file:${tarball}`,
+      },
+    }),
   );
 
   const deps =
@@ -53,7 +63,6 @@ for (const { framework, version } of cases) {
       "--no-package-lock",
       "--no-audit",
       "--no-fund",
-      tarball,
       ...deps,
     ],
     { cwd, stdio: "inherit" },
@@ -67,39 +76,44 @@ for (const { framework, version } of cases) {
     `${framework} installs must not pull in ${other}`,
   );
 
-  writeFileSync(
-    join(cwd, "smoke.mjs"),
-    readFileSync(`tests/fixtures/${framework}-packed.mjs`, "utf8"),
-  );
+  for (const name of ["smolter", manifest.name]) {
+    writeFileSync(
+      join(cwd, "smoke.mjs"),
+      readFileSync(`tests/fixtures/${framework}-packed.mjs`, "utf8").replaceAll(
+        "smolter/",
+        `${name}/`,
+      ),
+    );
 
-  execFileSync(process.execPath, [resolve(cwd, "smoke.mjs")], {
-    cwd,
-    stdio: "inherit",
-  });
+    execFileSync(process.execPath, [resolve(cwd, "smoke.mjs")], {
+      cwd,
+      stdio: "inherit",
+    });
 
-  writeFileSync(
-    join(cwd, "consumer.ts"),
-    readFileSync("tests/fixtures/packed-types.ts", "utf8").replaceAll(
-      "smolter/react",
-      `smolter/${framework}`,
-    ),
-  );
-  execFileSync(
-    process.execPath,
-    [
-      resolve("node_modules/typescript/bin/tsc"),
-      "--noEmit",
-      "--strict",
-      "--skipLibCheck",
-      "false",
-      "--module",
-      "NodeNext",
-      "--target",
-      "ES2022",
-      "consumer.ts",
-    ],
-    { cwd, stdio: "inherit" },
-  );
+    writeFileSync(
+      join(cwd, "consumer.ts"),
+      readFileSync("tests/fixtures/packed-types.ts", "utf8").replaceAll(
+        "smolter/react",
+        `${name}/${framework}`,
+      ),
+    );
+    execFileSync(
+      process.execPath,
+      [
+        resolve("node_modules/typescript/bin/tsc"),
+        "--noEmit",
+        "--strict",
+        "--skipLibCheck",
+        "false",
+        "--module",
+        "NodeNext",
+        "--target",
+        "ES2022",
+        "consumer.ts",
+      ],
+      { cwd, stdio: "inherit" },
+    );
+  }
 
   rmSync(cwd, { recursive: true, force: true });
 }

@@ -35,7 +35,8 @@ The next push to `main` starts CI; Pages and Release wait for its success.
 
 ## Registry setup
 
-The npm package is `smolter`; the JSR package is `@kasperrt/smolter`.
+Both npm and JSR publish `@kasperrt/smolter`. The examples install the npm
+package under the alias `smolter`, preserving `smolter/react` imports.
 
 Configure npm trusted publishing for GitHub owner `kasperrt`, repository
 `smolter`, workflow `release.yml`, and environment `release`. Allow publishing.
