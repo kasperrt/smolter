@@ -1,0 +1,13 @@
+{
+  "slug": "DataOf",
+  "title": "DataOf",
+  "summary": "Extracts the awaited successful result of a function.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Extracts the awaited successful result of a function. Error results are excluded. This is the basis for the data-hook generic types; it does not validate JSON at runtime.",
+      "code": "type Task = DataOf<typeof loader>;"
+    }
+  ]
+}

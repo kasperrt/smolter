@@ -1,0 +1,13 @@
+{
+  "slug": "FormProps",
+  "title": "FormProps",
+  "summary": "Native form props with action and method defined for router handling.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Native form props with action and method defined for router handling. method is lowercase and supports get/post/put/patch/delete. Submitter attributes can override action and method. Use uppercase only for imperative submit options.",
+      "code": "<Form action=\"/tasks/search\" method=\"get\">\n  <input name=\"q\" />\n  <button>Search</button>\n</Form>"
+    }
+  ]
+}

@@ -84,6 +84,30 @@ const result = await (async () => {
   await page.getByRole("heading", { name: "Edit task", exact: true }).waitFor();
 
   assert.equal(page.url(), detail);
+  await page.getByRole("link", { name: "← All tasks", exact: true }).click();
+  assert.equal(page.url(), `${origin}/smolter/preact/tasks`);
+  await page.getByRole("link", { name: "Search", exact: true }).click();
+  await page.getByLabel("Search query").fill("route");
+  await page.getByRole("button", { name: "Search tasks", exact: true }).click();
+  await page.waitForURL(`${origin}/smolter/preact/tasks/search?q=route`);
+  await page
+    .getByRole("link", { name: "Read the route", exact: true })
+    .waitFor();
+
+  for (const framework of ["react", "preact"]) {
+    await page.goto(`${origin}/smolter/${framework}/docs/useFetcher`);
+    await page
+      .getByRole("heading", { name: "useFetcher", exact: true })
+      .waitFor();
+    await page
+      .getByRole("navigation", { name: "Documentation", exact: true })
+      .getByRole("link", { name: "Routing", exact: true })
+      .click();
+    await page.waitForURL(`${origin}/smolter/${framework}/docs/routing`);
+    await page.reload();
+    await page.getByRole("heading", { name: "Routing", exact: true }).waitFor();
+  }
+
   assert.deepEqual(errors, []);
 })().then(
   () => ({ ok: true }),

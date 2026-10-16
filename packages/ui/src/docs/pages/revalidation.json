@@ -1,0 +1,28 @@
+{
+  "slug": "revalidation",
+  "title": "Revalidation",
+  "summary": "Refresh only the route data that needs to change.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Automatic refresh",
+      "body": "Successful actions refresh the active page loader. A loader read through a fetcher does not. Same-route navigation can opt out when existing data is valid; initial visits and failed navigation retries still load.",
+      "code": ""
+    },
+    {
+      "title": "Control refresh",
+      "body": "shouldRevalidate receives currentUrl, nextUrl, url, reason, defaultShouldRevalidate, and mutation context when available. Returning false skips a refresh. The function must be synchronous.",
+      "code": "import type { RevalidationArgs } from \"@kasperrt/smolter/react\";\n\nexport function shouldRevalidate({ reason, actionResult }: RevalidationArgs) {\n  if (reason === \"action\" && actionResult &&\n      typeof actionResult === \"object\" && \"changed\" in actionResult) {\n    return actionResult.changed !== false;\n  }\n\n  return true;\n}"
+    },
+    {
+      "title": "Manual refresh",
+      "body": "useRevalidator returns a function, not an object with state and revalidate fields. Manual refresh also respects shouldRevalidate.",
+      "code": "const revalidate = useRevalidator();\n\n<button onClick={() => void revalidate()}>Refresh</button>"
+    },
+    {
+      "title": "Avoid stale UI",
+      "body": "Opting out means you own the freshness decision. Keep the default true until you can identify no-op actions or URL changes that leave the active loader result valid.",
+      "code": ""
+    }
+  ]
+}

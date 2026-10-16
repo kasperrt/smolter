@@ -1,0 +1,28 @@
+{
+  "slug": "data-flow",
+  "title": "Loaders and actions",
+  "summary": "A route owns its reads and writes. Components render their results.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Browser-only data",
+      "body": "clientLoader and clientAction run in the browser. Use these for local storage or requests to your own API. They do not create backend endpoints.",
+      "code": "// loader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\n\nexport async function clientLoader({ request, signal }: DataArgs) {\n  const query = new URL(request.url).searchParams.get(\"q\") ?? \"\";\n  const response = await fetch(`/api/tasks?q=${encodeURIComponent(query)}`, { signal });\n\n  return response.json();\n}\n\n// route.tsx\nexport { clientLoader } from \"./loader\";\nexport { clientAction } from \"./action\";\nexport { default } from \"./view\";"
+    },
+    {
+      "title": "Server data",
+      "body": "loader and action execute on the server when using the generated transport or serverRoute. handleRequest must be installed on your production server. Exporting a server handler in a plain browser route table does not move that code to a backend automatically.",
+      "code": "// action.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\n\nexport async function action({ request, params }: DataArgs) {\n  const body = await request.formData();\n\n  return updateTask(params.id, String(body.get(\"title\")));\n}"
+    },
+    {
+      "title": "Client call-through",
+      "body": "With serverRoute or the Vite-generated browser route table, a client handler can call its paired server handler. Read client action form data freely: the transport preserves a clone for serverAction. SSR runs server handlers and skips client handlers.",
+      "code": "import type { ClientLoaderArgs } from \"@kasperrt/smolter/react\";\n\nexport async function clientLoader({ serverLoader }: ClientLoaderArgs) {\n  const serverData = await serverLoader();\n\n  return { serverData, online: navigator.onLine };\n}"
+    },
+    {
+      "title": "Pending, errors, cancellation",
+      "body": "A newer request aborts the older request on the same channel. Pass signal to fetch and other abort-aware work. Returned or rejected errors become route error state. HydrateFallback renders before the first successful loader; ErrorBoundary receives an error prop. An error does not undo writes already committed by a server.",
+      "code": ""
+    }
+  ]
+}

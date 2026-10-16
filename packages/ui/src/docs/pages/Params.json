@@ -1,0 +1,13 @@
+{
+  "slug": "Params",
+  "title": "Params",
+  "summary": "Path parameters captured by a matched route.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Path parameters captured by a matched route. Keys and values are strings. Read a named key only when the active route declares it; a wildcard uses the key *. Query parameters are separate.",
+      "code": "const { id } = useParams();\nconst query = new URL(request.url).searchParams.get(\"q\");"
+    }
+  ]
+}

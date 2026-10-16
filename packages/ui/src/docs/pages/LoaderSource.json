@@ -1,0 +1,13 @@
+{
+  "slug": "LoaderSource",
+  "title": "LoaderSource",
+  "summary": "A route module or function accepted by data-hook inference.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "A route module or function accepted by data-hook inference. A function is typically supplied with typeof; a typed route can be passed as the actual hook argument.",
+      "code": "const data = useLoaderData<typeof loader>();"
+    }
+  ]
+}

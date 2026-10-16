@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import {
   cpSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -30,7 +31,16 @@ for (const framework of ["react", "preact"]) {
 
   const html = readFileSync(`site/${framework}/index.html`, "utf8");
 
-  for (const route of ["tasks", "tasks/1", "about"]) {
+  for (const route of [
+    "tasks",
+    "tasks/1",
+    "tasks/search",
+    "about",
+    "docs",
+    ...readdirSync("packages/ui/src/docs/pages").map(
+      (file) => `docs/${file.replace(/\.json$/, "")}`,
+    ),
+  ]) {
     mkdirSync(`site/${framework}/${route}`, { recursive: true });
     writeFileSync(`site/${framework}/${route}/index.html`, html);
   }

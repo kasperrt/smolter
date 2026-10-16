@@ -1,0 +1,28 @@
+{
+  "slug": "fetchers",
+  "title": "Independent reads and writes",
+  "summary": "Use a fetcher when an operation should keep the current page and URL.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Read a registered route",
+      "body": "load calls the target loader. Its result goes to fetcher.data and does not replace the page loader data or trigger page revalidation.",
+      "code": "const preview = useFetcher<typeof taskLoader>();\n\n<button onClick={() => preview.load(\"/tasks/1\")}>Preview</button>\n<p>{preview.data?.title}</p>"
+    },
+    {
+      "title": "Mutate a registered route",
+      "body": "Fetcher forms support POST, PUT, PATCH, and DELETE. Actions target registered routes, not arbitrary unregistered API URLs. A successful action revalidates the active page loader unless shouldRevalidate opts out.",
+      "code": "const editor = useFetcher<typeof taskAction>();\nconst busy = editor.state !== \"idle\";\n\n<editor.Form action=\"/tasks/1\" method=\"patch\">\n  <input name=\"title\" defaultValue=\"New title\" />\n  <button disabled={busy}>Save</button>\n</editor.Form>"
+    },
+    {
+      "title": "State and ownership",
+      "body": "A fetcher transitions idle \u2192 loading \u2192 idle for a read; idle \u2192 submitting \u2192 loading \u2192 idle for a successful mutation and revalidation. Each useFetcher instance owns independent data and cancellation. Its data persists during subsequent requests. Errors are exposed as fetcher.error.",
+      "code": ""
+    },
+    {
+      "title": "Navigation versus fetcher",
+      "body": "Form and Link navigate. fetcher.Form, fetcher.load, and fetcher.submit keep the URL, except when a handler returns a redirect. Existing fetchers are not globally cached or automatically refetched after another fetcher writes. Reload previews explicitly when needed.",
+      "code": ""
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { Link, useFetcher, useLoaderData } from "smolter/react";
+import { Link, useFetcher, useLoaderData } from "@kasperrt/smolter/react";
 import type { clientLoader } from "./loader";
 import type { clientLoader as taskLoader } from "../tasks.$id/loader";
 import type { clientAction } from "./action";

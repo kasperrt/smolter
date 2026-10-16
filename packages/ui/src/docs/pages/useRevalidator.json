@@ -1,0 +1,28 @@
+{
+  "slug": "useRevalidator",
+  "title": "useRevalidator",
+  "summary": "Get the active router revalidation function.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "The hook takes no arguments. The returned function optionally accepts a reason and mutation context.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "An async function resolving after revalidation.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const revalidate = useRevalidator();\n\n<button onClick={() => void revalidate()}>Refresh</button>"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "Calling without arguments uses reason manual. shouldRevalidate can return false even for manual refresh. It refreshes the active page loader, not every fetcher. This API returns a function, unlike React Router\u2019s object-shaped revalidator.",
+      "code": ""
+    }
+  ]
+}

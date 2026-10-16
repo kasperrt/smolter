@@ -1,0 +1,13 @@
+{
+  "slug": "DataArgs",
+  "title": "DataArgs",
+  "summary": "Every loader and action receives the Request, decoded params, and an AbortSignal.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Every loader and action receives the Request, decoded params, and an AbortSignal. Use request.url for query parameters and request.formData() for mutations. Forward signal to cancellable work.",
+      "code": "export async function loader({ request, params, signal }: DataArgs) {\n  return fetch(`/api/tasks/${params.id}`, { signal });\n}"
+    }
+  ]
+}

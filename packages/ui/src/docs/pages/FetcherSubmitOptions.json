@@ -1,0 +1,13 @@
+{
+  "slug": "FetcherSubmitOptions",
+  "title": "FetcherSubmitOptions",
+  "summary": "Combines the uppercase mutation method with an optional action URL.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Combines the uppercase mutation method with an optional action URL. This is the second argument of the hook fetcher.submit; imperative core fetcher.submit instead receives its target URL as the first argument.",
+      "code": "await fetcher.submit(formData, { action: \"/tasks/1\", method: \"PATCH\" });"
+    }
+  ]
+}

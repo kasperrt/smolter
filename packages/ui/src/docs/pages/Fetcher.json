@@ -1,0 +1,13 @@
+{
+  "slug": "Fetcher",
+  "title": "Fetcher",
+  "summary": "The imperative fetcher returned by router.createFetcher.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "The imperative fetcher returned by router.createFetcher. subscribe returns an unsubscribe function. load reads; submit mutates; dispose aborts work and clears subscriptions. UI components normally use useFetcher instead.",
+      "code": "const fetcher = router.createFetcher();\nawait fetcher.load(\"/tasks/1\");\nconsole.log(fetcher.getSnapshot().data);\nfetcher.dispose();"
+    }
+  ]
+}

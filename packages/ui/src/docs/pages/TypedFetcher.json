@@ -1,0 +1,13 @@
+{
+  "slug": "TypedFetcher",
+  "title": "TypedFetcher",
+  "summary": "The hook-level fetcher with a generic data result and a bound Form component.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "The hook-level fetcher with a generic data result and a bound Form component. It merges state with load and submit methods. A route-bound fetcher can have a union of loader and action results; narrow before accessing action-only fields.",
+      "code": "const fetcher = useFetcher<typeof action>();\nconst busy = fetcher.state !== \"idle\";\n\n<fetcher.Form action=\"/tasks/1\" method=\"patch\">\n  <button disabled={busy}>Save</button>\n</fetcher.Form>"
+    }
+  ]
+}

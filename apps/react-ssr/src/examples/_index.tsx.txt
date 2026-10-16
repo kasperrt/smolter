@@ -1,4 +1,4 @@
-import { useFetcher, useLoaderData, useRevalidator } from "smolter/react";
+import { useFetcher, useLoaderData, useRevalidator } from "@kasperrt/smolter/react";
 import type { loader } from "./loader";
 import type { action } from "./action";
 

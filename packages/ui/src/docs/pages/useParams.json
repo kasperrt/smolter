@@ -1,0 +1,28 @@
+{
+  "slug": "useParams",
+  "title": "useParams",
+  "summary": "Read the active path parameters.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "No arguments.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "A string-to-string parameter record.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const { id } = useParams();\n\nreturn <p>Task {id}</p>;"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "Named parameters are decoded; wildcard * captures the remaining path. Query strings are not params. Use useLocation or the loader Request URL for query values. It requires RouterProvider.",
+      "code": ""
+    }
+  ]
+}

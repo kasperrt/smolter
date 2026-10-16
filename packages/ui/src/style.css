@@ -678,3 +678,162 @@ aside pre {
   overflow-wrap: anywhere;
   line-height: 1.7;
 }
+
+nav a.active {
+  color: var(--pink, #d92097);
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+.route-address {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border: 1px solid #b69acb;
+  border-radius: 10px;
+  margin-block: 14px;
+  background: #f5edfc;
+  font-family: monospace;
+  overflow-wrap: anywhere;
+}
+
+.route-address span {
+  color: #7e6592;
+  font-size: 12px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.documentation {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr) 170px;
+  gap: 36px;
+  align-items: start;
+  margin-block: 36px;
+}
+
+.docs-sidebar,
+.docs-outline {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  display: grid;
+  gap: 20px;
+  font-size: 14px;
+}
+
+.docs-sidebar section,
+.docs-outline {
+  display: grid;
+  gap: 8px;
+}
+
+.docs-sidebar h2,
+.docs-outline h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.docs-sidebar a,
+.docs-outline a {
+  padding-block: 3px;
+  overflow-wrap: anywhere;
+}
+
+.docs-article {
+  min-width: 0;
+  line-height: 1.75;
+}
+
+.docs-article h1 {
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  font-size: clamp(28px, 4vw, 42px);
+  overflow-wrap: anywhere;
+}
+
+.docs-article h2 {
+  margin-block: 32px 12px;
+  font-size: 23px;
+}
+
+.docs-article h3 {
+  margin-top: 24px;
+}
+
+.docs-article p {
+  margin-block: 14px;
+}
+
+.docs-kind {
+  color: #8b3480;
+  font-size: 14px;
+}
+
+.docs-article pre {
+  background: #251d30;
+  color: #e5dced;
+  border: 1px solid #594264;
+  border-radius: 12px;
+  padding: 22px;
+  margin-block: 20px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.docs-article section {
+  scroll-margin-top: 24px;
+}
+
+@media (max-width: 1050px) {
+  .documentation {
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .docs-outline {
+    display: none;
+  }
+}
+
+@media (max-width: 650px) {
+  .documentation {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .docs-sidebar {
+    position: static;
+    max-height: 200px;
+    padding: 16px;
+    border: 1px solid #b69acb;
+    border-radius: 12px;
+  }
+}
+
+.docs-related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.docs-related h2 {
+  width: 100%;
+}
+
+.docs-related a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.docs-article h1:focus {
+  outline: none;
+}

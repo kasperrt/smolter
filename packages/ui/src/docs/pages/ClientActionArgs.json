@@ -1,0 +1,13 @@
+{
+  "slug": "ClientActionArgs",
+  "title": "ClientActionArgs",
+  "summary": "Extends DataArgs with serverAction.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Extends DataArgs with serverAction. The transport clones the action request so reading formData in the client handler does not consume the request later sent to the server.",
+      "code": "export async function clientAction({ request, serverAction }: ClientActionArgs) {\n  const form = await request.formData();\n  const result = await serverAction();\n\n  return { result, title: form.get(\"title\") };\n}"
+    }
+  ]
+}

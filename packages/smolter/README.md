@@ -14,6 +14,8 @@ loader; `shouldRevalidate` decides when that work is needed.
 Inspired by [wouter](https://github.com/molefrog/wouter)
 and [React Router](https://reactrouter.com/).
 
+[Read the documentation](https://kasperrt.github.io/smolter/react/docs/) for guides and the complete API reference. The site itself uses smolter routes.
+
 ## Contents
 
 - [Install](#install)
@@ -49,10 +51,10 @@ pnpm dev
 
 | App | Open | Data |
 | --- | --- | --- |
-| [React SPA](https://github.com/kasperrt/smolter/tree/main/apps/react) | http://127.0.0.1:5173 | Client loaders/actions, localStorage |
-| [Preact SPA](https://github.com/kasperrt/smolter/tree/main/apps/preact) | http://127.0.0.1:5174 | Client loaders/actions, localStorage |
-| [React SSR](https://github.com/kasperrt/smolter/tree/main/apps/react-ssr) | http://127.0.0.1:5175 | Server loaders/actions, hydration |
-| [Preact SSR](https://github.com/kasperrt/smolter/tree/main/apps/preact-ssr) | http://127.0.0.1:5176 | Server loaders/actions, hydration |
+| [React SPA](./apps/react) | http://127.0.0.1:5173 | Client loaders/actions, localStorage |
+| [Preact SPA](./apps/preact) | http://127.0.0.1:5174 | Client loaders/actions, localStorage |
+| [React SSR](./apps/react-ssr) | http://127.0.0.1:5175 | Server loaders/actions, hydration |
+| [Preact SSR](./apps/preact-ssr) | http://127.0.0.1:5176 | Server loaders/actions, hydration |
 
 Each app has its own entrypoints, routes, and data code. Only UI components are
 shared. Preact examples do not import React. Each includes:
@@ -442,7 +444,7 @@ sizes, not equivalent feature sets or the minimum code for one route.
 rendering code and the Vite plugin are not shipped to the browser.
 
 Exact current measurements are generated in
-[`packages/ui/src/size.json`](https://github.com/kasperrt/smolter/blob/main/packages/ui/src/size.json).
+[`packages/ui/src/size.json`](./packages/ui/src/size.json).
 
 ```sh
 pnpm fix               # Formatting
@@ -469,3 +471,5 @@ To test a local package build in another project:
 pnpm --dir packages/smolter pack --pack-destination ../..
 pnpm add /absolute/path/to/kasperrt-smolter-0.0.1.tgz
 ```
+
+Workspace structure and rendering checks are documented in [CONTRIBUTING.md](./CONTRIBUTING.md).

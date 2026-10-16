@@ -1,0 +1,28 @@
+{
+  "slug": "useActionData",
+  "title": "useActionData",
+  "summary": "Read the result of a navigating page action.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Optionally pass a typed route object or an action function type generic.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Inferred action result or undefined.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const result = useActionData<typeof action>();\n\nreturn <p>{result?.message}</p>;"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "Fetcher action results belong to fetcher.data and are not returned here. Navigating to another route clears page action data. The hook does not submit anything; use Form or router.submit.",
+      "code": ""
+    }
+  ]
+}

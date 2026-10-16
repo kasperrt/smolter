@@ -1,0 +1,13 @@
+{
+  "slug": "AnyDataFunction",
+  "title": "AnyDataFunction",
+  "summary": "A structural function constraint for type inference.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "A structural function constraint for type inference. It lets DataOf extract the return type from handlers with more specific arguments. It is a type utility, not an executable handler.",
+      "code": "type Data = DataOf<typeof loader>;"
+    }
+  ]
+}

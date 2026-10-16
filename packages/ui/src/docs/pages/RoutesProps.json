@@ -1,0 +1,13 @@
+{
+  "slug": "RoutesProps",
+  "title": "RoutesProps",
+  "summary": "fallback supplies renderable content when no matched route view can render.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "fallback supplies renderable content when no matched route view can render. It is separate from a route-specific HydrateFallback and defaults to null.",
+      "code": "<Routes fallback={<p>Not found</p>} />"
+    }
+  ]
+}

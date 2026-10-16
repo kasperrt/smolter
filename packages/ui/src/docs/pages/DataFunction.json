@@ -1,0 +1,13 @@
+{
+  "slug": "DataFunction",
+  "title": "DataFunction",
+  "summary": "The runtime handler contract accepts DataArgs and can return a value, a promise, or an Error.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "The runtime handler contract accepts DataArgs and can return a value, a promise, or an Error. Annotating a concrete handler with this broad type loses its exact return type; prefer annotating only the parameter.",
+      "code": "export function loader({ params }: DataArgs) {\n  return { id: params.id };\n}"
+    }
+  ]
+}

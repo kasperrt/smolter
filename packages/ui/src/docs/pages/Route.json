@@ -1,0 +1,13 @@
+{
+  "slug": "Route",
+  "title": "Route",
+  "summary": "A RouteModule plus its registered path.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "A RouteModule plus its registered path. The generic preserves the exact module type for useLoaderData(route) and useFetcher(route). Do not annotate a concrete route with a broad Route type if you want inference retained.",
+      "code": "const route = defineRoute(\"/tasks/:id\", taskModule);\nconst data = useLoaderData(route);"
+    }
+  ]
+}

@@ -1,0 +1,1034 @@
+[
+  {
+    "slug": "safeWrapAsync",
+    "title": "safeWrapAsync",
+    "entries": ["core"],
+    "kind": "API",
+    "summary": "Resolve returned or rejected errors into Error values without losing their cause.",
+    "signature": "function safeWrapAsync<T>(\n  work: () => T | Promise<T>,\n): Promise<Result<T>>;",
+    "fields": [],
+    "source": "packages/core/src/errors.ts"
+  },
+  {
+    "slug": "defineRoute",
+    "title": "defineRoute",
+    "entries": ["core", "react", "preact"],
+    "kind": "API",
+    "summary": "Associate a URL pattern with a module while retaining its inferred handler types.",
+    "signature": "function defineRoute<const M extends RouteModule>(\n  path: string,\n  module: M,\n): Route<M>;",
+    "fields": [],
+    "source": "packages/core/src/match.ts"
+  },
+  {
+    "slug": "matchRoutes",
+    "title": "matchRoutes",
+    "entries": ["core"],
+    "kind": "API",
+    "summary": "Static segments, :params and a terminal * wildcard; first match wins.",
+    "signature": "function matchRoutes(\n  routes: readonly Route[],\n  pathname: string,\n): Match | undefined;",
+    "fields": [],
+    "source": "packages/core/src/match.ts"
+  },
+  {
+    "slug": "createRouter",
+    "title": "createRouter",
+    "entries": ["core", "react", "preact"],
+    "kind": "API",
+    "summary": "Create an isolated router. Use browser: true for browser history, or loadRouter for SSR.",
+    "signature": "function createRouter(\n  routes: readonly Route[],\n  options: RouterOptions = {},\n): Router;",
+    "fields": [],
+    "source": "packages/core/src/router.ts"
+  },
+  {
+    "slug": "Params",
+    "title": "Params",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "Framework-independent data routing. No global request state.",
+    "signature": "type Params = Record<string, string>;",
+    "fields": [],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "DataArgs",
+    "title": "DataArgs",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "Request, path parameters, and cancellation signal passed to a data handler.",
+    "signature": "interface DataArgs {\n  request: Request;\n  params: Params;\n  signal: AbortSignal;\n}",
+    "fields": [
+      {
+        "name": "request",
+        "signature": "request: Request;",
+        "summary": ""
+      },
+      {
+        "name": "params",
+        "signature": "params: Params;",
+        "summary": ""
+      },
+      {
+        "name": "signal",
+        "signature": "signal: AbortSignal;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "DataFunction",
+    "title": "DataFunction",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "A loader or action that returns data, a Response, or an Error value.",
+    "signature": "type DataFunction = (args: DataArgs) => unknown;",
+    "fields": [],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "AnyDataFunction",
+    "title": "AnyDataFunction",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "A handler signature used to infer data from specialized loader and action arguments.",
+    "signature": "type AnyDataFunction = (...args: never[]) => unknown;",
+    "fields": [],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "ClientLoaderArgs",
+    "title": "ClientLoaderArgs",
+    "entries": ["core", "react", "preact", "client"],
+    "kind": "Types",
+    "summary": "Client loader arguments, including a typed call to the server loader.",
+    "signature": "interface ClientLoaderArgs<L extends AnyDataFunction = DataFunction>\n  extends DataArgs {\n  serverLoader: () => Promise<DataOf<L>>;\n}",
+    "fields": [
+      {
+        "name": "serverLoader",
+        "signature": "serverLoader: () => Promise<DataOf<L>>;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "ClientActionArgs",
+    "title": "ClientActionArgs",
+    "entries": ["core", "react", "preact", "client"],
+    "kind": "Types",
+    "summary": "Client action arguments, including a typed call to the server action.",
+    "signature": "interface ClientActionArgs<A extends AnyDataFunction = DataFunction>\n  extends DataArgs {\n  serverAction: () => Promise<DataOf<A>>;\n}",
+    "fields": [
+      {
+        "name": "serverAction",
+        "signature": "serverAction: () => Promise<DataOf<A>>;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "DataOf",
+    "title": "DataOf",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "The resolved data returned by a handler, excluding Error values.",
+    "signature": "type DataOf<F> = F extends AnyDataFunction\n  ? Exclude<Awaited<ReturnType<F>>, Error>\n  : undefined;",
+    "fields": [],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "RevalidationContext",
+    "title": "RevalidationContext",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "Mutation details supplied when deciding whether to reload route data.",
+    "signature": "interface RevalidationContext {\n  formMethod?: string;\n  formAction?: string;\n  formData?: FormData;\n  actionResult?: unknown;\n}",
+    "fields": [
+      {
+        "name": "formMethod",
+        "signature": "formMethod?: string;",
+        "summary": ""
+      },
+      {
+        "name": "formAction",
+        "signature": "formAction?: string;",
+        "summary": ""
+      },
+      {
+        "name": "formData",
+        "signature": "formData?: FormData;",
+        "summary": ""
+      },
+      {
+        "name": "actionResult",
+        "signature": "actionResult?: unknown;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "RevalidationArgs",
+    "title": "RevalidationArgs",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "Current URL, mutation result, and reason passed to shouldRevalidate.",
+    "signature": "interface RevalidationArgs extends RevalidationContext {\n  currentUrl: URL;\n  nextUrl: URL;\n  defaultShouldRevalidate: boolean;\n  url: URL;\n  reason: \"manual\" | \"action\" | \"navigation\";\n}",
+    "fields": [
+      {
+        "name": "currentUrl",
+        "signature": "currentUrl: URL;",
+        "summary": ""
+      },
+      {
+        "name": "nextUrl",
+        "signature": "nextUrl: URL;",
+        "summary": ""
+      },
+      {
+        "name": "defaultShouldRevalidate",
+        "signature": "defaultShouldRevalidate: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "url",
+        "signature": "url: URL;",
+        "summary": ""
+      },
+      {
+        "name": "reason",
+        "signature": "reason: \"manual\" | \"action\" | \"navigation\";",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "RouteModule",
+    "title": "RouteModule",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "A route component and its optional server and client data handlers.",
+    "signature": "interface RouteModule {\n  default?: unknown;\n  HydrateFallback?: unknown;\n  ErrorBoundary?: unknown;\n  loader?: DataFunction;\n  action?: DataFunction;\n  clientLoader?(args: ClientLoaderArgs): unknown;\n  clientAction?(args: ClientActionArgs): unknown;\n  shouldRevalidate?: (args: RevalidationArgs) => boolean;\n}",
+    "fields": [
+      {
+        "name": "default",
+        "signature": "default?: unknown;",
+        "summary": ""
+      },
+      {
+        "name": "HydrateFallback",
+        "signature": "HydrateFallback?: unknown;",
+        "summary": ""
+      },
+      {
+        "name": "ErrorBoundary",
+        "signature": "ErrorBoundary?: unknown;",
+        "summary": ""
+      },
+      {
+        "name": "loader",
+        "signature": "loader?: DataFunction;",
+        "summary": ""
+      },
+      {
+        "name": "action",
+        "signature": "action?: DataFunction;",
+        "summary": ""
+      },
+      {
+        "name": "clientLoader",
+        "signature": "clientLoader?(args: ClientLoaderArgs): unknown;",
+        "summary": ""
+      },
+      {
+        "name": "clientAction",
+        "signature": "clientAction?(args: ClientActionArgs): unknown;",
+        "summary": ""
+      },
+      {
+        "name": "shouldRevalidate",
+        "signature": "shouldRevalidate?: (args: RevalidationArgs) => boolean;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "Route",
+    "title": "Route",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "A route module associated with an explicit URL pattern.",
+    "signature": "type Route<M extends RouteModule = RouteModule> = M & { path: string };",
+    "fields": [],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "Match",
+    "title": "Match",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "The first matching route and its decoded path parameters.",
+    "signature": "interface Match {\n  route: Route;\n  params: Params;\n}",
+    "fields": [
+      {
+        "name": "route",
+        "signature": "route: Route;",
+        "summary": ""
+      },
+      {
+        "name": "params",
+        "signature": "params: Params;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "Snapshot",
+    "title": "Snapshot",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "Immutable current route state observed by framework hooks.",
+    "signature": "interface Snapshot {\n  url: string;\n  path?: string;\n  params: Params;\n  data?: unknown;\n  /** Whether this route has completed a loader, including an undefined result. */\n  loaded?: boolean;\n  actionData?: unknown;\n  error?: Error;\n  state: \"idle\" | \"loading\" | \"submitting\";\n}",
+    "fields": [
+      {
+        "name": "url",
+        "signature": "url: string;",
+        "summary": ""
+      },
+      {
+        "name": "path",
+        "signature": "path?: string;",
+        "summary": ""
+      },
+      {
+        "name": "params",
+        "signature": "params: Params;",
+        "summary": ""
+      },
+      {
+        "name": "data",
+        "signature": "data?: unknown;",
+        "summary": ""
+      },
+      {
+        "name": "loaded",
+        "signature": "loaded?: boolean;",
+        "summary": "Whether this route has completed a loader, including an undefined result."
+      },
+      {
+        "name": "actionData",
+        "signature": "actionData?: unknown;",
+        "summary": ""
+      },
+      {
+        "name": "error",
+        "signature": "error?: Error;",
+        "summary": ""
+      },
+      {
+        "name": "state",
+        "signature": "state: \"idle\" | \"loading\" | \"submitting\";",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "RouterOptions",
+    "title": "RouterOptions",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "Initial URL, browser history, and hydration configuration.",
+    "signature": "interface RouterOptions {\n  url?: string;\n  /** Explicitly opt into browser history; leave off for SSR and tests. */\n  browser?: boolean;\n  hydrationData?: Snapshot;\n}",
+    "fields": [
+      {
+        "name": "url",
+        "signature": "url?: string;",
+        "summary": ""
+      },
+      {
+        "name": "browser",
+        "signature": "browser?: boolean;",
+        "summary": "Explicitly opt into browser history; leave off for SSR and tests."
+      },
+      {
+        "name": "hydrationData",
+        "signature": "hydrationData?: Snapshot;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "NavigateOptions",
+    "title": "NavigateOptions",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "Options for replacing rather than appending a browser history entry.",
+    "signature": "interface NavigateOptions {\n  replace?: boolean;\n}",
+    "fields": [
+      {
+        "name": "replace",
+        "signature": "replace?: boolean;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "SubmitOptions",
+    "title": "SubmitOptions",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "HTTP method for a route action submission; defaults to POST.",
+    "signature": "interface SubmitOptions {\n  method?: \"POST\" | \"PUT\" | \"PATCH\" | \"DELETE\";\n}",
+    "fields": [
+      {
+        "name": "method",
+        "signature": "method?: \"POST\" | \"PUT\" | \"PATCH\" | \"DELETE\";",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "Result",
+    "title": "Result",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "A resolved operation result, with either data or a normalized Error.",
+    "signature": "interface Result<T = unknown> {\n  data?: T;\n  error?: Error;\n}",
+    "fields": [
+      {
+        "name": "data",
+        "signature": "data?: T;",
+        "summary": ""
+      },
+      {
+        "name": "error",
+        "signature": "error?: Error;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "FetcherSnapshot",
+    "title": "FetcherSnapshot",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "Independent fetcher data, error, and pending state.",
+    "signature": "interface FetcherSnapshot extends Result {\n  state: Snapshot[\"state\"];\n}",
+    "fields": [
+      {
+        "name": "state",
+        "signature": "state: Snapshot[\"state\"];",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "Fetcher",
+    "title": "Fetcher",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "An independent loader/action channel that does not navigate the page.",
+    "signature": "interface Fetcher {\n  getSnapshot: () => FetcherSnapshot;\n  subscribe: (listener: () => void) => () => void;\n  load: (url: string) => Promise<Result>;\n  submit: (\n    url: string,\n    body: FormData,\n    options?: SubmitOptions,\n  ) => Promise<Result>;\n  /** Abort work and release subscriptions when this imperative fetcher is no longer used. */\n  dispose: () => void;\n}",
+    "fields": [
+      {
+        "name": "getSnapshot",
+        "signature": "getSnapshot: () => FetcherSnapshot;",
+        "summary": ""
+      },
+      {
+        "name": "subscribe",
+        "signature": "subscribe: (listener: () => void) => () => void;",
+        "summary": ""
+      },
+      {
+        "name": "load",
+        "signature": "load: (url: string) => Promise<Result>;",
+        "summary": ""
+      },
+      {
+        "name": "submit",
+        "signature": "submit: (\n    url: string,\n    body: FormData,\n    options?: SubmitOptions,\n  ) => Promise<Result>;",
+        "summary": ""
+      },
+      {
+        "name": "dispose",
+        "signature": "dispose: () => void;",
+        "summary": "Abort work and release subscriptions when this imperative fetcher is no longer used."
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "Router",
+    "title": "Router",
+    "entries": ["core", "react", "preact"],
+    "kind": "Types",
+    "summary": "Route navigation, subscriptions, fetchers, and loader revalidation.",
+    "signature": "interface Router {\n  routes: readonly Route[];\n  getSnapshot: () => Snapshot;\n  subscribe: (listener: () => void) => () => void;\n  start: () => () => void;\n  navigate: (url: string, options?: NavigateOptions) => Promise<void>;\n  revalidate: (\n    reason?: RevalidationArgs[\"reason\"],\n    context?: RevalidationContext,\n  ) => Promise<void>;\n  submit: (\n    url: string,\n    body: FormData,\n    options?: SubmitOptions,\n  ) => Promise<Result>;\n  /** Create an independent fetcher. Framework useFetcher hooks manage disposal automatically. */\n  createFetcher: () => Fetcher;\n  dispose: () => void;\n}",
+    "fields": [
+      {
+        "name": "routes",
+        "signature": "routes: readonly Route[];",
+        "summary": ""
+      },
+      {
+        "name": "getSnapshot",
+        "signature": "getSnapshot: () => Snapshot;",
+        "summary": ""
+      },
+      {
+        "name": "subscribe",
+        "signature": "subscribe: (listener: () => void) => () => void;",
+        "summary": ""
+      },
+      {
+        "name": "start",
+        "signature": "start: () => () => void;",
+        "summary": ""
+      },
+      {
+        "name": "navigate",
+        "signature": "navigate: (url: string, options?: NavigateOptions) => Promise<void>;",
+        "summary": ""
+      },
+      {
+        "name": "revalidate",
+        "signature": "revalidate: (\n    reason?: RevalidationArgs[\"reason\"],\n    context?: RevalidationContext,\n  ) => Promise<void>;",
+        "summary": ""
+      },
+      {
+        "name": "submit",
+        "signature": "submit: (\n    url: string,\n    body: FormData,\n    options?: SubmitOptions,\n  ) => Promise<Result>;",
+        "summary": ""
+      },
+      {
+        "name": "createFetcher",
+        "signature": "createFetcher: () => Fetcher;",
+        "summary": "Create an independent fetcher. Framework useFetcher hooks manage disposal automatically."
+      },
+      {
+        "name": "dispose",
+        "signature": "dispose: () => void;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "internalURL",
+    "title": "internalURL",
+    "entries": ["core"],
+    "kind": "API",
+    "summary": "Resolve an internal URL; external links remain the browser's responsibility.",
+    "signature": "function internalURL(base: string, href = base): URL | undefined;",
+    "fields": [],
+    "source": "packages/core/src/url.ts"
+  },
+  {
+    "slug": "RouterProvider",
+    "title": "RouterProvider",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Provide a router to descendant hooks and connect its browser lifecycle.",
+    "signature": "function RouterProvider({\n  router,\n  children,\n}: RouterProviderProps): ReactNode;",
+    "fields": [],
+    "source": "packages/react/src/context.ts"
+  },
+  {
+    "slug": "RouterProviderProps",
+    "title": "RouterProviderProps",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Router instance and children rendered within its context.",
+    "signature": "interface RouterProviderProps {\n  router: Router;\n  children?: ReactNode;\n}",
+    "fields": [
+      {
+        "name": "router",
+        "signature": "router: Router;",
+        "summary": ""
+      },
+      {
+        "name": "children",
+        "signature": "children?: ReactNode;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/context.ts"
+  },
+  {
+    "slug": "useRouter",
+    "title": "useRouter",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Hooks require a RouterProvider.",
+    "signature": "function useRouter(): Router;",
+    "fields": [],
+    "source": "packages/react/src/context.ts"
+  },
+  {
+    "slug": "useFetcher",
+    "title": "useFetcher",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Create a fetcher for independent route reads and mutations; its data stays local.",
+    "signature": "function useFetcher<T extends RouteModule>(\n  route: RouteDefinition<T>,\n): TypedFetcher<\n  | DataOf<Extract<T[\"action\"] | T[\"clientAction\"], AnyDataFunction>>\n  | DataOf<Extract<T[\"loader\"] | T[\"clientLoader\"], AnyDataFunction>>\n>;\n\nfunction useFetcher<\n  T extends AnyDataFunction = DataFunction,\n>(): TypedFetcher<DataOf<T>>;",
+    "fields": [],
+    "source": "packages/react/src/fetcher.ts"
+  },
+  {
+    "slug": "FetcherSubmitOptions",
+    "title": "FetcherSubmitOptions",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Action method and optional explicit route URL for a fetcher submission.",
+    "signature": "interface FetcherSubmitOptions extends SubmitOptions {\n  action?: string;\n}",
+    "fields": [
+      {
+        "name": "action",
+        "signature": "action?: string;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/fetcher.ts"
+  },
+  {
+    "slug": "TypedFetcher",
+    "title": "TypedFetcher",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Typed independent request state, methods, and a bound Form component.",
+    "signature": "interface TypedFetcher<T> extends Omit<FetcherSnapshot, \"data\"> {\n  data?: T;\n  Form: ComponentType<FormProps>;\n  load: (url?: string) => Promise<Result>;\n  submit: (body: FormData, options?: FetcherSubmitOptions) => Promise<Result>;\n}",
+    "fields": [
+      {
+        "name": "data",
+        "signature": "data?: T;",
+        "summary": ""
+      },
+      {
+        "name": "Form",
+        "signature": "Form: ComponentType<FormProps>;",
+        "summary": ""
+      },
+      {
+        "name": "load",
+        "signature": "load: (url?: string) => Promise<Result>;",
+        "summary": ""
+      },
+      {
+        "name": "submit",
+        "signature": "submit: (body: FormData, options?: FetcherSubmitOptions) => Promise<Result>;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/fetcher.ts"
+  },
+  {
+    "slug": "Form",
+    "title": "Form",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Submit form data to a registered route without a document reload.",
+    "signature": "function Form({\n  action,\n  method = \"post\",\n  fetcher,\n  onSubmit,\n  ...props\n}: InternalFormProps): ReactNode;",
+    "fields": [],
+    "source": "packages/react/src/form.ts"
+  },
+  {
+    "slug": "FormProps",
+    "title": "FormProps",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Form attributes with GET loader requests or POST, PUT, PATCH, and DELETE actions.",
+    "signature": "interface FormProps\n  extends Omit<FormHTMLAttributes<HTMLFormElement>, \"action\" | \"method\"> {\n  action?: string;\n  method?: \"get\" | \"post\" | \"put\" | \"patch\" | \"delete\";\n}",
+    "fields": [
+      {
+        "name": "action",
+        "signature": "action?: string;",
+        "summary": ""
+      },
+      {
+        "name": "method",
+        "signature": "method?: \"get\" | \"post\" | \"put\" | \"patch\" | \"delete\";",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/form.ts"
+  },
+  {
+    "slug": "useLoaderData",
+    "title": "useLoaderData",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Pass a route for inference, or use useLoaderData<typeof loader>() in its module.",
+    "signature": "function useLoaderData<T extends LoaderSource = RouteModule>(\n  route?: T,\n): LoaderData<T> | undefined;",
+    "fields": [],
+    "source": "packages/react/src/hooks.ts"
+  },
+  {
+    "slug": "useActionData",
+    "title": "useActionData",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Read the last page action result, optionally inferring its type from a route.",
+    "signature": "function useActionData<T extends LoaderSource = RouteModule>(\n  route?: T,\n): ActionData<T> | undefined;",
+    "fields": [],
+    "source": "packages/react/src/hooks.ts"
+  },
+  {
+    "slug": "useParams",
+    "title": "useParams",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Read path parameters for the active route.",
+    "signature": "function useParams(): Snapshot[\"params\"];",
+    "fields": [],
+    "source": "packages/react/src/hooks.ts"
+  },
+  {
+    "slug": "useLocation",
+    "title": "useLocation",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Read the current path, search, and hash together with the navigate function.",
+    "signature": "function useLocation(): readonly [string, Router[\"navigate\"]];",
+    "fields": [],
+    "source": "packages/react/src/hooks.ts"
+  },
+  {
+    "slug": "useRevalidator",
+    "title": "useRevalidator",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Get the function that revalidates the current loader subject to shouldRevalidate.",
+    "signature": "function useRevalidator(): Router[\"revalidate\"];",
+    "fields": [],
+    "source": "packages/react/src/hooks.ts"
+  },
+  {
+    "slug": "LoaderSource",
+    "title": "LoaderSource",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "A route module or loader function used for data inference.",
+    "signature": "type LoaderSource = RouteModule | AnyDataFunction;",
+    "fields": [],
+    "source": "packages/react/src/hooks.ts"
+  },
+  {
+    "slug": "LoaderData",
+    "title": "LoaderData",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Infer server and client loader data from a route module or function.",
+    "signature": "type LoaderData<T> = T extends AnyDataFunction\n  ? DataOf<T>\n  : T extends RouteModule\n    ? DataOf<Extract<T[\"loader\"] | T[\"clientLoader\"], AnyDataFunction>>\n    : unknown;",
+    "fields": [],
+    "source": "packages/react/src/hooks.ts"
+  },
+  {
+    "slug": "ActionData",
+    "title": "ActionData",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Infer server and client action data from a route module or function.",
+    "signature": "type ActionData<T> = T extends AnyDataFunction\n  ? DataOf<T>\n  : T extends RouteModule\n    ? DataOf<Extract<T[\"action\"] | T[\"clientAction\"], AnyDataFunction>>\n    : unknown;",
+    "fields": [],
+    "source": "packages/react/src/hooks.ts"
+  },
+  {
+    "slug": "Link",
+    "title": "Link",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Render an anchor that handles internal navigation and preserves native modified clicks.",
+    "signature": "function Link({\n  href,\n  replace,\n  onClick,\n  ...props\n}: LinkProps): ReactNode;",
+    "fields": [],
+    "source": "packages/react/src/link.ts"
+  },
+  {
+    "slug": "LinkProps",
+    "title": "LinkProps",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Anchor attributes with internal navigation and optional history replacement.",
+    "signature": "interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {\n  href: string;\n  replace?: boolean;\n}",
+    "fields": [
+      {
+        "name": "href",
+        "signature": "href: string;",
+        "summary": ""
+      },
+      {
+        "name": "replace",
+        "signature": "replace?: boolean;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/link.ts"
+  },
+  {
+    "slug": "Routes",
+    "title": "Routes",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Renders the first matching registered module.",
+    "signature": "function Routes({ fallback = null }: RoutesProps): ReactNode;",
+    "fields": [],
+    "source": "packages/react/src/routes.ts"
+  },
+  {
+    "slug": "ViewModule",
+    "title": "ViewModule",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Renderable route module with optional loading and error components.",
+    "signature": "interface ViewModule extends RouteModule {\n  default?: ComponentType;\n  HydrateFallback?: ComponentType;\n  ErrorBoundary?: ComponentType<ErrorProps>;\n}",
+    "fields": [
+      {
+        "name": "default",
+        "signature": "default?: ComponentType;",
+        "summary": ""
+      },
+      {
+        "name": "HydrateFallback",
+        "signature": "HydrateFallback?: ComponentType;",
+        "summary": ""
+      },
+      {
+        "name": "ErrorBoundary",
+        "signature": "ErrorBoundary?: ComponentType<ErrorProps>;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/routes.ts"
+  },
+  {
+    "slug": "ErrorProps",
+    "title": "ErrorProps",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Normalized route error supplied to an ErrorBoundary component.",
+    "signature": "interface ErrorProps {\n  error: Error;\n}",
+    "fields": [
+      {
+        "name": "error",
+        "signature": "error: Error;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/routes.ts"
+  },
+  {
+    "slug": "RoutesProps",
+    "title": "RoutesProps",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Fallback content used when no matching component can be rendered.",
+    "signature": "interface RoutesProps {\n  fallback?: ReactNode;\n}",
+    "fields": [
+      {
+        "name": "fallback",
+        "signature": "fallback?: ReactNode;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/routes.ts"
+  },
+  {
+    "slug": "serverRoute",
+    "title": "serverRoute",
+    "entries": ["client"],
+    "kind": "API",
+    "summary": "Browser transport for server routes. File-router builds generate this call.",
+    "signature": "function serverRoute<M extends RouteModule = RouteModule>(\n  path: string,\n  module: ClientRouteModule,\n  handlers: ServerHandlers = { loader: true, action: true },\n): Route<M>;",
+    "fields": [],
+    "source": "packages/client/src/index.ts"
+  },
+  {
+    "slug": "deserialize",
+    "title": "deserialize",
+    "entries": ["client"],
+    "kind": "API",
+    "summary": "Restore a trusted snapshot produced by",
+    "signature": "function deserialize(json: string): Snapshot;",
+    "fields": [],
+    "source": "packages/client/src/deserialize.ts"
+  },
+  {
+    "slug": "ClientRouteModule",
+    "title": "ClientRouteModule",
+    "entries": ["client"],
+    "kind": "Types",
+    "summary": "Browser-safe route exports, excluding server implementation code.",
+    "signature": "interface ClientRouteModule {\n  default?: unknown;\n  HydrateFallback?: unknown;\n  ErrorBoundary?: unknown;\n  clientLoader?(args: ClientLoaderArgs): unknown;\n  clientAction?(args: ClientActionArgs): unknown;\n  shouldRevalidate?: RouteModule[\"shouldRevalidate\"];\n}",
+    "fields": [
+      {
+        "name": "default",
+        "signature": "default?: unknown;",
+        "summary": ""
+      },
+      {
+        "name": "HydrateFallback",
+        "signature": "HydrateFallback?: unknown;",
+        "summary": ""
+      },
+      {
+        "name": "ErrorBoundary",
+        "signature": "ErrorBoundary?: unknown;",
+        "summary": ""
+      },
+      {
+        "name": "clientLoader",
+        "signature": "clientLoader?(args: ClientLoaderArgs): unknown;",
+        "summary": ""
+      },
+      {
+        "name": "clientAction",
+        "signature": "clientAction?(args: ClientActionArgs): unknown;",
+        "summary": ""
+      },
+      {
+        "name": "shouldRevalidate",
+        "signature": "shouldRevalidate?: RouteModule[\"shouldRevalidate\"];",
+        "summary": ""
+      }
+    ],
+    "source": "packages/client/src/index.ts"
+  },
+  {
+    "slug": "ServerHandlers",
+    "title": "ServerHandlers",
+    "entries": ["client"],
+    "kind": "Types",
+    "summary": "Select the server loader and action proxies available on a browser route.",
+    "signature": "interface ServerHandlers {\n  loader?: boolean;\n  action?: boolean;\n}",
+    "fields": [
+      {
+        "name": "loader",
+        "signature": "loader?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "action",
+        "signature": "action?: boolean;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/client/src/index.ts"
+  },
+  {
+    "slug": "loadRouter",
+    "title": "loadRouter",
+    "entries": ["server"],
+    "kind": "API",
+    "summary": "Create one router per server request, await this, then render the provider.",
+    "signature": "function loadRouter(\n  routes: readonly Route[],\n  input: string | Request,\n): Promise<Router>;",
+    "fields": [],
+    "source": "packages/server/src/index.ts"
+  },
+  {
+    "slug": "serialize",
+    "title": "serialize",
+    "entries": ["server"],
+    "kind": "API",
+    "summary": "Safe inside a script element. Data must be JSON serializable; error stacks and causes are omitted.",
+    "signature": "function serialize(snapshot: Snapshot): string;",
+    "fields": [],
+    "source": "packages/server/src/index.ts"
+  },
+  {
+    "slug": "handleRequest",
+    "title": "handleRequest",
+    "entries": ["server"],
+    "kind": "API",
+    "summary": "Dispatch an HTTP data request to a registered server loader or action.",
+    "signature": "function handleRequest(\n  routes: readonly Route[],\n  request: Request,\n): Promise<Response>;",
+    "fields": [],
+    "source": "packages/server/src/index.ts"
+  },
+  {
+    "slug": "flatRoutes",
+    "title": "flatRoutes",
+    "entries": ["files"],
+    "kind": "API",
+    "summary": "Read only flat files and immediate route folders. Colocated helpers are ignored.",
+    "signature": "function flatRoutes(\n  directory: string,\n): Promise<RouteFile[] | Error>;",
+    "fields": [],
+    "source": "packages/files/src/index.ts"
+  },
+  {
+    "slug": "RouteFile",
+    "title": "RouteFile",
+    "entries": ["files"],
+    "kind": "Types",
+    "summary": "A discovered flat route pattern and its module file path.",
+    "signature": "interface RouteFile {\n  path: string;\n  file: string;\n}",
+    "fields": [
+      {
+        "name": "path",
+        "signature": "path: string;",
+        "summary": ""
+      },
+      {
+        "name": "file",
+        "signature": "file: string;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/files/src/index.ts"
+  },
+  {
+    "slug": "routerPlugin",
+    "title": "routerPlugin",
+    "entries": ["vite"],
+    "kind": "API",
+    "summary": "Build-time flat route discovery and the optional server data transport.",
+    "signature": "function routerPlugin({\n  directory = \"src/routes\",\n  clientRoutes,\n  serverRoutes,\n}: FileRouterOptions = {}): Plugin;",
+    "fields": [],
+    "source": "packages/vite/src/index.ts"
+  },
+  {
+    "slug": "FileRouterOptions",
+    "title": "FileRouterOptions",
+    "entries": ["vite"],
+    "kind": "Types",
+    "summary": "",
+    "signature": "interface FileRouterOptions {\n  directory?: string;\n  clientRoutes?: string;\n  serverRoutes?: string;\n}",
+    "fields": [
+      {
+        "name": "directory",
+        "signature": "directory?: string;",
+        "summary": ""
+      },
+      {
+        "name": "clientRoutes",
+        "signature": "clientRoutes?: string;",
+        "summary": ""
+      },
+      {
+        "name": "serverRoutes",
+        "signature": "serverRoutes?: string;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/vite/src/index.ts"
+  },
+  {
+    "slug": "fileRouter",
+    "title": "fileRouter",
+    "entries": ["vite"],
+    "kind": "API",
+    "summary": "File routing is the default; this alias keeps configuration explicit.",
+    "signature": "const fileRouter: ({ directory, clientRoutes, serverRoutes, }?: FileRouterOptions) => Plugin;",
+    "fields": [],
+    "source": "packages/vite/src/index.ts"
+  }
+]

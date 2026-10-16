@@ -1,0 +1,13 @@
+{
+  "slug": "RevalidationArgs",
+  "title": "RevalidationArgs",
+  "summary": "The full synchronous shouldRevalidate argument.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "The full synchronous shouldRevalidate argument. reason is manual, action, or navigation. currentUrl and nextUrl distinguish same-route navigation; action context is present after successful mutations. Return false to retain existing data.",
+      "code": "export function shouldRevalidate({ currentUrl, nextUrl, reason }: RevalidationArgs) {\n  if (reason === \"navigation\") return currentUrl.search !== nextUrl.search;\n\n  return true;\n}"
+    }
+  ]
+}

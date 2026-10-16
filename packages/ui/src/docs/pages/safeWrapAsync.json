@@ -1,0 +1,28 @@
+{
+  "slug": "safeWrapAsync",
+  "title": "safeWrapAsync",
+  "summary": "Normalize asynchronous work into a data-or-error result.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "work is a callback returning a value or promise.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Promise<Result<T>> with data on success or error on failure.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const result = await safeWrapAsync(() => readTask());\n\nif (result.error) return result.error;\nreturn result.data;"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "Returning an Error is treated as failure. Rejected promises and synchronous exceptions are converted to Error values whose cause preserves the original failure. This is an exported low-level utility used by the router and server dispatcher.",
+      "code": ""
+    }
+  ]
+}

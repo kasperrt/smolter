@@ -1,0 +1,28 @@
+{
+  "slug": "Form",
+  "title": "Form",
+  "summary": "Submit to a registered route and navigate without reloading the document.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "action defaults to the current URL. method defaults to post; get, post, put, patch, and delete are supported. Standard form attributes and onSubmit are forwarded.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "A form element.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "<Form action=\"/tasks/search\" method=\"get\">\n  <input name=\"q\" />\n  <button>Search</button>\n</Form>"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "GET serializes form values into a new query string and calls the loader through navigation. Mutations call the action, then revalidate. Submitter formaction and formmethod override form defaults. GET files contribute their filenames. Use fetcher.Form to avoid navigation. Native markup uses GET or POST; PATCH/PUT/DELETE require the JavaScript handler.",
+      "code": ""
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "slug": "handleRequest",
+  "title": "handleRequest",
+  "summary": "Dispatch an HTTP data request to a server route.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "routes is the server route table. request must have the intended route URL, method, headers, body, and signal.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "A Promise<Response>: handler data as JSON, a returned Response, or a JSON error response.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "const response = await handleRequest(serverRoutes, request);\nreturn response;"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "GET invokes loader. POST, PUT, PATCH, and DELETE invoke action. Missing routes return 404; absent handlers and unsupported methods return 405; errors return 500. Returned Location redirects are translated into X-Smolter-Redirect for the browser transport. This dispatches data, not HTML.",
+      "code": ""
+    }
+  ]
+}

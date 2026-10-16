@@ -1,0 +1,28 @@
+{
+  "slug": "Link",
+  "title": "Link",
+  "summary": "Navigate within the app using a normal anchor.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "href is required. replace chooses history replacement. Standard anchor attributes and onClick are forwarded.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "An anchor with internal-navigation handling.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Import this API from one of the entry points listed above. Framework APIs are available from both /react and /preact.",
+      "code": "<Link href=\"/tasks/1\">Open task</Link>\n<Link href=\"/tasks?sort=title\" replace>Sort by title</Link>"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "Modified clicks, downloads, external URLs, and non-_self targets retain native browser behavior. onClick runs first and can preventDefault. URL resolution follows normal URL rules relative to the current URL; this is not route-hierarchy-relative resolution.",
+      "code": ""
+    }
+  ]
+}
