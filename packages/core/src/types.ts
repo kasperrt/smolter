@@ -79,6 +79,8 @@ export interface Snapshot {
   path?: string;
   params: Params;
   data?: unknown;
+  /** Whether this route has completed a loader, including an undefined result. */
+  loaded?: boolean;
   actionData?: unknown;
   error?: Error;
   state: "idle" | "loading" | "submitting";

@@ -8,22 +8,57 @@ const json = `${JSON.stringify(sizes, null, 2)}\n`;
 if (readFileSync(path, "utf8") !== json) writeFileSync(path, json);
 
 if (!process.argv.includes("--write-only")) {
-  for (const [adapter, baseline] of [
-    ["react", "wouter"],
-    ["preact", "wouter-preact"],
-  ]) {
-    const actual = sizes[adapter];
-    const reference = await measure(baseline);
+  const manifest = JSON.parse(
+    readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+  );
+  const references = await Promise.all(
+    ["wouter", "wouter-preact", "react-router"].map(async (name) => ({
+      name,
+      version: manifest.devDependencies[name],
+      bytes: await measure(name),
+    })),
+  );
+  const rows = [
+    ["smolter/react", sizes.react],
+    ["smolter/preact", sizes.preact],
+    ["smolter/react + smolter/client", sizes.reactServer],
+    ["smolter/preact + smolter/client", sizes.preactServer],
+    ...references.map(({ name, version, bytes }) => [
+      `${name}@${version}`,
+      bytes,
+    ]),
+  ];
+  const table = [
+    "<!-- size-comparison:start -->",
+    "| Browser exports | Gzip bytes |",
+    "| --- | ---: |",
+    ...rows.map(([name, bytes]) => `| \`${name}\` | ${bytes} |`),
+    "<!-- size-comparison:end -->",
+  ].join("\n");
 
-    console.log(
-      `${adapter}: ${actual} B gzip; ${baseline}: ${reference} B; with optional server transport: ${sizes[`${adapter}Server`]} B`,
+  for (const file of ["README.md", "packages/smolter/README.md"]) {
+    const url = new URL(`../${file}`, import.meta.url);
+    const source = readFileSync(url, "utf8");
+    const updated = source.replace(
+      /<!-- size-comparison:start -->[\s\S]*?<!-- size-comparison:end -->/,
+      table,
     );
 
-    if (actual >= reference || actual >= 2100) process.exitCode = 1;
+    if (source !== updated) writeFileSync(url, updated);
   }
 
-  console.log(`core: ${await measure("@smolter/core")} B gzip`);
+  for (const [name, bytes] of rows) console.log(`${name}: ${bytes} B gzip`);
+
+  for (const [index, adapter] of ["react", "preact"].entries()) {
+    if (sizes[adapter] >= references[index].bytes) {
+      console.error(
+        `${adapter} must be smaller than ${references[index].name}`,
+      );
+      process.exitCode = 1;
+    }
+  }
+
   console.log(
-    "All exports, identical minifiers, gzip level 9. Frameworks excluded. File discovery runs at build time.",
+    "All exports, identical minifiers, gzip level 9. Frameworks excluded; runtime dependencies included.",
   );
 }

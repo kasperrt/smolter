@@ -55,7 +55,7 @@ export async function loadRouter(
   ) {
     return createRouter(serverRoutes, {
       url,
-      hydrationData: { ...snapshot, state: "loading" },
+      hydrationData: { ...snapshot, loaded: false, state: "loading" },
     });
   }
 

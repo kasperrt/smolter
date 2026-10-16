@@ -24,13 +24,16 @@ export function createRouter(
   options: RouterOptions = {},
 ): Router {
   const browser = options.browser && typeof window !== "undefined";
-  const initial: Snapshot = options.hydrationData ?? {
-    url: new URL(
-      options.url ?? (browser ? location.href : "/"),
-      "http://localhost",
-    ).href,
-    params: {},
-    state: "idle",
+  const initial: Snapshot = {
+    loaded: options.hydrationData?.state === "idle",
+    ...(options.hydrationData ?? {
+      url: new URL(
+        options.url ?? (browser ? location.href : "/"),
+        "http://localhost",
+      ).href,
+      params: {},
+      state: "idle",
+    }),
   };
   const disposers = new Set<() => void>();
   const channel = <S extends ChannelSnapshot>(initial: S, local = false) => {
@@ -51,7 +54,8 @@ export function createRouter(
       href: string,
       body?: FormData,
       operation: OperationOptions = {},
-      navigation?: "push" | "pop",
+      // true pushes history; false handles popstate; undefined is a data request.
+      navigation?: boolean,
     ): Promise<Result> => {
       controller?.abort();
 
@@ -70,19 +74,22 @@ export function createRouter(
 
         if (!changed && snapshot.path !== undefined) return;
 
-        if (browser && (navigation === "push" || body) && changed)
+        if (browser && (navigation || body) && changed)
           history[operation.replace ? "replaceState" : "pushState"](
             null,
             "",
             url,
           );
+        const sameRoute = snapshot.path === match?.route.path;
+
         snapshot = {
           ...snapshot,
           url: url.href,
           path: match?.route.path,
           params: match?.params ?? {},
           actionData: undefined,
-          data: snapshot.path === match?.route.path ? snapshot.data : undefined,
+          data: sameRoute ? snapshot.data : undefined,
+          loaded: sameRoute && snapshot.loaded,
         };
       };
 
@@ -93,9 +100,9 @@ export function createRouter(
         if (!match) return new Error(url ? "No route" : "External URL");
 
         if (
-          navigation &&
+          navigation !== undefined &&
           !body &&
-          previous.state === "idle" &&
+          previous.loaded &&
           !previous.error &&
           previous.path === match.route.path &&
           match.route.shouldRevalidate?.({
@@ -138,7 +145,7 @@ export function createRouter(
             replace: true,
             hops: (operation.hops ?? 0) + 1,
           },
-          "push",
+          true,
         );
 
         if (!signal.aborted) emit({ state: "idle" });
@@ -150,10 +157,10 @@ export function createRouter(
 
       if (body && !result.error) commit();
 
-      const key = body && !local ? "actionData" : "data";
       emit({
-        [key]: result.data,
+        [body && !local ? "actionData" : "data"]: result.data,
         error: result.error,
+        loaded: body ? snapshot.loaded : !result.error,
         state: body && !result.error ? "loading" : "idle",
       });
 
@@ -187,15 +194,15 @@ export function createRouter(
   };
   const main = channel(initial);
   let started = 0;
-  let initialized = options.hydrationData?.state === "idle";
+  let initialized = initial.loaded;
   const pop = () => {
-    void main.load(location.href, undefined, undefined, "pop");
+    void main.load(location.href, undefined, undefined, false);
   };
   const router: Router = {
     ...main,
     routes,
     start() {
-      if (started++ === 0 && browser) addEventListener("popstate", pop);
+      if (!started++ && browser) addEventListener("popstate", pop);
 
       if (!initialized) {
         initialized = true;
@@ -203,12 +210,12 @@ export function createRouter(
       }
 
       return () => {
-        if (--started === 0 && browser) removeEventListener("popstate", pop);
+        if (!--started && browser) removeEventListener("popstate", pop);
       };
     },
     async navigate(url, operation) {
       initialized = true;
-      await main.load(url, undefined, operation, "push");
+      await main.load(url, undefined, operation, true);
     },
     async revalidate(reason = "manual", context = {}) {
       const url = new URL(main.getSnapshot().url);

@@ -33,7 +33,7 @@ export function Routes({ fallback = null }: RoutesProps): ReactNode {
     | undefined;
   const component = state.error
     ? module?.ErrorBoundary
-    : state.state === "loading" && state.data === undefined
+    : state.state === "loading" && !state.loaded
       ? module?.HydrateFallback
       : module?.default;
 

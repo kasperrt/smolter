@@ -52,12 +52,13 @@ export function useFetcher<
 /** Create a fetcher for independent route reads and mutations; its data stays local. */
 export function useFetcher(route?: RouteDefinition): TypedFetcher<unknown> {
   const router = useRouter();
+  const path = route?.path;
   const fetcher = useMemo(() => {
     const store = router.createFetcher();
     const target = () => {
       const snapshot = router.getSnapshot();
 
-      return !route || route.path === snapshot.path ? snapshot.url : route.path;
+      return path === undefined || path === snapshot.path ? snapshot.url : path;
     };
 
     return {
@@ -68,7 +69,7 @@ export function useFetcher(route?: RouteDefinition): TypedFetcher<unknown> {
       submit: (body: FormData, options?: FetcherSubmitOptions) =>
         store.submit(options?.action ?? target(), body, options),
     };
-  }, [router, route?.path]);
+  }, [router, path]);
 
   useEffect(() => fetcher.dispose, [fetcher]);
 

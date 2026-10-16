@@ -5,6 +5,7 @@ import { createRoot as preactRoot } from "preact/compat/client";
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it } from "vitest";
+import { deferred } from "../helpers/deferred";
 
 const frameworks = [
   { name: "React", api: react, element: createElement, root: createRoot },
@@ -111,6 +112,58 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       .toBe("2");
     expect(pageRenders).toBe(initialPageRenders);
     expect(paramsRenders).toBe(initialParamsRenders + 1);
+  });
+
+  it(`${name} preserves a loaded page whose loader returns undefined`, async (context) => {
+    const initial = deferred<void>();
+    const refresh = deferred<void>();
+    let reads = 0;
+    const router = api.createRouter(
+      [
+        api.defineRoute("/empty", {
+          loader: () => [initial.promise, refresh.promise][reads++],
+          shouldRevalidate: ({ reason }) => reason !== "navigation",
+          default: () => h("input", { "aria-label": "Kept input" }),
+          HydrateFallback: () => h("p", null, "Loading empty page"),
+        }),
+      ],
+      { url: "/empty" },
+    );
+    const container = document.createElement("div");
+    const root = mount(container);
+
+    document.body.append(container);
+    context.onTestFinished(() => {
+      root.unmount();
+      router.dispose();
+      container.remove();
+    });
+
+    root.render(h(api.RouterProvider, { router }, h(api.Routes)));
+    await expect.poll(() => container.textContent).toBe("Loading empty page");
+    initial.resolve();
+    await expect.poll(() => container.querySelector("input")).not.toBeNull();
+
+    const input = container.querySelector("input")!;
+
+    input.value = "Keep this value";
+
+    const pending = router.revalidate();
+
+    await expect.poll(() => reads).toBe(2);
+    await new Promise(requestAnimationFrame);
+
+    expect(container.querySelector("input")).toBe(input);
+    expect(container.textContent).not.toContain("Loading empty page");
+
+    refresh.resolve();
+    await pending;
+    await router.navigate("/empty?view=compact");
+    await new Promise(requestAnimationFrame);
+
+    expect(reads).toBe(2);
+    expect(container.querySelector("input")).toBe(input);
+    expect(input.value).toBe("Keep this value");
   });
 
   it(`${name} connects data hooks, forms, links, and independent fetchers`, async (context) => {

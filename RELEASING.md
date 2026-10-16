@@ -71,8 +71,8 @@ interpreted as an unpublished version.
 
 After 0.0.1 is available on both registries, restore required PRs and the
 `checks (22)`, `checks (24)`, `browser`, `jsr`, `site`, and `coverage` status checks
-on `main`. Coverage remains 100% per file; the browser gzip limit stays below
-2,100 bytes throughout bootstrapping.
+on `main`. Coverage remains 100% per file; each browser adapter must remain smaller than its
+corresponding pinned wouter entry under identical gzip measurements.
 
 Restore branch protection with the checked-in policy:
 

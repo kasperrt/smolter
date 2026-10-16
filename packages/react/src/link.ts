@@ -27,7 +27,7 @@ export function Link({
 
     if (
       event.defaultPrevented ||
-      event.button !== 0 ||
+      event.button ||
       event.metaKey ||
       event.ctrlKey ||
       event.altKey ||
@@ -37,11 +37,9 @@ export function Link({
     )
       return;
 
-    const target = internalURL(router.getSnapshot().url, href);
-
-    if (!target) return;
+    if (!internalURL(router.getSnapshot().url, href)) return;
     event.preventDefault();
-    void router.navigate(target.href, { replace });
+    void router.navigate(href, { replace });
   };
 
   return createElement("a", { ...props, href, onClick: click });
