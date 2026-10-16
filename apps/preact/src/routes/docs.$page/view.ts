@@ -12,11 +12,17 @@ export default function Documentation() {
   useEffect(() => {
     if (!page) return;
 
+    const previousTitle = document.title;
+
     document.title = `${page.title} · smolter docs`;
     document
       .querySelector<HTMLElement>(".docs-article h1")
       ?.focus({ preventScroll: true });
     if (!location.hash) scrollTo(0, 0);
+
+    return () => {
+      document.title = previousTitle;
+    };
   }, [page]);
 
   return (

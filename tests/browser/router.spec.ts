@@ -27,6 +27,7 @@ for (const example of examples) {
     page,
   }) => {
     await page.goto(origin);
+    const originalTitle = await page.title();
     await page.evaluate(() => {
       document.documentElement.dataset.docs = "mounted";
     });
@@ -66,6 +67,8 @@ for (const example of examples) {
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
+    await page.getByRole("link", { name: "Search", exact: true }).click();
+    await expect(page).toHaveTitle(originalTitle);
   });
 
   test(`${example.name}: route search, deep links, and back navigation`, async ({
