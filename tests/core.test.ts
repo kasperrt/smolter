@@ -350,3 +350,58 @@ it("loads a client-only route after its empty SSR snapshot is hydrated", async (
   stop();
   client.dispose();
 });
+
+for (const server of [false, true]) {
+  for (const method of ["POST", "PUT", "PATCH", "DELETE"] as const) {
+    it(`routes ${method} fetchers to a parameterized ${server ? "server" : "client"} action`, async () => {
+      let reads = 0;
+      const calls: string[] = [];
+      const handler =
+        (source: string) =>
+        async ({
+          request,
+          params,
+        }: import("../packages/smolter/src/core").DataArgs) => {
+          calls.push(source);
+          return {
+            source,
+            id: params.id,
+            method: request.method,
+            title: (await request.formData()).get("title"),
+          };
+        };
+      const router = createRouter(
+        [
+          defineRoute("/tasks", { loader: () => ++reads }),
+          defineRoute("/tasks/:id", {
+            loader: () => ({ source: "loader" }),
+            clientLoader: () => ({ source: "clientLoader" }),
+            action: handler("action"),
+            clientAction: handler("clientAction"),
+          }),
+        ],
+        { server, url: "https://test.dev/tasks" },
+      );
+      await router.navigate("/tasks");
+      const fetcher = router.createFetcher();
+      await fetcher.load("/tasks/42");
+      expect(fetcher.getSnapshot().data).toEqual({
+        source: server ? "loader" : "clientLoader",
+      });
+      const data = new FormData();
+      data.set("title", "Write the docs");
+      await fetcher.submit("/tasks/42", data, { method });
+      expect(fetcher.getSnapshot().data).toEqual({
+        source: server ? "action" : "clientAction",
+        id: "42",
+        method,
+        title: "Write the docs",
+      });
+      expect(calls).toEqual([server ? "action" : "clientAction"]);
+      expect(router.getSnapshot().url).toBe("https://test.dev/tasks");
+      expect(router.getSnapshot().data).toBe(2);
+      expect(router.getSnapshot().actionData).toBeUndefined();
+      router.dispose();
+    });
+  }
+}

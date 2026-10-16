@@ -1,14 +1,285 @@
-# smolter ✳
+# smolter _
 
-A small, typed data router for React and Preact. **Zero runtime dependencies.**
-Loaders read, actions write, and fetchers submit without navigating. Successful
-actions automatically revalidate the active loader.
+A tiny, typed data router for React and Preact. **Zero runtime dependencies.**
 
-Inspired by [wouter](https://github.com/molefrog/wouter) and the
-[React Router data model](https://reactrouter.com/start/data/route-object).
-This is an independent implementation, with a deliberately smaller feature set.
+Keep data out of deeply nested components: loaders read, actions mutate, and
+components render. Fetchers call a route without navigating. Successful actions
+revalidate the current page's loader automatically.
 
-## Try it
+**Unreleased · 0.0.1.** Inspired by [wouter](https://github.com/molefrog/wouter)
+and [React Router](https://reactrouter.com/). Not published to npm or JSR yet.
+
+## Define paths first
+
+Every handler belongs to an explicitly registered route. Importing a route module
+picks up its named exports; there is no filename convention or build plugin.
+
+```tsx
+// routes.ts
+import { createRouter, defineRoute } from "smolter";
+import * as tasks from "./tasks/route";
+import * as task from "./task/route";
+import * as files from "./files/route";
+
+export const tasksRoute = defineRoute("/tasks", tasks);
+export const taskRoute = defineRoute("/tasks/:id", task);
+export const routes = [
+  tasksRoute,
+  taskRoute,
+  defineRoute("/files/*", files),
+];
+export const router = createRouter(routes, { browser: true });
+```
+
+| URL | Route | Handler params |
+| --- | --- | --- |
+| `/tasks` | `/tasks` | `{}` |
+| `/tasks/42` | `/tasks/:id` | `{ id: "42" }` |
+| `/files/docs/start` | `/files/*` | `{ "*": "docs/start" }` |
+
+First match wins. Put specific routes before catch-alls. Trailing slashes are
+ignored. Query parameters are available through `new URL(request.url).searchParams`.
+Routes form a flat table, without nested layout matching.
+
+```tsx
+// app.tsx
+import { Link, RouterProvider, Routes } from "smolter";
+import { router } from "./routes";
+
+export function App() {
+  return <RouterProvider router={router}>
+    <Link href="/tasks">Tasks</Link>
+    <Routes />
+  </RouterProvider>;
+}
+```
+
+For Preact, use the same exports from **`smolter/preact`**. That adapter uses
+Preact, never React. Headless APIs live in `smolter/core`; SSR helpers live in
+`smolter/server`.
+
+## Four handlers, on the same route
+
+A module can export **all four**. Client handlers do not replace or remove the
+ordinary handlers from the route definition.
+
+```tsx
+// task/route.tsx
+export { loader } from "./loader";
+export { action } from "./action";
+export { clientLoader } from "./client-loader";
+export { clientAction } from "./client-action";
+export { default } from "./view";
+export { HydrateFallback } from "./components/hydrate-fallback";
+export { ErrorBoundary } from "./components/error-boundary";
+```
+
+| Operation | Client router | Server router (`loadRouter`) |
+| --- | --- | --- |
+| Read / navigate / revalidate | `clientLoader`, falling back to `loader` | `loader` |
+| POST / PUT / PATCH / DELETE | `clientAction`, falling back to `action` | `action` |
+
+Only the selected handler runs; they are not called in sequence. Client handlers
+never execute in server mode. Server-loaded data is reused during hydration;
+subsequent client navigation or revalidation selects the client handler.
+
+**Execution and HTTP are separate.** A fetcher invokes the matching registered
+handler. It does not itself send an HTTP request. A client handler can call your
+API, read browser storage, or compute a value. `loader` and `action` are universal
+fallbacks, not automatically generated backend endpoints. To keep them strictly
+server-side, register them only in your server route table; register the matching
+client handlers in your browser table. This package does not strip server imports
+or provide `serverLoader()` / `serverAction()` RPC callbacks.
+
+For example, the client handlers for `/tasks/:id` can call a backend:
+
+```ts
+// task/client-loader.ts
+import type { DataArgs } from "smolter";
+
+interface Task { id: string; title: string }
+
+export async function clientLoader({ params, signal }: DataArgs) {
+  const response = await fetch(`/api/tasks/${encodeURIComponent(params.id)}`, {
+    signal,
+  });
+  if (!response.ok) return new Error("Could not load task");
+  return await response.json() as Task;
+}
+```
+
+```ts
+// task/client-action.ts
+import type { DataArgs } from "smolter";
+
+export async function clientAction({ request, params, signal }: DataArgs) {
+  const response = await fetch(`/api/tasks/${encodeURIComponent(params.id)}`, {
+    method: request.method, // POST, PUT, PATCH, or DELETE from the fetcher
+    body: await request.formData(),
+    signal,
+  });
+  if (!response.ok) return new Error("Could not save task");
+  return { saved: true, id: params.id };
+}
+```
+
+`loader` and `action` receive the same `{ request, params, signal }` arguments.
+On the server they can call your server-side data layer. Forward `signal` to
+fetches so superseded work can be cancelled.
+
+## Fetchers target routes
+
+A fetcher on `/tasks` can submit to `/tasks/42`. That matches the registered
+`/tasks/:id` route and calls its action with `params.id === "42"`.
+
+```tsx
+// A component rendered on /tasks
+import { useFetcher } from "smolter";
+import type { clientAction } from "../task/client-action";
+
+export function RenameTask() {
+  const fetcher = useFetcher<typeof clientAction>();
+
+  return <fetcher.Form action="/tasks/42" method="patch">
+    <input name="title" defaultValue="Write the docs" />
+    <button type="submit" disabled={fetcher.state !== "idle"}>Save</button>
+    {fetcher.data?.saved && <p>Saved task {fetcher.data.id}</p>}
+    {fetcher.error && <p role="alert">{fetcher.error.message}</p>}
+  </fetcher.Form>;
+}
+```
+
+The flow is:
+
+1. Match `/tasks/42` against `/tasks/:id`.
+2. Call that route's `clientAction` (or `action` fallback) with a PATCH `Request`.
+3. The example handler sends PATCH `/api/tasks/42` to your backend.
+4. Store the handler result in this fetcher's `data`.
+5. Revalidate the active `/tasks` loader. The URL stays `/tasks`.
+
+POST works the same way: `<fetcher.Form action="/tasks" method="post">`
+calls the action registered on `/tasks`. A handler-only resource route does not
+need a default component.
+
+Programmatic reads and mutations use concrete URLs too:
+
+```tsx
+const fetcher = useFetcher(taskRoute); // inferred loader + action result types
+
+await fetcher.load("/tasks/42"); // that route's loader; no navigation
+
+const body = new FormData();
+body.set("title", "Updated title");
+await fetcher.submit(body, { action: "/tasks/42", method: "PATCH" });
+await fetcher.submit(body, { action: "/tasks/42", method: "POST" });
+```
+
+`useFetcher(taskRoute)` binds types and a default target. For a static route,
+that target is its path. For the active parameterized route, it uses the current
+concrete URL. **When targeting a different ID, pass the concrete URL explicitly**;
+`/tasks/:id` is a pattern, not a destination.
+
+Without a route argument or explicit target, the fetcher uses the current URL.
+Each fetcher owns independent `data`, `error`, and `state` (`idle`, `submitting`,
+`loading`). Fetcher data does not populate `useActionData()`.
+
+## Types follow handlers
+
+Pass a route to infer data without repeating a data interface:
+
+```tsx
+import { defineRoute, useLoaderData, useActionData } from "smolter";
+
+const counterRoute = defineRoute("/counter", {
+  loader: () => ({ count: 1 }),
+  action: () => ({ saved: true }),
+  default: Counter,
+});
+
+function Counter() {
+  const data = useLoaderData(counterRoute); // { count: number } | undefined
+  const result = useActionData(counterRoute); // { saved: boolean } | undefined
+  return <p>{data?.count} {result?.saved && "Saved"}</p>;
+}
+```
+
+This is also the manual definition style: handlers may be supplied directly
+instead of imported as module exports. Remember to include `counterRoute` in
+the array passed to `createRouter`.
+
+Inside a route module, function types avoid circular imports:
+
+```tsx
+import { useLoaderData, useActionData } from "smolter";
+import type { clientLoader } from "./client-loader";
+import type { clientAction } from "./client-action";
+
+const data = useLoaderData<typeof clientLoader>();
+const result = useActionData<typeof clientAction>();
+```
+
+These hook calls belong inside your component. TypeScript cannot infer an
+unrelated nearby export from its filename: the route argument or `typeof`
+connects the hook to the handler. Route-based inference includes both ordinary
+and client handler return types when both exist. A function generic selects
+that function's type; use the route-based form if the two return different shapes.
+Returned `Error` values are excluded from data types. Data is optional before
+loading or submitting.
+
+## Navigation, forms, and revalidation
+
+- `<Form action="/tasks/42" method="patch">` navigates to its target, stores the
+  result for `useActionData()`, and reloads the destination loader.
+- `<fetcher.Form>` performs the same mutation without navigation and keeps the
+  result in `fetcher.data`.
+- `<Form method="get">` builds a query string and navigates. A fetcher GET form
+  loads its target without navigation.
+- Both forms support named submit buttons and `formaction` / `formmethod`
+  overrides. PUT, PATCH, and DELETE require JavaScript.
+- `const revalidate = useRevalidator(); await revalidate()` refreshes the current
+  route manually. Successful actions do this automatically.
+- `shouldRevalidate({ url, reason })` can return `false` for `"action"` or
+  `"manual"` revalidation. Navigation always loads its destination.
+- `useLocation()` returns `[url, navigate]`; `navigate(url, { replace: true })`
+  replaces history. `useParams()` reads current path parameters.
+- Return an `Error` or reject a handler to report failure. Fetcher errors remain
+  local; route errors render `ErrorBoundary({ error })`, or the error message.
+- Return a `Response` with a `Location` header to redirect. Fetcher redirects
+  also navigate. A data error boundary does not catch component render errors.
+
+## Server rendering
+
+Create a fresh router for each request. Server mode selects `loader` and
+`action`, never their client counterparts.
+
+```tsx
+import { renderToString } from "react-dom/server";
+import { RouterProvider, Routes } from "smolter";
+import { loadRouter, serialize } from "smolter/server";
+import { routes } from "./server-routes";
+
+const router = await loadRouter(routes, incomingRequest);
+const html = renderToString(
+  <RouterProvider router={router}><Routes /></RouterProvider>,
+);
+const hydrationJSON = serialize(router.getSnapshot());
+```
+
+Embed `hydrationJSON` in a JSON script element. On the client, parse it and pass
+`hydrationData` to `createRouter(clientRoutes, { browser: true, hydrationData })`,
+then hydrate with React or Preact. Existing data is reused without loading again.
+A client-only route renders `HydrateFallback` on the server and loads after
+hydration. See `apps/demo/src/server.tsx` and `hydrate.tsx` for the working example.
+
+`loadRouter` prepares a read; it does not automatically dispatch incoming POSTs.
+Your HTTP adapter may call `router.submit(url, formData, { method: "PATCH" })`
+on a server-mode router to invoke a registered `action`. The host server owns
+HTTP endpoints, response statuses, authentication, CSRF, and redirect responses.
+Incoming request headers are forwarded to handlers. Keep server-only imports
+out of browser route tables. Serialized data must be JSON-compatible; errors
+are omitted and script-closing characters escaped.
+
+## Try 0.0.1
 
 ```sh
 pnpm install
@@ -16,274 +287,46 @@ pnpm build
 pnpm dev
 ```
 
-Open `http://127.0.0.1:5173` for React, `/preact.html` for Preact, and `/ssr`
-for a server-rendered page with hydration. The counter uses a local development API with a per-browser cookie. Clicking Add one
-sends POST /api/counter; revalidation sends GET /api/counter. Data survives page
-navigation and reloads until the dev server restarts. No external backend or credentials are needed.
+Open `http://127.0.0.1:5173`, `/preact.html`, or `/ssr`. All three use the same
+UI. Add one sends POST `/api/counter`, then revalidation sends GET `/api/counter`.
+Counters are isolated by browser cookie and survive reloads until server restart.
 
-This private repository contains version **0.0.1**. It is not published to npm
-or JSR. To test in another project:
+To install the unpublished package in another project:
 
 ```sh
 pnpm --dir packages/smolter pack --pack-destination ../..
-# In your app:
 pnpm add /absolute/path/to/smolter-0.0.1.tgz
 ```
 
-## Imports
+Install React 18+ or Preact 10+ alongside it. Both are optional peers; only the
+framework you use is needed. Version stays **0.0.1** until an actual release.
 
-```tsx
-import {
-  createRouter, defineRoute, RouterProvider, Routes,
-  Link, Form, useFetcher, useLoaderData, useActionData,
-  useParams, useLocation, useRevalidator, useRouter,
-} from "smolter";
-```
+## Size and development
 
-Preact uses exactly the same API from **`smolter/preact`**. It imports
-`preact/compat`, never React. React 18+ and Preact 10+ are optional peers; install
-only the framework you use. The headless API is available from `smolter/core`.
-Server preparation helpers live in `smolter/server` and stay out of browser bundles.
+`pnpm size` compares all browser exports with pinned wouter baselines using the
+same esbuild + Terser + gzip settings. Dependencies are included; framework
+runtimes are excluded. CI requires both adapters to be strictly smaller than
+their corresponding wouter entry and below 2,500 bytes gzip.
 
-## Route modules
+| Full browser entry | smolter | Baseline |
+| --- | ---: | ---: |
+| React | 2,436 B | wouter 3.13.0: 3,091 B |
+| Preact | 2,442 B | wouter-preact 3.13.0: 2,450 B |
 
-A route module exports `loader`, `action`, and its default component. Register
-the namespace once; the router discovers those exports automatically.
-
-```tsx
-// routes.ts
-import { createRouter, defineRoute } from "smolter";
-import * as counter from "./counter/route";
-
-export const counterRoute = defineRoute("/", counter);
-export const router = createRouter([counterRoute], { browser: true });
-```
-
-```tsx
-// counter/loader.ts
-export async function loader() {
-  const response = await fetch("/api/count");
-  const data: { count: number } = await response.json();
-  return data;
-}
-```
-
-```tsx
-// counter/action.ts
-import type { DataArgs } from "smolter";
-
-export async function action({ request, signal }: DataArgs) {
-  const response = await fetch("/api/count", {
-    method: "POST", body: await request.formData(), signal,
-  });
-  return { saved: response.ok };
-}
-```
-
-```tsx
-// counter/route.tsx
-import { useFetcher, useLoaderData } from "smolter";
-import type { loader } from "./loader";
-import type { action } from "./action";
-export { loader } from "./loader";
-export { action } from "./action";
-export { HydrateFallback } from "./components/hydrate-fallback";
-
-export default function Counter() {
-  const data = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<typeof action>();
-  return <fetcher.Form>
-    <button type="submit" disabled={fetcher.state !== "idle"}>
-      Count: {data?.count}
-    </button>
-    {fetcher.data?.saved && <p>Saved!</p>}
-  </fetcher.Form>;
-}
-```
-
-```tsx
-// app.tsx
-import { RouterProvider, Routes } from "smolter";
-import { router } from "./routes";
-
-export function App() {
-  return <RouterProvider router={router}><Routes /></RouterProvider>;
-}
-```
-
-`HydrateFallback` is a component exported from its own file. Export
-`ErrorBoundary` to render loader/action errors; it receives `{ error: Error }`.
-Without it, `Routes` displays the error message. It handles data failures,
-not exceptions thrown while rendering components.
-
-There is no file-system crawler, compiler plugin, or generated route manifest.
-Explicit module registration works in any bundler. A Vite application may also
-use `import.meta.glob` to build its own route table at build time.
-
-## Client-only handlers
-
-Export `clientLoader` and `clientAction` from a route module, or pass them to
-`defineRoute`. `createRouter` prefers these handlers over `loader` / `action`.
-They run directly on the client: a handler can call `fetch`, use browser storage,
-or return a computed value. Calling a handler alone does not send a network request.
-
-```tsx
-// loader.ts — runs in the browser, no backend required
-export function clientLoader() {
-  return { theme: localStorage.getItem("theme") ?? "light" };
-}
-```
-
-```tsx
-// route.tsx
-import { useLoaderData } from "smolter";
-import type { clientLoader } from "./loader";
-export { clientLoader } from "./loader";
-
-export default function Preferences() {
-  const data = useLoaderData<typeof clientLoader>();
-  // inferred: { theme: string } | undefined
-  return <p>{data?.theme}</p>;
-}
-```
-
-`loadRouter` from `smolter/server` sets server mode and **never executes client
-handlers**. It uses ordinary `loader` / `action` handlers there. A client-only
-route renders its `HydrateFallback` during SSR, then loads on the client after
-hydration. Existing server data is reused on hydration; subsequent navigation
-and revalidation use the client loader. When server and client return different
-shapes, route-based hooks infer their union. Returned `Error` values appear in
-error state, not the data type.
-
-Ordinary `loader` / `action` remain universal fallbacks: this library does not
-turn them into remote server endpoints. A client request to your backend is an
-explicit `fetch` inside the client handler. Keep server code out of browser
-modules; a server/client compiler split is not part of this package.
-
-## Manual definitions and automatic inference
-
-```tsx
-const counter = defineRoute("/counter", {
-  loader: async () => ({ count: 12 }),
-  action: async () => ({ saved: true }),
-  default: Counter,
-});
-
-function Counter() {
-  const data = useLoaderData(counter); // { count: number } | undefined
-  const result = useActionData(counter); // { saved: boolean } | undefined
-  const fetcher = useFetcher(counter); // loader/action result union
-  // ...
-}
-```
-
-A hook cannot infer the surrounding route from an unrelated module export in
-TypeScript alone. Passing the route supplies that connection with **no manual
-data interface or generic argument**. Within a module, `typeof loader` and
-`typeof action` avoid circular imports. `undefined` accounts for loading and
-an action that has not yet run. For a fetcher that only submits actions, use
-`useFetcher<typeof action>()` for its narrower data type.
-
-Data handlers receive `{ request, params, signal }`. The signal is aborted when
-a newer operation supersedes the request. Handlers must pass it to their own
-fetches if the underlying network request should also be cancelled.
-
-## Forms, fetchers, and revalidation
-
-- `<Form method="post">` calls the matching action, navigates to its target,
-  retains action data, and refreshes the active loader.
-- `<fetcher.Form>` calls the action and refreshes the active loader **without
-  navigation**. Each hook owns independent `data`, `error`, and `state`.
-- `state` is `idle`, `submitting`, or `loading` (including revalidation).
-- `<Form method="get">` builds a query string and navigates through the loader.
-- `fetcher.load("/resource")` reads another loader without navigation.
-- `fetcher.submit(formData, { action: "/resource", method: "POST" })` submits
-  programmatically. The default target is the current route or supplied route.
-- Named submit buttons are included in `FormData`; `formaction` and `formmethod`
-  overrides work. Forms support POST, PUT, PATCH, and DELETE in JavaScript.
-- `const revalidate = useRevalidator(); await revalidate()` refreshes manually.
-- Export `shouldRevalidate({ url, reason })` to opt out. Reasons are `action`
-  and `manual`. URL navigation always loads its destination.
-- Return an `Error`, or reject a handler, to surface an operation error. Rejected
-  errors are wrapped with their original `cause`. Fetcher errors stay local.
-- Return a `Response` with a `Location` header for a redirect. A redirect from a
-  fetcher navigates too. Redirect chains are bounded.
-
-`Link` preserves modified clicks, downloads, external URLs, and targets.
-`useLocation()` returns `[pathnameWithSearchAndHash, navigate]`.
-`navigate(url, { replace: true })` replaces browser history.
-
-Routes are ordered, **first match wins**. Supported patterns are static paths,
-`:params`, and a terminal `*` splat. Trailing slashes are ignored. Put specific
-routes before a catch-all. Parameterized fetcher routes use the current concrete
-URL when active; pass `action` or a load URL when targeting another concrete ID.
-
-## Server rendering
-
-Create a **new router for every request**. No browser globals are needed.
-
-```tsx
-import { RouterProvider, Routes } from "smolter";
-import { loadRouter, serialize } from "smolter/server";
-import { renderToString } from "react-dom/server";
-
-const router = await loadRouter(routes, incomingRequest); // Request or URL string
-const snapshot = router.getSnapshot();
-const html = renderToString(
-  <RouterProvider router={router}><Routes /></RouterProvider>,
-);
-const hydrationJSON = serialize(snapshot);
-```
-
-On the client, parse the serialized snapshot and pass it as
-`createRouter(routes, { browser: true, hydrationData })`, then use `hydrateRoot`
-(or Preact's `hydrate`). Initial hydration reuses data without loading again.
-`serialize` escapes script-closing HTML characters. Data must be JSON serializable.
-It omits errors: handle errors on the server rather than hydrating failed requests.
-The demo's `server.tsx` and `hydrate.tsx` contain a complete working example.
-
-Incoming request headers are forwarded to loaders. HTTP status codes, server
-redirect responses (compare the final snapshot URL), authentication, CSRF,
-and POST endpoints belong to the host server. This package does not generate
-RPC endpoints or remove server-only imports from client bundles. Keep secrets
-and database code in your server; browser handlers call your own API.
-
-## Size is a test
-
-`pnpm size` measures **every export in each browser entry**, with identical
-esbuild + Terser production settings and gzip. Runtime dependencies are included;
-only React/Preact are externalized. It compares against pinned `wouter@3.13.0`
-and `wouter-preact@3.13.0`, and fails if smolter is not strictly smaller than
-**both corresponding baselines**, or if either adapter exceeds 2,500 bytes.
-Run the command for exact measured bytes; CI runs it on every PR and main push.
-
-This is a complete-entry comparison, not a comparison against wouter's smaller
-README headline or a cherry-picked single-hook import. The optional server
-entry and your framework are additional. Importing fewer features can tree-shake
-more code. There are no runtime dependencies; benchmark tools are dev-only.
-
-## Scope of 0.1
-
-Flat exclusive route matching, client data handlers, framework adapters, browser
-history, server preloading/hydration, forms, fetchers, and revalidation. Nested
-layout chains, parallel nested loaders, lazy module loading, optional/regex path
-syntax, caches, streaming, navigation blockers, scroll restoration, and automatic
-server endpoint generation are intentionally outside this first version.
-
-## Development
+The server entry is separate. These are full-entry measurements, not single-hook
+headline sizes. Run `pnpm size` to reproduce them.
 
 ```sh
-pnpm fix          # Biome; no ESLint or Prettier
-pnpm check        # lint, typecheck, unit/SSR tests, build, size comparison
-pnpm pack:smoke   # separate packed installs with React-only and Preact-only peers
+pnpm fix          # Biome
+pnpm check        # lint, types, unit/SSR tests, build, size gate
+pnpm pack:smoke   # isolated React-only and Preact-only package installs
 pnpm exec playwright install chromium
-pnpm smoke        # real browser forms, navigation, and SSR hydration
+pnpm smoke        # browser forms, requests, navigation, SSR, layout stability
 ```
 
-GitHub Actions runs checks and packed installs on Node 22 and 24, plus Chromium
-smoke tests. See [RELEASING.md](./RELEASING.md) for versioning and JSR preparation.
+GitHub Actions runs on PRs and main pushes, with Node 22/24 checks and Chromium
+smoke tests. [RELEASING.md](./RELEASING.md) covers release and JSR preparation.
+The private `packages/ui` supplies all demo UI; it adds nothing to the router.
 
-The demo UI lives in the private `packages/ui` workspace package. React, Preact,
-and SSR share its layout, controls, branding, loading states, and stylesheet.
-It is not a dependency of the published router. Keep UI markup there; route
-components only connect loaders, actions, and router hooks to shared views.
+Current scope excludes nested loader chains, caching, streaming, optional/regex
+paths, navigation blockers, scroll restoration, and generated backend endpoints.
