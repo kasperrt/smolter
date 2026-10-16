@@ -6,6 +6,7 @@ import {
   Routes,
   useFetcher,
   useLoaderData,
+  useRevalidator,
 } from "smolter/preact";
 import { action } from "./routes/home/action";
 import { loader } from "./routes/home/loader";
@@ -14,36 +15,120 @@ import "./style.css";
 function Counter() {
   const data = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
+  const revalidate = useRevalidator();
   return h(
-    "main",
+    "div",
     null,
-    h("a", { href: "/", className: "wordmark" }, "smolter ✳"),
-    h("h1", null, "Same router.", h("br", {}), "Hello, Preact."),
     h(
-      "section",
-      { className: "playground" },
-      h("span", { className: "pill" }, "Preact adapter · no React runtime"),
+      "header",
+      null,
       h(
-        "h2",
-        null,
-        "Things counted: ",
-        h("span", { "data-testid": "count" }, data?.count ?? 0),
+        "a",
+        { href: "/", className: "wordmark" },
+        h("span", null, "s."),
+        "smolter",
       ),
       h(
-        fetcher.Form,
+        "nav",
         null,
+        h("a", { href: "https://github.com/kasperrt/smolter" }, "GitHub ↗"),
+      ),
+    ),
+    h(
+      "main",
+      null,
+      h(
+        "div",
+        { className: "intro" },
         h(
-          "button",
-          { type: "submit", disabled: fetcher.state !== "idle" },
-          fetcher.state === "idle" ? "Add one ↗" : "Saving…",
+          "div",
+          null,
+          h("h1", null, "smolter", h("span", null, "_")),
+          h("p", null, "Same data flow. Preact adapter."),
         ),
       ),
       h(
-        "p",
-        { role: "status" },
-        fetcher.data?.message ?? "Ready when you are.",
+        "div",
+        { className: "panel-tabs" },
+        h("a", { href: "/" }, "React ↗"),
+        h("a", { href: "/preact.html", "aria-current": "page" }, "Preact"),
+        h("a", { href: "/ssr" }, "SSR ↗"),
+      ),
+      h(
+        "section",
+        { className: "playground preact-playground" },
+        h(
+          "div",
+          { className: "window-bar" },
+          h("span", null, "counter.demo"),
+          h("span", { className: "live-indicator" }, "Live"),
+        ),
+        h(
+          "div",
+          { className: "counter-body" },
+          h(
+            "div",
+            { className: "counter-label" },
+            h("h2", null, "Counter"),
+            h("span", { className: "pill" }, fetcher.state),
+          ),
+          h(
+            "div",
+            { className: "counter" },
+            h("span", { "data-testid": "count" }, data?.count ?? 0),
+          ),
+          h(
+            fetcher.Form,
+            null,
+            h(
+              "button",
+              {
+                type: "submit",
+                name: "intent",
+                value: "increment",
+                disabled: fetcher.state !== "idle",
+              },
+              fetcher.state === "idle" ? "Add one +" : "Saving…",
+            ),
+            h(
+              "button",
+              {
+                type: "submit",
+                name: "intent",
+                value: "reset",
+                className: "secondary",
+                disabled: fetcher.state !== "idle",
+              },
+              "Reset",
+            ),
+          ),
+          h(
+            "div",
+            { className: "status" },
+            h(
+              "span",
+              { role: "status" },
+              fetcher.data?.message ?? "Submit to update the loader.",
+            ),
+          ),
+        ),
+        h(
+          "div",
+          { className: "demo-footer" },
+          h("span", null, `Loader runs: ${data?.reads ?? 0}`),
+          h(
+            "button",
+            {
+              type: "button",
+              className: "text-button",
+              onClick: () => void revalidate(),
+            },
+            "Revalidate ↻",
+          ),
+        ),
       ),
     ),
+    h("footer", null, h("span", null, "Preact · zero runtime dependencies")),
   );
 }
 const router = createRouter(
