@@ -282,7 +282,7 @@ export function createRouter(
       if (!body) commit();
       emit({ state: body ? "submitting" : "loading", error: undefined });
 
-      const result = await safeWrapAsync(async () => {
+      const result = await safeWrapAsync(() => {
         if (!url) return new Error("External URL");
 
         if (!match) return new Error("No route");
