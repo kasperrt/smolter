@@ -123,6 +123,7 @@ export interface Fetcher {
     body: FormData,
     options?: SubmitOptions,
   ) => Promise<Result>;
+  /** Abort work and release subscriptions when this imperative fetcher is no longer used. */
   dispose: () => void;
 }
 
@@ -142,6 +143,7 @@ export interface Router {
     body: FormData,
     options?: SubmitOptions,
   ) => Promise<Result>;
+  /** Create an independent fetcher. Framework useFetcher hooks manage disposal automatically. */
   createFetcher: () => Fetcher;
   dispose: () => void;
 }

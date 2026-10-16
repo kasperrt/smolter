@@ -33,13 +33,15 @@ export function createRouter(
     params: {},
     state: "idle",
   };
-  const controllers = new Set<AbortController>();
+  const disposers = new Set<() => void>();
   const channel = <S extends ChannelSnapshot>(initial: S, local = false) => {
     let snapshot = initial;
     let controller: AbortController | undefined;
     const listeners = new Set<() => void>();
-    const abort = () => {
-      if (controllers.delete(controller!)) controller!.abort();
+    const dispose = () => {
+      disposers.delete(dispose);
+      controller?.abort();
+      listeners.clear();
     };
     const emit = (next: Partial<Snapshot>) => {
       snapshot = { ...snapshot, ...next };
@@ -51,12 +53,12 @@ export function createRouter(
       body?: FormData,
       operation: OperationOptions = {},
     ): Promise<Result> => {
-      abort();
+      controller?.abort();
 
       controller = new AbortController();
 
       const { signal } = controller;
-      controllers.add(controller);
+      disposers.add(dispose);
 
       const url = internalURL(main.getSnapshot().url, href);
       const match = url && matchRoutes(routes, url.pathname);
@@ -159,10 +161,7 @@ export function createRouter(
       },
       load: run,
       submit: run,
-      dispose() {
-        abort();
-        listeners.clear();
-      },
+      dispose,
     };
   };
   const main = channel(initial);
@@ -215,8 +214,7 @@ export function createRouter(
     dispose() {
       main.dispose();
 
-      for (const controller of controllers) controller.abort();
-      controllers.clear();
+      for (const dispose of disposers) dispose();
 
       if (browser) window.removeEventListener("popstate", pop);
     },

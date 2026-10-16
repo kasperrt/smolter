@@ -737,3 +737,49 @@ it("hydrates an undefined server result without invoking the paired client loade
   client.dispose();
   server.dispose();
 });
+
+it("disposing one fetcher leaves another request active", async () => {
+  const firstResult = deferred<string>();
+  const secondResult = deferred<string>();
+  const signals = new Map<string, AbortSignal>();
+  const router = createRouter([
+    defineRoute("/:id", {
+      loader: ({ params, signal }) => {
+        signals.set(params.id, signal);
+
+        return params.id === "first"
+          ? firstResult.promise
+          : secondResult.promise;
+      },
+    }),
+  ]);
+  const first = router.createFetcher();
+  const second = router.createFetcher();
+  const firstStates: string[] = [];
+  const secondStates: string[] = [];
+  first.subscribe(() => firstStates.push(first.getSnapshot().state));
+  second.subscribe(() => secondStates.push(second.getSnapshot().state));
+
+  const firstRequest = first.load("/first");
+  const secondRequest = second.load("/second");
+
+  await Promise.resolve();
+
+  first.dispose();
+
+  expect(signals.get("first")?.aborted).toBe(true);
+  expect(signals.get("second")?.aborted).toBe(false);
+
+  firstResult.resolve("stale");
+  secondResult.resolve("current");
+  await Promise.all([firstRequest, secondRequest]);
+
+  expect(first.getSnapshot().data).toBeUndefined();
+  expect(second.getSnapshot().data).toBe("current");
+  expect(firstStates).toEqual(["loading"]);
+  expect(secondStates).toEqual(["loading", "idle"]);
+
+  router.dispose();
+
+  expect(signals.get("second")?.aborted).toBe(true);
+});
