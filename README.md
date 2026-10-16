@@ -346,6 +346,12 @@ The root `smolter` entry (also available as `smolter/core`) is framework-indepen
 Server helpers live in `smolter/server`; optional browser transport in `smolter/client`;
 flat file routing in `smolter/vite` and `smolter/files`.
 
+On JSR, install `@kasperrt/smolter` using the
+[JSR package instructions](https://jsr.io/docs/npm-compatibility) and import
+`@kasperrt/smolter/react` or `@kasperrt/smolter/preact`. Its `core`, `client`,
+`server`, and `files` subpaths match npm. The Vite plugin is npm-only:
+use `smolter/vite` from the npm package when adding file routing.
+
 ## Size and checks
 
 `pnpm size` measures every browser export with esbuild, Terser, and gzip level 9.
@@ -368,7 +374,7 @@ SMOLTER_ROUTES=manual SMOLTER_TEST_PORT=4473 pnpm smoke
 pnpm smoke:production  # Built SSR servers, hydration, reads, mutations
 ```
 
-GitHub Actions checks every PR and push to main. Coverage must remain at 100%
+The CI workflow defines checks for PRs and pushes to main. Coverage must remain at 100%
 for every implementation file across the core, adapters, transport, and routing
 packages. Reports are uploaded as CI artifacts.
 

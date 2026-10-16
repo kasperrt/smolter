@@ -20,6 +20,19 @@ The first candidate is **0.0.1-rc.1**, published with the npm `next` tag and
 marked as a GitHub prerelease. Stable versions use npm `latest`.
 The release goal also requires npm and JSR availability and a verified public site.
 
+## Enable workflows after local validation
+
+CI, Pages, and Release are disabled during bootstrap work. Once the local
+release checks above pass, including the size limit, re-enable them:
+
+```sh
+gh workflow enable ci.yml
+gh workflow enable pages.yml
+gh workflow enable release.yml
+```
+
+The next push to `main` starts CI; Pages and Release wait for its success.
+
 ## Registry setup
 
 The npm package is `smolter`; the JSR package is `@kasperrt/smolter`.
@@ -36,6 +49,13 @@ the bootstrap token in npm, and delete the `NPM_TOKEN` environment secret.
 
 Create the JSR package and link it to `kasperrt/smolter` in its settings.
 GitHub Actions uses OIDC to publish with provenance; no JSR token is needed.
+
+## Promote the release candidate
+
+Run `pnpm version:release` to change both manifests from `0.0.1-rc.1` to
+`0.0.1`. This only edits the manifests; publication still runs through Actions
+after all release checks pass. The command rejects mismatched registry versions
+and refuses to promote a version that is already stable.
 
 ## Subsequent releases
 

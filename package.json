@@ -16,6 +16,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size",
     "version:patch": "node scripts/version.mjs patch",
     "version:minor": "node scripts/version.mjs minor",
+    "version:release": "node scripts/version.mjs release",
     "pack:smoke": "node scripts/pack-smoke.mjs",
     "build:examples": "pnpm --filter \"@smolter/example-*\" build",
     "smoke:production": "node scripts/production-smoke.mjs",
