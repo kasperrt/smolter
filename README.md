@@ -341,7 +341,7 @@ The SSR examples use the same server route definitions for HTML and data request
 
 ## Package entries
 
-Use `smolter/react` for React and `smolter/preact` for Preact.
+Use `smolter/react` for React 18+ and `smolter/preact` for Preact 10.25+.
 The root `smolter` entry (also available as `smolter/core`) is framework-independent.
 Server helpers live in `smolter/server`; optional browser transport in `smolter/client`;
 flat file routing in `smolter/vite` and `smolter/files`.
