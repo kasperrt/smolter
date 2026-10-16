@@ -15,7 +15,6 @@ import { internalURL } from "./url.ts";
 type ChannelSnapshot = Partial<Snapshot> & Pick<Snapshot, "state">;
 
 interface OperationOptions extends SubmitOptions, NavigateOptions {
-  push?: boolean;
   hops?: number;
 }
 
@@ -52,6 +51,7 @@ export function createRouter(
       href: string,
       body?: FormData,
       operation: OperationOptions = {},
+      push = false,
     ): Promise<Result> => {
       controller?.abort();
 
@@ -69,7 +69,7 @@ export function createRouter(
 
         if (!changed && snapshot.path !== undefined) return;
 
-        if (browser && (operation.push || body) && changed)
+        if (browser && (push || body) && changed)
           window.history[operation.replace ? "replaceState" : "pushState"](
             null,
             "",
@@ -114,11 +114,15 @@ export function createRouter(
         result.data instanceof Response && result.data.headers.get("Location");
 
       if (redirectTo && (operation.hops ?? 0) < 10) {
-        await main.load(new URL(redirectTo, url!).href, undefined, {
-          push: true,
-          replace: true,
-          hops: (operation.hops ?? 0) + 1,
-        });
+        await main.load(
+          new URL(redirectTo, url!).href,
+          undefined,
+          {
+            replace: true,
+            hops: (operation.hops ?? 0) + 1,
+          },
+          true,
+        );
 
         if (local && !signal.aborted) emit({ state: "idle" });
 
@@ -186,9 +190,9 @@ export function createRouter(
           window.removeEventListener("popstate", pop);
       };
     },
-    async navigate(url, operation = {}) {
+    async navigate(url, operation) {
       initialized = true;
-      await main.load(url, undefined, { ...operation, push: true });
+      await main.load(url, undefined, operation, true);
     },
     async revalidate(reason = "manual", context = {}) {
       const url = new URL(main.getSnapshot().url);
