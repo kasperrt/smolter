@@ -33,11 +33,14 @@ export function createRouter(
     params: {},
     state: "idle",
   };
-  const pending = new Set<AbortController>();
+  const controllers = new Set<AbortController>();
   const channel = <S extends ChannelSnapshot>(initial: S, local = false) => {
     let snapshot = initial;
     let controller: AbortController | undefined;
     const listeners = new Set<() => void>();
+    const abort = () => {
+      if (controllers.delete(controller!)) controller!.abort();
+    };
     const emit = (next: Partial<Snapshot>) => {
       snapshot = { ...snapshot, ...next };
 
@@ -48,12 +51,12 @@ export function createRouter(
       body?: FormData,
       operation: OperationOptions = {},
     ): Promise<Result> => {
-      controller?.abort();
+      abort();
 
       const current = new AbortController();
       const { signal } = current;
       controller = current;
-      pending.add(current);
+      controllers.add(current);
 
       const url = internalURL(main.getSnapshot().url, href);
       const match = url && matchRoutes(routes, url.pathname);
@@ -99,7 +102,6 @@ export function createRouter(
           signal,
         });
       });
-      pending.delete(current);
 
       if (signal.aborted) return result;
 
@@ -113,7 +115,7 @@ export function createRouter(
           hops: (operation.hops ?? 0) + 1,
         });
 
-        if (local) emit({ state: "idle" });
+        if (local && !signal.aborted) emit({ state: "idle" });
 
         return result;
       }
@@ -155,7 +157,7 @@ export function createRouter(
       load: run,
       submit: run,
       dispose() {
-        controller?.abort();
+        abort();
         listeners.clear();
       },
     };
@@ -210,8 +212,8 @@ export function createRouter(
     dispose() {
       main.dispose();
 
-      for (const controller of pending) controller.abort();
-      pending.clear();
+      for (const controller of controllers) controller.abort();
+      controllers.clear();
 
       if (browser) window.removeEventListener("popstate", pop);
     },

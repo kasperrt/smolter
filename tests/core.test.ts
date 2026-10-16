@@ -8,6 +8,8 @@ import type { ActionData, LoaderData } from "@smolter/react";
 import { loadRouter, serialize } from "@smolter/server";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
+import { deferred } from "./helpers/deferred.ts";
+
 const body = () => new FormData();
 describe("data router", () => {
   it("matches static paths, encoded params, wildcards and trailing slashes", () => {
@@ -585,4 +587,77 @@ it("does not reload a completed SSR loader just because it returned undefined", 
   stop();
   client.dispose();
   server.dispose();
+});
+
+it("cancels a fetcher through action revalidation when the router is disposed", async () => {
+  const revalidation = deferred<string>();
+  const started = deferred<void>();
+  let loads = 0;
+  let actionSignal: AbortSignal | undefined;
+  const router = createRouter([
+    defineRoute("/", {
+      loader: () => {
+        if (loads++ === 0) return "initial";
+
+        started.resolve();
+
+        return revalidation.promise;
+      },
+      action: ({ signal }) => {
+        actionSignal = signal;
+
+        return "saved";
+      },
+    }),
+  ]);
+
+  await router.navigate("/");
+
+  const fetcher = router.createFetcher();
+  const states: string[] = [];
+  fetcher.subscribe(() => states.push(fetcher.getSnapshot().state));
+
+  const submission = fetcher.submit("/", body());
+
+  await started.promise;
+
+  router.dispose();
+  revalidation.resolve("late data");
+  await submission;
+
+  expect(actionSignal?.aborted).toBe(true);
+  expect(states).toEqual(["submitting", "loading"]);
+  expect(router.getSnapshot().data).toBe("initial");
+});
+
+it("does not notify a stale fetcher after its redirect finishes", async () => {
+  const destination = deferred<string>();
+  const started = deferred<void>();
+  const router = createRouter([
+    defineRoute("/redirect", { loader: () => redirect("/slow") }),
+    defineRoute("/slow", {
+      loader: () => {
+        started.resolve();
+
+        return destination.promise;
+      },
+    }),
+    defineRoute("/fast", { loader: () => "current" }),
+  ]);
+  const fetcher = router.createFetcher();
+  const states: string[] = [];
+  fetcher.subscribe(() => states.push(fetcher.getSnapshot().state));
+
+  const first = fetcher.load("/redirect");
+
+  await started.promise;
+  await fetcher.load("/fast");
+
+  destination.resolve("page data");
+  await first;
+
+  expect(states).toEqual(["loading", "loading", "idle"]);
+  expect(fetcher.getSnapshot().data).toBe("current");
+
+  router.dispose();
 });
