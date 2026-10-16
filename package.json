@@ -1,0 +1,38 @@
+{
+  "name": "smolter-workspace",
+  "private": true,
+  "packageManager": "pnpm@11.8.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "pnpm --filter @smolter/demo dev --host 127.0.0.1",
+    "fix": "biome check --write .",
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "smoke": "playwright test",
+    "size": "node scripts/size.mjs",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm size",
+    "version:patch": "node scripts/version.mjs patch",
+    "version:minor": "node scripts/version.mjs minor",
+    "pack:smoke": "node scripts/pack-smoke.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@playwright/test": "1.64.1",
+    "@types/node": "24.10.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "esbuild": "0.28.2",
+    "preact": "11.0.1",
+    "preact-render-to-string": "6.8.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "terser": "5.44.1",
+    "typescript": "6.0.3",
+    "vite": "8.3.4",
+    "vitest": "5.0.5",
+    "wouter": "3.13.0",
+    "wouter-preact": "3.13.0"
+  }
+}
