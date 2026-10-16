@@ -7,7 +7,7 @@ export interface DataArgs {
 }
 export type DataFunction = (args: DataArgs) => unknown;
 export type DataOf<F> = F extends DataFunction
-  ? Awaited<ReturnType<F>>
+  ? Exclude<Awaited<ReturnType<F>>, Error>
   : undefined;
 export interface RevalidationArgs {
   url: URL;
@@ -19,6 +19,8 @@ export interface RouteModule {
   ErrorBoundary?: unknown;
   loader?: DataFunction;
   action?: DataFunction;
+  clientLoader?: DataFunction;
+  clientAction?: DataFunction;
   shouldRevalidate?: (args: RevalidationArgs) => boolean;
 }
 export type Route<M extends RouteModule = RouteModule> = M & { path: string };
@@ -79,6 +81,8 @@ export interface Snapshot {
 }
 export interface RouterOptions {
   url?: string;
+  /** Skip browser-only handlers during server rendering. Set by loadRouter. */
+  server?: boolean;
   /** Incoming server request headers are forwarded to data handlers. */
   request?: Request;
   /** Explicitly opt into browser history; leave off for SSR and tests. */
@@ -124,7 +128,7 @@ export interface Router {
   createFetcher: () => Fetcher;
   dispose: () => void;
 }
-export async function safeWrapAsync<T>(
+export function safeWrapAsync<T>(
   work: () => T | Promise<T>,
 ): Promise<Result<T>> {
   return Promise.resolve()
@@ -135,7 +139,7 @@ export async function safeWrapAsync<T>(
     );
 }
 interface OperationOptions extends SubmitOptions, NavigateOptions {
-  history?: boolean;
+  push?: boolean;
   hops?: number;
 }
 export function createRouter(
@@ -176,7 +180,7 @@ export function createRouter(
       const match = matchRoutes(routes, url.pathname);
       const commit = () => {
         if (local || url.origin !== new URL(snapshot.url).origin) return;
-        if (browser && (operation.history || body) && snapshot.url !== url.href)
+        if (browser && (operation.push || body) && snapshot.url !== url.href)
           window.history[operation.replace ? "replaceState" : "pushState"](
             null,
             "",
@@ -196,9 +200,12 @@ export function createRouter(
       emit({ state: body ? "submitting" : "loading", error: undefined });
       const result = await safeWrapAsync(async () => {
         if (url.origin !== new URL(main.getSnapshot().url).origin)
-          return new Error("Cross-origin URL");
+          return new Error("External URL");
         if (!match) return new Error("No route");
-        const fn = match.route[body ? "action" : "loader"];
+        const fn =
+          (!options.server &&
+            match.route[body ? "clientAction" : "clientLoader"]) ||
+          match.route[body ? "action" : "loader"];
         if (body && !fn) return new Error("No action");
         return fn?.({
           request: new Request(url, {
@@ -223,7 +230,7 @@ export function createRouter(
           result.error = new Error("Redirect loop");
         if (!result.error) {
           await main.run(new URL(redirectTo, url).href, undefined, {
-            history: true,
+            push: true,
             replace: true,
             hops: (operation.hops ?? 0) + 1,
           });
@@ -258,7 +265,7 @@ export function createRouter(
   };
   const main = channel(initial);
   let started = 0;
-  let initialized = !!options.hydrationData;
+  let initialized = options.hydrationData?.data !== undefined;
   const pop = () => {
     void main.run(window.location.href);
   };
@@ -279,7 +286,7 @@ export function createRouter(
     },
     async navigate(url, operation = {}) {
       initialized = true;
-      await main.run(url, undefined, { ...operation, history: true });
+      await main.run(url, undefined, { ...operation, push: true });
     },
     async revalidate(reason = "manual") {
       const url = new URL(main.getSnapshot().url);

@@ -47,3 +47,67 @@ test("SSR produces HTML and hydrates without loading again", async ({
   await expect(page.getByTestId("runs")).toHaveText("2");
   expect(errors).toEqual([]);
 });
+for (const path of ["/", "/preact.html"]) {
+  test(`${path} makes real requests and keeps controls still while submitting`, async ({
+    page,
+  }) => {
+    await page.goto(path);
+    await expect(page.getByTestId("count")).toHaveText("0");
+    await expect(page.getByText("Loader runs:")).toContainText("1");
+    const button = page.getByRole("button", { name: "Add one" });
+    const reset = page.getByRole("button", { name: "Reset", exact: true });
+    const before = await button.boundingBox();
+    const resetBefore = await reset.boundingBox();
+    await button.hover();
+    expect(await button.boundingBox()).toEqual(before);
+    let release: () => void = () => {};
+    const barrier = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route("**/api/counter", async (route) => {
+      if (route.request().method() === "POST") await barrier;
+      await route.continue();
+    });
+    const post = page.waitForRequest(
+      (request) =>
+        request.url().endsWith("/api/counter") && request.method() === "POST",
+    );
+    const get = page.waitForRequest(
+      (request) =>
+        request.url().endsWith("/api/counter") && request.method() === "GET",
+    );
+    await button.click();
+    await post;
+    await expect(button).toBeDisabled();
+    expect(await button.boundingBox()).toEqual(before);
+    expect(await reset.boundingBox()).toEqual(resetBefore);
+    release();
+    await get;
+    await expect(page.getByTestId("count")).toHaveText("1");
+    await expect(button).toBeEnabled();
+    expect(await button.boundingBox()).toEqual(before);
+  });
+}
+test("the original logo and header stay identical across every page", async ({
+  page,
+}) => {
+  let expected: Awaited<
+    ReturnType<ReturnType<typeof page.locator>["boundingBox"]>
+  > = null;
+  let markup: string | undefined;
+  for (const path of ["/", "/about", "/preact.html", "/ssr"]) {
+    await page.goto(path);
+    await page.evaluate(() => document.fonts.ready);
+    const logo = page.locator(".wordmark");
+    await expect(logo.locator("span")).toHaveText("s.");
+    const box = await logo.boundingBox();
+    const html = await logo.innerHTML();
+    if (!expected) {
+      expected = box;
+      markup = html;
+      continue;
+    }
+    expect(box).toEqual(expected);
+    expect(html).toBe(markup);
+  }
+});

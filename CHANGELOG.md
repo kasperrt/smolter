@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Client-only loaders/actions, SSR fallback, and inferred client data types.
+- Real demo API requests and automatic GET revalidation after POST.
+- Shared original logo with pink underscore, stable header and button geometry.
+
 ## 0.1.0
 
 - Initial typed React and Preact adapters with zero runtime dependencies.

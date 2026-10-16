@@ -215,7 +215,7 @@ describe("data router", () => {
     expect(router.getSnapshot().error?.message).toMatch("No route");
     await router.navigate("https://elsewhere.dev/");
     expect(router.getSnapshot().url).toBe("https://test.dev/missing");
-    expect(router.getSnapshot().error?.message).toMatch("Cross-origin");
+    expect(router.getSnapshot().error?.message).toMatch("External URL");
   });
 });
 it("forwards incoming SSR request headers", async () => {
@@ -287,4 +287,66 @@ it("fetcher revalidation does not take a pending navigation back to the old URL"
   await navigation;
   expect(router.getSnapshot().url).toBe("https://test.dev/next");
   expect(router.getSnapshot().data).toBe("next");
+});
+it("selects client handlers locally and skips them during SSR", async () => {
+  let clientLoads = 0;
+  let clientActions = 0;
+  const route = defineRoute("/", {
+    loader: () => ({ source: "server" as const }),
+    action: () => ({ source: "server-action" as const }),
+    clientLoader: () => {
+      clientLoads++;
+      return { source: "client" as const };
+    },
+    clientAction: () => {
+      clientActions++;
+      return { source: "client-action" as const };
+    },
+  });
+  const server = await loadRouter([route], "https://test.dev/");
+  expect(server.getSnapshot().data).toEqual({ source: "server" });
+  await server.submit("/", body());
+  expect(server.getSnapshot().actionData).toEqual({ source: "server-action" });
+  expect(clientLoads).toBe(0);
+  expect(clientActions).toBe(0);
+  const client = createRouter([route]);
+  await client.navigate("/");
+  expect(client.getSnapshot().data).toEqual({ source: "client" });
+  const fetcher = client.createFetcher();
+  await fetcher.submit("/", body());
+  expect(fetcher.getSnapshot().data).toEqual({ source: "client-action" });
+  expect(clientLoads).toBe(2);
+  expect(clientActions).toBe(1);
+  expectTypeOf<LoaderData<typeof route>>().toEqualTypeOf<
+    { source: "server" } | { source: "client" }
+  >();
+  expectTypeOf<ActionData<typeof route>>().toEqualTypeOf<
+    { source: "server-action" } | { source: "client-action" }
+  >();
+});
+it("loads a client-only route after its empty SSR snapshot is hydrated", async () => {
+  let runs = 0;
+  const route = defineRoute("/", {
+    clientLoader: () => ({ count: ++runs }),
+    clientAction: () => ({ saved: true }),
+  });
+  expectTypeOf<LoaderData<typeof route>>().toEqualTypeOf<{ count: number }>();
+  expectTypeOf<ActionData<typeof route>>().toEqualTypeOf<{ saved: boolean }>();
+  const server = await loadRouter([route], "https://test.dev/");
+  expect(runs).toBe(0);
+  expect(server.getSnapshot().data).toBeUndefined();
+  expect((await server.submit("/", body())).error?.message).toBe("No action");
+  const client = createRouter([route], {
+    hydrationData: { ...server.getSnapshot(), error: undefined },
+  });
+  const loaded = new Promise<void>((resolve) =>
+    client.subscribe(() => {
+      if (client.getSnapshot().data) resolve();
+    }),
+  );
+  const stop = client.start();
+  await loaded;
+  expect(client.getSnapshot().data).toEqual({ count: 1 });
+  stop();
+  client.dispose();
 });

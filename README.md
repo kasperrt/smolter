@@ -17,16 +17,17 @@ pnpm dev
 ```
 
 Open `http://127.0.0.1:5173` for React, `/preact.html` for Preact, and `/ssr`
-for a server-rendered page with hydration. The counter is an in-memory demo;
-a browser reload resets it. No backend or credentials are needed.
+for a server-rendered page with hydration. The counter uses a local development API with a per-browser cookie. Clicking Add one
+sends POST /api/counter; revalidation sends GET /api/counter. Data survives page
+navigation and reloads until the dev server restarts. No external backend or credentials are needed.
 
-This private repository contains version **0.1.0**. It is not published to npm
+This private repository contains version **0.1.1**. It is not published to npm
 or JSR. To test in another project:
 
 ```sh
 pnpm --dir packages/smolter pack --pack-destination ../..
 # In your app:
-pnpm add /absolute/path/to/smolter-0.1.0.tgz
+pnpm add /absolute/path/to/smolter-0.1.1.tgz
 ```
 
 ## Imports
@@ -118,6 +119,46 @@ not exceptions thrown while rendering components.
 There is no file-system crawler, compiler plugin, or generated route manifest.
 Explicit module registration works in any bundler. A Vite application may also
 use `import.meta.glob` to build its own route table at build time.
+
+## Client-only handlers
+
+Export `clientLoader` and `clientAction` from a route module, or pass them to
+`defineRoute`. `createRouter` prefers these handlers over `loader` / `action`.
+They run directly on the client: a handler can call `fetch`, use browser storage,
+or return a computed value. Calling a handler alone does not send a network request.
+
+```tsx
+// loader.ts — runs in the browser, no backend required
+export function clientLoader() {
+  return { theme: localStorage.getItem("theme") ?? "light" };
+}
+```
+
+```tsx
+// route.tsx
+import { useLoaderData } from "smolter";
+import type { clientLoader } from "./loader";
+export { clientLoader } from "./loader";
+
+export default function Preferences() {
+  const data = useLoaderData<typeof clientLoader>();
+  // inferred: { theme: string } | undefined
+  return <p>{data?.theme}</p>;
+}
+```
+
+`loadRouter` from `smolter/server` sets server mode and **never executes client
+handlers**. It uses ordinary `loader` / `action` handlers there. A client-only
+route renders its `HydrateFallback` during SSR, then loads on the client after
+hydration. Existing server data is reused on hydration; subsequent navigation
+and revalidation use the client loader. When server and client return different
+shapes, route-based hooks infer their union. Returned `Error` values appear in
+error state, not the data type.
+
+Ordinary `loader` / `action` remain universal fallbacks: this library does not
+turn them into remote server endpoints. A client request to your backend is an
+explicit `fetch` inside the client handler. Keep server code out of browser
+modules; a server/client compiler split is not part of this package.
 
 ## Manual definitions and automatic inference
 

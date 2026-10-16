@@ -1,15 +1,15 @@
 import { useFetcher, useLoaderData, useRevalidator } from "smolter";
 import { Button } from "../../components/button";
-import type { action } from "./action";
-import type { loader } from "./loader";
+import type { clientAction } from "./action";
+import type { clientLoader } from "./loader";
 
-export { action } from "./action";
+export { clientAction } from "./action";
 export { ErrorBoundary } from "./components/error-boundary";
 export { HydrateFallback } from "./components/hydrate-fallback";
-export { loader } from "./loader";
+export { clientLoader } from "./loader";
 export default function Home() {
-  const data = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<typeof action>();
+  const data = useLoaderData<typeof clientLoader>();
+  const fetcher = useFetcher<typeof clientAction>();
   const revalidate = useRevalidator();
   return (
     <section className="playground">
@@ -31,8 +31,9 @@ export default function Home() {
             name="intent"
             value="increment"
             disabled={fetcher.state !== "idle"}
+            aria-busy={fetcher.state !== "idle"}
           >
-            {fetcher.state === "idle" ? "Add one +" : "Saving…"}
+            Add one +
           </Button>
           <Button
             className="secondary"
@@ -40,13 +41,14 @@ export default function Home() {
             name="intent"
             value="reset"
             disabled={fetcher.state !== "idle"}
+            aria-busy={fetcher.state !== "idle"}
           >
             Reset
           </Button>
         </fetcher.Form>
         <div className="status">
           <span role="status">
-            {fetcher.data?.message ?? "Submit to update the loader."}
+            {fetcher.data?.message ?? "POST /api/counter → GET /api/counter"}
           </span>
         </div>
       </div>

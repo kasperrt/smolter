@@ -8,16 +8,18 @@ export default function ServerPage() {
   const data = useLoaderData<typeof loader>();
   const revalidate = useRevalidator();
   return (
-    <main>
-      <h1>{data?.message}</h1>
-      <p>
-        Hydrated without fetching again. Loader runs:{" "}
-        <span data-testid="runs">{data?.runs}</span>
-      </p>
-      <Button onClick={() => void revalidate()}>Revalidate</Button>
-      <p>
-        <a href="/">← Playground</a>
-      </p>
-    </main>
+    <>
+      <main className="server-page">
+        <h1>{data?.message}</h1>
+        <p>
+          Hydrated without fetching again. Loader runs:{" "}
+          <span data-testid="runs">{data?.runs}</span>
+        </p>
+        <Button onClick={() => void revalidate()}>Revalidate</Button>
+        <p>
+          <a href="/">← Playground</a>
+        </p>
+      </main>
+    </>
   );
 }

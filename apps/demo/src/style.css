@@ -34,8 +34,7 @@ a,
 button {
   transition:
     background 0.15s,
-    color 0.15s,
-    transform 0.15s;
+    color 0.15s;
 }
 a:focus-visible,
 button:focus-visible {
@@ -245,10 +244,8 @@ button {
 }
 button:hover {
   background: #c91d7d;
-  transform: translateY(-1px);
 }
 button:active {
-  transform: translateY(1px);
 }
 button:disabled {
   opacity: 0.6;
@@ -517,4 +514,55 @@ main > .preact-playground h2 {
 }
 body:has(.preact-playground) main {
   padding-top: 0;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+.wordmark {
+  flex: none;
+  width: 130px;
+  white-space: nowrap;
+  line-height: 1;
+}
+.wordmark > span {
+  flex: none;
+}
+.wordmark svg {
+  display: block;
+}
+button {
+  height: 40px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.counter-body form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 82px;
+}
+.pill {
+  width: 78px;
+  text-align: center;
+}
+.status {
+  min-height: 36px;
+}
+.server-page {
+  padding-top: 46px;
+}
+.server-page h1 {
+  font-size: 40px;
+  letter-spacing: -1px;
+}
+.server-page > button {
+  margin: 20px 0;
+}
+
+.wordmark-name {
+  font: inherit;
+}
+.wordmark-name i {
+  color: var(--pink);
+  font-style: normal;
+  margin-left: 2px;
 }

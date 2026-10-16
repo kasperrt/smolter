@@ -58,12 +58,12 @@ export type LoaderSource = RouteModule | DataFunction;
 export type LoaderData<T> = T extends DataFunction
   ? DataOf<T>
   : T extends RouteModule
-    ? DataOf<T["loader"]>
+    ? DataOf<Extract<T["loader"] | T["clientLoader"], DataFunction>>
     : unknown;
 export type ActionData<T> = T extends DataFunction
   ? DataOf<T>
   : T extends RouteModule
-    ? DataOf<T["action"]>
+    ? DataOf<Extract<T["action"] | T["clientAction"], DataFunction>>
     : unknown;
 function useData(key: "data" | "actionData", route?: LoaderSource): unknown {
   const snapshot = useSnapshot();
@@ -228,7 +228,10 @@ export interface TypedFetcher<T> extends Omit<FetcherSnapshot, "data"> {
 }
 export function useFetcher<T extends RouteModule>(
   route: RouteDefinition<T>,
-): TypedFetcher<DataOf<T["action"]> | DataOf<T["loader"]>>;
+): TypedFetcher<
+  | DataOf<Extract<T["action"] | T["clientAction"], DataFunction>>
+  | DataOf<Extract<T["loader"] | T["clientLoader"], DataFunction>>
+>;
 export function useFetcher<
   T extends DataFunction = DataFunction,
 >(): TypedFetcher<DataOf<T>>;

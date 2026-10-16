@@ -1,11 +1,13 @@
 import { renderToString } from "react-dom/server";
 import { RouterProvider, Routes } from "smolter";
 import { loadRouter, serialize } from "smolter/server";
+import { SiteHeader } from "./components/site-header";
 import { routes } from "./ssr-routes";
 export async function render(url: string) {
   const router = await loadRouter(routes, url);
   const html = renderToString(
     <RouterProvider router={router}>
+      <SiteHeader />
       <Routes />
     </RouterProvider>,
   );

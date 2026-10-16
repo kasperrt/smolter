@@ -6,6 +6,7 @@ import {
   RouterProvider,
   Routes,
 } from "smolter";
+import { SiteHeader } from "./components/site-header";
 import * as home from "./routes/home/route";
 import "./style.css";
 
@@ -23,12 +24,17 @@ function About() {
       <div className="about-body">
         <h2>Less router.</h2>
         <p>
-          Loaders read. Actions write. Successful actions revalidate the active
-          loader.
+          clientLoader reads in the browser. clientAction handles submissions.
+          Successful actions revalidate the active loader.
         </p>
         <p>
-          Fetchers submit without navigating. Both adapters share the same
-          dependency-free core.
+          The counter calls POST /api/counter, then GET /api/counter. Open the
+          Network tab to see both requests.
+        </p>
+        <p>
+          Types come from useLoaderData(route), or useLoaderData&lt;typeof
+          clientLoader&gt;(). The return type is inferred from the function—not
+          from its filename.
         </p>
         <Link href="/">← Playground</Link>
       </div>
@@ -38,16 +44,7 @@ function About() {
 function App() {
   return (
     <RouterProvider router={router}>
-      <header>
-        <Link href="/" className="wordmark">
-          <span aria-hidden="true">s.</span>smolter
-        </Link>
-        <nav aria-label="Main navigation">
-          <Link href="/about">The idea</Link>
-          <a href="https://github.com/kasperrt/smolter">GitHub ↗</a>
-          <span className="version">v0.1.0</span>
-        </nav>
-      </header>
+      <SiteHeader spa />
       <main>
         <div className="intro">
           <div>
@@ -88,13 +85,13 @@ function App() {
                 {`\n  from `}
                 <span className="code-pink">{`"smolter"`}</span>
                 {`;\n`}
-                <span className="code-muted">{`import type { loader } from "./loader";\nimport type { action } from "./action";`}</span>
+                <span className="code-muted">{`import type { clientLoader } from "./loader";\nimport type { clientAction } from "./action";`}</span>
                 {`\n`}
-                <span className="code-purple">{`export { loader } from "./loader";\nexport { action } from "./action";`}</span>
+                <span className="code-purple">{`export { clientLoader } from "./loader";\nexport { clientAction } from "./action";`}</span>
                 {`\nexport default function Counter() {\n  const data = useLoaderData<`}
-                <span className="code-pink">typeof loader</span>
+                <span className="code-pink">typeof clientLoader</span>
                 {`>();\n  const fetcher = useFetcher<`}
-                <span className="code-pink">typeof action</span>
+                <span className="code-pink">typeof clientAction</span>
                 {`>();\n  return <fetcher.Form>\n    <button>{data?.count}</button>\n  </fetcher.Form>;\n}`}
               </code>
             </pre>

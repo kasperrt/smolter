@@ -1,6 +1,12 @@
-import { store } from "./store";
-export async function loader() {
-  await new Promise((resolve) => setTimeout(resolve, 120));
-  return { count: store.count, reads: ++store.reads };
+import type { DataArgs } from "smolter";
+export interface CounterData {
+  count: number;
+  reads: number;
 }
-export type LoaderData = Awaited<ReturnType<typeof loader>>;
+export async function clientLoader({ signal }: DataArgs) {
+  const response = await fetch("/api/counter", { signal });
+  if (!response.ok)
+    return new Error(`Counter request failed (${response.status})`);
+  return (await response.json()) as CounterData;
+}
+export type LoaderData = Awaited<ReturnType<typeof clientLoader>>;

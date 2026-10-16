@@ -1,13 +1,18 @@
 import type { DataArgs } from "smolter";
-import { store } from "./store";
-export async function action({ request }: DataArgs) {
-  const data = await request.formData();
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  if (data.get("intent") === "reset") {
-    store.count = 0;
-    return { message: "Counter reset." };
-  }
-  store.count += 1;
-  return { message: "Saved. Loader data is fresh." };
+export interface CounterActionData {
+  message: string;
 }
-export type ActionData = Awaited<ReturnType<typeof action>>;
+export async function clientAction({ request, signal }: DataArgs) {
+  const data = await request.formData();
+  const response = await fetch("/api/counter", {
+    method: "POST",
+    signal,
+    body: new URLSearchParams({
+      intent: String(data.get("intent") ?? "increment"),
+    }),
+  });
+  if (!response.ok)
+    return new Error(`Counter update failed (${response.status})`);
+  return (await response.json()) as CounterActionData;
+}
+export type ActionData = Awaited<ReturnType<typeof clientAction>>;

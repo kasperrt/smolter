@@ -1,4 +1,4 @@
-import { h, render } from "preact";
+import { type ComponentChildren, h, render } from "preact";
 import {
   createRouter,
   defineRoute,
@@ -8,32 +8,18 @@ import {
   useLoaderData,
   useRevalidator,
 } from "smolter/preact";
-import { action } from "./routes/home/action";
-import { loader } from "./routes/home/loader";
+import { headerContent } from "./components/header-content";
+import { clientAction } from "./routes/home/action";
+import { clientLoader } from "./routes/home/loader";
 import "./style.css";
 
 function Counter() {
-  const data = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<typeof action>();
+  const data = useLoaderData<typeof clientLoader>();
+  const fetcher = useFetcher<typeof clientAction>();
   const revalidate = useRevalidator();
   return h(
     "div",
     null,
-    h(
-      "header",
-      null,
-      h(
-        "a",
-        { href: "/", className: "wordmark" },
-        h("span", null, "s."),
-        "smolter",
-      ),
-      h(
-        "nav",
-        null,
-        h("a", { href: "https://github.com/kasperrt/smolter" }, "GitHub ↗"),
-      ),
-    ),
     h(
       "main",
       null,
@@ -88,7 +74,7 @@ function Counter() {
                 value: "increment",
                 disabled: fetcher.state !== "idle",
               },
-              fetcher.state === "idle" ? "Add one +" : "Saving…",
+              "Add one +",
             ),
             h(
               "button",
@@ -108,7 +94,7 @@ function Counter() {
             h(
               "span",
               { role: "status" },
-              fetcher.data?.message ?? "Submit to update the loader.",
+              fetcher.data?.message ?? "POST /api/counter → GET /api/counter",
             ),
           ),
         ),
@@ -128,13 +114,27 @@ function Counter() {
         ),
       ),
     ),
-    h("footer", null, h("span", null, "Preact · zero runtime dependencies")),
   );
 }
 const router = createRouter(
-  [defineRoute("/preact.html", { default: Counter, loader, action })],
+  [
+    defineRoute("/preact.html", {
+      default: Counter,
+      clientLoader,
+      clientAction,
+    }),
+  ],
   { browser: true },
 );
 const root = document.getElementById("root");
 if (root)
-  render(h(RouterProvider, { router }, h(Routes, { fallback: null })), root);
+  render(
+    h(
+      RouterProvider,
+      { router },
+      h("header", null, ...headerContent<ComponentChildren>(h)),
+      h(Routes, { fallback: null }),
+      h("footer", null, "Preact · zero runtime dependencies"),
+    ),
+    root,
+  );
