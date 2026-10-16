@@ -8,6 +8,8 @@ Local publishing, tag pushes, and manual workflow dispatch are not release paths
 - npm and JSR manifests contain the same version.
 - Formatting, types, unit tests, package smoke tests, browser tests, production
   SSR tests, JSR validation, and the size gate pass for the merged commit.
+- The required `coverage` check reports 100% line coverage for every file in
+  `packages/smolter/src`, combining unit tests with real Chromium adapter tests.
 - The commit is the merge commit of a pull request targeting `main`.
 - The repository is public and the GitHub Pages build passes.
 

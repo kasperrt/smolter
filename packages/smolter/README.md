@@ -348,6 +348,7 @@ Exact current measurements are generated in
 ```sh
 pnpm fix               # Formatting
 pnpm check             # Lint, types, tests, build, size gate
+pnpm coverage          # 100% lines per published source file, including browser tests
 pnpm pack:smoke         # React-only and Preact-only packed installs
 pnpm build:examples    # Four independent builds
 pnpm smoke             # Four-app browser checks, file routing
@@ -355,7 +356,10 @@ SMOLTER_ROUTES=manual SMOLTER_TEST_PORT=4473 pnpm smoke
 pnpm smoke:production  # Built SSR servers, hydration, reads, mutations
 ```
 
-GitHub Actions checks every PR and merge. Registry publishing requires a merged PR
+GitHub Actions checks every PR and merge. The required `coverage` check enforces
+100% line coverage for every file in `packages/smolter/src`, including the Vite
+integration and both framework adapters. Reports are uploaded as CI artifacts.
+Registry publishing requires a merged PR
 and passing checks. [Release workflow](https://github.com/kasperrt/smolter/blob/main/RELEASING.md).
 To test a local package build in another project:
 

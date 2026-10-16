@@ -1,2 +1,34 @@
+import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
-export default defineConfig({ test: { include: ["tests/**/*.test.ts"] } });
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: "unit",
+          include: ["tests/**/*.test.ts"],
+          exclude: ["tests/browser/**"],
+        },
+      },
+      {
+        test: {
+          name: "browser",
+          include: ["tests/browser/**/*.test.ts"],
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright(),
+            instances: [{ browser: "chromium" }],
+          },
+        },
+      },
+    ],
+    coverage: {
+      provider: "v8",
+      include: ["packages/smolter/src/**/*.ts"],
+      reporter: ["text", "json", "json-summary", "html", "lcov"],
+      thresholds: { lines: 100, perFile: true },
+    },
+  },
+});

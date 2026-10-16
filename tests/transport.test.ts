@@ -138,3 +138,54 @@ it("server transport handles missing routes, errors, methods, and redirects", as
     ).headers.get("X-Smolter-Redirect"),
   ).toBe("/done");
 });
+
+it("preserves Response results and rejects unsupported HTTP methods", async () => {
+  const routes = [
+    defineRoute("/", { loader: () => Response.json({ value: 7 }) }),
+  ];
+  const response = await handleRequest(
+    routes,
+    new Request("https://test.dev/"),
+  );
+
+  expect(await response.json()).toEqual({ value: 7 });
+  expect(
+    (
+      await handleRequest(
+        routes,
+        new Request("https://test.dev/", { method: "HEAD" }),
+      )
+    ).status,
+  ).toBe(405);
+});
+
+it("surfaces server failures through the client route error state", async () => {
+  vi.stubGlobal("fetch", async () =>
+    Response.json({ error: "Unavailable" }, { status: 503 }),
+  );
+
+  const router = createRouter([serverRoute("/", {})]);
+
+  await router.navigate("/");
+
+  expect(router.getSnapshot().error?.message).toBe("Unavailable");
+});
+
+it("follows a redirect returned through the server transport", async () => {
+  vi.stubGlobal(
+    "fetch",
+    async () =>
+      new Response(null, {
+        headers: { "X-Smolter-Redirect": "/done" },
+      }),
+  );
+
+  const router = createRouter([
+    serverRoute("/", {}),
+    defineRoute("/done", { loader: () => "Finished" }),
+  ]);
+
+  await router.navigate("/");
+
+  expect(router.getSnapshot().data).toBe("Finished");
+});

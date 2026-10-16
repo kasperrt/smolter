@@ -46,6 +46,7 @@ it("discovers only flat route modules with index, groups, params, and splats", a
   ]);
 
   await mkdir(join(root, "helpers"));
+  await writeFile(join(root, "types.d.ts"), "export interface RouteData {}");
   await writeFile(join(root, "helpers", "view.ts"), "export default 1;");
   await writeFile(
     join(root, "about.tsx"),
@@ -78,6 +79,12 @@ it("discovers only flat route modules with index, groups, params, and splats", a
 
   expect(result.every((route) => route.file.startsWith(root))).toBe(true);
 });
+
+for (const name of ["tasks..detail", "tasks._index.detail", "tasks.$.detail"]) {
+  it(`rejects the invalid flat route ${name}`, async () => {
+    expect(await flatRoutes(await fixture([name]))).toBeInstanceOf(Error);
+  });
+}
 
 it("rejects conflicting params instead of relying on filesystem enumeration order", async () => {
   const result = await flatRoutes(await fixture(["tasks.$id", "tasks.$slug"]));
