@@ -18,7 +18,6 @@ export interface FormProps
 
 type FormSubmitEvent = Parameters<NonNullable<FormProps["onSubmit"]>>[0];
 
-type NativeSubmitEvent = FormSubmitEvent & { nativeEvent?: SubmitEvent };
 interface InternalFormProps extends FormProps {
   fetcher?: Fetcher;
 }
@@ -37,9 +36,7 @@ export function Form({
 
     if (event.defaultPrevented) return;
 
-    const submitter = (
-      ((event as NativeSubmitEvent).nativeEvent ?? event) as SubmitEvent
-    ).submitter as HTMLButtonElement | null;
+    const submitter = (event as SubmitEvent).submitter;
     const target = internalURL(
       router.getSnapshot().url,
       submitter?.getAttribute("formaction") ?? action,

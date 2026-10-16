@@ -26,7 +26,7 @@ export function createRouter(
   const browser = options.browser && typeof window !== "undefined";
   const initial: Snapshot = options.hydrationData ?? {
     url: new URL(
-      options.url ?? (browser ? window.location.href : "/"),
+      options.url ?? (browser ? location.href : "/"),
       "http://localhost",
     ).href,
     params: {},
@@ -70,7 +70,7 @@ export function createRouter(
         if (!changed && snapshot.path !== undefined) return;
 
         if (browser && (push || body) && changed)
-          window.history[operation.replace ? "replaceState" : "pushState"](
+          history[operation.replace ? "replaceState" : "pushState"](
             null,
             "",
             url,
@@ -95,9 +95,9 @@ export function createRouter(
           match.route[body ? "clientAction" : "clientLoader"] ||
           match.route[body ? "action" : "loader"];
 
-        if (body && !fn) return new Error("No action");
+        if (!fn) return body && new Error("No action");
 
-        return (fn as DataFunction | undefined)?.({
+        return (fn as DataFunction)({
           request: new Request(url, {
             signal,
             method: body && (operation.method ?? "POST"),
@@ -172,13 +172,13 @@ export function createRouter(
   let started = 0;
   let initialized = options.hydrationData?.state === "idle";
   const pop = () => {
-    void main.load(window.location.href);
+    void main.load(location.href);
   };
   const router: Router = {
     ...main,
     routes,
     start() {
-      if (started++ === 0 && browser) window.addEventListener("popstate", pop);
+      if (started++ === 0 && browser) addEventListener("popstate", pop);
 
       if (!initialized) {
         initialized = true;
@@ -186,8 +186,7 @@ export function createRouter(
       }
 
       return () => {
-        if (--started === 0 && browser)
-          window.removeEventListener("popstate", pop);
+        if (--started === 0 && browser) removeEventListener("popstate", pop);
       };
     },
     async navigate(url, operation) {
@@ -220,7 +219,7 @@ export function createRouter(
 
       for (const dispose of disposers) dispose();
 
-      if (browser) window.removeEventListener("popstate", pop);
+      if (browser) removeEventListener("popstate", pop);
     },
   };
 
