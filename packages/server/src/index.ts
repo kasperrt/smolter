@@ -22,13 +22,14 @@ export async function loadRouter(
     if (!handler || typeof input === "string") return handler;
 
     return (args) => {
-      const request = new Request(args.request);
+      const signal = AbortSignal.any([input.signal, args.signal]);
+      const request = new Request(args.request, { signal });
 
       input.headers.forEach((value, name) => {
         if (!request.headers.has(name)) request.headers.set(name, value);
       });
 
-      return handler({ ...args, request });
+      return handler({ ...args, request, signal });
     };
   };
   const serverRoutes = routes.map((route) => ({

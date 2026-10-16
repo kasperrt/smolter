@@ -6,6 +6,61 @@ import { render } from "preact-render-to-string";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { expect, it } from "vitest";
+import { deferred } from "./helpers/deferred";
+
+it("forwards incoming request cancellation to SSR loaders", async () => {
+  const controller = new AbortController();
+  const started = deferred<react.DataArgs>();
+  const completed = deferred<void>();
+  const route = react.defineRoute("/", {
+    loader: (args) => {
+      started.resolve(args);
+
+      return completed.promise;
+    },
+  });
+  const pending = loadRouter(
+    [route],
+    new Request("https://test.dev/", { signal: controller.signal }),
+  );
+  const args = await started.promise;
+
+  expect(args.signal.aborted).toBe(false);
+  expect(args.request.signal.aborted).toBe(false);
+
+  controller.abort();
+
+  expect(args.signal.aborted).toBe(true);
+  expect(args.request.signal.aborted).toBe(true);
+  expect(args.signal.reason).toBe(controller.signal.reason);
+
+  completed.resolve();
+
+  const router = await pending;
+
+  router.dispose();
+});
+
+it("preserves an already aborted SSR request signal", async () => {
+  const signal = AbortSignal.abort();
+  const route = react.defineRoute("/", {
+    loader: (args) => ({
+      aborted: args.signal.aborted,
+      requestAborted: args.request.signal.aborted,
+    }),
+  });
+  const router = await loadRouter(
+    [route],
+    new Request("https://test.dev/", { signal }),
+  );
+
+  expect(router.getSnapshot().data).toEqual({
+    aborted: true,
+    requestAborted: true,
+  });
+
+  router.dispose();
+});
 
 it("server renders React data without browser globals", async () => {
   const route = react.defineRoute("/", {

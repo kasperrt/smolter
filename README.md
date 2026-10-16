@@ -202,8 +202,10 @@ export async function clientLoader({ signal }: DataArgs) {
 ```
 
 Server transport forwards this signal automatically, including calls through
-`serverLoader()`. Cancelled requests cannot overwrite the current page's data
-or error state. Aborting a request does not undo a mutation already processed
+`serverLoader()`. For SSR, `loadRouter(routes, request)` combines the incoming
+request's signal with the router's signal. The host must abort that incoming
+request when a client disconnects. Cancelled navigation requests cannot overwrite
+the current page's data or error state. Aborting a request does not undo a mutation already processed
 by the server.
 
 Keep server handlers in separate files and re-export them as shown. The plugin
