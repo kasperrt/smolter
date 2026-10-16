@@ -53,6 +53,7 @@ export function createRouter(
       controller?.abort();
 
       const current = new AbortController();
+      const { signal } = current;
       controller = current;
       pending.add(current);
 
@@ -95,16 +96,16 @@ export function createRouter(
 
         return (fn as DataFunction | undefined)?.({
           request: new Request(url, {
-            signal: current.signal,
+            signal,
             ...(body && { method: operation.method ?? "POST", body }),
           }),
           params: match.params,
-          signal: current.signal,
+          signal,
         });
       });
       pending.delete(current);
 
-      if (current.signal.aborted) return result;
+      if (signal.aborted) return result;
 
       const redirectTo =
         result.data instanceof Response && result.data.headers.get("Location");
@@ -140,7 +141,7 @@ export function createRouter(
           actionResult: result.data,
         });
 
-        if (local && !current.signal.aborted) emit({ state: "idle" });
+        if (local && !signal.aborted) emit({ state: "idle" });
       }
 
       return result;

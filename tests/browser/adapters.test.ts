@@ -147,6 +147,8 @@ for (const { name, api, element: h, root: mount } of frameworks) {
           api.Form,
           { action: "/tasks/42", method: "get", id: "search-form" },
           h("input", { name: "q", value: "hello", readOnly: true }),
+          h("input", { name: "q", value: "again", readOnly: true }),
+          h("input", { name: "attachment", type: "file" }),
           h("button", { type: "submit" }, "Search"),
         ),
       );
@@ -186,9 +188,22 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     await revalidate!();
     await expect.poll(() => container.textContent).toContain('"data":9');
 
+    const upload = new DataTransfer();
+
+    upload.items.add(
+      new File(["example"], "notes.txt", { type: "text/plain" }),
+    );
+    container.querySelector<HTMLInputElement>(
+      "#search-form input[type=file]",
+    )!.files = upload.files;
     container.querySelector<HTMLButtonElement>("#search-form button")!.click();
 
     await expect.poll(() => router.getSnapshot().url).toContain("?q=hello");
+
+    const search = new URL(router.getSnapshot().url).searchParams;
+
+    expect(search.getAll("q")).toEqual(["hello", "again"]);
+    expect(search.get("attachment")).toBe("notes.txt");
 
     container.querySelector<HTMLAnchorElement>("#next")!.click();
 

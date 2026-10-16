@@ -56,12 +56,12 @@ export function Form({
     ).toUpperCase();
 
     if (verb === "GET") {
-      target.search = new URLSearchParams(
-        Array.from(data, ([key, value]) => [
-          key,
-          typeof value === "string" ? value : value.name,
-        ]),
-      ).toString();
+      const search = new URLSearchParams();
+
+      for (const [key, value] of data)
+        search.append(key, typeof value === "string" ? value : value.name);
+
+      target.search = String(search);
 
       void (fetcher ? fetcher.load : router.navigate)(target.href);
 

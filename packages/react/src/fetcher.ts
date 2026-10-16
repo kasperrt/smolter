@@ -11,7 +11,6 @@ import type {
   Result,
   Route as RouteDefinition,
   RouteModule,
-  Router,
   SubmitOptions,
 } from "@smolter/core";
 import { useRouter } from "./context.ts";
@@ -55,7 +54,11 @@ export function useFetcher(route?: RouteDefinition): TypedFetcher<unknown> {
   const router = useRouter();
   const fetcher = useMemo(() => {
     const store = router.createFetcher();
-    const target = () => fetcherTarget(router, route);
+    const target = () => {
+      const snapshot = router.getSnapshot();
+
+      return !route || route.path === snapshot.path ? snapshot.url : route.path;
+    };
 
     return {
       ...store,
@@ -76,10 +79,4 @@ export function useFetcher(route?: RouteDefinition): TypedFetcher<unknown> {
   );
 
   return { ...fetcher, ...state };
-}
-
-function fetcherTarget(router: Router, route?: RouteDefinition): string {
-  const snapshot = router.getSnapshot();
-
-  return !route || route.path === snapshot.path ? snapshot.url : route.path;
 }
