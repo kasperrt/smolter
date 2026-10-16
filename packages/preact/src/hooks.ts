@@ -6,6 +6,7 @@
 import type {
   AnyDataFunction,
   DataOf,
+  Route,
   RouteModule,
   Router,
   Snapshot,
@@ -30,9 +31,10 @@ export type ActionData<T> = T extends AnyDataFunction
     ? DataOf<Extract<T["action"] | T["clientAction"], AnyDataFunction>>
     : unknown;
 function useData(key: "data" | "actionData", route?: LoaderSource): unknown {
+  const path = (route as Route | undefined)?.path;
+
   return useSnapshot((snapshot) => {
-    if (route && "path" in route && route.path !== snapshot.path)
-      return undefined;
+    if (path !== undefined && path !== snapshot.path) return undefined;
 
     return snapshot[key];
   });
