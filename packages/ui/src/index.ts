@@ -1,16 +1,22 @@
+import { highlight } from "./highlight";
+import sizes from "./size.json";
+
 export interface Attributes {
   [key: string]: unknown;
 }
+
 export type ElementFactory<N> = (
   tag: string,
   props: Attributes | null,
   ...children: (N | string | number)[]
 ) => N;
+
 export type LinkFactory<N> = (
   href: string,
   children: N | string,
   className?: string,
 ) => N;
+
 export interface CounterProps<N> {
   data?: { count: number; reads: number };
   state: string;
@@ -18,15 +24,55 @@ export interface CounterProps<N> {
   form: (children: N[]) => N;
   revalidate?: () => void;
 }
+
 export interface ShellProps<N> {
-  mode: "React" | "Preact" | "SSR";
+  mode: "React" | "Preact" | "SSR" | "React SSR" | "Preact SSR";
+  basePort?: number;
+  routePath?: string;
+  hosted?: boolean;
+  source?: N;
   content: N;
   link?: LinkFactory<N>;
 }
+
+export interface CodePanelProps {
+  files: Record<string, string>;
+  active: string;
+  select: (file: string) => void;
+}
+
 export interface ArticleProps {
   title: string;
   paragraphs: string[];
 }
+
+export interface TaskData {
+  id: string;
+  title: string;
+}
+
+export interface TaskProps<N> {
+  state: string;
+  message?: string;
+  form: (children: N[]) => N;
+}
+
+export interface TaskListProps<N> extends TaskProps<N> {
+  tasks: TaskData[];
+  preview?: N;
+  link: LinkFactory<N>;
+}
+
+export interface TaskPreviewProps {
+  task?: TaskData;
+  state: string;
+  load: () => void;
+}
+
+export interface TaskDetailProps<N> extends TaskProps<N> {
+  task?: TaskData;
+}
+
 /** Pure UI shared by both renderers; no routing, requests, or framework hooks. */
 export function createUI<N>(h: ElementFactory<N>) {
   const link: LinkFactory<N> = (href, children, className) =>
@@ -34,6 +80,7 @@ export function createUI<N>(h: ElementFactory<N>) {
   function Button(props: Attributes, label: string) {
     return h("button", { type: "button", ...props }, label);
   }
+
   function WindowBar(title: string, detail: string) {
     return h(
       "div",
@@ -42,6 +89,7 @@ export function createUI<N>(h: ElementFactory<N>) {
       h("span", null, detail),
     );
   }
+
   function Panel(title: string, ...children: N[]) {
     return h(
       "section",
@@ -50,6 +98,102 @@ export function createUI<N>(h: ElementFactory<N>) {
       ...children,
     );
   }
+
+  function TaskList({
+    tasks,
+    state,
+    message,
+    form,
+    preview,
+    link: renderLink,
+  }: TaskListProps<N>) {
+    return Panel(
+      "tasks._index/route.ts",
+      h(
+        "div",
+        { className: "task-body" },
+        h("h2", null, "Tasks"),
+        h(
+          "ul",
+          { className: "task-list" },
+          ...tasks.map((task) =>
+            h(
+              "li",
+              { key: task.id },
+              renderLink(`/tasks/${task.id}`, task.title),
+            ),
+          ),
+        ),
+        form([
+          h(
+            "label",
+            null,
+            "New task",
+            h("input", {
+              name: "title",
+              required: true,
+              placeholder: "Task title",
+            }),
+          ),
+          Button({ type: "submit", disabled: state !== "idle" }, "Create task"),
+        ]),
+        h("p", { role: "status" }, message ?? "POST /tasks"),
+        ...(preview ? [preview] : []),
+      ),
+    );
+  }
+
+  function TaskPreview({ task, state, load }: TaskPreviewProps) {
+    return h(
+      "section",
+      { className: "fetcher-preview" },
+      h("h2", null, "Fetcher data"),
+      Button({ onClick: load, disabled: state !== "idle" }, "Fetch task 1"),
+      h(
+        "p",
+        { "data-testid": "fetcher-data" },
+        task?.title ?? "Nothing fetched yet.",
+      ),
+    );
+  }
+
+  function TaskDetail({ task, state, message, form }: TaskDetailProps<N>) {
+    return Panel(
+      "tasks.$id/route.ts",
+      h(
+        "div",
+        { className: "task-body" },
+        h("h2", null, "Edit task"),
+        form([
+          h(
+            "label",
+            null,
+            "Title",
+            h("input", {
+              key: task?.id,
+              name: "title",
+              defaultValue: task?.title,
+              required: true,
+            }),
+          ),
+          Button({ type: "submit", disabled: state !== "idle" }, "Save task"),
+          Button(
+            {
+              type: "submit",
+              formMethod: "delete",
+              formNoValidate: true,
+              className: "secondary",
+              disabled: state !== "idle",
+            },
+            "Delete task",
+          ),
+        ]),
+        h("p", { role: "status" }, message ?? `PATCH /tasks/${task?.id ?? ""}`),
+        link("/tasks", "← All tasks"),
+      ),
+    );
+  }
+
   function Brand(renderLink = link) {
     return renderLink(
       "/",
@@ -67,6 +211,7 @@ export function createUI<N>(h: ElementFactory<N>) {
       "wordmark",
     );
   }
+
   function Header(renderLink = link) {
     return h(
       "header",
@@ -75,12 +220,15 @@ export function createUI<N>(h: ElementFactory<N>) {
       h(
         "nav",
         { "aria-label": "Main navigation" },
+        renderLink("/", "Counter"),
+        renderLink("/tasks", "Tasks"),
         renderLink("/about", "The idea"),
         link("https://github.com/kasperrt/smolter", "GitHub ↗"),
         h("span", { className: "version" }, "v0.0.1"),
       ),
     );
   }
+
   function CounterPanel({
     data,
     state,
@@ -89,6 +237,7 @@ export function createUI<N>(h: ElementFactory<N>) {
     revalidate,
   }: CounterProps<N>) {
     const busy = state !== "idle";
+
     return Panel(
       "counter.demo",
       h(
@@ -134,7 +283,7 @@ export function createUI<N>(h: ElementFactory<N>) {
           h(
             "span",
             { role: "status" },
-            message ?? "POST /api/counter → GET /api/counter",
+            message ?? "Route action → loader revalidation",
           ),
         ),
       ),
@@ -154,12 +303,14 @@ export function createUI<N>(h: ElementFactory<N>) {
       ),
     );
   }
+
   function CounterFallback() {
     return CounterPanel({
       state: "loading",
       form: (children) => h("form", null, ...children),
     });
   }
+
   function Article({ title, paragraphs }: ArticleProps) {
     return Panel(
       "the-idea.txt",
@@ -171,49 +322,82 @@ export function createUI<N>(h: ElementFactory<N>) {
       ),
     );
   }
+
   function ErrorPanel(error: Error) {
     return Panel(
       "error",
       h("div", { className: "about-body", role: "alert" }, error.message),
     );
   }
-  function CodePanel() {
+
+  function CodePanel({ files, active, select }: CodePanelProps) {
     return h(
       "aside",
-      null,
-      WindowBar("route.tsx", "TSX"),
+      { "data-testid": "source-panel" },
+      WindowBar(active, "SOURCE"),
+      h(
+        "div",
+        { className: "source-tabs" },
+        ...Object.keys(files).map((file) =>
+          Button(
+            {
+              key: file,
+              onClick: () => select(file),
+              "aria-pressed": file === active,
+            },
+            file,
+          ),
+        ),
+      ),
       h(
         "pre",
-        null,
+        { tabIndex: 0, "aria-label": `${active} source code` },
         h(
           "code",
           null,
-          `export { clientLoader } from "./loader";
-export { clientAction } from "./action";
-
-export default function Counter() {
-  const data = useLoaderData<
-    typeof clientLoader
-  >();
-  const fetcher = useFetcher<
-    typeof clientAction
-  >();
-
-  return <fetcher.Form>
-    <button>{data?.count}</button>
-  </fetcher.Form>;
-}`,
+          ...highlight(files[active] ?? "").map((token, index) =>
+            h(
+              "span",
+              { key: index, className: token.kind && `syntax-${token.kind}` },
+              token.text,
+            ),
+          ),
         ),
       ),
       h(
         "div",
         { className: "code-footer" },
+        h(
+          "span",
+          null,
+          active === "Example"
+            ? "Same behavior · styling omitted"
+            : active.includes("routes")
+              ? "Route registration · paths and modules"
+              : "Actual route source",
+        ),
         h("span", null, "TypeScript"),
-        h("span", null, "UTF-8"),
       ),
     );
   }
-  function Shell({ mode, content, link: renderLink = link }: ShellProps<N>) {
+
+  function Shell({
+    mode,
+    content,
+    source,
+    basePort = 5173,
+    routePath = "/",
+    hosted = false,
+    link: renderLink = link,
+  }: ShellProps<N>) {
+    const size = mode.startsWith("Preact")
+      ? mode.includes("SSR")
+        ? sizes.preactServer
+        : sizes.preact
+      : mode.includes("SSR")
+        ? sizes.reactServer
+        : sizes.react;
+
     return h(
       "div",
       { className: "app-shell" },
@@ -233,7 +417,17 @@ export default function Counter() {
           h(
             "div",
             { className: "specs" },
-            h("span", null, h("strong", null, "2.4 kB"), " gzip"),
+            h(
+              "span",
+              {
+                title: mode.includes("SSR")
+                  ? "Browser router + server request transport; framework excluded"
+                  : "All browser router exports; framework excluded",
+                "data-testid": "gzip-size",
+              },
+              h("strong", null, `${size} B`),
+              " gzip",
+            ),
             h("span", null, h("strong", null, "0"), " dependencies"),
             h("span", null, "React + Preact"),
           ),
@@ -249,16 +443,25 @@ export default function Counter() {
               { className: "panel-tabs" },
               ...(
                 [
-                  ["React", "/"],
-                  ["Preact", "/preact.html"],
-                  ["SSR", "/ssr"],
+                  ["React", `http://127.0.0.1:${basePort}/`],
+                  ["Preact", `http://127.0.0.1:${basePort + 1}/`],
+                  ["React SSR", `http://127.0.0.1:${basePort + 2}/`],
+                  ["Preact SSR", `http://127.0.0.1:${basePort + 3}/`],
                 ] as const
               ).map(([label, href]) =>
                 h(
                   "a",
                   {
                     key: label,
-                    href,
+                    href: hosted
+                      ? label.includes("SSR")
+                        ? `https://github.com/kasperrt/smolter/tree/main/apps/${label.toLowerCase().replace(" ", "-")}`
+                        : `/smolter/${label.toLowerCase()}${routePath}`
+                      : new URL(routePath, href).href,
+                    title:
+                      hosted && label.includes("SSR")
+                        ? "Standalone server example · run with Node"
+                        : undefined,
                     "aria-current": mode === label ? "page" : undefined,
                   },
                   label,
@@ -267,7 +470,7 @@ export default function Counter() {
             ),
             content,
           ),
-          CodePanel(),
+          ...(source ? [source] : []),
         ),
       ),
       h(
@@ -278,6 +481,7 @@ export default function Counter() {
       ),
     );
   }
+
   return {
     Button,
     WindowBar,
@@ -290,5 +494,8 @@ export default function Counter() {
     ErrorPanel,
     CodePanel,
     Shell,
+    TaskList,
+    TaskPreview,
+    TaskDetail,
   };
 }

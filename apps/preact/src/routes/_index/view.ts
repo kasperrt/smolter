@@ -1,0 +1,20 @@
+import { ui } from "@smolter/ui/preact";
+import { h } from "preact";
+import { useFetcher, useLoaderData, useRevalidator } from "smolter/preact";
+import type { clientAction } from "./action";
+import type { clientLoader } from "./loader";
+
+export default function Counter() {
+  const data = useLoaderData<typeof clientLoader>();
+  const fetcher = useFetcher<typeof clientAction>();
+  const revalidate = useRevalidator();
+
+  return ui.CounterPanel({
+    data,
+    state: fetcher.state,
+    message: fetcher.error?.message ?? fetcher.data?.message,
+    form: (children) =>
+      h(fetcher.Form, { action: "/", method: "post" }, ...children),
+    revalidate: () => void revalidate(),
+  });
+}

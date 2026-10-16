@@ -9,8 +9,16 @@
     "./preact": "./src/preact.ts",
     "./style.css": "./src/style.css"
   },
-  "dependencies": {
-    "react": "catalog:",
-    "preact": "catalog:"
+  "peerDependencies": {
+    "react": ">=18",
+    "preact": ">=10"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "preact": {
+      "optional": true
+    }
   }
 }

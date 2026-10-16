@@ -1,38 +1,31 @@
-import { gzipSync } from "node:zlib";
-import { build } from "esbuild";
-import { minify } from "terser";
+import { readFileSync, writeFileSync } from "node:fs";
+import { measure, measureAdapters } from "./measure.mjs";
 
-async function measure(entry) {
-  const result = await build({
-    stdin: { contents: `export * from "${entry}"`, resolveDir: process.cwd() },
-    bundle: true,
-    minify: true,
-    format: "esm",
-    write: false,
-    define: { "process.env.NODE_ENV": '"production"' },
-    external: ["react", "react-dom", "preact", "preact/*"],
-  });
-  const output = await minify(result.outputFiles[0].text, {
-    module: true,
-    compress: { passes: 3 },
-    mangle: true,
-  });
-  return gzipSync(output.code).byteLength;
-}
-for (const [adapter, baseline] of [
-  ["react", "wouter"],
-  ["preact", "wouter-preact"],
-]) {
-  const [actual, reference] = await Promise.all([
-    measure(`./packages/smolter/dist/${adapter}.js`),
-    measure(baseline),
-  ]);
+const sizes = await measureAdapters();
+const path = new URL("../packages/ui/src/size.json", import.meta.url);
+const json = `${JSON.stringify(sizes, null, 2)}\n`;
+
+if (readFileSync(path, "utf8") !== json) writeFileSync(path, json);
+
+if (!process.argv.includes("--write-only")) {
+  for (const [adapter, baseline] of [
+    ["react", "wouter"],
+    ["preact", "wouter-preact"],
+  ]) {
+    const actual = sizes[adapter];
+    const reference = await measure(baseline);
+
+    console.log(
+      `${adapter}: ${actual} B gzip; ${baseline}: ${reference} B; with optional server transport: ${sizes[`${adapter}Server`]} B`,
+    );
+
+    if (actual >= reference || actual >= 2100) process.exitCode = 1;
+  }
+
   console.log(
-    `${adapter}: smolter ${actual} B gzip; ${baseline}@3.13.0 ${reference} B; ${reference - actual} B smaller`,
+    `core: ${await measure("./packages/smolter/src/core.ts")} B gzip`,
   );
-  if (actual >= reference || actual > 2500) process.exitCode = 1;
+  console.log(
+    "All exports, identical minifiers, gzip level 9. Frameworks excluded. File discovery runs at build time.",
+  );
 }
-console.log(`core: ${await measure("./packages/smolter/dist/core.js")} B gzip`);
-console.log(
-  "All browser exports; identical esbuild + Terser settings; dependencies included, framework excluded. SSR helpers use the separate /server entry.",
-);

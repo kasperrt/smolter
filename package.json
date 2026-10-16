@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "dev": "pnpm --filter @smolter/demo dev --host 127.0.0.1",
+    "dev": "pnpm build && node scripts/dev.mjs",
     "fix": "biome check --write .",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit",
@@ -15,7 +15,12 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm size",
     "version:patch": "node scripts/version.mjs patch",
     "version:minor": "node scripts/version.mjs minor",
-    "pack:smoke": "node scripts/pack-smoke.mjs"
+    "pack:smoke": "node scripts/pack-smoke.mjs",
+    "build:examples": "pnpm --filter \"@smolter/react*\" --filter \"@smolter/preact*\" build",
+    "smoke:production": "node scripts/production-smoke.mjs",
+    "jsr:check": "node scripts/jsr.mjs",
+    "build:site": "node scripts/build-site.mjs",
+    "smoke:site": "node scripts/site-smoke.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

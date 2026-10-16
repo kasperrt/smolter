@@ -1,0 +1,21 @@
+import routes from "virtual:smolter/routes";
+import { render as renderToString } from "preact-render-to-string";
+import { handleRequest, loadRouter, serialize } from "smolter/server";
+import { app } from "./app";
+
+export async function render(request: Request, template: string) {
+  const router = await loadRouter(routes, request);
+  const html = renderToString(app(router));
+  const data = serialize(router.getSnapshot());
+
+  return template
+    .replace("<!--app-->", html)
+    .replace(
+      "<!--data-->",
+      `<script id="smolter-data" type="application/json">${data}</script>`,
+    );
+}
+
+export function data(request: Request) {
+  return handleRequest(routes, request);
+}

@@ -2,16 +2,25 @@
   "name": "@kasperrt/smolter",
   "version": "0.0.1",
   "exports": {
-    ".": "./src/react.ts",
+    ".": "./src/core.ts",
     "./preact": "./src/preact.ts",
     "./core": "./src/core.ts",
-    "./server": "./src/server.ts"
+    "./server": "./src/server.ts",
+    "./client": "./src/client.ts",
+    "./files": "./src/files.ts",
+    "./react": "./src/react.ts"
   },
   "imports": {
     "react": "npm:react@19.3.1",
     "preact/compat": "npm:preact@11.0.1/compat"
   },
   "publish": {
-    "include": ["src", "README.md", "LICENSE", "jsr.json"]
+    "include": ["src", "README.md", "LICENSE", "jsr.json"],
+    "exclude": ["src/vite.ts"]
+  },
+  "license": "MIT",
+  "compatibility": {
+    "node": ">=22",
+    "browser": true
   }
 }

@@ -1,0 +1,14 @@
+{
+  "name": "@smolter/preact",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5174",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "smolter": "workspace:*",
+    "@smolter/ui": "workspace:*",
+    "preact": "catalog:"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@smolter/preact-ssr",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5176",
+    "build": "vite build && vite build --ssr src/server.ts --outDir dist/server",
+    "start": "node server/start.mjs"
+  },
+  "dependencies": {
+    "smolter": "workspace:*",
+    "@smolter/ui": "workspace:*",
+    "preact": "catalog:",
+    "preact-render-to-string": "6.8.1"
+  }
+}

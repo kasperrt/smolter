@@ -21,7 +21,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm pack:smoke
-      - run: pnpm --filter @smolter/demo build
+      - run: pnpm build:examples
   browser:
     runs-on: ubuntu-latest
     steps:
@@ -35,8 +35,36 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm smoke
+      - run: SMOLTER_ROUTES=manual SMOLTER_TEST_PORT=4473 pnpm smoke
+      - run: pnpm build:examples
+      - run: pnpm smoke:production
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: browser-results
           path: test-results/
+
+  jsr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm jsr:check
+
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm build:site
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm smoke:site

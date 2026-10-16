@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>smolter _</title>
+    <script>
+      const match = location.pathname.match(/^\/smolter\/(react|preact)(\/.*)$/);
+
+      if (match) {
+        const route = match[2] + location.search + location.hash;
+        const target = `/smolter/${match[1]}/?__route=${encodeURIComponent(route)}`;
+
+        location.replace(target);
+      }
+    </script>
+  </head>
+  <body>
+    <a href="/smolter/">Open smolter</a>
+  </body>
+</html>

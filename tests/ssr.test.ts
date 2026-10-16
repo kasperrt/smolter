@@ -15,7 +15,9 @@ it("server renders React data without browser globals", async () => {
   function Page() {
     return createElement("h1", null, react.useLoaderData(route)?.title);
   }
+
   const router = await loadRouter([route], "https://test.dev/");
+
   expect(
     renderToString(
       createElement(
@@ -26,6 +28,7 @@ it("server renders React data without browser globals", async () => {
     ),
   ).toContain("Hello React");
 });
+
 it("server renders Preact data through its own adapter", async () => {
   const route = preact.defineRoute("/", {
     loader: () => ({ title: "Hello Preact" }),
@@ -34,7 +37,9 @@ it("server renders Preact data through its own adapter", async () => {
   function Page() {
     return h("h1", null, preact.useLoaderData(route)?.title);
   }
+
   const router = await loadRouter([route], "https://test.dev/");
+
   expect(
     render(
       h(
@@ -45,6 +50,7 @@ it("server renders Preact data through its own adapter", async () => {
     ),
   ).toContain("Hello Preact");
 });
+
 it("renders a fallback for client-only data on the server", async () => {
   const route = react.defineRoute("/", {
     clientLoader: () => "browser",
@@ -59,6 +65,8 @@ it("renders a fallback for client-only data on the server", async () => {
       createElement(react.Routes, {}),
     ),
   );
+
   expect(html).toContain("Waiting for browser");
+
   expect(html).not.toContain("Client page");
 });

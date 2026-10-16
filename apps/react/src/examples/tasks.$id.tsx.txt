@@ -1,0 +1,18 @@
+import { useFetcher, useLoaderData } from "smolter/react";
+import type { clientLoader } from "./loader";
+import type { clientAction } from "./action";
+
+export default function Task() {
+  const task = useLoaderData<typeof clientLoader>();
+  const fetcher = useFetcher<typeof clientAction>();
+  const busy = fetcher.state !== "idle";
+
+  return <fetcher.Form action={`/tasks/${task?.id}`} method="patch">
+    <input name="title" defaultValue={task?.title} required />
+
+    <button disabled={busy}>Save task</button>
+    <button disabled={busy} formMethod="delete" formNoValidate>Delete task</button>
+
+    <p>{fetcher.error?.message}</p>
+  </fetcher.Form>;
+}

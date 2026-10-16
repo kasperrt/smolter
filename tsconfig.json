@@ -10,10 +10,14 @@
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "paths": {
-      "smolter": ["./packages/smolter/src/react.ts"],
+      "smolter": ["./packages/smolter/src/core.ts"],
       "smolter/core": ["./packages/smolter/src/core.ts"],
       "smolter/preact": ["./packages/smolter/src/preact.ts"],
-      "smolter/server": ["./packages/smolter/src/server.ts"]
+      "smolter/server": ["./packages/smolter/src/server.ts"],
+      "smolter/files": ["./packages/smolter/src/files.ts"],
+      "smolter/vite": ["./packages/smolter/src/vite.ts"],
+      "smolter/client": ["./packages/smolter/src/client.ts"],
+      "smolter/react": ["./packages/smolter/src/react.ts"]
     },
     "types": ["node", "vite/client"]
   },

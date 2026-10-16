@@ -7,10 +7,23 @@
       "!**/node_modules",
       "!**/playwright-report",
       "!**/test-results",
-      "!**/pnpm-lock.yaml"
+      "!**/pnpm-lock.yaml",
+      "!site"
     ]
   },
-  "formatter": { "indentStyle": "space", "indentWidth": 2 },
-  "javascript": { "formatter": { "quoteStyle": "double" } },
-  "linter": { "enabled": true, "rules": { "preset": "none" } }
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "none"
+    }
+  }
 }

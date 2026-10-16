@@ -1,0 +1,28 @@
+import { Link, useFetcher, useLoaderData } from "smolter/react";
+import type { clientLoader } from "./loader";
+import type { clientLoader as taskLoader } from "../tasks.$id/loader";
+import type { clientAction } from "./action";
+
+export default function Tasks() {
+  const data = useLoaderData<typeof clientLoader>();
+  const create = useFetcher<typeof clientAction>();
+  const preview = useFetcher<typeof taskLoader>();
+
+  return <>
+    {data?.tasks.map(task => (
+      <Link key={task.id} href={`/tasks/${task.id}`}>
+        {task.title}
+      </Link>
+    ))}
+
+    <create.Form action="/tasks" method="post">
+      <input name="title" required />
+      <button disabled={create.state !== "idle"}>Create task</button>
+    </create.Form>
+
+    <button disabled={preview.state !== "idle"} onClick={() => preview.load("/tasks/1")}>
+      Fetch task 1
+    </button>
+    <p>{preview.data?.title}</p>
+  </>;
+}

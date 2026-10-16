@@ -8,10 +8,12 @@ const versions = {
   minor: `${major}.${minor + 1}.0`,
 };
 const version = versions[process.argv[2]];
+
 if (!version) {
   console.error("Use patch or minor");
   process.exit(1);
 }
+
 for (const file of files) {
   const value = JSON.parse(await readFile(file, "utf8"));
   value.version = version;

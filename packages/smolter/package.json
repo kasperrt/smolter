@@ -12,8 +12,8 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/react.d.ts",
-      "import": "./dist/react.js"
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.js"
     },
     "./preact": {
       "types": "./dist/preact.d.ts",
@@ -26,6 +26,23 @@
     "./server": {
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js"
+    },
+    "./files": {
+      "types": "./dist/files.d.ts",
+      "import": "./dist/files.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    },
+    "./package.json": "./package.json",
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
     }
   },
   "files": [
@@ -40,7 +57,8 @@
   },
   "peerDependencies": {
     "react": ">=18",
-    "preact": ">=10"
+    "preact": ">=10",
+    "vite": ">=8"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -48,6 +66,31 @@
     },
     "preact": {
       "optional": true
+    },
+    "vite": {
+      "optional": true
     }
+  },
+  "author": "Kasper Rynning-T\u00f8nnesen <kasperrt@users.noreply.github.com> (https://github.com/kasperrt)",
+  "homepage": "https://kasperrt.github.io/smolter/",
+  "bugs": {
+    "url": "https://github.com/kasperrt/smolter/issues"
+  },
+  "keywords": [
+    "router",
+    "react",
+    "preact",
+    "typescript",
+    "loader",
+    "action",
+    "fetcher",
+    "ssr",
+    "file-routing"
+  ],
+  "main": "./dist/core.js",
+  "types": "./dist/core.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

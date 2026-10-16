@@ -69,7 +69,7 @@ importers:
         specifier: 3.13.0
         version: 3.13.0(preact@11.0.1)
 
-  apps/demo:
+  apps/preact:
     dependencies:
       '@smolter/ui':
         specifier: workspace:*
@@ -77,6 +77,45 @@ importers:
       preact:
         specifier: 'catalog:'
         version: 11.0.1(preact-render-to-string@6.8.1)
+      smolter:
+        specifier: workspace:*
+        version: link:../../packages/smolter
+
+  apps/preact-ssr:
+    dependencies:
+      '@smolter/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      preact:
+        specifier: 'catalog:'
+        version: 11.0.1(preact-render-to-string@6.8.1)
+      preact-render-to-string:
+        specifier: 6.8.1
+        version: 6.8.1(preact@11.0.1)
+      smolter:
+        specifier: workspace:*
+        version: link:../../packages/smolter
+
+  apps/react:
+    dependencies:
+      '@smolter/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      smolter:
+        specifier: workspace:*
+        version: link:../../packages/smolter
+
+  apps/react-ssr:
+    dependencies:
+      '@smolter/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -95,14 +134,17 @@ importers:
       react:
         specifier: '>=18'
         version: 19.3.1
+      vite:
+        specifier: '>=8'
+        version: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)
 
   packages/ui:
     dependencies:
       preact:
-        specifier: 'catalog:'
+        specifier: '>=10'
         version: 11.0.1(preact-render-to-string@6.8.1)
       react:
-        specifier: 'catalog:'
+        specifier: '>=18'
         version: 19.3.1
 
 packages:

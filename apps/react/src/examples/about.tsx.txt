@@ -1,0 +1,2 @@
+// Loaders read. Actions mutate. Components render.
+// Fetchers read or submit without navigation.
