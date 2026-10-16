@@ -17,12 +17,16 @@ const frameworks = [
 ];
 
 for (const { name, api, element: h, root: mount } of frameworks) {
-  it(`${name} only rerenders data and location readers when their selected value changes`, async (context) => {
+  it(`${name} only rerenders readers when their selected value changes`, async (context) => {
     let value = 1;
     let dataRenders = 0;
     let locationRenders = 0;
     let pageRenders = 0;
-    const route = api.defineRoute("/", { loader: () => value, default: Page });
+    let paramsRenders = 0;
+    const route = api.defineRoute("/items/:id", {
+      loader: () => value,
+      default: Page,
+    });
     const router = api.createRouter([route]);
     const container = document.createElement("div");
     const root = mount(container);
@@ -37,7 +41,13 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     function Page() {
       pageRenders++;
 
-      return h("section", null, h(DataReader), h(LocationReader));
+      return h(
+        "section",
+        null,
+        h(DataReader),
+        h(LocationReader),
+        h(ParamsReader),
+      );
     }
 
     function DataReader() {
@@ -56,7 +66,15 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       return h("output", { id: "selected-location" }, location);
     }
 
-    await router.navigate("/");
+    function ParamsReader() {
+      const params = api.useParams();
+
+      paramsRenders++;
+
+      return h("output", { id: "selected-params" }, params.id);
+    }
+
+    await router.navigate("/items/1");
     root.render(h(api.RouterProvider, { router }, h(api.Routes)));
     await expect
       .poll(() => container.querySelector("#selected-data")?.textContent)
@@ -65,6 +83,7 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     const initialPageRenders = pageRenders;
     const initialDataRenders = dataRenders;
     const initialLocationRenders = locationRenders;
+    const initialParamsRenders = paramsRenders;
 
     await router.revalidate();
     await new Promise(requestAnimationFrame);
@@ -73,6 +92,7 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     expect(pageRenders).toBe(initialPageRenders);
     expect(dataRenders).toBe(initialDataRenders);
     expect(locationRenders).toBe(initialLocationRenders);
+    expect(paramsRenders).toBe(initialParamsRenders);
 
     value = 2;
     await router.revalidate();
@@ -83,6 +103,11 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     expect(pageRenders).toBe(initialPageRenders);
     expect(dataRenders).toBe(initialDataRenders + 1);
     expect(locationRenders).toBe(initialLocationRenders);
+    expect(paramsRenders).toBe(initialParamsRenders);
+    await router.navigate("/items/2");
+    await expect
+      .poll(() => container.querySelector("#selected-params")?.textContent)
+      .toBe("2");
   });
 
   it(`${name} connects data hooks, forms, links, and independent fetchers`, async (context) => {

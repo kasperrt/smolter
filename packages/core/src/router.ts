@@ -67,6 +67,8 @@ export function createRouter(
 
         const changed = snapshot.url !== url.href;
 
+        if (!changed && snapshot.path !== undefined) return;
+
         if (browser && (operation.push || body) && changed)
           window.history[operation.replace ? "replaceState" : "pushState"](
             null,
@@ -78,10 +80,8 @@ export function createRouter(
           url: url.href,
           path: match?.route.path,
           params: match?.params ?? {},
-          ...(changed && {
-            actionData: undefined,
-            data: undefined,
-          }),
+          actionData: undefined,
+          data: undefined,
         };
       };
 
