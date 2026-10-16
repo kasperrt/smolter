@@ -1,6 +1,6 @@
 {
   "name": "smolter",
-  "version": "0.0.1",
+  "version": "0.0.1-rc.1",
   "description": "A tiny typed data router for React and Preact.",
   "type": "module",
   "sideEffects": false,

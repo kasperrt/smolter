@@ -7,6 +7,7 @@ const jsr = JSON.parse(readFileSync(new URL("jsr.json", directory)));
 const repository = "kasperrt/smolter";
 const sha = process.env.RELEASE_SHA;
 const mode = process.argv[2];
+const prerelease = manifest.version.includes("-");
 
 function command(binary, args, options = {}) {
   return execFileSync(binary, args, { stdio: "inherit", ...options });
@@ -68,9 +69,20 @@ if (mode === "publish") {
   );
 
   if (!npmExists)
-    command("npm", ["publish", "--access", "public", "--provenance"], {
-      cwd: directory,
-    });
+    command(
+      "npm",
+      [
+        "publish",
+        "--access",
+        "public",
+        "--provenance",
+        "--tag",
+        prerelease ? "next" : "latest",
+      ],
+      {
+        cwd: directory,
+      },
+    );
 
   if (!jsrExists) command("node", ["scripts/jsr.mjs", "--publish"]);
 }
@@ -90,6 +102,7 @@ if (mode === "tag") {
       sha,
       "--title",
       tag,
+      ...(prerelease ? ["--prerelease"] : []),
       "--notes-file",
       "CHANGELOG.md",
     ]);

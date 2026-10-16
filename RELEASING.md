@@ -11,8 +11,9 @@ Local publishing, tag pushes, and manual workflow dispatch are not release paths
 - The commit is the merge commit of a pull request targeting `main`.
 - The repository is public and the GitHub Pages build passes.
 
-The first release is **0.0.1**. Completion means that version is available from
-both npm and JSR and the public site is deployed and verified.
+The first candidate is **0.0.1-rc.1**, published with the npm `next` tag and
+marked as a GitHub prerelease. Stable versions use npm `latest`.
+The release goal also requires npm and JSR availability and a verified public site.
 
 ## Registry setup
 
@@ -20,9 +21,7 @@ The npm package is `smolter`; the JSR package is `@kasperrt/smolter`.
 
 Configure npm trusted publishing for GitHub owner `kasperrt`, repository
 `smolter`, workflow `release.yml`, and environment `release`. Allow publishing.
-For a first publication that requires a bootstrap token, add it directly as the
-GitHub environment secret `NPM_TOKEN`; never put its value in an issue or chat.
-After the first publication, use trusted publishing and remove that secret.
+Publishing uses OIDC only. No npm access token is used or stored in GitHub.
 
 Create the JSR package and link it to `kasperrt/smolter` in its settings.
 GitHub Actions uses OIDC to publish with provenance; no JSR token is needed.

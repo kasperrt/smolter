@@ -52,7 +52,7 @@ export function RouterProvider({
   router,
   children,
 }: RouterProviderProps): ReactNode {
-  useEffect(() => router.start(), [router]);
+  useEffect(router.start, [router]);
 
   return createElement(RouterContext.Provider, { value: router }, children);
 }
@@ -307,7 +307,7 @@ export function useFetcher<
 export function useFetcher(route?: RouteDefinition): TypedFetcher<unknown> {
   const router = useRouter();
   const fetcher = useMemo(() => router.createFetcher(), [router]);
-  useEffect(() => () => fetcher.dispose(), [fetcher]);
+  useEffect(() => fetcher.dispose, [fetcher]);
 
   const state = useSyncExternalStore(
     fetcher.subscribe,

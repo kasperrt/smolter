@@ -361,5 +361,5 @@ To test a local package build in another project:
 
 ```sh
 pnpm --dir packages/smolter pack --pack-destination ../..
-pnpm add /absolute/path/to/smolter-0.0.1.tgz
+pnpm add /absolute/path/to/smolter-0.0.1-rc.1.tgz
 ```

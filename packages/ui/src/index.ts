@@ -1,3 +1,4 @@
+import { version } from "../../smolter/package.json";
 import { highlight } from "./highlight";
 import sizes from "./size.json";
 
@@ -224,7 +225,7 @@ export function createUI<N>(h: ElementFactory<N>) {
         renderLink("/tasks", "Tasks"),
         renderLink("/about", "The idea"),
         link("https://github.com/kasperrt/smolter", "GitHub ↗"),
-        h("span", { className: "version" }, "v0.0.1"),
+        h("span", { className: "version" }, `v${version}`),
       ),
     );
   }

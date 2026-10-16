@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.0.1
+## 0.0.1-rc.1
 
 - Typed React and Preact routing with loaders, actions, and independent fetchers.
 - Server handlers with optional clientLoader and clientAction call-through.
