@@ -38,6 +38,9 @@ async function verify() {
     const errors = [];
 
     page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
 
     const response = await page.goto(origin);
 
@@ -62,12 +65,35 @@ async function verify() {
     await page.getByRole("button", { name: "Save task" }).click();
     await page.getByText("Task saved.", { exact: true }).waitFor();
 
+    const hydrationRequests = [];
+
+    page.on("request", (request) => {
+      if (new URL(request.url()).pathname === "/_smolter")
+        hydrationRequests.push(request.url());
+    });
+
+    const failed = await page.goto(`${origin}/tasks/missing`);
+
+    assert.match(await failed.text(), /Task not found/);
+
+    await page.waitForFunction(() => !document.getElementById("root")?.inert);
+    await page
+      .getByRole("alert")
+      .filter({ hasText: "Task not found" })
+      .waitFor();
+    await page.getByRole("link", { name: "The idea", exact: true }).click();
+    await page.waitForURL("**/about");
+
+    assert.equal(
+      hydrationRequests.filter((url) => url.includes("missing")).length,
+      0,
+    );
     assert.deepEqual(errors, []);
 
     await page.close();
 
     console.log(
-      `${name}: production SSR, hydration, fetcher read, POST and PATCH passed`,
+      `${name}: production SSR, success/error hydration, fetcher read, POST and PATCH passed`,
     );
   }
 }

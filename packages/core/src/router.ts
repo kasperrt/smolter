@@ -194,7 +194,7 @@ export function createRouter(
   };
   const main = channel(initial);
   let started = 0;
-  let initialized = initial.loaded;
+  let initialized = options.hydrationData?.state === "idle";
   const pop = () => {
     void main.load(location.href, undefined, undefined, false);
   };

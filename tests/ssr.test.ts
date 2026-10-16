@@ -1,6 +1,7 @@
+import { deserialize } from "@smolter/client";
 import * as preact from "@smolter/preact";
 import * as react from "@smolter/react";
-import { loadRouter } from "@smolter/server";
+import { loadRouter, serialize } from "@smolter/server";
 import { h } from "preact";
 import { render } from "preact-render-to-string";
 import { createElement } from "react";
@@ -124,4 +125,56 @@ it("renders a fallback for client-only data on the server", async () => {
   expect(html).toContain("Waiting for browser");
 
   expect(html).not.toContain("Client page");
+});
+
+it("preserves server errors through hydration without retrying or exposing their cause", async () => {
+  let reads = 0;
+  const route = react.defineRoute("/", {
+    loader: () => {
+      reads++;
+
+      return new TypeError("Cannot load </script>\u2028\u2029", {
+        cause: "private server detail",
+      });
+    },
+  });
+  const server = await loadRouter([route], "https://test.dev/");
+  const json = serialize(server.getSnapshot());
+  const client = react.createRouter([route], {
+    hydrationData: deserialize(json),
+  });
+  const stop = client.start();
+
+  await Promise.resolve();
+
+  expect(json).not.toContain("private server detail");
+  expect(json).not.toContain("stack");
+  expect(json).not.toContain("</script>");
+  expect(json).not.toContain("\u2028");
+  expect(json).not.toContain("\u2029");
+  expect(client.getSnapshot().error).toBeInstanceOf(Error);
+  expect(client.getSnapshot().error?.name).toBe("TypeError");
+  expect(client.getSnapshot().error?.message).toBe(
+    server.getSnapshot().error?.message,
+  );
+  expect(reads).toBe(1);
+
+  await client.revalidate();
+
+  expect(reads).toBe(2);
+
+  stop();
+  client.dispose();
+  server.dispose();
+});
+
+it("restores successful hydration snapshots", async () => {
+  const route = react.defineRoute("/", { loader: () => ({ count: 3 }) });
+  const server = await loadRouter([route], "https://test.dev/");
+  const snapshot = deserialize(serialize(server.getSnapshot()));
+
+  expect(snapshot).toEqual(server.getSnapshot());
+  expect(snapshot.error).toBeUndefined();
+
+  server.dispose();
 });

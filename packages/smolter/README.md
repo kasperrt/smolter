@@ -357,7 +357,22 @@ const hydrationJSON = serialize(router.getSnapshot());
 ```
 
 Create a fresh router per request. Embed the serialized snapshot in a JSON
-script, parse it on the client, and pass it as `hydrationData` to `createRouter`.
+script, restore it with `deserialize` from `smolter/client`, and pass it as
+`hydrationData` to `createRouter`. This preserves loader errors through hydration
+without exposing server stacks or causes. Error boundaries should display the
+error message, not its stack.
+
+```ts
+import { deserialize } from "smolter/client";
+import { createRouter } from "smolter/react";
+import routes from "virtual:smolter/routes";
+
+const data = document.getElementById("smolter-data");
+const router = createRouter(routes, {
+  browser: true,
+  hydrationData: data?.textContent ? deserialize(data.textContent) : undefined,
+});
+```
 Then hydrate with your framework. A client-only route renders its fallback on
 the server and loads after hydration. Data must be JSON serializable; script
 closing characters are escaped and errors omitted.
@@ -390,10 +405,10 @@ example labels. File discovery is build-only.
 <!-- size-comparison:start -->
 | Browser exports | Gzip bytes |
 | --- | ---: |
-| `smolter/react` | 2447 |
-| `smolter/preact` | 2447 |
-| `smolter/react + smolter/client` | 2724 |
-| `smolter/preact + smolter/client` | 2724 |
+| `smolter/react` | 2448 |
+| `smolter/preact` | 2449 |
+| `smolter/react + smolter/client` | 2787 |
+| `smolter/preact + smolter/client` | 2788 |
 | `wouter@3.13.0` | 3091 |
 | `wouter-preact@3.13.0` | 2450 |
 | `react-router@8.4.0` | 60994 |

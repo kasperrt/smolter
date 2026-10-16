@@ -12,6 +12,7 @@ import type {
 } from "@smolter/core";
 
 export type { ClientActionArgs, ClientLoaderArgs } from "@smolter/core";
+export { deserialize } from "./deserialize.ts";
 
 /** Browser-safe route exports, excluding server implementation code. */
 export interface ClientRouteModule {
