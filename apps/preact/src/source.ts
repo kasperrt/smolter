@@ -15,7 +15,7 @@ const sources = import.meta.glob<string>("./routes/**/*.ts", {
   import: "default",
 });
 
-export function Source() {
+export default function Source() {
   const [url] = useLocation();
   const [selected, select] = useState("Example");
   const path = url.split(/[?#]/)[0].replace(/\/$/, "") || "/";

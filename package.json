@@ -20,7 +20,7 @@
     "build:examples": "pnpm --filter \"@smolter/example-*\" build",
     "smoke:production": "node scripts/production-smoke.mjs",
     "jsr:check": "node scripts/jsr.mjs",
-    "build:site": "vite build --config apps/site/vite.config.ts && pnpm --filter @smolter/example-react build --mode hosted && pnpm --filter @smolter/example-preact build --mode hosted",
+    "build:site": "pnpm --filter @smolter/example-preact build --mode hosted",
     "smoke:site": "node scripts/site-smoke.mjs",
     "docs:badges": "node scripts/readme-badges.mjs",
     "docs:reference": "pnpm build && node scripts/docs-reference.mjs",
@@ -35,6 +35,7 @@
     "@smolter/preact": "workspace:*",
     "@smolter/react": "workspace:*",
     "@smolter/server": "workspace:*",
+    "@smolter/ui": "workspace:*",
     "@smolter/vite": "workspace:*",
     "@types/node": "24.10.1",
     "@types/react": "19.3.0",
@@ -135,10 +136,10 @@
     "CHANGELOG.md"
   ],
   "peerDependencies": {
-    "react": ">=18",
     "preact": ">=11.0.1",
-    "vite": ">=8",
-    "preact-render-to-string": ">=6.8.1"
+    "preact-render-to-string": ">=6.8.1",
+    "react": ">=18",
+    "vite": ">=8"
   },
   "peerDependenciesMeta": {
     "react": {

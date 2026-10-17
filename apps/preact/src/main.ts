@@ -2,6 +2,7 @@ import routes from "virtual:smolter/routes";
 import { createDataRouter } from "@kasperrt/smolter/preact";
 import { deserialize } from "@kasperrt/smolter/preact/client";
 import { siteHistory, siteRoute } from "@smolter/ui/hosting";
+import { watchMetadata } from "@smolter/ui/metadata";
 import { hydrate, render } from "preact";
 import { app } from "./app";
 import "@smolter/ui/style.css";
@@ -34,7 +35,10 @@ const router = createDataRouter(routes, {
   }),
 });
 
-if (import.meta.env.VITE_HOSTED) siteHistory(router, import.meta.env.BASE_URL);
+if (import.meta.env.VITE_HOSTED) {
+  siteHistory(router, import.meta.env.BASE_URL);
+}
+watchMetadata(router);
 
 if (root) {
   if (hydrationData) hydrate(app(router), root);

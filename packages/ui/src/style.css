@@ -2,7 +2,7 @@
   font-family: "Pixelify Sans";
   font-style: normal;
   font-weight: 400 600;
-  font-display: block;
+  font-display: optional;
   src: url("./fonts/pixelify-sans-500.ttf") format("truetype");
 }
 

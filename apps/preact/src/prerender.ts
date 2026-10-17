@@ -1,6 +1,7 @@
 import { createDataRouter } from "@kasperrt/smolter/preact";
 import { serialize } from "@kasperrt/smolter/preact/server";
 import { docs } from "@smolter/ui/docs";
+import { pageMetadata } from "@smolter/ui/metadata";
 import { renderToString } from "preact-render-to-string";
 import { app } from "./app";
 import { routes } from "./manual-routes";
@@ -20,10 +21,5 @@ export async function prerender(path: string) {
 
   router.dispose();
 
-  const page = docs.find((item) => path === `/docs/${item.slug}`);
-  const title = page
-    ? `${page.title} · smolter`
-    : "smolter · Typed routing for React and Preact";
-
-  return { html, data, title };
+  return { html, data, metadata: pageMetadata(path, snapshot.data) };
 }

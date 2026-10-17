@@ -14,9 +14,9 @@ loader; `shouldRevalidate` decides when that work is needed.
 Inspired by [wouter](https://github.com/molefrog/wouter)
 and [React Router](https://reactrouter.com/).
 
-[Read the documentation](https://kasperrt.github.io/smolter/react/docs/) for guides and the complete API reference. The site itself uses smolter routes.
+[Read the documentation](https://kasperrt.github.io/smolter/docs/) for guides and the complete API reference. The prerendered site uses Preact and Smolter routes. Articles load individually; React examples remain available in the repository.
 
-Start with [loaders](https://kasperrt.github.io/smolter/react/docs/loaders/), [actions](https://kasperrt.github.io/smolter/react/docs/actions/), [forms and validation](https://kasperrt.github.io/smolter/react/docs/forms/), or [fetcher reads and mutations](https://kasperrt.github.io/smolter/react/docs/fetchers/). Each guide connects the handler to an actual route URL and its consuming view.
+Start with [loaders](https://kasperrt.github.io/smolter/docs/loaders/), [actions](https://kasperrt.github.io/smolter/docs/actions/), [forms and validation](https://kasperrt.github.io/smolter/docs/forms/), or [fetcher reads and mutations](https://kasperrt.github.io/smolter/docs/fetchers/). Each guide connects the handler to an actual route URL and its consuming view.
 
 ## Contents
 
@@ -456,7 +456,7 @@ Server entries do not import either UI renderer. Vite entries are build-time onl
 `/files`, and `/vite` imports to the corresponding renderer-prefixed path above.
 The bare package root and old top-level subpaths are no longer exported.
 
-See the [0.3 migration guide](https://kasperrt.github.io/smolter/react/docs/migration-0.3/) and [changelog](./CHANGELOG.md).
+See the [0.3 migration guide](https://kasperrt.github.io/smolter/docs/migration-0.3/) and [changelog](./CHANGELOG.md).
 
 **Router factory migration:** code that previously used `createRouter` with
 loaders, actions, fetchers or revalidation must now use `createDataRouter`.
@@ -525,7 +525,7 @@ re-exports and installs server proxies. `entry.client.tsx` and `entry.server.tsx
 are application-owned files wiring those manifests to hydration and SSR.
 Manual tables can be imported directly instead.
 
-See the [virtual routes guide](https://kasperrt.github.io/smolter/react/docs/virtual-routes)
+See the [virtual routes guide](https://kasperrt.github.io/smolter/docs/virtual-routes)
 for the exact contract, TypeScript declaration, and both entrypoint examples.
 
 ### Express hosting
@@ -537,7 +537,7 @@ server entry and `entry` is the browser entry URL from Vite's manifest. Do not
 consume request bodies with Express body parsers before this handler.
 The adapter has no Express dependency and forwards failures to `next(error)`.
 
-See the [Express guide](https://kasperrt.github.io/smolter/react/docs/express)
+See the [Express guide](https://kasperrt.github.io/smolter/docs/express)
 for a complete server example and streaming and hydration behavior.
 
 ## Resource subscriptions
@@ -735,7 +735,7 @@ normally, and a session marker prevents reload loops. Development/SSR builds
 disable the helper. This optional client module adds nothing to the routing-only
 entrypoints and never replays form submissions.
 
-See [deployment updates](https://kasperrt.github.io/smolter/react/docs/deployments/)
+See [deployment updates](https://kasperrt.github.io/smolter/docs/deployments/)
 for Express, CDN paths, TypeScript declarations and unsaved-state handling.
 
 
