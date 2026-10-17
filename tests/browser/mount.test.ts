@@ -75,6 +75,7 @@ interface HydratedError {
 interface HydrationResult {
   type: string;
   reused: boolean;
+  preserved: boolean;
   reads: number;
   text: string | null;
   error?: HydratedError;
@@ -111,6 +112,7 @@ for (const scenario of [
       .toEqual({
         type: "hydrated",
         reused: true,
+        preserved: true,
         reads: 0,
         text: scenario.text,
         ...(scenario.error && { error: scenario.error }),
@@ -122,6 +124,9 @@ for (const scenario of [
         () => messages.find((message) => message.type === "navigated")?.text,
       )
       .toBe("Next page");
+    expect(
+      messages.find((message) => message.type === "navigated")?.preserved,
+    ).toBe(true);
   });
 }
 

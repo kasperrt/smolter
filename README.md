@@ -607,8 +607,8 @@ a claim of identical features.
 | `@kasperrt/smolter/preact` | 4842 |
 | `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4104 |
 | `@kasperrt/smolter/preact + server transport` | 5950 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 8478 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 8761 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 8607 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 8890 |
 | `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
 | `React: common routing/data exports` | 2761 |
 | `Preact: common routing/data exports` | 3046 |
@@ -751,3 +751,16 @@ await mountApplication(routes, root, { deployment });
 Preact SSR starts root and route loaders concurrently. Return nested promises and render them with `Await` inside `Suspense` to stream a shell before optional data resolves. The Node/Express adapter streams the response; hydration starts after the document stream finishes. Root-loader failures render the root error boundary. Vite development HTML transformation still buffers the document.
 
 Successful action redirects refresh registered root data without replaying the mutation. Loader arguments expose `reason` to distinguish initial loads, navigation, revalidation and fetcher reads without comparing browser URLs.
+
+
+### Document hydration and injected tags
+
+Preact hydrates the complete document after the response finishes. A streamed shell is visible before optional data settles, but event handlers are not active yet. Measure a successful interaction rather than treating TTFB or DOMContentLoaded as hydration completion.
+
+Infrastructure that injects direct children of `<head>` can mark those external nodes with `data-smolter-preserve`. Smolter excludes them from positional hydration and restores the same nodes afterward. Do not also render them in the application layout. Unmarked HTML rewriting, body injection and changes to the hydration payload are not supported.
+
+```html
+<script data-smolter-preserve src="/infrastructure-instrumentation.js"></script>
+```
+
+The generated route asset manifest follows static imports for each route and leaves optional dynamic imports lazy. Serve the matched route's preload hints with the correct asset base; do not preload every route to reduce a waterfall. Chunk counts and total emitted bytes alone do not establish initial-load latency.

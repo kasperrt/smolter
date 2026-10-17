@@ -26,7 +26,16 @@ export const streamingRoot: RootModule = {
   default: Outlet,
   Layout: ({ children }) => (
     <Document>
-      <head />
+      <head>
+        <title>Streaming fixture</title>
+        <style id="app-style">{"main { color: rgb(20, 30, 40); }"}</style>
+        <script
+          id="app-script"
+          dangerouslySetInnerHTML={{
+            __html: "window.appRuns = (window.appRuns || 0) + 1",
+          }}
+        />
+      </head>
       <body>
         {children}
         <Scripts />

@@ -8,8 +8,9 @@ import { renderApplication } from "../../packages/server/src/application.tsx";
 import { send } from "../../packages/server/src/http.ts";
 import { StreamingPage, streamingRoot } from "../fixtures/streaming-page.tsx";
 
-for (const reject of [false, true]) {
-  test(`streams the shell and hydrates deferred ${reject ? "failures" : "values"} without rerunning loaders`, async ({
+for (const mode of ["values", "failures", "injected"]) {
+  const reject = mode === "failures";
+  test(`streams the shell and hydrates deferred ${mode} without rerunning loaders`, async ({
     page,
   }) => {
     const output = await mkdtemp(join(tmpdir(), "smolter-stream-"));
@@ -52,7 +53,19 @@ for (const reject of [false, true]) {
         ],
         streamingRoot,
         `/${entry.fileName}`,
-      ).then((response) => send(response, outgoing));
+      ).then(async (response) => {
+        if (mode === "injected") {
+          const html = (await response.text()).replace(
+            "<head>",
+            '<head><script data-smolter-preserve id="injected-script">window.injectedRuns = (window.injectedRuns || 0) + 1</script><meta data-smolter-preserve name="injected" content="preserve">',
+          );
+          return send(
+            new Response(html, { headers: response.headers }),
+            outgoing,
+          );
+        }
+        return send(response, outgoing);
+      });
     });
     await new Promise<void>((done) => server.listen(0, "127.0.0.1", done));
     const address = server.address();
@@ -60,6 +73,7 @@ for (const reject of [false, true]) {
       throw new Error("Missing port");
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
+    if (mode === "injected") release();
     await Promise.resolve()
       .then(async () => {
         await page.goto(`http://127.0.0.1:${address.port}`, {
@@ -68,7 +82,14 @@ for (const reject of [false, true]) {
         await expect(
           page.getByRole("heading", { name: "Immediate shell" }),
         ).toBeVisible();
-        await expect(page.getByText("Pending detail")).toBeVisible();
+        if (mode !== "injected")
+          await expect(page.getByText("Pending detail")).toBeVisible();
+        if (mode !== "injected") {
+          await page.getByRole("button", { name: "Count 0" }).click();
+          await expect(
+            page.getByRole("button", { name: "Count 0" }),
+          ).toBeVisible();
+        }
         release();
         await expect(
           page.getByText(reject ? "Detail unavailable" : "Deferred detail"),
@@ -78,6 +99,17 @@ for (const reject of [false, true]) {
           page.getByRole("button", { name: "Count 1" }),
         ).toBeVisible();
         expect(errors).toEqual([]);
+        if (mode === "injected") {
+          await expect(page.locator("#injected-script")).toHaveCount(1);
+          await expect(page.locator('meta[name="injected"]')).toHaveCount(1);
+          await expect(page.locator("#app-script")).toHaveCount(1);
+          await expect(page.locator("main")).toHaveCSS(
+            "color",
+            "rgb(20, 30, 40)",
+          );
+          expect(await page.evaluate("window.appRuns")).toBe(1);
+          expect(await page.evaluate("window.injectedRuns")).toBe(1);
+        }
       })
       .finally(async () => {
         release();

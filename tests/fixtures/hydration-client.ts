@@ -15,6 +15,13 @@ interface LayoutProps {
 let reads = 0;
 const output = document.querySelector("output");
 const head = document.head.innerHTML;
+const injected = document.createElement("meta");
+injected.name = "injected";
+injected.setAttribute("data-smolter-preserve", "");
+document.head.prepend(injected);
+const tail = injected.cloneNode() as HTMLMetaElement;
+tail.name = "injected-tail";
+document.head.append(tail);
 const failed = location.pathname.endsWith("hydration-error.html");
 const snapshot: Snapshot = {
   url: location.href,
@@ -86,6 +93,9 @@ function report(type: string) {
     {
       type,
       reused: document.querySelector("output") === output,
+      preserved:
+        injected.parentNode === document.head &&
+        tail.parentNode === document.head,
       reads,
       text: document.querySelector("output")?.textContent,
       ...(error && {

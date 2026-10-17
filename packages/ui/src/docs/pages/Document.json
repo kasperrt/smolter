@@ -23,6 +23,11 @@
       "title": "Hydration and subsequent changes",
       "body": "Hydration preserves classes that a theme bootstrap already added to document.documentElement. When className changes later, Document removes classes from the previous prop and adds the new ones, leaving unrelated classes intact. It also updates lang and data-debug. Other HTML attributes are forwarded during server rendering but are not synchronized by the browser effect.",
       "code": ""
+    },
+    {
+      "title": "Externally injected head elements",
+      "body": "Whole-document hydration expects the server and client layouts to match. Mark externally injected direct children of head with data-smolter-preserve. mountApplication temporarily excludes those nodes from hydration and restores the same nodes afterward; the application must not also render them. This is an explicit integration contract, not automatic tolerance of arbitrary HTML rewriting. Do not use it for application-owned tags, body content, or changes to the hydration payload.",
+      "code": "<script data-smolter-preserve src=\"/infrastructure-instrumentation.js\"></script>\n<meta data-smolter-preserve name=\"infrastructure-tag\" content=\"example\">"
     }
   ]
 }
