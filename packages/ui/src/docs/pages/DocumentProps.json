@@ -1,0 +1,13 @@
+{
+  "slug": "DocumentProps",
+  "title": "DocumentProps",
+  "summary": "HTML attributes accepted by Document, including its debug flag.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Extends Preact's HTML element props and adds an optional boolean data-debug field. The client reconciliation behavior of Document applies to className, lang, and data-debug; other attributes belong to the server markup.",
+      "code": "import type { DocumentProps } from \"@kasperrt/smolter/preact/document\";\n\nconst attributes: DocumentProps = {\n  lang: \"en\",\n  className: \"app\",\n  \"data-debug\": false,\n};"
+    }
+  ]
+}

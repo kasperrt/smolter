@@ -5,68 +5,65 @@
 
 import type {
   AnyDataFunction,
-  DataOf,
   Route,
   RouteModule,
   Router,
   Snapshot,
 } from "@smolter/core";
-
 import { useRouter, useSnapshot } from "./context.ts";
+import type { RouteData } from "./route-types.ts";
 
 /** A route module or loader function used for data inference. */
 export type LoaderSource = RouteModule | AnyDataFunction;
 
 /** Infer server and client loader data from a route module or function. */
 export type LoaderData<T> = T extends AnyDataFunction
-  ? DataOf<T>
+  ? RouteData<T>
   : T extends RouteModule
-    ? DataOf<Extract<T["loader"] | T["clientLoader"], AnyDataFunction>>
-    : unknown;
+    ? RouteData<Extract<T["loader"] | T["clientLoader"], AnyDataFunction>>
+    : RouteData<T>;
 
 /** Infer server and client action data from a route module or function. */
 export type ActionData<T> = T extends AnyDataFunction
-  ? DataOf<T>
+  ? RouteData<T>
   : T extends RouteModule
-    ? DataOf<Extract<T["action"] | T["clientAction"], AnyDataFunction>>
-    : unknown;
-function useData(key: "data" | "actionData", route?: LoaderSource): unknown {
-  const path = (route as Route | undefined)?.path;
-
-  return useSnapshot((snapshot) => {
-    if (path !== undefined && path !== snapshot.path) return undefined;
-
-    return snapshot[key];
-  });
-}
+    ? RouteData<Extract<T["action"] | T["clientAction"], AnyDataFunction>>
+    : RouteData<T>;
 /** Pass a route for inference, or use useLoaderData<typeof loader>() in its module. */
-export function useLoaderData<T extends LoaderSource = RouteModule>(
-  route?: T,
-): LoaderData<T> | undefined {
-  return useData("data", route) as LoaderData<T> | undefined;
+export function useLoaderData<T = RouteModule>(
+  route?: T & LoaderSource,
+): LoaderData<T> {
+  return useSnapshot(
+    "data",
+    (route as Route | undefined)?.path,
+  ) as LoaderData<T>;
 }
 
 /** Read the last page action result, optionally inferring its type from a route. */
-export function useActionData<T extends LoaderSource = RouteModule>(
-  route?: T,
+export function useActionData<T = RouteModule>(
+  route?: T & LoaderSource,
 ): ActionData<T> | undefined {
-  return useData("actionData", route) as ActionData<T> | undefined;
+  return useSnapshot("actionData", (route as Route | undefined)?.path) as
+    | ActionData<T>
+    | undefined;
 }
 
 /** Read path parameters for the active route. */
-export function useParams(): Snapshot["params"] {
-  return useSnapshot((snapshot) => snapshot.params);
+export function useParams<
+  T extends Snapshot["params"] = Snapshot["params"],
+>(): T {
+  return useSnapshot("params") as T;
 }
 
 /** Read the current path, search, and hash together with the navigate function. */
 export function useLocation(): readonly [string, Router["navigate"]] {
   const router = useRouter();
-  const url = useSnapshot((snapshot) => snapshot.url);
+  const url = useSnapshot("url");
 
   return [url.replace(/^\w+:\/\/[^/]+/, ""), router.navigate];
 }
 
 /** Get the function that revalidates the current loader subject to shouldRevalidate. */
 export function useRevalidator(): Router["revalidate"] {
-  return useRouter().revalidate;
+  return useRouter<Router>().revalidate;
 }

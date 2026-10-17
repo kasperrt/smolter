@@ -1,0 +1,13 @@
+{
+  "slug": "NavigationRouter",
+  "title": "NavigationRouter",
+  "summary": "The navigation-only router interface.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Contains routes, getSnapshot, subscribe, start, navigate and dispose. RouterProvider, Routes, Link, useParams and useLocation accept this engine. Data-specific hooks require createDataRouter.",
+      "code": "const router = createRouter(routes, { browser: true });"
+    }
+  ]
+}

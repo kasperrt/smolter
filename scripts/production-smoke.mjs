@@ -42,7 +42,7 @@ async function verify() {
       if (message.type() === "error") errors.push(message.text());
     });
 
-    const response = await page.goto(origin);
+    const response = await page.goto(`${origin}/examples/counter`);
 
     assert.match(await response.text(), /data-testid="count">0/);
 
@@ -51,7 +51,13 @@ async function verify() {
       () =>
         document.querySelector('[data-testid="count"]')?.textContent === "1",
     );
-    await page.getByRole("link", { name: "Tasks", exact: true }).click();
+    await page.getByRole("link", { name: "Docs", exact: true }).click();
+    await page
+      .getByRole("link", {
+        name: "Tasks: creation, updates, and fetcher reads →",
+        exact: true,
+      })
+      .click();
     await page.getByRole("button", { name: "Fetch task 1" }).click();
     await page.waitForFunction(
       () =>
@@ -81,8 +87,8 @@ async function verify() {
       .getByRole("alert")
       .filter({ hasText: "Task not found" })
       .waitFor();
-    await page.getByRole("link", { name: "The idea", exact: true }).click();
-    await page.waitForURL("**/about");
+    await page.getByRole("link", { name: "Docs", exact: true }).click();
+    await page.waitForURL("**/docs");
 
     assert.equal(
       hydrationRequests.filter((url) => url.includes("missing")).length,

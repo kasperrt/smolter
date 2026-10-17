@@ -12,7 +12,7 @@
     {
       "title": "Connect the form to a route",
       "body": "The action prop is a URL, not a JavaScript callback and not a handler filename. /settings must resolve to a registered route with clientAction or action for a mutation, or clientLoader or loader for a GET. The Actions guide contains the complete handler and view for this route.",
-      "code": "// router.ts\nimport { createRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as settings from \"./routes/settings/route\";\n\nexport const settingsRoute = defineRoute(\"/settings\", settings);\nexport const router = createRouter([settingsRoute], { browser: true });\n\n// app.tsx\nimport { RouterProvider, Routes } from \"@kasperrt/smolter/react\";\nimport { router } from \"./router\";\n\nexport function App() {\n  return (\n    <RouterProvider router={router}>\n      <Routes />\n    </RouterProvider>\n  );\n}"
+      "code": "// router.ts\nimport { createDataRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as settings from \"./routes/settings/route\";\n\nexport const settingsRoute = defineRoute(\"/settings\", settings);\nexport const router = createDataRouter([settingsRoute], { browser: true });\n\n// app.tsx\nimport { RouterProvider, Routes } from \"@kasperrt/smolter/react\";\nimport { router } from \"./router\";\n\nexport function App() {\n  return (\n    <RouterProvider router={router}>\n      <Routes />\n    </RouterProvider>\n  );\n}"
     },
     {
       "title": "GET search with a shareable URL",

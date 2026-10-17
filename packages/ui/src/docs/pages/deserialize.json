@@ -17,7 +17,7 @@
     {
       "title": "Usage",
       "body": "Import this API from one of the entry points listed above. Keep server and build helpers in their dedicated subpaths.",
-      "code": "const snapshot = deserialize(element.textContent!);\nconst router = createRouter(routes, { hydrationData: snapshot });"
+      "code": "const snapshot = deserialize(element.textContent!);\nconst router = createDataRouter(routes, { hydrationData: snapshot });"
     },
     {
       "title": "Behavior and edge cases",

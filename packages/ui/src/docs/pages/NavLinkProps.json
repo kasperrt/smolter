@@ -1,0 +1,18 @@
+{
+  "slug": "NavLinkProps",
+  "title": "NavLinkProps",
+  "summary": "Link props with pathname-aware rendering callbacks.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Extends LinkProps, replacing className and children with either ordinary values or callbacks receiving NavLinkRenderProps. end enables exact pathname matching.",
+      "code": "import type { NavLinkProps } from \"@kasperrt/smolter/preact\";\n\nexport const settingsLink: NavLinkProps = {\n  to: \"/settings\",\n  end: true,\n  children: \"Settings\",\n};"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Query strings and fragments do not affect active matching. NavLink adds aria-current=\"page\" when active and forwards the remaining link behavior to Link.",
+      "code": ""
+    }
+  ]
+}

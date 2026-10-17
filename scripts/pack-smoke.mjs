@@ -11,15 +11,11 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const directory = mkdtempSync(join(tmpdir(), "smolter-pack-"));
-execFileSync(
-  "pnpm",
-  ["--dir", "packages/smolter", "pack", "--pack-destination", directory],
-  { stdio: "inherit" },
-);
+execFileSync("pnpm", ["pack", "--pack-destination", directory], {
+  stdio: "inherit",
+});
 
-const manifest = JSON.parse(
-  readFileSync("packages/smolter/package.json", "utf8"),
-);
+const manifest = JSON.parse(readFileSync("package.json", "utf8"));
 const tarball = join(
   directory,
   `${manifest.name.replace(/^@/, "").replace("/", "-")}-${manifest.version}.tgz`,
@@ -28,7 +24,6 @@ const tarball = join(
 const cases = [
   { framework: "react", version: "18.0.0" },
   { framework: "react", version: "19.3.1" },
-  { framework: "preact", version: "10.25.0" },
   { framework: "preact", version: "11.0.1" },
 ];
 

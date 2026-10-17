@@ -13,16 +13,17 @@ for (const entry of [
   "preact",
   "react/client",
   "preact/client",
+  "preact/document",
   "react/server",
   "preact/server",
   "react/vite",
   "preact/vite",
   "utils",
+  "utils/http",
 ]) {
-  const filename =
-    entry.includes("/") || entry === "utils"
-      ? `packages/smolter/src/${entry.replace("/", "-")}.ts`
-      : `packages/${entry}/src/index.ts`;
+  const filename = parsed.options.paths[
+    `@kasperrt/smolter/${entry}`
+  ][0].replace(/^\.\//, "");
   const source = program.getSourceFile(filename);
   const module = checker.getSymbolAtLocation(source);
 
@@ -45,7 +46,7 @@ for (const entry of [
       ["react", "preact"].includes(entry) &&
       !isType &&
       declaration.getSourceFile().fileName.includes("/core/") &&
-      !["createRouter", "defineRoute"].includes(name)
+      !["createRouter", "createDataRouter", "defineRoute"].includes(name)
     )
       continue;
 

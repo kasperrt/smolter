@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Usage",
-      "body": "The imperative router contract. start installs history and begins the first load; its return value releases that lifecycle registration. navigate changes routes. revalidate refreshes the active loader. subscribe observes immutable snapshots. dispose aborts all active channels.",
+      "body": "The imperative router contract. start installs history and begins the first load; its return value releases that lifecycle registration. navigate changes routes. revalidate refreshes active route data, optionally targeting IDs or path patterns with { route }. registerRevalidator adds root/layout callbacks under an ID and returns an unregister function. subscribe observes immutable snapshots. dispose aborts all active channels.",
       "code": "const stop = router.start();\nconst unsubscribe = router.subscribe(() => console.log(router.getSnapshot()));\n\nawait router.navigate(\"/tasks\");\nunsubscribe();\nstop();\nrouter.dispose();"
     }
   ]

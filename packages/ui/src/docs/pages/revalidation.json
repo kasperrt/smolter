@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Automatic refresh",
-      "body": "Successful actions refresh the active page loader. A loader read through a fetcher does not. Same-route navigation can opt out when existing data is valid; initial visits and failed navigation retries still load.",
+      "body": "Successful actions refresh the active page, previously loaded fetchers, and registered root/layout data. A fetcher loader read does not trigger revalidation. Each route can opt out with shouldRevalidate.",
       "code": ""
     },
     {
@@ -18,6 +18,16 @@
       "title": "Manual refresh",
       "body": "useRevalidator returns a function, not an object with state and revalidate fields. Manual refresh also respects shouldRevalidate.",
       "code": "const revalidate = useRevalidator();\n\n<button onClick={() => void revalidate()}>Refresh</button>"
+    },
+    {
+      "title": "Target a route",
+      "body": "Pass a route ID or its registered path pattern. An array selects multiple routes. Only active page data, loaded fetchers, and registered layouts matching that target refresh; this does not navigate or load an inactive page. For /items/:id, use that pattern rather than /items/42. Unknown targets do nothing. shouldRevalidate still applies.",
+      "code": "const revalidate = useRevalidator();\n\nawait revalidate({ route: \"/items/:id\" });\nawait revalidate({ route: [\"root\", \"/items/:id\"] });"
+    },
+    {
+      "title": "Root and layout data",
+      "body": "The Preact root integration registers its root under root by default, or RootModule.id when provided. Set loaderPath to a registered data route when the root needs refreshing. Custom React or Preact layouts can register their own callback on the router and unregister it during cleanup. No endpoint name is assumed.",
+      "code": "// Preact application entry\nmountApplication(routes, { ...root, loaderPath: \"/session\" });\n\n// Refresh only root data from a component\nconst revalidate = useRevalidator();\nawait revalidate({ route: \"root\" });\n\n// Custom layout integration\nconst unregister = router.registerRevalidator(\"account-layout\", refreshAccount);"
     },
     {
       "title": "Avoid stale UI",

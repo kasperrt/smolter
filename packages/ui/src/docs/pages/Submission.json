@@ -1,0 +1,23 @@
+{
+  "slug": "Submission",
+  "title": "Submission",
+  "summary": "Values accepted by Preact programmatic submissions.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Supported values",
+      "body": "Submission is FormData, HTMLFormElement, or Record<string, unknown>. FormData is passed through unchanged. A form element is converted to FormData. Ordinary object fields are converted with String(value), so use FormData for files or repeated field names.",
+      "code": "import type { Submission } from \"@kasperrt/smolter/preact\";\n\nconst fields = new FormData();\nfields.append(\"tag\", \"routing\");\nfields.append(\"tag\", \"typescript\");\n\nconst submission: Submission = fields;"
+    },
+    {
+      "title": "Structured JSON",
+      "body": "With encType: \"application/json\", the object is serialized into a _payload form field. The route handler reads it with readSubmission(request). This encoding does not send a raw application/json body. Avoid including a form element or FormData when the intended payload is structured JSON; pass the object itself.",
+      "code": ""
+    },
+    {
+      "title": "Destinations",
+      "body": "The value contains the submission body, not its destination. Select the route with options.action. Programmatic submission of a form element reads its controls; supply the intended action and method explicitly. For an independent request and result state, use useFetcher rather than useSubmit.",
+      "code": ""
+    }
+  ]
+}

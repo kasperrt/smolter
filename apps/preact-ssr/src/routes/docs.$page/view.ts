@@ -18,6 +18,7 @@ export default function Documentation() {
     document
       .querySelector<HTMLElement>(".docs-article h1")
       ?.focus({ preventScroll: true });
+
     if (!location.hash) scrollTo(0, 0);
 
     return () => {

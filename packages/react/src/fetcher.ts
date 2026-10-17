@@ -3,20 +3,22 @@
  * @module
  */
 
-import type {
-  AnyDataFunction,
-  DataFunction,
-  DataOf,
-  FetcherSnapshot,
-  Result,
-  Route as RouteDefinition,
-  RouteModule,
-  SubmitOptions,
+import {
+  type AnyDataFunction,
+  type DataFunction,
+  type DataOf,
+  type FetcherSnapshot,
+  type Result,
+  type Route as RouteDefinition,
+  type RouteModule,
+  type Router,
+  type SubmitOptions,
 } from "@smolter/core";
 import { useRouter } from "./context.ts";
 import { Form, type FormProps } from "./form.ts";
-import type { ComponentType } from "./runtime.ts";
+
 import {
+  type ComponentType,
   createElement,
   useEffect,
   useMemo,
@@ -51,7 +53,7 @@ export function useFetcher<
 
 /** Create a fetcher for independent route reads and mutations; its data stays local. */
 export function useFetcher(route?: RouteDefinition): TypedFetcher<unknown> {
-  const router = useRouter();
+  const router = useRouter<Router>();
   const path = route?.path;
   const fetcher = useMemo(() => {
     const store = router.createFetcher();

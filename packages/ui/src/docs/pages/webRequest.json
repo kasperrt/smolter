@@ -1,0 +1,28 @@
+{
+  "slug": "webRequest",
+  "title": "webRequest",
+  "summary": "Convert a Node request into a web Request.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Pass incoming, outgoing, and optionally a local target path for data requests.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns Promise<Request>, preserving method, headers, buffered body and a disconnect abort signal.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Convert a Node request into a web Request.",
+      "code": "const request = await webRequest(req, res);"
+    },
+    {
+      "title": "Behavior and limits",
+      "body": "Use before body-parser middleware consumes the stream. Express protocol and originalUrl are respected. Body limits and trusted proxy policy belong to the host.",
+      "code": ""
+    }
+  ]
+}

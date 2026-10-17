@@ -55,6 +55,8 @@ export interface RevalidationArgs extends RevalidationContext {
 
 /** A route component and its optional server and client data handlers. */
 export interface RouteModule {
+  /** Stable identifier for targeted revalidation; defaults to the path. */
+  id?: string;
   default?: unknown;
   HydrateFallback?: unknown;
   ErrorBoundary?: unknown;
@@ -96,7 +98,11 @@ export interface RouterOptions {
 
 /** Options for replacing rather than appending a browser history entry. */
 export interface NavigateOptions {
+  state?: unknown;
+  viewTransition?: boolean;
   replace?: boolean;
+  /** Preserve scroll in integrations that manage scroll restoration. */
+  preventScrollReset?: boolean;
 }
 
 /** HTTP method for a route action submission; defaults to POST. */
@@ -129,6 +135,15 @@ export interface Fetcher {
   dispose: () => void;
 }
 
+/** Refresh active route data without navigation, optionally selecting route IDs or paths. */
+export interface RevalidateOptions extends RevalidationContext {
+  route?: string | readonly string[];
+  reason?: RevalidationArgs["reason"];
+}
+
+/** A registered layout loader's revalidation callback. */
+export type Revalidator = (args: RevalidationArgs) => void | Promise<void>;
+
 /** Route navigation, subscriptions, fetchers, and loader revalidation. */
 export interface Router {
   routes: readonly Route[];
@@ -137,9 +152,11 @@ export interface Router {
   start: () => () => void;
   navigate: (url: string, options?: NavigateOptions) => Promise<void>;
   revalidate: (
-    reason?: RevalidationArgs["reason"],
+    options?: RevalidateOptions | RevalidationArgs["reason"],
     context?: RevalidationContext,
   ) => Promise<void>;
+  /** Register layout data under a route ID. The returned function unregisters it. */
+  registerRevalidator: (id: string, revalidate: Revalidator) => () => void;
   submit: (
     url: string,
     body: FormData,

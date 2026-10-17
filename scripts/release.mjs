@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { setTimeout } from "node:timers/promises";
 import { withSizeBadges } from "./badges.mjs";
 
-const directory = new URL("../packages/smolter/", import.meta.url);
+const directory = new URL("../", import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL("package.json", directory)));
 const jsr = JSON.parse(readFileSync(new URL("jsr.json", directory)));
 const repository = "kasperrt/smolter";
@@ -150,6 +150,16 @@ if (mode === "tag") {
   const releases = github(`repos/${repository}/releases?per_page=100`);
 
   if (!releases.some((release) => release.tag_name === tag)) {
+    const changelog = readFileSync("CHANGELOG.md", "utf8");
+    const notes = changelog
+      .split(`## ${manifest.version}\n`)[1]
+      ?.split("\n## ")[0]
+      ?.trim();
+
+    if (!notes) fail(`Missing changelog for ${manifest.version}.`);
+
+    writeFileSync("release-notes.md", notes);
+
     command("gh", [
       "release",
       "create",
@@ -162,7 +172,7 @@ if (mode === "tag") {
       tag,
       ...(prerelease ? ["--prerelease"] : []),
       "--notes-file",
-      "CHANGELOG.md",
+      "release-notes.md",
     ]);
   }
 }

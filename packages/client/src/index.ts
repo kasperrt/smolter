@@ -16,6 +16,7 @@ export { deserialize } from "./deserialize.ts";
 
 /** Browser-safe route exports, excluding server implementation code. */
 export interface ClientRouteModule {
+  id?: string;
   default?: unknown;
   HydrateFallback?: unknown;
   ErrorBoundary?: unknown;

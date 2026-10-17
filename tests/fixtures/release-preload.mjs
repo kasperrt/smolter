@@ -11,7 +11,7 @@ const readFileSync = fs.readFileSync;
 fs.readFileSync = (file, ...args) => {
   const contents = readFileSync(file, ...args);
 
-  if (/\/packages\/smolter\/(package|jsr)\.json$/.test(String(file)))
+  if (/\/(package|jsr)\.json$/.test(String(file)))
     return JSON.stringify({ ...JSON.parse(contents), version });
 
   return contents;
@@ -62,7 +62,7 @@ childProcess.execFileSync = (binary, args, options) => {
 };
 
 fs.writeFileSync = (file, contents) => {
-  assert.ok(String(file).endsWith("/packages/smolter/README.md"));
+  assert.ok(String(file).endsWith("/README.md"));
   assert.ok(contents.includes("<!-- bundlejs:start -->"));
   assert.ok(contents.includes("deno.bundlejs.com"));
 };

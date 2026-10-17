@@ -1,0 +1,53 @@
+{
+  "slug": "virtual-routes",
+  "title": "Virtual routes and entry files",
+  "summary": "The explicit contract between the flat-routing Vite plugin, your source files, and the browser/server builds.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Who creates virtual:smolter/routes?",
+      "body": "This is a Vite-generated module, not a file to create and not an npm package. fileRouter (also called routerPlugin) provides it. applicationPlugins includes that plugin plus the optional Preact application integration. The spelling is virtual:smolter/routes, not virtual:smolter/router. Importing it outside a Vite build with the plugin installed will fail.",
+      "code": "import { defineConfig } from \"vite\";\nimport { applicationPlugins } from \"@kasperrt/smolter/preact/vite\";\n\nexport default defineConfig({\n  plugins: applicationPlugins({ directory: \"src/routes\" }),\n});"
+    },
+    {
+      "title": "What does it export?",
+      "body": "Its default export is a route array discovered from src/routes. Dots separate URL segments; $name captures a parameter; _index maps to the index path. Route modules export their default view and colocated behavior. No second file-routes directory is needed.",
+      "code": "src/routes/_index/route.tsx           \u2192 /\nsrc/routes/tasks/route.tsx            \u2192 /tasks\nsrc/routes/tasks.$id/route.tsx        \u2192 /tasks/:id\n\n// src/routes/tasks.$id/route.tsx\nexport { loader } from \"./loader\";\nexport { action } from \"./action\";\nexport { clientLoader } from \"./clientLoader\";\nexport { clientAction } from \"./clientAction\";\nexport { shouldRevalidate } from \"./shouldRevalidate\";\nexport { Task as default } from \"./components/Task\";"
+    },
+    {
+      "title": "Different browser and server manifests",
+      "body": "The SSR import retains server loader/action implementations. The browser import removes their named re-exports and uses the HTTP transport for server handlers. With applicationPlugins, browser route modules load lazily and the initial matched route is loaded before hydration. clientLoader/clientAction stay in the browser and can invoke serverLoader/serverAction. Keep server-only imports inside the separate loader/action modules: arbitrary imports in route.tsx are not automatically classified as server-only.",
+      "code": ""
+    },
+    {
+      "title": "entry.client.tsx is application-owned",
+      "body": "For the optional Preact application integration, this file starts hydration. Smolter supplies mountApplication, not the physical file. The Vite application plugin defaults to this path. It can configure application-wide URL policy before mounting. It must not import server handlers.",
+      "code": "import routes from \"virtual:smolter/routes\";\nimport { mountApplication } from \"@kasperrt/smolter/preact/client\";\nimport * as root from \"./root\";\n\nmountApplication(routes, root);"
+    },
+    {
+      "title": "Optional browser and document modules",
+      "body": "Routing hooks and components come from @kasperrt/smolter/preact. Import mountApplication and configureApplication from @kasperrt/smolter/preact/client. Import Document, Meta, Links, Scripts and ScrollRestoration from @kasperrt/smolter/preact/document. These are optional tree-shakable modules; a manually mounted router does not require the document or automatic hydration code. Server handlers belong only in /preact/server.",
+      "code": "import { Outlet } from \"@kasperrt/smolter/preact\";\nimport { Document, Meta, Scripts } from \"@kasperrt/smolter/preact/document\";"
+    },
+    {
+      "title": "entry.server.tsx is application-owned",
+      "body": "This file connects your server manifest and root layout to Smolter. The application dev plugin loads this path; the production Vite SSR build uses it as its entry. It renders one request at a time and exports the data-request handler consumed by the Node middleware. Express is a separate host, not replaced by this module. These examples use the optional Preact application API; the core React/Preact APIs still support custom renderers and hydration.",
+      "code": "import routes from \"virtual:smolter/routes\";\nimport { dispatchRoute, renderApplication } from \"@kasperrt/smolter/preact/server\";\nimport * as root from \"./root\";\n\nexport const handleDataRequest = (request: Request) =>\n  dispatchRoute(request, routes);\n\nexport default function handleRequest(request: Request, entry: string) {\n  return renderApplication(request, routes, root, entry);\n}"
+    },
+    {
+      "title": "TypeScript declaration",
+      "body": "Vite resolves the virtual import at runtime. Declare its shape for the editor in an included .d.ts file.",
+      "code": "declare module \"virtual:smolter/routes\" {\n  const routes: import(\"@kasperrt/smolter/preact\").AppRoute[];\n  export default routes;\n}"
+    },
+    {
+      "title": "Manual routes without virtual imports",
+      "body": "The generated manifest is optional. Define a browser route table and a separate server table, then import those files directly in your entrypoints. Use serverRoute for browser proxies rather than importing server implementations. If you want the Vite transport with manual tables, fileRouter accepts clientRoutes and serverRoutes; both are required. The optional applicationPlugins integration currently discovers flat files and does not accept those manual-table options.",
+      "code": "import { fileRouter } from \"@kasperrt/smolter/react/vite\";\n\nexport default defineConfig({\n  plugins: [fileRouter({\n    clientRoutes: \"src/browser-routes.ts\",\n    serverRoutes: \"src/server-routes.ts\",\n  })],\n});"
+    },
+    {
+      "title": "Root data and static assets",
+      "body": "Root loader data is serialized during SSR. Root revalidation after a successful mutation is opt-in: provide loaderPath when mounting, and register that URL in the route manifest. Without loaderPath, Smolter makes no extra root request. The root shouldRevalidate callback can skip that request. Static CSS, fonts, and images should use Vite asset imports and document links, not loader data or an artificial resource route. Vite applies the configured base, including a CDN origin, to emitted asset URLs. Call revalidate({ route: \"root\" }) to refresh only the root. Give the root an id to change that target name.",
+      "code": "import stylesheetUrl from \"./index.css?url\";\n\n// In the document head:\n<link rel=\"stylesheet\" href={stylesheetUrl} />\n\n// Only when root data needs server revalidation:\nmountApplication(routes, { ...root, loaderPath: \"/session\" });"
+    }
+  ]
+}

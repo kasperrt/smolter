@@ -1,0 +1,28 @@
+{
+  "slug": "useSearchParams",
+  "title": "useSearchParams",
+  "summary": "Read the current query string and replace it through navigation.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "The hook takes no arguments. The setter accepts URLSearchParams or Record<string, string>, followed by optional NavigateOptions. It does not accept a callback updater.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns [params, setParams]. params is memoized from the current URL search string. Changing that object does not navigate; call setParams explicitly. The setter replaces the query string and omits the previous hash.",
+      "code": ""
+    },
+    {
+      "title": "Preserving other fields",
+      "body": "Clone the current parameters before changing a field. Use URLSearchParams for repeated keys; an ordinary record supports one value per key.",
+      "code": "import { useSearchParams } from \"@kasperrt/smolter/preact\";\n\nexport function SortControl() {\n  const [params, setParams] = useSearchParams();\n\n  function sortByName() {\n    const next = new URLSearchParams(params);\n    next.set(\"sort\", \"name\");\n    setParams(next, { replace: true });\n  }\n\n  return <button onClick={sortByName}>Sort by name</button>;\n}"
+    },
+    {
+      "title": "Loading and revalidation",
+      "body": "Setting parameters performs navigation to the current pathname, so the active loader may run. shouldRevalidate receives the old and new URLs and can decline that reload. Use a GET fetcher form when search results should be independent of the browser address.",
+      "code": ""
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "rootDir": ".generated",
+    "outDir": "dist",
+    "rewriteRelativeImportExtensions": true,
+    "types": ["node"],
+    "paths": {},
+    "emitDeclarationOnly": true
+  },
+  "include": [".generated/**/*.ts", ".generated/**/*.tsx"],
+  "exclude": []
+}

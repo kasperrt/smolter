@@ -1,0 +1,43 @@
+{
+  "name": "@kasperrt/smolter",
+  "version": "0.3.0",
+  "exports": {
+    "./react": "./.generated/react/index.ts",
+    "./preact": "./.generated/preact/index.ts",
+    "./react/server": "./.generated/server/index.ts",
+    "./preact/server": "./.generated/server/preact.ts",
+    "./react/client": "./.generated/client/index.ts",
+    "./preact/client": "./.generated/preact/client.tsx",
+    "./utils": "./.generated/core/utils.ts",
+    "./utils/http": "./.generated/server/node.ts",
+    "./utils/assets": "./.generated/server/assets.ts",
+    "./utils/responses": "./.generated/core/responses.ts",
+    "./react/data": "./.generated/react/data.ts",
+    "./preact/lazy-route": "./.generated/preact/lazy-route.ts",
+    "./preact/document": "./.generated/preact/document.tsx"
+  },
+  "imports": {
+    "react": "npm:react@19.3.1",
+    "preact/compat": "npm:preact@11.0.1/compat",
+    "preact": "npm:preact@11.0.1",
+    "preact/hooks": "npm:preact@11.0.1/hooks",
+    "preact/jsx-runtime": "npm:preact@11.0.1/jsx-runtime",
+    "preact-render-to-string": "npm:preact-render-to-string@6.8.1",
+    "react/jsx-runtime": "npm:react@19.3.1/jsx-runtime"
+  },
+  "publish": {
+    "include": [
+      ".generated",
+      "README.md",
+      "LICENSE",
+      "jsr.json",
+      "CHANGELOG.md"
+    ],
+    "exclude": [".generated/vite"]
+  },
+  "license": "MIT",
+  "compatibility": {
+    "node": ">=22",
+    "browser": true
+  }
+}

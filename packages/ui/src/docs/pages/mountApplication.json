@@ -1,0 +1,33 @@
+{
+  "slug": "mountApplication",
+  "title": "mountApplication",
+  "summary": "Mount a Preact route application or hydrate an existing server-rendered document.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "routes is an AppRoute array. rootModule is an optional browser-safe RootModule for shared layout, metadata, and root data. hash defaults to false; true derives the route URL from the location hash and connects hash history. This API is browser-only and lives in the optional Preact client entry.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns a Promise<Router>. Mounting waits for the initially matched route module to preload. The returned router exposes navigation, revalidation, fetchers, and disposal. Client-only mounting starts loaders through RouterProvider; the returned promise does not mean every loader has completed.",
+      "code": ""
+    },
+    {
+      "title": "Client-only application",
+      "body": "Provide a root element in the HTML document. Manually registered routes work without a file-router plugin. Keep route components and client handlers in their normal route modules.",
+      "code": "import { defineRoute } from \"@kasperrt/smolter/preact\";\nimport { mountApplication } from \"@kasperrt/smolter/preact/client\";\nimport * as home from \"./routes/_index/route\";\nimport * as tasks from \"./routes/tasks/route\";\n\nconst routes = [\n  defineRoute(\"/\", home),\n  defineRoute(\"/tasks\", tasks),\n];\n\nconst router = await mountApplication(routes);\n\n// The HTML entry must contain <div id=\"root\"></div>.\nawait router.navigate(\"/tasks\");"
+    },
+    {
+      "title": "Server-rendered document",
+      "body": "When a non-empty #smolter-data script exists, mounting reads its Hydration payload, restores serialized errors, and hydrates the document rather than rendering into #root. Use the matching server and browser route modules and root layout. Scripts emits the bootstrap payload for renderApplication. Keep server handlers out of the browser root module and use the file-router integration to split server route exports.",
+      "code": ""
+    },
+    {
+      "title": "Navigation and root data",
+      "body": "Mounting retains the committed view while a new route loads and connects navigation metadata. A rootModule with loaderPath registers root revalidation under rootModule.id or \"root\". loaderPath must identify a registered data route; mounting does not invent an endpoint. With neither hydration data nor #root, a router is returned but no application is rendered.",
+      "code": ""
+    }
+  ]
+}

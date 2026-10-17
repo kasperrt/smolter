@@ -1,0 +1,13 @@
+{
+  "slug": "RequestHandlerOptions",
+  "title": "RequestHandlerOptions",
+  "summary": "Server/application integration contract.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "This type describes the optional server or Vite integration. See the Express and virtual routes guides for complete usage. It is not a browser runtime dependency.",
+      "code": "interface RequestHandlerOptions {\n  build: ServerBuild;\n  /** Browser entry URL resolved from Vite's production manifest. */\n  entry: string;\n}"
+    }
+  ]
+}

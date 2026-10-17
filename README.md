@@ -1,8 +1,8 @@
 # smolter _
 
 <!-- bundlejs:start -->
-[![react gzip size](https://deno.bundlejs.com/?q=%40kasperrt%2Fsmolter%400.0.1%2Freact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22react%22%2C%22react%2F*%22%5D%7D%7D&badge)](https://bundlejs.com/?q=%40kasperrt%2Fsmolter%400.0.1%2Freact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22react%22%2C%22react%2F*%22%5D%7D%7D&bundle)
-[![preact gzip size](https://deno.bundlejs.com/?q=%40kasperrt%2Fsmolter%400.0.1%2Fpreact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22preact%22%2C%22preact%2F*%22%5D%7D%7D&badge)](https://bundlejs.com/?q=%40kasperrt%2Fsmolter%400.0.1%2Fpreact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22preact%22%2C%22preact%2F*%22%5D%7D%7D&bundle)
+[![react gzip size](https://deno.bundlejs.com/?q=%40kasperrt%2Fsmolter%40latest%2Freact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22react%22%2C%22react%2F*%22%5D%7D%7D&badge)](https://bundlejs.com/?q=%40kasperrt%2Fsmolter%40latest%2Freact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22react%22%2C%22react%2F*%22%5D%7D%7D&bundle)
+[![preact gzip size](https://deno.bundlejs.com/?q=%40kasperrt%2Fsmolter%40latest%2Fpreact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22preact%22%2C%22preact%2F*%22%5D%7D%7D&badge)](https://bundlejs.com/?q=%40kasperrt%2Fsmolter%40latest%2Fpreact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22preact%22%2C%22preact%2F*%22%5D%7D%7D&bundle)
 <!-- bundlejs:end -->
 
 A typed data router for React and Preact. **Zero runtime dependencies.**
@@ -29,7 +29,10 @@ Start with [loaders](https://kasperrt.github.io/smolter/react/docs/loaders/), [a
 - [Types follow the handler](#types-follow-the-handler)
 - [Server rendering](#server-rendering)
 - [Package entries](#package-entries)
+- [Application integration](#application-integration)
+- [Resource subscriptions](#resource-subscriptions)
 - [Size and checks](#size-and-checks)
+- [Routing without data hooks](#routing-without-data-hooks)
 
 ## Install
 
@@ -40,7 +43,7 @@ pnpm add @kasperrt/smolter
 ```
 
 ```ts
-import { createRouter, useFetcher } from "@kasperrt/smolter/react";
+import { createDataRouter, useFetcher } from "@kasperrt/smolter/react";
 // Preact: import from "@kasperrt/smolter/preact".
 ```
 
@@ -61,7 +64,8 @@ pnpm dev
 Each app has its own entrypoints, routes, and data code. Only UI components are
 shared. Preact examples do not import React. Each includes:
 
-- `/`: counter, fetcher POST, automatic and manual revalidation.
+- `/`: a short introduction and a link to the docs.
+- `/examples/counter`: fetcher POST, automatic and manual revalidation.
 - `/tasks`: list, create form, and a fetcher-only task preview.
 - `/tasks/:id`: PATCH, DELETE, validation, and skipping no-op revalidation.
 - `/about`: the separation between data and rendering.
@@ -94,10 +98,10 @@ export default defineConfig({
 
 ```ts
 // app.ts
-import { createRouter } from "@kasperrt/smolter/react";
+import { createDataRouter } from "@kasperrt/smolter/react";
 import routes from "virtual:smolter/routes";
 
-export const router = createRouter(routes, { browser: true });
+export const router = createDataRouter(routes, { browser: true });
 ```
 
 | File or folder | URL |
@@ -136,14 +140,14 @@ Outside Vite, `flatRoutes(directory)` from `@kasperrt/smolter/react/vite` return
 ### Manual routes
 
 ```tsx
-import { createRouter, defineRoute } from "@kasperrt/smolter/react";
+import { createDataRouter, defineRoute } from "@kasperrt/smolter/react";
 import * as tasks from "./tasks/route";
 import * as task from "./task/route";
 
 export const tasksRoute = defineRoute("/tasks", tasks);
 export const taskRoute = defineRoute("/tasks/:id", task);
 export const routes = [tasksRoute, taskRoute];
-export const router = createRouter(routes, { browser: true });
+export const router = createDataRouter(routes, { browser: true });
 ```
 
 Or pass handlers directly to `defineRoute(path, { loader, action, default: View })`.
@@ -171,11 +175,12 @@ export { default } from "./view";
 export { loader } from "./loader";
 export { action } from "./action";
 
-export { clientLoader } from "./client-loader";
-export { clientAction } from "./client-action";
+export { clientLoader } from "./clientLoader";
+export { clientAction } from "./clientAction";
 
-export { shouldRevalidate } from "./should-revalidate";
-export { HydrateFallback, ErrorBoundary } from "../../boundaries";
+export { shouldRevalidate } from "./shouldRevalidate";
+export { HydrateFallback } from "./HydrateFallback";
+export { ErrorBoundary } from "./ErrorBoundary";
 ```
 
 With the optional server integration:
@@ -187,7 +192,7 @@ With the optional server integration:
 - SSR executes the server loader and hydration reuses that data.
 
 ```ts
-// client-loader.ts
+// clientLoader.ts
 import type { ClientLoaderArgs } from "@kasperrt/smolter/react/client";
 import type { loader } from "./loader";
 
@@ -197,7 +202,7 @@ export async function clientLoader({ serverLoader }: ClientLoaderArgs<typeof loa
 ```
 
 ```ts
-// client-action.ts
+// clientAction.ts
 import type { ClientActionArgs } from "@kasperrt/smolter/react/client";
 import type { action } from "./action";
 
@@ -258,7 +263,7 @@ routerPlugin({
 
 Each table exports `routes`. The standalone examples contain both tables.
 
-Without the optional integration, `createRouter` invokes handlers locally:
+Without the optional integration, `createDataRouter` invokes handlers locally:
 client handlers take precedence, with ordinary handlers as fallbacks.
 `loadRouter` selects server handlers only. Core-only usage does not create HTTP
 endpoints or compiler boundaries by itself.
@@ -319,7 +324,7 @@ Fetcher results belong to `fetcher.data`, not `useActionData()`.
 ## Decide when to revalidate
 
 ```ts
-// should-revalidate.ts
+// shouldRevalidate.ts
 import type { RevalidationArgs } from "@kasperrt/smolter/react";
 
 export function shouldRevalidate({ actionResult, defaultShouldRevalidate }: RevalidationArgs) {
@@ -344,7 +349,25 @@ and explicit `fetcher.load()` calls always load their destination.
 This controls loader refreshes; it does not rerun actions or reload the document.
 Existing page data stays visible during manual and post-action refreshes.
 
-`const revalidate = useRevalidator(); await revalidate()` requests a manual refresh.
+`useRevalidator()` returns an async function. Target a registered route ID or path
+pattern to refresh only its active data, including loaded fetchers:
+
+```tsx
+const revalidate = useRevalidator();
+
+await revalidate({ route: "/tasks/:id" });
+await revalidate({ route: "root" });
+await revalidate({ route: ["root", "/tasks/:id"] });
+```
+
+Without a target, `revalidate()` refreshes the active page, loaded fetchers, and
+registered root/layout data. `shouldRevalidate` still applies. Inactive routes
+are not loaded, unknown targets do nothing, and revalidation never navigates.
+
+The Preact root integration uses `root` as its default ID. Configure its
+`loaderPath` with a registered data route to enable root refreshes. Custom React
+or Preact layouts can use `router.registerRevalidator(id, callback)`; call its
+returned cleanup function when the layout is removed.
 The task-detail examples return `{ changed: false }` for an unchanged title;
 the corresponding loader is skipped.
 
@@ -381,17 +404,17 @@ const hydrationJSON = serialize(router.getSnapshot());
 
 Create a fresh router per request. Embed the serialized snapshot in a JSON
 script, restore it with `deserialize` from `@kasperrt/smolter/react/client`, and pass it as
-`hydrationData` to `createRouter`. This preserves loader errors through hydration
+`hydrationData` to `createDataRouter`. This preserves loader errors through hydration
 without exposing server stacks or causes. Error boundaries should display the
 error message, not its stack.
 
 ```ts
 import { deserialize } from "@kasperrt/smolter/react/client";
-import { createRouter } from "@kasperrt/smolter/react";
+import { createDataRouter } from "@kasperrt/smolter/react";
 import routes from "virtual:smolter/routes";
 
 const data = document.getElementById("smolter-data");
-const router = createRouter(routes, {
+const router = createDataRouter(routes, {
   browser: true,
   hydrationData: data?.textContent ? deserialize(data.textContent) : undefined,
 });
@@ -406,7 +429,7 @@ The SSR examples use the same server route definitions for HTML and data request
 
 ## Package entries
 
-Use `@kasperrt/smolter/react` for React 18+ and `@kasperrt/smolter/preact` for Preact 10.25+.
+Use `@kasperrt/smolter/react` for React 18+ and `@kasperrt/smolter/preact` for Preact 11.0.1+.
 Choose one renderer for your application. Both expose the same routing API:
 
 | Purpose | React | Preact |
@@ -421,45 +444,214 @@ The main renderer entries never import server or build modules. Named imports
 are tree-shaken; optional transport is included only when you import `/client`.
 Server entries do not import either UI renderer. Vite entries are build-time only.
 
-**Migrating to 0.2.0:** replace `/core` imports for types, `createRouter`, and
+**Migrating renderer subpaths:** replace `/core` imports for types, router factories, and
 `defineRoute` with your renderer entry. Use `/utils` for `matchRoutes`,
 `internalURL` and `safeWrapAsync`. Move `/client`, `/server`,
 `/files`, and `/vite` imports to the corresponding renderer-prefixed path above.
 The bare package root and old top-level subpaths are no longer exported.
 
+See the [0.3 migration guide](https://kasperrt.github.io/smolter/react/docs/migration-0.3/) and [changelog](./CHANGELOG.md).
+
+**Router factory migration:** code that previously used `createRouter` with
+loaders, actions, fetchers or revalidation must now use `createDataRouter`.
+`createRouter` now creates a navigation-only router. SSR and file-router
+application helpers select `createDataRouter` automatically.
+
 On JSR, install `@kasperrt/smolter` using the
 [JSR package instructions](https://jsr.io/docs/npm-compatibility) and import
-`@kasperrt/smolter/react` or `@kasperrt/smolter/preact`. Its `core`, `client`,
-`server`, and `files` subpaths match npm. The Vite plugin is npm-only:
+`@kasperrt/smolter/react` or `@kasperrt/smolter/preact`. Its renderer, client, server and utility subpaths match npm. The Vite plugin is npm-only:
 use `@kasperrt/smolter/react/vite` from the npm package when adding file routing.
+
+## Application integration
+
+Import routing, forms and data hooks from `@kasperrt/smolter/preact`.
+Document rendering is optional: `@kasperrt/smolter/preact/document` supplies
+`Document`, `Meta`, `Links`, `Scripts` and `ScrollRestoration`.
+`@kasperrt/smolter/preact/client` supplies `mountApplication`,
+`configureApplication` and the server transport helpers. Mounting connects
+hydration, root data and navigation presentation to the same core router.
+These modules remain tree-shakable; basic routing does not import the document
+or mounting code. The size table also measures all three together, because
+moving APIs to subpaths does not make their implementation disappear.
+
+```ts
+// vite.config.ts
+import { defineConfig } from "vite";
+import { applicationPlugins } from "@kasperrt/smolter/preact/vite";
+
+export default defineConfig({
+  plugins: applicationPlugins({ directory: "src/routes" }),
+});
+```
+
+```tsx
+// src/entry.client.tsx
+import routes from "virtual:smolter/routes";
+import { mountApplication } from "@kasperrt/smolter/preact/client";
+import * as root from "./root";
+
+mountApplication(routes, root);
+```
+
+`root` exports a default component containing `Outlet` and a `Layout` wrapping
+it in `Document`, a head, and a body containing `Scripts`. Its optional loader
+supplies root data. `renderApplication(request, routes, root, entry)` from
+`preact/server` renders the same tree and serializes hydration data;
+`dispatchRoute(request, routes)` handles route data requests. Server rendering
+requires the optional `preact-render-to-string` peer.
+
+Deployment-specific URL mapping can be configured once at startup with
+`configureApplication({ resolveURL, isDocumentHandoff, leaveDocument,
+entryScript })`. Do not put user-specific or request-specific state there.
+The library does not define application domains, ports, or branding.
+
+`utils/http` contains the Node request/response adapter; `utils/assets` contains
+manifest/preload helpers; `utils/responses` contains response normalization.
+Keep the first two in server/build entrypoints. Browser application imports do
+not include them.
+
+### Virtual modules and entrypoints
+
+`virtual:smolter/routes` is the default route-array export generated by the Vite
+plugin from `src/routes`. It is not a physical file or a runtime package.
+The server build retains loaders/actions; the browser build strips their
+re-exports and installs server proxies. `entry.client.tsx` and `entry.server.tsx`
+are application-owned files wiring those manifests to hydration and SSR.
+Manual tables can be imported directly instead.
+
+See the [virtual routes guide](https://kasperrt.github.io/smolter/react/docs/virtual-routes)
+for the exact contract, TypeScript declaration, and both entrypoint examples.
+
+### Express hosting
+
+Keep Express in control of metrics, tracing, authentication and static files.
+Mount `createRequestHandler({ build, entry })` from
+`@kasperrt/smolter/utils/http` after those middleware. `build` is the compiled
+server entry and `entry` is the browser entry URL from Vite's manifest. Do not
+consume request bodies with Express body parsers before this handler.
+The adapter has no Express dependency and forwards failures to `next(error)`.
+
+See the [Express guide](https://kasperrt.github.io/smolter/react/docs/express)
+for a complete server example and current buffering limitations.
+
+## Resource subscriptions
+
+`@kasperrt/smolter/react/data` adds subscriptions to named resources when their
+lifetime is independent of URL navigation. The state and cancellation logic
+lives in core; the entry adds React bindings without DOM or HTTP globals.
+
+```ts
+import { createResourceRouter } from "@kasperrt/smolter/react/data";
+
+const resources = createResourceRouter(new Map([
+  ["settings", {
+    loader: async ({ signal }) => ({
+      data: await readSettings(signal),
+      error: "",
+    }),
+    action: async ({ input, signal }) => ({
+      data: await saveSettings(input, signal),
+      error: "",
+    }),
+  }],
+]));
+```
+
+`ResourceProvider` owns the store lifetime. `Resource` selects a resource by
+`routeId` and params. `useResourceData` reads it; `useRouteLoaderData` reads a
+named resource. `useResourceFetcher` returns `[state, operations]`, with
+independent `load` and `submit` operations. Successful mutations consult the
+resource's `shouldRevalidate` before reloading its data. Last-subscriber cleanup
+aborts pending work; `persistent` keeps a resource until explicitly disposed.
+This optional entry does not contribute to the base React bundle measurement.
 
 ## Size and checks
 
-`pnpm size` measures every browser export with esbuild, Terser, and gzip level 9.
-Frameworks are excluded; library dependencies are included. It compares the same
-build settings against pinned wouter entries. Both adapters must be strictly
-smaller than their corresponding wouter entry; exceeding either fails the check. Optional server transport is measured separately and included in SSR
-example labels. File discovery is build-only.
+Use `createRouter` for navigation only, or `createDataRouter` for loaders,
+actions, fetchers and revalidation. Both are named exports from
+`@kasperrt/smolter/preact` and `/react`. No extra package or plugin is required.
+The production bundler can remove the data engine when only `createRouter` is used.
+
+`pnpm size` regenerates this table and the site's size data using identical
+minifiers. The routing-only gate compares our selected exports with wouter's
+routing subset: `Router`, `Route`, `Switch`, `Link`, `useParams`, and `useLocation`.
+Both complete wouter entries are reported too. The APIs differ; this is not
+a claim of identical features.
 
 <!-- size-comparison:start -->
 | Browser exports | Gzip bytes |
 | --- | ---: |
-| `@kasperrt/smolter/react` | 2445 |
-| `@kasperrt/smolter/preact` | 2445 |
-| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 2782 |
-| `@kasperrt/smolter/preact + @kasperrt/smolter/preact/client` | 2781 |
+| `React: routing-only named exports` | 1245 |
+| `Preact: routing-only named exports` | 1405 |
+| `@kasperrt/smolter/react` | 2873 |
+| `@kasperrt/smolter/preact` | 4748 |
+| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 3219 |
+| `@kasperrt/smolter/preact + server transport` | 5059 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 7415 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 7696 |
+| `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
+| `React: common routing/data exports` | 2683 |
+| `Preact: common routing/data exports` | 2966 |
+| `wouter: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
+| `wouter-preact: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |
 | `wouter-preact@3.13.0` | 2450 |
 | `react-router@8.4.0` | 60994 |
 <!-- size-comparison:end -->
 
-The table is generated by `pnpm size` from all exports of each listed entry,
+The common-export rows measure the same named API set: `createDataRouter`,
+`defineRoute`, `RouterProvider`, `Routes`, `Link`, `Form`, `useRouter`,
+`useLoaderData`, `useActionData`, `useParams`, `useLocation`,
+`useRevalidator` and `useFetcher`. Preact’s link and submission APIs currently
+have additional behavior; equal names do not imply identical implementations.
+The routing-only rows retain `createRouter`, `defineRoute`, `RouterProvider`,
+`Routes`, `Link`, `useParams` and `useLocation`. Full Preact also exposes richer
+application APIs. These tiers overlap: do not add the rows together.
+
+The table is generated by `pnpm size` from the named subsets above or all exports of each other listed entry,
 using production ESM bundles, esbuild, Terser, and gzip level 9. React, React DOM,
 and Preact are external in every bundle. Transitive library dependencies are
 included. React Router provides a broader API; this compares complete entry
 sizes, not equivalent feature sets or the minimum code for one route.
 `@kasperrt/smolter/react/client` adds browser transport for server loaders/actions; server-only
 rendering code and the Vite plugin are not shipped to the browser.
+
+### Routing without data hooks
+
+```tsx
+import { render } from "preact";
+import {
+  createRouter,
+  defineRoute,
+  Link,
+  RouterProvider,
+  Routes,
+} from "@kasperrt/smolter/preact";
+import Home from "./routes/home";
+import About from "./routes/about";
+
+const router = createRouter([
+  defineRoute("/", { default: Home }),
+  defineRoute("/about", { default: About }),
+], { browser: true });
+
+render(
+  <RouterProvider router={router}>
+    <nav>
+      <Link href="/">Home</Link>
+      <Link href="/about">About</Link>
+    </nav>
+    <Routes />
+  </RouterProvider>,
+  document.getElementById("app")!,
+);
+```
+
+Add `useParams` for dynamic paths such as `/tasks/:id` and `useLocation` for
+the current URL. Both are included in the routing-only measurement, even though
+this example does not need them. Switch the factory to `createDataRouter` when
+adding loaders, actions or fetchers, importing it from the same entry. SSR hydration and file-routed applications use the
+larger client/document/lazy-route tier; they are not represented by the routing-only number.
 
 Exact current measurements are generated in
 [`packages/ui/src/size.json`](./packages/ui/src/size.json).
@@ -486,7 +678,7 @@ PRs. [Release workflow](https://github.com/kasperrt/smolter/blob/main/RELEASING.
 To test a local package build in another project:
 
 ```sh
-pnpm --dir packages/smolter pack --pack-destination ../..
+pnpm pack
 pnpm add /absolute/path/to/kasperrt-smolter-0.0.1.tgz
 ```
 

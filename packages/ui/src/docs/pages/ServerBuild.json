@@ -1,0 +1,13 @@
+{
+  "slug": "ServerBuild",
+  "title": "ServerBuild",
+  "summary": "Server module produced by an application's SSR entrypoint.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "This type describes the optional server or Vite integration. See the Express and virtual routes guides for complete usage. It is not a browser runtime dependency.",
+      "code": "interface ServerBuild {\n  default: (request: Request, entry: string) => Response | Promise<Response>;\n  handleDataRequest: (request: Request) => Response | Promise<Response>;\n}"
+    }
+  ]
+}

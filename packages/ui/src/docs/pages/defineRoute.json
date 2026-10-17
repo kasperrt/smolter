@@ -21,7 +21,7 @@
     },
     {
       "title": "Behavior and edge cases",
-      "body": "The supplied path wins over any path field on the module. This helper does not register a route globally; include the result in the table passed to createRouter.",
+      "body": "The supplied path wins over any path field on the module. This helper does not register a route globally; include the result in the table passed to createDataRouter.",
       "code": ""
     }
   ]

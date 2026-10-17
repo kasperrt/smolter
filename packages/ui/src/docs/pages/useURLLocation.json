@@ -1,0 +1,28 @@
+{
+  "slug": "useURLLocation",
+  "title": "useURLLocation",
+  "summary": "Read the visible URL together with navigation state and its history key.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Takes no arguments and requires RouterProvider. Browser history state is maintained by the application navigation integration.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns a memoized URL with additional state and key properties. Standard URL properties such as pathname, search, hash, origin, and href remain available. The key identifies the current application history entry.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Use this value for display and derived state. Navigate through Link, useNavigate, or the router rather than mutating this URL object.",
+      "code": "import { useURLLocation } from \"@kasperrt/smolter/preact\";\n\nexport function CurrentAddress() {\n  const location = useURLLocation();\n\n  return <code>{location.pathname}{location.search}</code>;\n}"
+    },
+    {
+      "title": "Visible versus pending",
+      "body": "With retained views, this URL follows the committed snapshot while the next route loads. useNavigation().location reports a pending destination when the integration exposes one. A bare router does not independently maintain navigation history keys and state.",
+      "code": ""
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "slug": "ClientLoaderFunctionArgs",
+  "title": "ClientLoaderFunctionArgs",
+  "summary": "Client loader arguments with access to the server loader.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Extends LoaderFunctionArgs with serverLoader<T>(): Promise<T>. The application transport supplies this callback; invoking it requests the registered server loader.",
+      "code": "import type { ClientLoaderFunctionArgs } from \"@kasperrt/smolter/preact\";\n\ninterface TaskData {\n  title: string;\n}\n\nexport async function clientLoader({ serverLoader }: ClientLoaderFunctionArgs) {\n  const task = await serverLoader<TaskData>();\n\n  return { ...task, source: \"server\" };\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "A client loader can return locally sourced data without calling serverLoader. The generic declares the server result contract; it does not validate JSON at runtime. A bare createDataRouter does not install a server transport callback.",
+      "code": ""
+    }
+  ]
+}

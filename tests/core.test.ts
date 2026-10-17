@@ -1,5 +1,5 @@
 import {
-  createRouter,
+  createDataRouter,
   type DataOf,
   defineRoute,
   matchRoutes,
@@ -35,6 +35,38 @@ describe("data router", () => {
     expect(matchRoutes(routes, "/people")).toBeUndefined();
 
     expect(matchRoutes(routes, "/people/a/b")).toBeUndefined();
+  });
+
+  it.each([
+    ["%", "%"],
+    ["%E0%A4%A", "�%A"],
+    ["%FF", "�"],
+  ])(
+    "matches malformed percent escapes without throwing: %s",
+    (value, decoded) => {
+      const route = defineRoute("/items/:id", {});
+
+      expect(matchRoutes([route], `/items/${value}`)?.params).toEqual({
+        id: decoded,
+      });
+    },
+  );
+
+  it("keeps empty wildcard tails and repeated path segments distinct", () => {
+    const wildcard = defineRoute("/files/*", {});
+    const single = defineRoute("/items/:id", {});
+    const double = defineRoute("/items//:id", {});
+
+    expect(matchRoutes([wildcard], "/files")?.params).toEqual({ "*": "" });
+    expect(matchRoutes([wildcard], "/files/")?.params).toEqual({ "*": "" });
+    expect(matchRoutes([wildcard], "/files/a//b")?.params).toEqual({
+      "*": "a//b",
+    });
+    expect(matchRoutes([single], "/items//42")).toBeUndefined();
+    expect(matchRoutes([single, double], "/items//42")).toEqual({
+      route: double,
+      params: { id: "42" },
+    });
   });
 
   it("infers route and function data without duplicated interfaces", () => {
@@ -166,7 +198,7 @@ describe("data router", () => {
   it("aborts stale navigation and prevents late data overwrites", async () => {
     let finish: (value: string) => void = () => {};
     let signal: AbortSignal | undefined;
-    const router = createRouter([
+    const router = createDataRouter([
       defineRoute("/slow", {
         loader: (args) => {
           signal = args.signal;
@@ -192,7 +224,7 @@ describe("data router", () => {
 
   it("last fetcher request wins", async () => {
     let finish: (value: string) => void = () => {};
-    const router = createRouter([
+    const router = createDataRouter([
       defineRoute("/slow", {
         loader: () =>
           new Promise<string>((resolve) => {
@@ -249,6 +281,38 @@ describe("data router", () => {
     expect(loop.getSnapshot().error?.message).toMatch("Redirect loop");
   });
 
+  it("resets the redirect budget for each navigation", async () => {
+    const router = createDataRouter([
+      defineRoute("/:remaining", {
+        loader: ({ params }) => {
+          const remaining = Number(params.remaining);
+
+          if (remaining) return redirect(`/${remaining - 1}`);
+
+          return "arrived";
+        },
+      }),
+    ]);
+
+    await router.navigate("/10");
+
+    expect(router.getSnapshot().data).toBe("arrived");
+    expect(router.getSnapshot().error).toBeUndefined();
+
+    await router.navigate("/11");
+
+    expect(router.getSnapshot().error?.message).toBe("Redirect loop");
+    expect(router.getSnapshot().url).toBe("http://localhost/1");
+
+    await router.navigate("/10");
+
+    expect(router.getSnapshot().data).toBe("arrived");
+    expect(router.getSnapshot().error).toBeUndefined();
+    expect(router.getSnapshot().state).toBe("idle");
+
+    router.dispose();
+  });
+
   it("isolates server requests and safely serializes hydration", async () => {
     const routes = [
       defineRoute("/:id", {
@@ -266,7 +330,7 @@ describe("data router", () => {
 
     expect(serialized).not.toContain("</script>");
 
-    const hydrated = createRouter(routes, {
+    const hydrated = createDataRouter(routes, {
       hydrationData: JSON.parse(serialized),
     });
     const stop = hydrated.start();
@@ -384,7 +448,7 @@ it("selects client handlers locally and skips them during SSR", async () => {
     clientAction: () => {
       clientActions++;
 
-      return { source: "client-action" as const };
+      return { source: "clientAction" as const };
     },
   });
   const server = await loadRouter([route], "https://test.dev/");
@@ -398,7 +462,7 @@ it("selects client handlers locally and skips them during SSR", async () => {
 
   expect(clientActions).toBe(0);
 
-  const client = createRouter([route]);
+  const client = createDataRouter([route]);
   await client.navigate("/");
 
   expect(client.getSnapshot().data).toEqual({ source: "client" });
@@ -407,7 +471,7 @@ it("selects client handlers locally and skips them during SSR", async () => {
 
   await fetcher.submit("/", body());
 
-  expect(fetcher.getSnapshot().data).toEqual({ source: "client-action" });
+  expect(fetcher.getSnapshot().data).toEqual({ source: "clientAction" });
 
   expect(clientLoads).toBe(2);
 
@@ -416,7 +480,7 @@ it("selects client handlers locally and skips them during SSR", async () => {
     { source: "server" } | { source: "client" }
   >();
   expectTypeOf<ActionData<typeof route>>().toEqualTypeOf<
-    { source: "server-action" } | { source: "client-action" }
+    { source: "server-action" } | { source: "clientAction" }
   >();
 });
 
@@ -439,7 +503,7 @@ it("loads a client-only route after its empty SSR snapshot is hydrated", async (
 
   expect((await server.submit("/", body())).error?.message).toBe("No action");
 
-  const client = createRouter([route], {
+  const client = createDataRouter([route], {
     hydrationData,
   });
   const loaded = new Promise<void>((resolve) =>
@@ -484,7 +548,7 @@ for (const server of [false, true]) {
       const url = "https://test.dev/tasks";
       const router = server
         ? await loadRouter(routes, url)
-        : createRouter(routes, { url });
+        : createDataRouter(routes, { url });
 
       if (!server) await router.navigate("/tasks");
 
@@ -521,7 +585,7 @@ for (const server of [false, true]) {
 }
 
 it("keeps fetchers independent from a hydrated page error", () => {
-  const router = createRouter([], {
+  const router = createDataRouter([], {
     hydrationData: {
       url: "https://test.dev/",
       params: {},
@@ -576,7 +640,9 @@ it("does not reload a completed SSR loader just because it returned undefined", 
     },
   });
   const server = await loadRouter([route], "https://test.dev/");
-  const client = createRouter([route], { hydrationData: server.getSnapshot() });
+  const client = createDataRouter([route], {
+    hydrationData: server.getSnapshot(),
+  });
   const stop = client.start();
 
   await Promise.resolve();
@@ -594,7 +660,7 @@ it("cancels a fetcher through action revalidation when the router is disposed", 
   const started = deferred<void>();
   let loads = 0;
   let actionSignal: AbortSignal | undefined;
-  const router = createRouter([
+  const router = createDataRouter([
     defineRoute("/", {
       loader: () => {
         if (loads++ === 0) return "initial";
@@ -630,10 +696,40 @@ it("cancels a fetcher through action revalidation when the router is disposed", 
   expect(router.getSnapshot().data).toBe("initial");
 });
 
+it("settles a fetcher after an action redirects to another route", async () => {
+  const router = createDataRouter([
+    defineRoute("/", { loader: () => "initial" }),
+    defineRoute("/save", { action: () => redirect("/done") }),
+    defineRoute("/done", { loader: () => "saved page" }),
+  ]);
+
+  await router.navigate("/");
+
+  const fetcher = router.createFetcher();
+
+  await fetcher.load("/");
+
+  const states: string[] = [];
+
+  fetcher.subscribe(() => states.push(fetcher.getSnapshot().state));
+
+  const result = await fetcher.submit("/save", body());
+
+  expect(result.data).toBeInstanceOf(Response);
+  expect(states).toEqual(["submitting", "idle"]);
+  expect(fetcher.getSnapshot().data).toBe("initial");
+  expect(fetcher.getSnapshot().error).toBeUndefined();
+  expect(router.getSnapshot().url).toBe("http://localhost/done");
+  expect(router.getSnapshot().data).toBe("saved page");
+  expect(router.getSnapshot().state).toBe("idle");
+
+  router.dispose();
+});
+
 it("does not notify a stale fetcher after its redirect finishes", async () => {
   const destination = deferred<string>();
   const started = deferred<void>();
-  const router = createRouter([
+  const router = createDataRouter([
     defineRoute("/redirect", { loader: () => redirect("/slow") }),
     defineRoute("/slow", {
       loader: () => {
@@ -667,7 +763,7 @@ for (const revalidate of [true, false]) {
     const started = deferred<void>();
     const loaded = deferred<string>();
     let reads = 0;
-    const router = createRouter([
+    const router = createDataRouter([
       defineRoute("/", {
         loader: () => {
           if (reads++ === 0) return "initial";
@@ -721,7 +817,7 @@ it("hydrates an undefined server result without invoking the paired client loade
     },
   });
   const server = await loadRouter([route], "https://test.dev/");
-  const client = createRouter([route], {
+  const client = createDataRouter([route], {
     hydrationData: JSON.parse(serialize(server.getSnapshot())),
   });
   const stop = client.start();
@@ -742,7 +838,7 @@ it("disposing one fetcher leaves another request active", async () => {
   const firstResult = deferred<string>();
   const secondResult = deferred<string>();
   const signals = new Map<string, AbortSignal>();
-  const router = createRouter([
+  const router = createDataRouter([
     defineRoute("/:id", {
       loader: ({ params, signal }) => {
         signals.set(params.id, signal);
@@ -787,7 +883,7 @@ it("disposing one fetcher leaves another request active", async () => {
 it("lets an active route retain data across navigation without skipping first visits", async () => {
   let reads = 0;
   const decisions: string[][] = [];
-  const router = createRouter([
+  const router = createDataRouter([
     defineRoute("/items/:id", {
       loader: ({ params }) => ({ id: params.id, reads: ++reads }),
       shouldRevalidate: ({ currentUrl, nextUrl, reason }) => {
@@ -845,7 +941,7 @@ it("lets an active route retain data across navigation without skipping first vi
 
 it("does not skip a destination loader while an earlier navigation is pending", async () => {
   const pending = deferred<string>();
-  const router = createRouter([
+  const router = createDataRouter([
     defineRoute("/items/:id", {
       loader: ({ params }) =>
         params.id === "1" ? pending.promise : "Second item",
@@ -866,7 +962,7 @@ it("does not skip a destination loader while an earlier navigation is pending", 
 
 it("retries failed navigation even when a route opts out of revalidation", async () => {
   let reads = 0;
-  const router = createRouter([
+  const router = createDataRouter([
     defineRoute("/", {
       loader: () =>
         ++reads === 1 ? new Error("Temporary failure") : "Recovered",
@@ -884,4 +980,363 @@ it("retries failed navigation even when a route opts out of revalidation", async
   expect(router.getSnapshot().error).toBeUndefined();
 
   router.dispose();
+});
+
+describe("targeted revalidation", () => {
+  it("selects route IDs or path patterns without navigating", async () => {
+    let pageLoads = 0;
+    let itemLoads = 0;
+    const router = createDataRouter([
+      { path: "/", id: "home", loader: () => ++pageLoads },
+      { path: "/items/:id", id: "item", loader: () => ++itemLoads },
+    ]);
+    const fetcher = router.createFetcher();
+
+    await router.navigate("/");
+    await fetcher.load("/items/42");
+    await router.revalidate({ route: "item" });
+
+    expect(pageLoads).toBe(1);
+    expect(fetcher.getSnapshot().data).toBe(2);
+    expect(router.getSnapshot().url).toBe("http://localhost/");
+
+    await router.revalidate({ route: "/items/:id" });
+    expect(itemLoads).toBe(3);
+
+    await router.revalidate({ route: ["home", "item"] });
+    expect(pageLoads).toBe(2);
+    expect(itemLoads).toBe(4);
+
+    fetcher.dispose();
+    await router.revalidate({ route: "item" });
+    expect(itemLoads).toBe(4);
+    router.dispose();
+  });
+
+  it("targets routes without IDs by path without matching empty targets", async () => {
+    let loads = 0;
+    const router = createDataRouter([
+      defineRoute("/", { loader: () => ++loads }),
+    ]);
+
+    await router.navigate("/");
+    await router.revalidate({ route: ["", "unknown"] });
+
+    expect(loads).toBe(1);
+
+    await router.revalidate({ route: "/" });
+
+    expect(loads).toBe(2);
+    expect(router.getSnapshot().data).toBe(2);
+    expect(router.getSnapshot().url).toBe("http://localhost/");
+
+    router.dispose();
+  });
+
+  it("respects shouldRevalidate and ignores inactive or unknown targets", async () => {
+    let loads = 0;
+    const router = createDataRouter([
+      { path: "/", loader: () => ++loads, shouldRevalidate: () => false },
+      { path: "/inactive", loader: () => ++loads },
+    ]);
+
+    await router.navigate("/");
+    await router.revalidate({ route: ["/", "/inactive", "missing"] });
+    expect(loads).toBe(1);
+    router.dispose();
+  });
+
+  it("starts every selected revalidator even when one fails synchronously", async () => {
+    const router = createDataRouter([]);
+    const calls: string[] = [];
+
+    router.registerRevalidator("broken", () => JSON.parse("{"));
+    router.registerRevalidator("root", () => {
+      calls.push("root");
+    });
+
+    await expect(
+      router.revalidate({ route: ["broken", "root"] }),
+    ).rejects.toBeInstanceOf(SyntaxError);
+
+    expect(calls).toEqual(["root"]);
+    router.dispose();
+  });
+
+  it("keeps each refresh stable when callbacks change the registrations", async () => {
+    const router = createDataRouter([]);
+    const calls: string[] = [];
+    const unregisterRoot = router.registerRevalidator("root", () => {
+      calls.push("root");
+      unregisterRoot();
+      unregisterLayout();
+
+      router.registerRevalidator("replacement", () => {
+        calls.push("replacement");
+      });
+    });
+    const unregisterLayout = router.registerRevalidator("layout", () => {
+      calls.push("layout");
+    });
+
+    await router.revalidate();
+
+    expect(calls).toEqual(["root", "layout"]);
+
+    await router.revalidate();
+
+    expect(calls).toEqual(["root", "layout", "replacement"]);
+    router.dispose();
+  });
+
+  it("registers and unregisters root or layout data independently", async () => {
+    const calls: string[] = [];
+    const router = createDataRouter([
+      { path: "/", loader: () => calls.push("page") },
+    ]);
+    const unregister = router.registerRevalidator("root", () => {
+      calls.push("root");
+    });
+
+    await router.navigate("/");
+    await router.revalidate({ route: "root" });
+    expect(calls).toEqual(["page", "root"]);
+
+    unregister();
+    await router.revalidate({ route: "root" });
+    expect(calls).toEqual(["page", "root"]);
+    router.dispose();
+  });
+});
+
+it("keeps a newer fetcher action protected when an older revalidation finishes", async () => {
+  const rootPending = deferred<void>();
+  const rootStarted = deferred<void>();
+  const secondPending = deferred<string>();
+  const secondStarted = deferred<void>();
+  let reads = 0;
+  let actions = 0;
+  let secondSignal: AbortSignal | undefined;
+  const router = createDataRouter([
+    defineRoute("/", {}),
+    defineRoute("/item", { loader: () => ++reads }),
+    defineRoute("/change", {
+      action: ({ signal }) => {
+        if (++actions === 1) return "first";
+
+        secondSignal = signal;
+        secondStarted.resolve();
+
+        return secondPending.promise;
+      },
+    }),
+  ]);
+  const fetcher = router.createFetcher();
+
+  router.registerRevalidator("root", () => {
+    rootStarted.resolve();
+
+    return rootPending.promise;
+  });
+
+  await fetcher.load("/item");
+  const first = fetcher.submit("/change", body());
+  await rootStarted.promise;
+
+  const second = fetcher.submit("/change", body());
+  await secondStarted.promise;
+
+  rootPending.resolve();
+  await first;
+  await router.revalidate({ route: "/item" });
+
+  expect(reads).toBe(1);
+  expect(secondSignal?.aborted).toBe(false);
+  expect(fetcher.getSnapshot().state).toBe("submitting");
+
+  secondPending.resolve("second");
+  await second;
+
+  expect(fetcher.getSnapshot().data).toBe("second");
+  expect(fetcher.getSnapshot().state).toBe("idle");
+  router.dispose();
+});
+
+it("protects an action started by a fetcher completion subscriber", async () => {
+  const pending = deferred<string>();
+  const started = deferred<void>();
+  let reads = 0;
+  let actionSignal: AbortSignal | undefined;
+  const router = createDataRouter([
+    defineRoute("/", {}),
+    defineRoute("/item", { loader: () => ++reads }),
+    defineRoute("/change", {
+      action: ({ signal }) => {
+        actionSignal = signal;
+        started.resolve();
+
+        return pending.promise;
+      },
+    }),
+  ]);
+  const fetcher = router.createFetcher();
+  let action: Promise<unknown> | undefined;
+
+  await fetcher.load("/item");
+
+  const unsubscribe = fetcher.subscribe(() => {
+    const snapshot = fetcher.getSnapshot();
+
+    if (snapshot.state === "idle" && snapshot.data === 2) {
+      unsubscribe();
+      action = fetcher.submit("/change", body());
+    }
+  });
+
+  await fetcher.load("/item");
+  await started.promise;
+  await router.revalidate({ route: "/item" });
+
+  expect(reads).toBe(2);
+  expect(actionSignal?.aborted).toBe(false);
+  expect(fetcher.getSnapshot().state).toBe("submitting");
+
+  pending.resolve("complete");
+  await action;
+
+  expect(fetcher.getSnapshot().data).toBe("complete");
+  router.dispose();
+});
+
+it("leaves pending navigation untouched when revalidation excludes or declines it", async (context) => {
+  const pending = deferred<string>();
+  const signals: AbortSignal[] = [];
+  let decisions = 0;
+  let updates = 0;
+  const router = createDataRouter([
+    defineRoute("/slow", {
+      id: "slow",
+      loader: ({ signal }) => {
+        signals.push(signal);
+
+        return pending.promise;
+      },
+      shouldRevalidate: () => {
+        decisions++;
+
+        return false;
+      },
+    }),
+  ]);
+
+  context.onTestFinished(() => router.dispose());
+  router.subscribe(() => updates++);
+  const navigation = router.navigate("/slow");
+
+  await Promise.resolve();
+  expect(signals).toHaveLength(1);
+  const snapshot = router.getSnapshot();
+  const before = updates;
+
+  await router.revalidate({ route: "unrelated" });
+  expect(decisions).toBe(0);
+
+  await router.revalidate({ route: "slow" });
+  expect(decisions).toBe(1);
+  expect(signals[0].aborted).toBe(false);
+  expect(router.getSnapshot()).toBe(snapshot);
+  expect(updates).toBe(before);
+
+  pending.resolve("finished");
+  await navigation;
+
+  expect(router.getSnapshot()).toMatchObject({
+    data: "finished",
+    state: "idle",
+  });
+  expect(signals).toHaveLength(1);
+});
+
+it("settles a fetcher after rejected revalidation and allows later refreshes", async (context) => {
+  let loads = 0;
+  const failure = Error("Root refresh failed");
+  const router = createDataRouter([
+    defineRoute("/", {
+      loader: () => ++loads,
+      action: () => "saved",
+    }),
+  ]);
+  const fetcher = router.createFetcher();
+
+  context.onTestFinished(() => router.dispose());
+  await router.navigate("/");
+  await fetcher.load("/");
+  const unregister = router.registerRevalidator("root", () =>
+    Promise.reject(failure),
+  );
+
+  await expect(fetcher.submit("/", body())).rejects.toBe(failure);
+  expect(fetcher.getSnapshot()).toMatchObject({ state: "idle", data: "saved" });
+
+  unregister();
+  const before = loads;
+  await router.revalidate();
+
+  expect(loads).toBe(before + 2);
+  expect(fetcher.getSnapshot().state).toBe("idle");
+  expect(fetcher.getSnapshot().data).toBeTypeOf("number");
+});
+
+it("does not reload initialized page data when starting after revalidation", async (context) => {
+  let loads = 0;
+  const router = createDataRouter([
+    defineRoute("/", { loader: () => ++loads }),
+  ]);
+  context.onTestFinished(router.dispose);
+
+  await router.revalidate();
+  const snapshot = router.getSnapshot();
+  const stop = router.start();
+  context.onTestFinished(stop);
+  await Promise.resolve();
+
+  expect(loads).toBe(1);
+  expect(router.getSnapshot()).toBe(snapshot);
+});
+
+it("keeps a completed page action's route when the provider starts", async (context) => {
+  const router = createDataRouter([
+    defineRoute("/", { loader: () => "Home" }),
+    defineRoute("/edit", {
+      loader: () => "Edited page",
+      action: () => "Saved",
+    }),
+  ]);
+  context.onTestFinished(router.dispose);
+
+  await router.submit("/edit", body());
+  const snapshot = router.getSnapshot();
+  const stop = router.start();
+  context.onTestFinished(stop);
+  await Promise.resolve();
+
+  expect(router.getSnapshot()).toBe(snapshot);
+  expect(snapshot.url).toBe("http://localhost/edit");
+  expect(snapshot.actionData).toBe("Saved");
+});
+
+it("still loads the page after only an independent fetcher has loaded", async (context) => {
+  let pageLoads = 0;
+  const router = createDataRouter([
+    defineRoute("/", { loader: () => ++pageLoads }),
+    defineRoute("/preview", { loader: () => "Preview" }),
+  ]);
+  context.onTestFinished(router.dispose);
+
+  await router.createFetcher().load("/preview");
+  const stop = router.start();
+  context.onTestFinished(stop);
+  await Promise.resolve();
+
+  expect(pageLoads).toBe(1);
 });

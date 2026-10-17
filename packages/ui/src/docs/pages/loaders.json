@@ -7,17 +7,17 @@
     {
       "title": "Define the read once",
       "body": "A loader receives the URL, decoded path params, and a cancellation signal. Return the data the view needs. clientLoader runs in the browser; a server loader runs on the server when connected through the Vite integration or serverRoute. A plain manually registered function executes in the environment where that router runs.",
-      "code": "// routes/tasks.$id/loader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\nimport { tasks } from \"../../data/tasks\";\n\nexport async function clientLoader({ params, signal }: DataArgs) {\n  return tasks.read(params.id, { signal });\n}"
+      "code": "// routes/tasks.$id/clientLoader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\nimport { tasks } from \"../../data/tasks\";\n\nexport async function clientLoader({ params, signal }: DataArgs) {\n  return tasks.read(params.id, { signal });\n}"
     },
     {
       "title": "Register and render the route",
       "body": "Manual registration associates a URL pattern with the module. File routing derives /tasks/:id from tasks.$id/route.ts. Export the handler and view from that module. The tasks service above is application code: its read method returns a typed task or an Error.",
-      "code": "// routes/tasks.$id/route.ts\nexport { clientLoader } from \"./loader\";\nexport { default } from \"./view\";\nexport { HydrateFallback } from \"./fallback\";\n\n// router.ts\nimport { createRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as task from \"./routes/tasks.$id/route\";\n\nexport const router = createRouter([defineRoute(\"/tasks/:id\", task)], {\n  browser: true,\n});"
+      "code": "// routes/tasks.$id/route.ts\nexport { clientLoader } from \"./clientLoader\";\nexport { default } from \"./view\";\nexport { HydrateFallback } from \"./HydrateFallback\";\n\n// router.ts\nimport { createDataRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as task from \"./routes/tasks.$id/route\";\n\nexport const router = createDataRouter([defineRoute(\"/tasks/:id\", task)], {\n  browser: true,\n});"
     },
     {
       "title": "Consume the inferred result",
       "body": "typeof connects the hook to the handler return type without importing that handler at runtime. File proximity alone does not supply a generic type to TypeScript. Passing a typed route definition to useLoaderData is the alternative that infers the result from an argument.",
-      "code": "// routes/tasks.$id/view.tsx\nimport { useLoaderData } from \"@kasperrt/smolter/react\";\nimport type { clientLoader } from \"./loader\";\n\nexport default function Task() {\n  const task = useLoaderData<typeof clientLoader>();\n\n  return <h1>{task?.title}</h1>;\n}"
+      "code": "// routes/tasks.$id/view.tsx\nimport { useLoaderData } from \"@kasperrt/smolter/react\";\nimport type { clientLoader } from \"./clientLoader\";\n\nexport default function Task() {\n  const task = useLoaderData<typeof clientLoader>();\n\n  return <h1>{task?.title}</h1>;\n}"
     },
     {
       "title": "Query strings belong to request.url",
@@ -32,7 +32,7 @@
     {
       "title": "Server loader with a client wrapper",
       "body": "Keep loader and clientLoader as separate named exports. During SSR the server loader supplies the HTML data. Later browser loads use clientLoader, which may call serverLoader. A hydrated loaded snapshot avoids an automatic duplicate initial read. A client-only route with no server data loads in the browser.",
-      "code": "// client-loader.ts\nimport type { ClientLoaderArgs } from \"@kasperrt/smolter/react\";\nimport type { loader } from \"./loader\";\n\nexport async function clientLoader({\n  serverLoader,\n}: ClientLoaderArgs<typeof loader>) {\n  const data = await serverLoader();\n\n  return { ...data, compact: localStorage.getItem(\"compact\") === \"true\" };\n}\n\n// route.ts\nexport { loader } from \"./loader\";\nexport { clientLoader } from \"./client-loader\";\nexport { default } from \"./view\";"
+      "code": "// clientLoader.ts\nimport type { ClientLoaderArgs } from \"@kasperrt/smolter/react\";\nimport type { loader } from \"./loader\";\n\nexport async function clientLoader({\n  serverLoader,\n}: ClientLoaderArgs<typeof loader>) {\n  const data = await serverLoader();\n\n  return { ...data, compact: localStorage.getItem(\"compact\") === \"true\" };\n}\n\n// route.ts\nexport { loader } from \"./loader\";\nexport { clientLoader } from \"./clientLoader\";\nexport { default } from \"./view\";"
     },
     {
       "title": "Load without navigating",

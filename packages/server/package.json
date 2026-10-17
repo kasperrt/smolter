@@ -5,9 +5,11 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./http": "./src/http.ts"
   },
   "dependencies": {
-    "@smolter/core": "workspace:*"
+    "@smolter/core": "workspace:*",
+    "@smolter/preact": "workspace:*"
   }
 }

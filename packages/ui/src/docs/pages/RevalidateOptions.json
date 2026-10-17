@@ -1,0 +1,13 @@
+{
+  "slug": "RevalidateOptions",
+  "title": "RevalidateOptions",
+  "summary": "Select route data to refresh.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "route accepts one route ID or registered path pattern, or an array. Omitting route selects the active page, loaded fetchers, and registered layouts. reason defaults to manual. The mutation context fields are optional. Inactive routes and unknown targets do nothing. shouldRevalidate remains in control.",
+      "code": "import type { RevalidateOptions } from \"@kasperrt/smolter/react\";\n\nconst options: RevalidateOptions = { route: [\"root\", \"/tasks/:id\"] };\nawait router.revalidate(options);"
+    }
+  ]
+}

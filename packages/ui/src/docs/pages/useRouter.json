@@ -1,7 +1,7 @@
 {
   "slug": "useRouter",
   "title": "useRouter",
-  "summary": "Access the provider’s Router instance.",
+  "summary": "Access the provider\u2019s Router instance.",
   "kind": "API",
   "sections": [
     {
@@ -11,7 +11,7 @@
     },
     {
       "title": "Returns",
-      "body": "The current Router.",
+      "body": "The current router instance. The default type exposes navigation methods supported by both factories. With a data router provider, useRouter<Router>() exposes its full typed API; Router is the data-router interface. Prefer useFetcher or useRevalidator for reactive data operations.",
       "code": ""
     },
     {

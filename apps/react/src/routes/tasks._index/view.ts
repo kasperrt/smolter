@@ -1,10 +1,10 @@
 import { Link, useFetcher, useLoaderData } from "@kasperrt/smolter/react";
+import { siteHref } from "@smolter/ui/hosting";
 import { ui } from "@smolter/ui/react";
 import { createElement as h } from "react";
-import { siteHref } from "../../../../../scripts/site-history";
-import type { clientLoader as taskLoader } from "../tasks.$id/loader";
-import type { clientAction } from "./action";
-import type { clientLoader } from "./loader";
+import type { clientLoader as taskLoader } from "../tasks.$id/clientLoader";
+import type { clientAction } from "./clientAction";
+import type { clientLoader } from "./clientLoader";
 
 export default function Tasks() {
   const data = useLoaderData<typeof clientLoader>();

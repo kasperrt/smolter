@@ -5,8 +5,13 @@
 
 import type { Route as RouteDefinition, RouteModule } from "@smolter/core";
 import { useRouter, useSnapshot } from "./context.ts";
-import type { ComponentType, ReactNode } from "./runtime.ts";
-import { createElement, useMemo } from "./runtime.ts";
+
+import {
+  type ComponentType,
+  createElement,
+  type ReactNode,
+  useMemo,
+} from "./runtime.ts";
 
 /** Renderable route module with optional loading and error components. */
 export interface ViewModule extends RouteModule {
@@ -25,17 +30,20 @@ export interface RoutesProps {
   fallback?: ReactNode;
 }
 /** Renders the first matching registered module. */
-export function Routes({ fallback = null }: RoutesProps): ReactNode {
+export function Routes({ fallback }: RoutesProps): ReactNode {
   const router = useRouter();
-  const state = useSnapshot((snapshot) => snapshot);
+  const state = useSnapshot();
   const module = router.routes.find((route) => route.path === state.path) as
     | RouteDefinition<ViewModule>
     | undefined;
-  const component = state.error
-    ? module?.ErrorBoundary
-    : state.state === "loading" && !state.loaded
-      ? module?.HydrateFallback
-      : module?.default;
+  const component =
+    module?.[
+      state.error
+        ? "ErrorBoundary"
+        : state.state === "loading" && !state.loaded
+          ? "HydrateFallback"
+          : "default"
+    ];
 
   const element = useMemo(
     () =>

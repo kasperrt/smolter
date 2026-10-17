@@ -1,0 +1,28 @@
+{
+  "slug": "RouterApplication",
+  "title": "RouterApplication",
+  "summary": "Connect a router, flat route manifest, root data, and root components.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Pass router, routes, and root. Optional rootModule supplies the root page, Layout, metadata, links, and error boundary. entry is the browser script URL used by Scripts. document enables the root Layout for document rendering. An optional rootStore supplies a reusable root data store.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Provides RouterProvider and application context around the root page. When the root module has no default component, it renders Outlet. For document rendering, supply a Layout; document mode renders through that component.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "This lower-level component is useful when the application owns router construction. mountApplication handles browser mounting and hydration, and renderApplication handles server requests.",
+      "code": "import { createDataRouter, RouterApplication } from \"@kasperrt/smolter/preact\";\nimport { render } from \"preact\";\nimport * as rootModule from \"./root\";\nimport { routes } from \"./routes\";\n\nconst router = createDataRouter(routes, { browser: true });\nconst container = document.getElementById(\"root\")!;\n\nrender(\n  <RouterApplication router={router} routes={routes} root={undefined} rootModule={rootModule} />,\n  container,\n);"
+    },
+    {
+      "title": "Responsibilities",
+      "body": "The component supplies context and observes the router; it does not itself load root data, install retained navigation, or configure transport endpoints. Use the mounting helpers for those integrations. It chooses the root ErrorBoundary when a snapshot has an error and the active route has no own boundary. In a manually constructed browser entry, both the routes and root module must be browser-safe; importing a server loader module directly does not automatically remove its dependencies.",
+      "code": ""
+    }
+  ]
+}

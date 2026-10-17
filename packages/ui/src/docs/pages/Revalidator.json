@@ -1,0 +1,13 @@
+{
+  "slug": "Revalidator",
+  "title": "Revalidator",
+  "summary": "Callback for registered layout data.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Receives RevalidationArgs when selected explicitly by ID or during a full revalidation. Return a promise to make revalidate await the refresh. The callback owns its data update, cancellation, and shouldRevalidate decision. Unregister when the layout is removed.",
+      "code": "const unregister = router.registerRevalidator(\"account\", async (args) => {\n  if (shouldRevalidate(args)) await refreshAccount();\n});\n\nawait router.revalidate({ route: \"account\" });\nunregister();"
+    }
+  ]
+}

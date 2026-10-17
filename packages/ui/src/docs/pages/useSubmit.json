@@ -1,0 +1,28 @@
+{
+  "slug": "useSubmit",
+  "title": "useSubmit",
+  "summary": "Submit programmatically through the page router.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "The hook takes no arguments and requires RouterProvider. Its returned function accepts a Submission and SubmissionOptions. Use a registered route URL in options.action; the default is the current snapshot URL.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "For GET, returns the navigation promise. For POST, PUT, PATCH, or DELETE, returns the router submission promise with a Result. Methods are normalized to uppercase and default to POST. Page action results are read through useActionData; independent forms should generally use useFetcher instead.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "An imperative GET replaces the destination query string with the submitted fields and navigates to that route\u2019s loader.",
+      "code": "import { useSubmit } from \"@kasperrt/smolter/preact\";\n\nexport function SearchShortcut() {\n  const submit = useSubmit();\n\n  return (\n    <button onClick={() => void submit({ q: \"routing\" }, {\n      action: \"/search\",\n      method: \"GET\",\n      replace: true,\n    })}>\n      Search routing\n    </button>\n  );\n}"
+    },
+    {
+      "title": "Body encoding and navigation options",
+      "body": "FormData is preserved, an HTMLFormElement becomes FormData, and object fields are stringified. application/json encoding stores JSON in a _payload form field for readSubmission. Pass action and method explicitly when submitting a form element: its HTML action, method, and clicked submit button are not inspected here. replace and preventScrollReset are forwarded for GET navigation; they are not forwarded by this hook for mutations.",
+      "code": ""
+    }
+  ]
+}

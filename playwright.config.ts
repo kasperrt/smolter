@@ -7,7 +7,7 @@ export default defineConfig({
   testMatch: "**/*.spec.ts",
   use: { baseURL: `http://127.0.0.1:${port}` },
   webServer: {
-    command: `SMOLTER_PORT=${port} node scripts/dev.mjs`,
+    command: `SMOLTER_PORT=${port} pnpm --parallel --filter "@smolter/example-*" dev`,
     url: `http://127.0.0.1:${port + 3}`,
     reuseExistingServer: !process.env.CI,
   },

@@ -1,0 +1,28 @@
+{
+  "slug": "useNavigation",
+  "title": "useNavigation",
+  "summary": "Observe page-level pending state without mixing it with independent fetcher state.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Takes no arguments and requires RouterProvider. The application mounting helpers also install retained-view navigation, which exposes the pending destination.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns { state, location }. state is idle, loading, or submitting. location is the pending URL when retained-view navigation is installed, otherwise undefined. It is also undefined after the underlying request reaches idle; a view transition may still be finishing its visual commit.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Use page navigation state for page-level feedback. A fetcher has its own state and should render its own pending feedback.",
+      "code": "import { useNavigation } from \"@kasperrt/smolter/preact\";\n\nexport function NavigationStatus() {\n  const navigation = useNavigation();\n  const busy = navigation.state !== \"idle\";\n\n  return <span role=\"status\">{busy ? \"Updating page\u2026\" : \"\"}</span>;\n}"
+    },
+    {
+      "title": "Retained views",
+      "body": "During a retained navigation, the displayed page and its data remain together until the destination can commit. Use location for the pending destination when present; useURLLocation describes the visible snapshot. This hook does not expose formData, formMethod, or a nested match list.",
+      "code": ""
+    }
+  ]
+}

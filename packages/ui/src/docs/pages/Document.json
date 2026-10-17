@@ -1,0 +1,28 @@
+{
+  "slug": "Document",
+  "title": "Document",
+  "summary": "Render the SSR document and reconcile its client-side language and theme classes.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Accepts DocumentProps: HTML attributes and children, plus an optional boolean data-debug attribute. Pass an explicit lang value for accessible server markup.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "On the server, renders an html element with the supplied attributes and children. In the browser, returns the children without creating another html element.",
+      "code": ""
+    },
+    {
+      "title": "Root layout",
+      "body": "Use Document in the root module's Layout component. Keep metadata, links, and hydration scripts in that layout so the server and browser render the same document structure.",
+      "code": "import { Document, Links, Meta, Scripts } from \"@kasperrt/smolter/preact/document\";\nimport type { DocumentProps } from \"@kasperrt/smolter/preact/document\";\n\nexport function Layout({ children }: DocumentProps) {\n  return (\n    <Document lang=\"en\" className=\"app\">\n      <head>\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        {children}\n        <Scripts />\n      </body>\n    </Document>\n  );\n}"
+    },
+    {
+      "title": "Hydration and subsequent changes",
+      "body": "Hydration preserves classes that a theme bootstrap already added to document.documentElement. When className changes later, Document removes classes from the previous prop and adds the new ones, leaving unrelated classes intact. It also updates lang and data-debug. Other HTML attributes are forwarded during server rendering but are not synchronized by the browser effect.",
+      "code": ""
+    }
+  ]
+}

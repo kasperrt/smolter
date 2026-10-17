@@ -1,9 +1,9 @@
 import { Link, useFetcher, useLoaderData } from "@kasperrt/smolter/preact";
+import { siteHref } from "@smolter/ui/hosting";
 import { ui } from "@smolter/ui/preact";
 import { h } from "preact";
-import { siteHref } from "../../../../../scripts/site-history";
-import type { clientAction } from "./action";
-import type { clientLoader } from "./loader";
+import type { clientAction } from "./clientAction";
+import type { clientLoader } from "./clientLoader";
 
 export default function Task() {
   const data = useLoaderData<typeof clientLoader>();

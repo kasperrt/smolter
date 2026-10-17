@@ -1,0 +1,28 @@
+{
+  "slug": "ScrollRestoration",
+  "title": "ScrollRestoration",
+  "summary": "Restore saved history positions and scroll new pages after their DOM commits.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Accepts ScriptProps for compatibility, but currently does not use nonce or render a script. Requires application context and the navigation integration that records history keys and scroll positions.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Renders nothing. While mounted, sets history.scrollRestoration to manual and restores the previous setting when unmounted.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Mount once in the root document layout, alongside the application content. mountApplication supplies the navigation integration.",
+      "code": "import { ScrollRestoration, Scripts } from \"@kasperrt/smolter/preact/document\";\n\nexport function DocumentFooter() {\n  return (\n    <>\n      <ScrollRestoration />\n      <Scripts />\n    </>\n  );\n}"
+    },
+    {
+      "title": "Restoration order",
+      "body": "Waits for an idle snapshot with the committed history key, then schedules a frame so lazy views can finish mounting. A saved POP position takes precedence. Otherwise a hash target scrolls into view; without one, preventScrollReset preserves the current position, and ordinary navigation scrolls to [0, 0]. Positions are held in memory for this router rather than persisted across document reloads.",
+      "code": ""
+    }
+  ]
+}

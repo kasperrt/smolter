@@ -41,7 +41,7 @@ export function Source() {
 }
 
 function routeName(path: string) {
-  if (path === "/") return "_index";
+  if (path === "/examples/counter") return "examples.counter";
 
   if (path === "/tasks") return "tasks._index";
 
@@ -49,5 +49,5 @@ function routeName(path: string) {
 
   if (path.startsWith("/tasks/")) return "tasks.$id";
 
-  return "about";
+  return "_index";
 }

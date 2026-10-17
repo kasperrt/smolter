@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 5176",
+    "dev": "vite --host 127.0.0.1",
     "build": "vite build && vite build --ssr src/server.ts --outDir dist/server",
     "start": "node server/start.mjs"
   },

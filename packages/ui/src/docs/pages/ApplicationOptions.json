@@ -1,0 +1,13 @@
+{
+  "slug": "ApplicationOptions",
+  "title": "ApplicationOptions",
+  "summary": "Server/application integration contract.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "This type describes the optional server or Vite integration. See the Express and virtual routes guides for complete usage. It is not a browser runtime dependency.",
+      "code": "interface ApplicationOptions {\n  directory?: string;\n  ssr?: boolean;\n  splitRoutes?: boolean;\n  resourceRequest?: (url: string) => boolean;\n}"
+    }
+  ]
+}

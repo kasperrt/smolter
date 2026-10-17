@@ -1,0 +1,28 @@
+{
+  "slug": "Scripts",
+  "title": "Scripts",
+  "summary": "Emit the initial hydration payload and browser module entry.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Accepts ScriptProps with an optional nonce. Requires application context containing the router, root data, and optional entry URL.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Renders an inline bootstrap script from the configured application entryScript, then an application/json script with id smolter-data containing { root, snapshot }. If entry is present, also renders a type=\"module\" script with that URL. The nonce is applied to all emitted scripts.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Render Scripts once near the end of the root document body. Use the server-provided deployed entry URL through renderApplication or the application integration.",
+      "code": "import { Scripts } from \"@kasperrt/smolter/preact/document\";\n\nexport function BrowserBootstrap() {\n  return <Scripts />;\n}"
+    },
+    {
+      "title": "Hydration contract",
+      "body": "The payload is captured once for this mounted document and does not change after navigation or revalidation. It describes the initial SSR view. Error name and message are preserved with enumerable error fields; non-enumerable stack and cause are not copied. serializeData escapes characters that could break a script element. The application owns what data it makes available to the browser.",
+      "code": ""
+    }
+  ]
+}

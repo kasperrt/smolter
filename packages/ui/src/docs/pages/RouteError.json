@@ -1,0 +1,18 @@
+{
+  "slug": "RouteError",
+  "title": "RouteError",
+  "summary": "An Error with normalized HTTP response details.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Extends Error with status, statusText, and optional data. Use isRouteErrorResponse to narrow an unknown failure before reading those fields.",
+      "code": "import type { RouteError } from \"@kasperrt/smolter/preact\";\n\nexport function errorTitle(error: RouteError): string {\n  return `${error.status} ${error.statusText}: ${error.message}`;\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Not every loader failure is an HTTP error. Ordinary Error values have no guaranteed status. JSON action validation data returned through data(...) remains action data rather than automatically becoming a RouteError.",
+      "code": ""
+    }
+  ]
+}

@@ -1,18 +1,17 @@
 {
-  "name": "smolter-workspace",
-  "private": true,
+  "name": "@kasperrt/smolter",
   "packageManager": "pnpm@11.8.0",
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "dev": "pnpm build && node scripts/dev.mjs",
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "dev": "pnpm build && pnpm --parallel --filter \"@smolter/example-*\" dev",
     "fix": "biome check --write .",
     "lint": "biome check .",
     "typecheck": "pnpm build && tsc --noEmit",
     "test": "pnpm build && vitest run --project unit",
     "coverage": "pnpm build && vitest run --coverage",
     "smoke": "playwright test",
-    "size": "node scripts/size.mjs",
+    "size": "pnpm build && node scripts/size.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size",
     "version:patch": "node scripts/version.mjs patch",
     "version:minor": "node scripts/version.mjs minor",
@@ -21,7 +20,7 @@
     "build:examples": "pnpm --filter \"@smolter/example-*\" build",
     "smoke:production": "node scripts/production-smoke.mjs",
     "jsr:check": "node scripts/jsr.mjs",
-    "build:site": "node scripts/build-site.mjs",
+    "build:site": "vite build --config apps/site/vite.config.ts && pnpm --filter @smolter/example-react build --mode hosted && pnpm --filter @smolter/example-preact build --mode hosted",
     "smoke:site": "node scripts/site-smoke.mjs",
     "docs:badges": "node scripts/readme-badges.mjs",
     "docs:reference": "pnpm build && node scripts/docs-reference.mjs",
@@ -56,5 +55,123 @@
     "vitest": "5.0.5",
     "wouter": "3.13.0",
     "wouter-preact": "3.13.0"
+  },
+  "version": "0.3.0",
+  "description": "A tiny typed data router for React and Preact.",
+  "sideEffects": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kasperrt/smolter.git"
+  },
+  "exports": {
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
+    },
+    "./preact": {
+      "types": "./dist/preact/index.d.ts",
+      "import": "./dist/preact/index.js"
+    },
+    "./react/server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.js"
+    },
+    "./preact/server": {
+      "types": "./dist/server/preact.d.ts",
+      "import": "./dist/server/preact.js"
+    },
+    "./react/client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js"
+    },
+    "./preact/client": {
+      "types": "./dist/preact/client.d.ts",
+      "import": "./dist/preact/client.js"
+    },
+    "./react/vite": {
+      "types": "./dist/vite/react.d.ts",
+      "import": "./dist/vite/react.js"
+    },
+    "./preact/vite": {
+      "types": "./dist/vite/preact.d.ts",
+      "import": "./dist/vite/preact.js"
+    },
+    "./utils": {
+      "types": "./dist/core/utils.d.ts",
+      "import": "./dist/core/utils.js"
+    },
+    "./utils/http": {
+      "types": "./dist/server/node.d.ts",
+      "import": "./dist/server/node.js"
+    },
+    "./utils/assets": {
+      "types": "./dist/server/assets.d.ts",
+      "import": "./dist/server/assets.js"
+    },
+    "./utils/responses": {
+      "types": "./dist/core/responses.d.ts",
+      "import": "./dist/core/responses.js"
+    },
+    "./react/data": {
+      "types": "./dist/react/data.d.ts",
+      "import": "./dist/react/data.js"
+    },
+    "./preact/lazy-route": {
+      "types": "./dist/preact/lazy-route.d.ts",
+      "import": "./dist/preact/lazy-route.js"
+    },
+    "./preact/document": {
+      "types": "./dist/preact/document.d.ts",
+      "import": "./dist/preact/document.js"
+    }
+  },
+  "files": [
+    "dist",
+    ".generated",
+    "README.md",
+    "LICENSE",
+    "jsr.json",
+    "CHANGELOG.md"
+  ],
+  "peerDependencies": {
+    "react": ">=18",
+    "preact": ">=11.0.1",
+    "vite": ">=8",
+    "preact-render-to-string": ">=6"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "preact": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    },
+    "preact-render-to-string": {
+      "optional": true
+    }
+  },
+  "author": "Kasper Rynning-T\u00f8nnesen <kasperrt@users.noreply.github.com> (https://github.com/kasperrt)",
+  "homepage": "https://kasperrt.github.io/smolter/",
+  "bugs": {
+    "url": "https://github.com/kasperrt/smolter/issues"
+  },
+  "keywords": [
+    "router",
+    "react",
+    "preact",
+    "typescript",
+    "loader",
+    "action",
+    "fetcher",
+    "ssr",
+    "file-routing"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

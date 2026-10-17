@@ -1,5 +1,5 @@
 import type { DocPage } from "./docs";
-import type { ElementFactory, LinkFactory } from "./index";
+import type { ElementFactory, LinkFactory } from "./types";
 
 export interface DocumentationProps<N> {
   page: DocPage;
@@ -90,6 +90,9 @@ export function createDocumentation<N>(
             { key: section.title, id: sectionId(section.title) },
             h("h2", null, section.title),
             h("p", null, section.body),
+            ...(section.links ?? []).map(({ href, label }) =>
+              h("p", { key: href }, renderLink(href, label)),
+            ),
             ...(section.code
               ? [CodeBlock(section.code, `${section.title} example`)]
               : []),

@@ -1,28 +1,33 @@
 {
   "slug": "createRouter",
   "title": "createRouter",
-  "summary": "Create an isolated data router.",
+  "summary": "Create a navigation-only router with no loader/action engine.",
   "kind": "API",
   "sections": [
     {
       "title": "Parameters",
-      "body": "routes is an ordered readonly route table. options accepts url, browser, and hydrationData. browser defaults to false.",
-      "code": ""
-    },
-    {
-      "title": "Returns",
-      "body": "A Router with start, navigate, revalidate, submit, createFetcher, subscribe, getSnapshot, dispose, and routes.",
+      "body": "routes contains URL patterns and components. Data handlers and shouldRevalidate are excluded by the NavigationRoute type. options accepts url and browser; browser defaults to false.",
       "code": ""
     },
     {
       "title": "Usage",
-      "body": "Import this API from one of the entry points listed above. Keep server and build helpers in their dedicated subpaths.",
-      "code": "const router = createRouter(routes, { browser: true });\nawait router.navigate(\"/tasks/1\");\nawait router.revalidate();"
+      "body": "Use the same components and location/parameter hooks with either router. Create the instance outside component rendering.",
+      "code": "import { render } from \"preact\";\nimport {\n  createRouter,\n  defineRoute,\n  Link,\n  RouterProvider,\n  Routes,\n} from \"@kasperrt/smolter/preact\";\nimport Home from \"./routes/home\";\nimport About from \"./routes/about\";\n\nconst router = createRouter([\n  defineRoute(\"/\", { default: Home }),\n  defineRoute(\"/about\", { default: About }),\n], { browser: true });\n\nrender(\n  <RouterProvider router={router}>\n    <nav>\n      <Link href=\"/\">Home</Link>\n      <Link href=\"/about\">About</Link>\n    </nav>\n    <Routes />\n  </RouterProvider>,\n  document.getElementById(\"app\")!,\n);"
     },
     {
-      "title": "Behavior and edge cases",
-      "body": "Creating a router does not immediately load data. RouterProvider calls start. Imperative consumers call start or navigate themselves. dispose aborts pending channels and removes the history listener. Prefer one browser router per app and one server router per request.",
+      "title": "Returns",
+      "body": "A NavigationRouter with routes, getSnapshot, subscribe, start, navigate and dispose. It has no submit, createFetcher or revalidate methods. Initial route matching is synchronous, including during SSR.",
       "code": ""
+    },
+    {
+      "title": "History and lifecycle",
+      "body": "browser: true enables pushState/replaceState navigation and listens for popstate and hashchange while a provider is mounted. An unmatched URL renders the Routes fallback. External imperative destinations are ignored; external links retain browser behavior. dispose releases subscriptions and history listeners.",
+      "code": ""
+    },
+    {
+      "title": "Add data flow",
+      "body": "Choose createDataRouter for loaders, actions, fetchers, cancellation, revalidation and data hydration. Application/file-router hydration helpers already use createDataRouter. Navigation-only routing does not execute handlers or manage scroll/view-transition integrations.",
+      "code": "const router = createDataRouter(routes, { browser: true });"
     }
   ]
 }

@@ -1,0 +1,28 @@
+{
+  "slug": "Outlet",
+  "title": "Outlet",
+  "summary": "Render the active flat route and optionally provide context to its descendants.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Accepts context and optional children. When children is null or undefined, Outlet renders Routes with its default loading fallback. An explicit child replaces that route rendering.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns an Outlet context provider around its children or Routes. A missing or null context inherits the nearest ancestor Outlet context.",
+      "code": ""
+    },
+    {
+      "title": "Root shell",
+      "body": "Use Outlet from a root module to place the active page inside a persistent shell. Keep route components in their own files.",
+      "code": "import { Outlet } from \"@kasperrt/smolter/preact\";\n\nexport default function Root() {\n  return (\n    <main>\n      <header>Task manager</header>\n      <Outlet />\n    </main>\n  );\n}"
+    },
+    {
+      "title": "Flat routing",
+      "body": "Outlet does not create a hierarchy of nested route records. It renders the active flat match. Context can be read with useOutletContext<T>; provide and share that type yourself because it cannot be inferred across component boundaries.",
+      "code": ""
+    }
+  ]
+}

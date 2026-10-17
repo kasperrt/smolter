@@ -1,0 +1,28 @@
+{
+  "slug": "NavLink",
+  "title": "NavLink",
+  "summary": "Render a Link with active-route styling and aria-current.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Accepts LinkProps plus end, a className string or render callback, and children or a render callback. Both callbacks receive { isActive, isPending }. to takes precedence over href; the default destination is /.",
+      "code": ""
+    },
+    {
+      "title": "Active matching",
+      "body": "A link is active when its target pathname equals the current pathname. Without end, descendants also match at a slash boundary. The root pathname only matches itself. Query strings and hashes do not affect active matching.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Use end for an exact section link. Active links receive aria-current=\"page\" automatically.",
+      "code": "import { NavLink } from \"@kasperrt/smolter/preact\";\n\nexport function Navigation() {\n  return (\n    <nav aria-label=\"Main\">\n      <NavLink to=\"/tasks\" className={({ isActive }) => isActive ? \"active\" : \"\"}>\n        Tasks\n      </NavLink>\n      <NavLink to=\"/settings\" end>Settings</NavLink>\n    </nav>\n  );\n}"
+    },
+    {
+      "title": "Pending state and inherited behavior",
+      "body": "isPending is currently always false. Use useNavigation for page pending state rather than relying on this field. NavLink forwards link prefetching, reloadDocument, event handlers, and navigation options to Link. It does not create nested route matches.",
+      "code": ""
+    }
+  ]
+}

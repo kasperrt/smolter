@@ -1,7 +1,7 @@
 import { fileRouter } from "@kasperrt/smolter/preact/vite";
 import { defineConfig } from "vite";
-import { demoAssets } from "../../scripts/demo-assets.ts";
-import { measuredSize } from "../../scripts/size-plugin.ts";
+import { demoAssets } from "../../tooling/vite/demo-assets.ts";
+import { measuredSize } from "../../tooling/vite/size-plugin.ts";
 import { serverRendering } from "./server/render-plugin.ts";
 import { sessions } from "./server/session.ts";
 

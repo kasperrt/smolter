@@ -7,7 +7,7 @@ export default defineConfig({
       {
         test: {
           name: "unit",
-          include: ["tests/**/*.test.ts"],
+          include: ["tests/**/*.test.{ts,tsx}"],
           exclude: ["tests/browser/**"],
         },
       },
@@ -27,7 +27,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: [
-        "packages/{core,react,preact,client,server,files,vite}/src/**/*.ts",
+        "packages/{core,react,preact,client,server,files,vite}/src/**/*.{ts,tsx}",
       ],
       reporter: ["text", "json", "json-summary", "html", "lcov"],
       thresholds: { lines: 100, perFile: true },

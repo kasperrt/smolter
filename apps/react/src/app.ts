@@ -5,10 +5,9 @@ import {
   Routes,
   useLocation,
 } from "@kasperrt/smolter/react";
+import { siteHref } from "@smolter/ui/hosting";
 import { ui } from "@smolter/ui/react";
 import { createElement as h } from "react";
-
-import { siteHref } from "../../../scripts/site-history";
 import { Source } from "./source";
 
 export function app(router: Router) {
@@ -26,6 +25,6 @@ function Example() {
     basePort: Number(import.meta.env.VITE_EXAMPLE_BASE_PORT ?? 5173),
     link: (href, children, className) =>
       h(Link, { href: siteHref(href), className }, children),
-    content: h(Routes, { fallback: ui.CounterFallback() }),
+    content: h(Routes, { fallback: ui.LoadingPanel("Loading…") }),
   });
 }

@@ -1,0 +1,28 @@
+{
+  "slug": "Await",
+  "title": "Await",
+  "summary": "Render a stable promise through Preact Suspense, with a local rejection fallback.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "resolve accepts a value or Promise. children receives the resolved value, inferred as Awaited<T>. errorElement is optional and may be null to deliberately render nothing on rejection.",
+      "code": ""
+    },
+    {
+      "title": "Pending and resolved values",
+      "body": "Place Await inside Suspense from preact/compat. Pending promises suspend to that boundary; fulfilled promises call children. A non-Promise value calls children immediately. Preserve the promise identity between renders instead of creating a new promise inside the component.",
+      "code": "import { Await } from \"@kasperrt/smolter/preact\";\nimport { Suspense } from \"preact/compat\";\n\ninterface ReviewsProps {\n  reviews: Promise<string[]>;\n}\n\nexport function Reviews({ reviews }: ReviewsProps) {\n  return (\n    <Suspense fallback={<p role=\"status\">Loading reviews\u2026</p>}>\n      <Await resolve={reviews} errorElement={<p>Reviews are unavailable.</p>}>\n        {(items) => <ul>{items.map((item) => <li key={item}>{item}</li>)}</ul>}\n      </Await>\n    </Suspense>\n  );\n}"
+    },
+    {
+      "title": "Rejections",
+      "body": "When errorElement is supplied, Await renders it instead of children. Otherwise the rejection is thrown during rendering and must be handled by a Preact error boundary. useRouteError reads router request errors; it does not expose this locally handled promise rejection.",
+      "code": ""
+    },
+    {
+      "title": "Server rendering",
+      "body": "Await does not start requests and does not implement streaming. renderApplication buffers the document, and route transport resolves deferred fields before JSON serialization. Use this component for promises whose lifecycle is owned outside the rendering component; do not assume a loader promise will remain pending after transport normalization.",
+      "code": ""
+    }
+  ]
+}

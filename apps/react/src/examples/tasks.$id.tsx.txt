@@ -1,6 +1,6 @@
 import { useFetcher, useLoaderData } from "@kasperrt/smolter/react";
-import type { clientLoader } from "./loader";
-import type { clientAction } from "./action";
+import type { clientLoader } from "./clientLoader";
+import type { clientAction } from "./clientAction";
 
 export default function Task() {
   const task = useLoaderData<typeof clientLoader>();
