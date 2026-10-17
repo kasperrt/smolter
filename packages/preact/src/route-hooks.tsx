@@ -15,6 +15,7 @@ import { OutletContext, useApplication } from "./root-context.ts";
 import type { RouteData } from "./route-types.ts";
 import { useContext, useMemo } from "./runtime.ts";
 
+/** Read root loader data from the application context. */
 export function useRootData<T = unknown>(): RouteData<T> {
   return useApplication().root as RouteData<T>;
 }
@@ -37,10 +38,12 @@ export function useRouteLoaderData<T = unknown>(
 
 export { useSnapshot };
 
+/** Read the current route error for an error boundary. */
 export function useRouteError(): Error | undefined {
   return useSnapshot("error");
 }
 
+/** Read the current page navigation or submission state. */
 export function useNavigation(): {
   state: "idle" | "loading" | "submitting";
   location: URL | undefined;
@@ -58,24 +61,27 @@ export function useNavigation(): {
   );
 }
 
+/** Read the active flat route match and loader data; this is not a nested layout match chain. */
 export function useMatches(): {
   id: string;
   data: unknown;
   params: import("@smolter/core").Params;
 }[] {
-  const { routes } = useApplication();
+  const router = useRouter();
   const snapshot = useSnapshot();
-  const route = routes.find((item) => item.path === snapshot.path);
+  const route = router.routes.find((item) => item.path === snapshot.path);
 
   return [
     { id: route?.id ?? "", data: snapshot.data, params: snapshot.params },
   ];
 }
 
+/** Read context supplied by the nearest Outlet. */
 export function useOutletContext<T>(): T {
   return useContext(OutletContext) as T;
 }
 
+/** Return a function that submits form data through the current router. */
 export function useSubmit(): (
   value: Submission,
   options?: SubmissionOptions,
@@ -103,6 +109,7 @@ export function useSubmit(): (
   );
 }
 
+/** Read the current router location as a URL. */
 export function useURLLocation(): URL & { state: unknown; key: string } {
   const href = useSnapshot("url");
   const snapshot = useNavigationSnapshot(useRouter<Router>());
@@ -117,6 +124,7 @@ export function useURLLocation(): URL & { state: unknown; key: string } {
   );
 }
 
+/** Return the application navigation function, including history offsets and relative destinations. */
 export function useNavigate(): NavigateFunction {
   const router = useRouter<Router>();
 
@@ -139,6 +147,7 @@ export function useNavigate(): NavigateFunction {
   );
 }
 
+/** Read URL search parameters and update them through router navigation. */
 export function useSearchParams(): [
   URLSearchParams,
   (
@@ -165,6 +174,7 @@ export function useSearchParams(): [
   return [params, set];
 }
 
+/** Read the last browser history operation. */
 export function useNavigationType(): NavigationType {
   return useNavigationSnapshot(useRouter<Router>()).type;
 }

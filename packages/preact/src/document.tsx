@@ -1,3 +1,8 @@
+/**
+ * Preact document metadata, resource links and hydration scripts.
+ *
+ * @module
+ */
 /** @jsxImportSource preact */
 
 import { applicationEnvironment } from "@smolter/core/environment";
@@ -34,6 +39,7 @@ function renderMeta(item: MetaDescriptor, index: number) {
   });
 }
 
+/** Render root or active-route metadata in the document head. */
 export function Meta(): import("preact").JSX.Element {
   const { routes, rootModule } = useApplication();
   const snapshot = useSnapshot();
@@ -55,6 +61,7 @@ export function Meta(): import("preact").JSX.Element {
   return <Fragment>{values.map(renderMeta)}</Fragment>;
 }
 
+/** Render stylesheet and other link descriptors from the application root. */
 export function Links(): import("preact").JSX.Element {
   const { rootModule } = useApplication();
 
@@ -67,10 +74,12 @@ export function Links(): import("preact").JSX.Element {
   );
 }
 
+/** Nonce and browser entry options for the document hydration scripts. */
 export interface ScriptProps {
   nonce?: string;
 }
 
+/** Render the hydration snapshot and browser entry script with an optional CSP nonce. */
 export function Scripts({ nonce }: ScriptProps): import("preact").JSX.Element {
   const { root, rootError, router, entry, streaming, initialData } =
     useApplication();
@@ -119,6 +128,7 @@ export function Scripts({ nonce }: ScriptProps): import("preact").JSX.Element {
   );
 }
 
+/** Reset scroll after navigation unless the navigation requests preservation. */
 export function ScrollRestoration(_props: ScriptProps): null {
   const { router } = useApplication();
   const { url, state } = useSnapshot();

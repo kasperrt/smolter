@@ -15,11 +15,13 @@ export type { NavigateOptions } from "@smolter/core";
 
 export type { NavigationType } from "@smolter/core/navigation";
 
+/** Navigate to a URL or move through browser history using a numeric offset. */
 export type NavigateFunction = (
   to: string | number | Partial<Pick<URL, "pathname" | "search" | "hash">>,
   options?: NavigateOptions,
 ) => void;
 
+/** Anchor properties and router navigation options, including document reload and prefetch controls. */
 export interface LinkProps extends Omit<ComponentProps<"a">, "href" | "role"> {
   to?: string;
   href?: string;
@@ -47,11 +49,13 @@ export interface LinkProps extends Omit<ComponentProps<"a">, "href" | "role"> {
   reloadDocument?: boolean;
 }
 
+/** Active and pending flags supplied to NavLink render callbacks. */
 export interface NavLinkRenderProps {
   isActive: boolean;
   isPending: boolean;
 }
 
+/** Link options with matching rules and state-aware class or children callbacks. */
 export interface NavLinkProps
   extends Omit<LinkProps, "className" | "children"> {
   end?: boolean;
@@ -59,6 +63,7 @@ export interface NavLinkProps
   children?: ReactNode | ((state: NavLinkRenderProps) => ReactNode);
 }
 
+/** Render an anchor with same-origin router navigation and optional intent prefetching. */
 export function Link(options: LinkProps): ReactNode {
   const {
     href: hrefProp,
@@ -115,6 +120,7 @@ export function Link(options: LinkProps): ReactNode {
   });
 }
 
+/** Render a Link with active-route state and aria-current for the matching destination. */
 export function NavLink({
   href,
   to = href ?? "/",

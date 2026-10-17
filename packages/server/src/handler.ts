@@ -8,6 +8,7 @@ export interface ServerBuild {
   handleDataRequest: (request: Request) => Response | Promise<Response>;
 }
 
+/** SSR build, browser entry URL and application-scoped data endpoint for Node or Express. */
 export interface RequestHandlerOptions {
   build: ServerBuild;
   /** Browser entry URL resolved from Vite's production manifest. */
@@ -16,12 +17,14 @@ export interface RequestHandlerOptions {
   dataEndpoint?: string;
 }
 
+/** Node request with optional Express protocol and original URL information. */
 export interface ServerIncomingMessage extends IncomingMessage {
   /** Express supplies this using the application's trust proxy policy. */
   protocol?: string;
   originalUrl?: string;
 }
 
+/** Express-compatible callback for forwarding middleware errors. */
 export type NextHandler = (error?: unknown) => void;
 
 /** Node/Express middleware; mount after metrics, tracing and static assets. */

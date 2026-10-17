@@ -1,19 +1,28 @@
+/**
+ * HTTP response helpers and loader result normalization.
+ *
+ * @module
+ */
+/** Normalized route failure with an HTTP status, status text and optional response data. */
 export interface RouteError extends Error {
   status: number;
   statusText: string;
   data?: unknown;
 }
 
+/** Loader value paired with HTTP response metadata. */
 export interface DataResponse<T> {
   value: T;
   init: ResponseInit;
   __routeData: true;
 }
 
+/** Wrap loader data with HTTP status and headers without creating a Response body. */
 export function data<T>(value: T, init: ResponseInit = {}): DataResponse<T> {
   return { value, init, __routeData: true };
 }
 
+/** Create an empty redirect Response with a Location header; defaults to HTTP 302. */
 export function redirect(
   location: string,
   init: number | ResponseInit = 302,
@@ -29,10 +38,12 @@ export function redirect(
   });
 }
 
+/** Identify normalized Error objects carrying an HTTP status. */
 export function isRouteErrorResponse(value: unknown): value is RouteError {
   return value instanceof Error && "status" in value;
 }
 
+/** Normalize transport responses and wrapped data, optionally resolving nested deferred values. */
 export async function normalizeResult(
   value: unknown,
   resolveDeferred = true,
@@ -68,6 +79,7 @@ export async function normalizeResult(
 }
 
 // Smolter transfers JSON snapshots. Resolve deferred fields before serialization.
+/** Recursively resolve promises in arrays and plain objects before JSON serialization. */
 export async function resolveData(value: unknown): Promise<unknown> {
   const resolved = await value;
 

@@ -17,6 +17,7 @@ type Resolution = { value: unknown } | { error: unknown };
 // Cache only the error-as-data adapter. Preact owns pending and resolved state.
 const resolutions = new WeakMap<Promise<unknown>, Promise<Resolution>>();
 
+/** Render a value or promise. An explicit fallback owns pending content during early hydration; errorElement handles rejection. */
 export function Await<T>(props: AwaitProps<T>): ComponentChildren {
   const app = useContext(Application);
   if (!(props.resolve instanceof Promise))

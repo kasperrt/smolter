@@ -1,3 +1,4 @@
+/** Application base URLs, navigation handoff and document-transition settings shared by browser integrations. */
 export interface ApplicationEnvironment {
   resolveURL?: (url: URL) => URL;
   isDocumentHandoff?: (from: URL, to: URL) => boolean;

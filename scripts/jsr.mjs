@@ -4,6 +4,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -45,7 +46,7 @@ for (const file of readdirSync(new URL(".generated/", source), {
   inspect(tree);
 }
 
-const directory = mkdtempSync(join(tmpdir(), "smolter-jsr-"));
+const directory = realpathSync(mkdtempSync(join(tmpdir(), "smolter-jsr-")));
 
 for (const file of [
   ".generated",
@@ -55,6 +56,59 @@ for (const file of [
   "LICENSE",
 ]) {
   cpSync(new URL(file, source), join(directory, file), { recursive: true });
+}
+
+// Check the same source documentation that JSR indexes, before either registry publishes.
+const manifest = JSON.parse(readFileSync(join(directory, "jsr.json"), "utf8"));
+const documentation = JSON.parse(
+  execFileSync(
+    "pnpm",
+    [
+      "dlx",
+      "deno@2.9.6",
+      "doc",
+      "--node-modules-dir=auto",
+      "--json",
+      "--import-map",
+      join(directory, "jsr.json"),
+      ...Object.values(manifest.exports).map((entry) => join(directory, entry)),
+    ],
+    { cwd: directory, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  ),
+);
+const locationKey = (location) =>
+  `${location.filename}:${location.line}:${location.col}`;
+const declarations = new Map(
+  Object.values(documentation.nodes).flatMap((module) =>
+    module.symbols.flatMap((symbol) =>
+      symbol.declarations.map((declaration) => [
+        locationKey(declaration.location),
+        declaration,
+      ]),
+    ),
+  ),
+);
+const documented = (declaration) => {
+  if (declaration.kind === "reference") {
+    const target = declarations.get(locationKey(declaration.def.target));
+    return target && target !== declaration && documented(target);
+  }
+  return Boolean(declaration.jsDoc?.doc?.trim());
+};
+for (const [entry, module] of Object.entries(documentation.nodes)) {
+  if (!module.module_doc?.doc?.trim()) {
+    throw new Error(`Missing JSR entrypoint documentation: ${entry}`);
+  }
+  for (const symbol of module.symbols) {
+    const exported = symbol.declarations.filter(
+      (declaration) => declaration.declarationKind === "export",
+    );
+    if (exported.length && !exported.some(documented)) {
+      throw new Error(
+        `Missing JSR symbol documentation: ${entry}: ${symbol.name}`,
+      );
+    }
+  }
 }
 
 execFileSync(

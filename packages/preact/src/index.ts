@@ -1,4 +1,8 @@
-/** Framework components and typed data hooks. @module */
+/**
+ * Preact routing components, typed data hooks and application integration.
+ *
+ * @module
+ */
 export type * from "@smolter/core";
 export {
   createDataRouter,
@@ -30,5 +34,5 @@ export {
   useSubmit,
 } from "./route-hooks.tsx";
 export * from "./route-types.ts";
-export { Outlet, RouterApplication } from "./router.tsx";
+export { Outlet, type OutletProps, RouterApplication } from "./router.tsx";
 export * from "./routes.ts";
