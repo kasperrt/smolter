@@ -212,9 +212,9 @@ const result = await (async () => {
     );
     assert.equal(
       await documentSupport.locator(".support-alternative").count(),
-      2,
+      0,
     );
-    assert.equal(await documentSupport.locator(".support-yes").count(), 2);
+    assert.equal(await documentSupport.locator(".support-yes").count(), 4);
     const actionsLink = hydrated
       .getByRole("navigation", { name: "Documentation", exact: true })
       .getByRole("link", { name: "Actions", exact: true });

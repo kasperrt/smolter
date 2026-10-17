@@ -11,6 +11,7 @@ export type {
 export {
   createContext,
   createElement,
+  useCallback,
   useContext,
   useEffect,
   useMemo,

@@ -1,20 +1,21 @@
 {
   "name": "@kasperrt/smolter",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "exports": {
     "./react": "./.generated/react/index.ts",
     "./preact": "./.generated/preact/index.ts",
-    "./react/server": "./.generated/server/index.ts",
+    "./react/server": "./.generated/server/react.ts",
     "./preact/server": "./.generated/server/preact.ts",
-    "./react/client": "./.generated/client/index.ts",
+    "./react/client": "./.generated/react/client.tsx",
     "./preact/client": "./.generated/preact/client.tsx",
     "./utils": "./.generated/core/utils.ts",
     "./utils/http": "./.generated/server/node.ts",
     "./utils/assets": "./.generated/server/assets.ts",
     "./utils/responses": "./.generated/core/responses.ts",
-    "./react/data": "./.generated/react/data.ts",
     "./preact/lazy-route": "./.generated/preact/lazy-route.ts",
-    "./preact/document": "./.generated/preact/document.tsx"
+    "./preact/document": "./.generated/preact/document.tsx",
+    "./react/document": "./.generated/react/document.tsx",
+    "./react/lazy-route": "./.generated/react/lazy-route.ts"
   },
   "imports": {
     "react": "npm:react@19.3.1",
@@ -23,7 +24,10 @@
     "preact/hooks": "npm:preact@11.0.1/hooks",
     "preact/jsx-runtime": "npm:preact@11.0.1/jsx-runtime",
     "preact-render-to-string": "npm:preact-render-to-string@6.8.1",
-    "react/jsx-runtime": "npm:react@19.3.1/jsx-runtime"
+    "react/jsx-runtime": "npm:react@19.3.1/jsx-runtime",
+    "react-dom": "npm:react-dom@19.3.1",
+    "react-dom/client": "npm:react-dom@19.3.1/client",
+    "react-dom/server": "npm:react-dom@19.3.1/server"
   },
   "publish": {
     "include": [

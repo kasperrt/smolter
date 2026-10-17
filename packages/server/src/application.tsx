@@ -1,274 +1,39 @@
 /** @jsxImportSource preact */
-
-import { createDataRouter, matchRoutes, safeWrapAsync } from "@smolter/core";
-import {
-  type DataResponse,
-  normalizeResult,
-  resolveData,
-} from "@smolter/core/responses";
 import type { AppRoute, RootModule } from "@smolter/preact/route-types";
-import { prepareRoutes, RouterApplication } from "@smolter/preact/router";
-import { loadRouter } from "@smolter/server";
+import { RouterApplication } from "@smolter/preact/router";
 import type { ComponentChildren } from "preact";
 import { Suspense } from "preact/compat";
 import { renderToReadableStream } from "preact-render-to-string/stream";
-import { deferredHydration } from "./deferred-hydration.ts";
-import { privateResponse } from "./private-response.ts";
-import { progressiveDocument } from "./progressive-document.ts";
-import { resolveHydration, streamDocument } from "./stream-document.ts";
+import {
+  type RenderApplicationOptions,
+  renderDocument,
+} from "./render-application.ts";
 
-/** SSR settings for CSP nonce and early deferred-data hydration. */
-export interface RenderApplicationOptions {
-  nonce?: string;
-  earlyHydration?: boolean;
-}
+export { dispatchRoute } from "./dispatch.ts";
+export type { RenderApplicationOptions } from "./render-application.ts";
 
-/** Render a Preact application response with root and route data, streaming deferred content when enabled. */
-export async function renderApplication(
+/** Render a Preact application response with root data and optional early deferred hydration. */
+export function renderApplication(
   request: Request,
   routes: AppRoute[],
   rootModule: RootModule,
   entry: string,
   options: RenderApplicationOptions = {},
 ): Promise<Response> {
-  routes = routes.map((route) => ({
-    ...route,
-    path: route.routePath ?? route.path,
-  }));
-  const match = matchRoutes(routes, new URL(request.url).pathname);
-
-  if (match && !match.route.default)
-    return dispatchRoute(request, routes, true);
-
-  let actionResponse: Response | undefined;
-  let actionData: unknown;
-
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    actionResponse = await dispatchRoute(request, routes, true);
-
-    if (
-      actionResponse.headers.has("Location") ||
-      !actionResponse.headers.get("Content-Type")?.includes("application/json")
-    )
-      return actionResponse;
-
-    actionData = await normalizeResult(await actionResponse.json());
-  }
-
-  const rootResult = safeWrapAsync(() =>
-    Promise.resolve()
-      .then(() =>
-        rootModule.loader?.({ request, params: {}, signal: request.signal }),
-      )
-      .then(
-        (value) => normalizeResult(value, false),
-        (error: unknown) =>
-          error instanceof Response
-            ? normalizeResult(error, false)
-            : error instanceof Error
-              ? error
-              : new Error(String(error), { cause: error }),
-      ),
-  );
-  let redirectResponse: Response | undefined;
-  const prepared = prepareRoutes(
-    routes.map((route) => ({
-      ...route,
-      ErrorBoundary: route.ErrorBoundary ?? rootModule.ErrorBoundary,
-    })),
-    true,
-  ).map((route) => {
-    if (!route.loader) return route;
-
-    const loader = route.loader;
-
-    return {
-      ...route,
-      loader: async (args: Parameters<typeof loader>[0]) => {
-        const value = await loader(args);
-
-        if (value instanceof Response && value.headers.has("Location"))
-          redirectResponse = value;
-
-        return value;
-      },
-    };
-  });
-  const [rootState, loadedRouter] = await Promise.all([
-    rootResult,
-    loadRouter(prepared, request),
-  ]);
-  let router = loadedRouter;
-  const rootError =
-    rootState.error ??
-    (rootState.data instanceof Error ? rootState.data : undefined);
-  const root = rootError ? undefined : rootState.data;
-
-  if (root instanceof Response && root.headers.has("Location")) {
-    router.dispose();
-    return root;
-  }
-
-  if (redirectResponse) {
-    router.dispose();
-
-    return redirectResponse;
-  }
-
-  if (actionResponse || rootError) {
-    const hydrationData = {
-      ...router.getSnapshot(),
-      actionData: actionData instanceof Error ? undefined : actionData,
-      ...(actionData instanceof Error && { error: actionData }),
-      ...(rootError && { error: rootError }),
-    };
-    router.dispose();
-    router = createDataRouter(router.routes, { hydrationData });
-  }
-
-  const snapshot = router.getSnapshot();
-  const hydrationData = {
-    root,
-    snapshot: {
-      ...snapshot,
-      error: snapshot.error && {
-        ...snapshot.error,
-        name: snapshot.error.name,
-        message: snapshot.error.message,
-      },
-    },
-    ...(rootError && { rootError: true }),
-  };
-  const deferred = options.earlyHydration
-    ? deferredHydration(hydrationData, options.nonce)
-    : undefined;
-  const stream = renderToReadableStream(
-    <RouterApplication
-      router={router}
-      routes={routes}
-      root={root}
-      rootModule={rootModule}
-      entry={entry}
-      rootError={Boolean(rootError)}
-      streaming
-      deferredBoundary={options.earlyHydration ? undefined : deferredBoundary}
-      initialData={deferred?.initial}
-      document
-    />,
-    options,
-  );
-  // The renderer reports the same rejection through its stream reader.
-  void stream.allReady.catch(() => {});
-  const headers = new Headers(actionResponse?.headers);
-  headers.delete("Content-Length");
-  headers.delete("Content-Encoding");
-  headers.set("Content-Type", "text/html; charset=utf-8");
-  headers.set("Cache-Control", "no-store");
-
-  return new Response(
-    deferred
-      ? progressiveDocument(stream, deferred.stream, {
-          signal: request.signal,
-          dispose: () => router.dispose(),
-        })
-      : streamDocument(stream, {
-          hydration: resolveHydration(hydrationData),
-          signal: request.signal,
-          nonce: options.nonce,
-          dispose: () => router.dispose(),
-        }),
-    {
-      status: snapshot.error
-        ? Number("status" in snapshot.error ? snapshot.error.status : 500)
-        : (actionResponse?.status ?? 200),
-      headers,
-    },
+  return renderDocument(request, routes, rootModule, entry, options, (props) =>
+    renderToReadableStream(
+      <RouterApplication
+        {...props}
+        rootModule={rootModule}
+        deferredBoundary={options.earlyHydration ? undefined : deferredBoundary}
+      />,
+      options,
+    ),
   );
 }
-
 function deferredBoundary(
   children: ComponentChildren,
   fallback: ComponentChildren,
 ) {
   return <Suspense fallback={fallback}>{children}</Suspense>;
-}
-
-async function dispatch(
-  request: Request,
-  routes: AppRoute[],
-  document = false,
-): Promise<Response> {
-  const match = matchRoutes(
-    routes.map((route) => ({ ...route, path: route.routePath ?? route.path })),
-    new URL(request.url).pathname,
-  );
-
-  if (!match) return Response.json({ error: "No route" }, { status: 404 });
-
-  const handler =
-    request.method === "GET" || request.method === "HEAD"
-      ? match.route.loader
-      : match.route.action;
-
-  if (!handler) return Response.json({ error: "No handler" }, { status: 405 });
-
-  const value = await Promise.resolve()
-    .then(() =>
-      handler({ request, params: match.params, signal: request.signal }),
-    )
-    .then(
-      (result) => result,
-      (error: unknown) => error,
-    );
-
-  if (value instanceof Response) {
-    const location = value.headers.get("Location");
-
-    if (document) return value;
-
-    if (!location) {
-      if (value.ok) return value;
-
-      return Response.json({
-        __routeError: {
-          message: await value.text(),
-          status: value.status,
-          statusText: value.statusText,
-        },
-      });
-    }
-
-    const headers = new Headers(value.headers);
-    headers.delete("Location");
-    headers.set("X-Smolter-Redirect", location);
-
-    return new Response(null, { headers });
-  }
-
-  if (value instanceof Error)
-    return Response.json({
-      __routeError: { ...value, message: value.message },
-    });
-
-  if (value && typeof value === "object" && "__routeData" in value) {
-    const result = value as DataResponse<unknown>;
-
-    return Response.json(
-      await resolveData(result.value),
-      document ? result.init : { headers: result.init.headers },
-    );
-  }
-
-  return Response.json((await normalizeResult(value)) ?? null);
-}
-
-/** Dispatch a normalized application URL to its route loader or action and return an HTTP response. */
-export async function dispatchRoute(
-  request: Request,
-  routes: AppRoute[],
-  document = false,
-): Promise<Response> {
-  const response = await dispatch(request, routes, document);
-
-  return document ? response : privateResponse(response);
 }

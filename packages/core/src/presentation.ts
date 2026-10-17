@@ -9,7 +9,7 @@ type CommitView = (update: () => void) => void;
 const pending = new WeakMap<Router, () => Snapshot>();
 
 export function pendingLocation(router: Router) {
-  const snapshot = pending.get(router)?.();
+  const snapshot = pending.get(router)?.() ?? router.getSnapshot();
 
   return snapshot?.state !== "idle" && snapshot?.url
     ? new URL(snapshot.url)

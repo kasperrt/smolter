@@ -1,7 +1,7 @@
 {
   "slug": "renderApplication",
   "title": "renderApplication",
-  "summary": "Render the optional Preact application document and hydration snapshot.",
+  "summary": "Render a React or Preact application document with root data and streaming hydration.",
   "kind": "API",
   "sections": [
     {
@@ -16,7 +16,7 @@
     },
     {
       "title": "Usage",
-      "body": "Render the optional Preact application document and hydration snapshot.",
+      "body": "Import from react/server or preact/server to use the matching renderer.",
       "code": "import { renderApplication } from \"@kasperrt/smolter/preact/server\";\n\nconst response = await renderApplication(\n  request,\n  routes,\n  root,\n  \"/assets/client.js\",\n);"
     },
     {
@@ -26,7 +26,7 @@
     },
     {
       "title": "Behavior and limits",
-      "body": "Requires preact-render-to-string >=6.8.1. Render deferred fields with Await and its fallback prop. By default, hydration starts after the document completes. Set earlyHydration: true to send an initial snapshot with promise references and hydrate the shell while deferred values stream independently. Rejected deferred fields retain Await errorElement behavior. Errors after headers have been sent cannot change the HTTP status. Vite development HTML transformation buffers; production Node/Express hosting streams. Each request router is disposed when its stream completes or is cancelled.",
+      "body": "React application SSR requires React and React DOM 19+. Preact requires preact-render-to-string >=6.8.1. In React, render a stable deferred promise with use(promise) inside Suspense and an error boundary; in Preact, use Await with its fallback prop. By default, hydration waits for document completion. earlyHydration: true hydrates shell controls while deferred values stream. Errors after headers are sent cannot change HTTP status. Vite development HTML transformation buffers; production Node/Express hosting streams. Each request router is disposed on completion or cancellation.",
       "code": ""
     }
   ]

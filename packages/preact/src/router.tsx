@@ -1,7 +1,5 @@
 /** @jsxImportSource preact */
 
-import type { DataFunction } from "@smolter/core";
-import { normalizeResult } from "@smolter/core/responses";
 import type { ReactNode } from "preact/compat";
 import { RouterProvider } from "./context.ts";
 import {
@@ -10,7 +8,6 @@ import {
   OutletContext,
 } from "./root-context.ts";
 import { createRootStore } from "./root-data.ts";
-import type { AppRoute } from "./route-types.ts";
 import { Routes } from "./routes.ts";
 import { useContext, useMemo, useSyncExternalStore } from "./runtime.ts";
 
@@ -34,6 +31,7 @@ export function Outlet({
   );
 }
 
+/** Root data, document components and request-scoped router for an application. */
 export interface ApplicationProps extends ApplicationContext {
   document?: boolean;
   rootStore?: ReturnType<typeof createRootStore>;
@@ -69,48 +67,4 @@ export function RouterApplication(
   );
 }
 
-export function prepareRoutes(
-  routes: AppRoute[],
-  preserveDeferred = false,
-): AppRoute[] {
-  return routes.map((route) => {
-    const wrapped: AppRoute = {
-      ...route,
-      path: route.routePath ?? route.path,
-      shouldRevalidate: (args) => {
-        const { currentUrl, nextUrl } = args;
-
-        if (
-          args.reason === "navigation" &&
-          currentUrl.pathname === nextUrl.pathname &&
-          currentUrl.search === nextUrl.search &&
-          currentUrl.hash !== nextUrl.hash
-        )
-          return false;
-
-        return route.shouldRevalidate?.(args) ?? args.defaultShouldRevalidate;
-      },
-    };
-
-    for (const key of [
-      "loader",
-      "action",
-      "clientLoader",
-      "clientAction",
-    ] as const) {
-      const handler = route[key] as DataFunction | undefined;
-
-      if (!handler) continue;
-
-      wrapped[key] = (args) =>
-        Promise.resolve()
-          .then(() => handler(args))
-          .then(
-            (value) => normalizeResult(value, !preserveDeferred),
-            (error) => normalizeResult(error, !preserveDeferred),
-          );
-    }
-
-    return wrapped;
-  });
-}
+export { prepareRoutes } from "@smolter/core/prepare-routes";

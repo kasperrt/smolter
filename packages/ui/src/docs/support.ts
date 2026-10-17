@@ -16,7 +16,7 @@ const reactAlternatives: Record<
 > = {
   Await: {
     detail:
-      "React 19+ provides use(promise) with Suspense and an error boundary. Use a stable promise. This replaces promise rendering, not Smolter's Preact deferred-data transport.",
+      "React 19+ provides use(promise) with Suspense and an error boundary. Use a stable promise. Smolter's React application integration revives streamed loader promises before hydration.",
     reference: {
       href: "https://react.dev/reference/react/use",
       label: "React use + Suspense",
@@ -48,21 +48,6 @@ const reactAlternatives: Record<
   },
 };
 
-const reactReasons: Record<string, string> = {
-  useNavigation:
-    "Smolter's React adapter has no equivalent page-navigation hook. React does not provide router pending state; useTransition is not a substitute for it.",
-  useNavigate:
-    "Use the navigate function returned by Smolter's React useLocation for URL navigation. This Preact hook also supports history offsets; React itself has no routing hook.",
-  NavLink:
-    "Use Smolter's React Link and useLocation to derive active styling. React itself does not provide NavLink.",
-  mountApplication:
-    "Preact-only application bootstrap. React requires explicit router setup and React DOM hydration; hydrateRoot alone does not install Smolter transport or recovery.",
-  renderApplication:
-    "Preact-only integrated document renderer. React uses loadRouter and its own server renderer; it does not implement Smolter's Preact deferred-data protocol.",
-  RouterApplication:
-    "Preact-only root document and route composition. React applications compose RouterProvider and Routes or Outlet themselves.",
-};
-
 /** Entries describe actual exports; guides may discuss several integration levels. */
 export function pageSupport(page: DocPage): Support[] {
   const entries = page.entries ?? [];
@@ -83,8 +68,7 @@ export function pageSupport(page: DocPage): Support[] {
         : undefined;
     const unavailable =
       framework === "react"
-        ? (reactReasons[page.slug] ??
-          "Preact application API; Smolter has no React export for it. It is not a built-in React API.")
+        ? "Renderer-specific API; check the documented import for this renderer."
         : "Not implemented by Smolter for Preact; no framework replacement is implied.";
     const serverOnly =
       entries.length > 0 &&
@@ -96,11 +80,7 @@ export function pageSupport(page: DocPage): Support[] {
       );
     const clientOnly =
       entries.length > 0 && entries.every((entry) => entry.endsWith("/client"));
-    const mixedGuide =
-      !entries.length &&
-      ["server-rendering", "express", "virtual-routes"].includes(page.slug);
-    const partialSSR =
-      available && (clientOnly || (mixedGuide && framework === "react"));
+    const partialSSR = available && clientOnly;
     return [
       {
         label,
@@ -138,9 +118,7 @@ export function pageSupport(page: DocPage): Support[] {
             ? unavailable
             : clientOnly
               ? "Client-side setup for an SSR application; do not execute on the server."
-              : mixedGuide && framework === "react"
-                ? "Manual SSR integration. Integrated documents and early deferred hydration are Preact-only."
-                : "Available to this renderer's SSR integration; browser event handlers run after hydration.",
+              : "Available to this renderer's SSR integration; browser event handlers run after hydration.",
       },
     ] as Support[];
   });

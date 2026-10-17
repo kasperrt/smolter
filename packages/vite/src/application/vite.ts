@@ -6,6 +6,7 @@ import { lazyFiles } from "./lazy-files.ts";
 
 export interface ApplicationOptions {
   directory?: string;
+  framework?: "react" | "preact";
   dataEndpoint?: string;
   ssr?: boolean;
   splitRoutes?: boolean;
@@ -43,6 +44,7 @@ export const preactConfig: UserConfig = {
 
 export function applicationPlugins({
   directory = "src/routes",
+  framework = "preact",
   dataEndpoint = "/_smolter",
   ssr = true,
   splitRoutes = true,
@@ -51,7 +53,13 @@ export function applicationPlugins({
   const application: Plugin = {
     name: "smolter-application",
     enforce: "pre",
-    config: () => preactConfig,
+    config: () =>
+      framework === "preact"
+        ? preactConfig
+        : {
+            resolve: { dedupe: ["react", "react-dom", "@kasperrt/smolter"] },
+            ssr: { noExternal: ["@kasperrt/smolter"] },
+          },
     transformIndexHtml: {
       order: "post",
       handler(html, context) {
@@ -93,7 +101,7 @@ export function applicationPlugins({
           const request = await webRequest(incoming, outgoing, target);
           const [{ default: routes }, { dispatchRoute }] = await Promise.all([
             server.ssrLoadModule("virtual:smolter/routes"),
-            server.ssrLoadModule("@kasperrt/smolter/preact/server"),
+            server.ssrLoadModule(`@kasperrt/smolter/${framework}/server`),
           ]);
           await send(await dispatchRoute(request, routes), outgoing);
         };
@@ -144,7 +152,7 @@ export function applicationPlugins({
   return [
     application,
     browserBoundary(),
-    ...(splitRoutes ? [lazyFiles(directory, dataEndpoint)] : []),
-    routerPlugin({ directory, framework: "preact", dataEndpoint }),
+    ...(splitRoutes ? [lazyFiles(directory, dataEndpoint, framework)] : []),
+    routerPlugin({ directory, framework, dataEndpoint }),
   ];
 }

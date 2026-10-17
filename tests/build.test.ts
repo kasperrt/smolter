@@ -161,9 +161,10 @@ it("publishes only renderer entries and browser-safe utilities", () => {
     "./utils",
     "./preact/lazy-route",
     "./preact/document",
+    "./react/document",
+    "./react/lazy-route",
     "./utils/assets",
     "./utils/http",
-    "./react/data",
     "./utils/responses",
   ];
 
@@ -205,12 +206,10 @@ it("bundles hydration serialization without server dispatch or a renderer", asyn
   );
 });
 
-it("keeps optional application and resource bundles isolated", async () => {
-  for (const entry of ["react-data", "preact"]) {
+it("keeps both adapters isolated from server and build code", async () => {
+  for (const entry of ["react", "preact"]) {
     const result = await bundleBrowser({
-      entryPoints: [
-        `dist/${entry === "react-data" ? "react/data" : "preact/index"}.js`,
-      ],
+      entryPoints: [`dist/${entry}/index.js`],
       bundle: true,
       platform: "browser",
       format: "esm",
@@ -227,12 +226,11 @@ it("keeps optional application and resource bundles isolated", async () => {
       /node:|preact-render-to-string/,
     );
 
-    if (entry === "react-data") {
-      expect(inputs.some((name) => name.includes("/preact/"))).toBe(false);
-      expect(result.outputFiles[0].text).not.toMatch(
-        /\b(document|window|history|FormData|Request)\b/,
-      );
-    }
+    expect(
+      inputs.some((name) =>
+        name.includes(entry === "react" ? "/preact/" : "/react/"),
+      ),
+    ).toBe(false);
   }
 });
 

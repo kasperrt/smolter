@@ -7,7 +7,7 @@ import { navigationClick } from "@smolter/core/url";
 import type { TargetedMouseEvent } from "preact";
 import type { ComponentProps, ReactNode } from "preact/compat";
 import { useRouter, useSnapshot } from "./context.ts";
-import { useURLLocation } from "./route-hooks.tsx";
+import { useNavigation, useURLLocation } from "./route-hooks.tsx";
 import type { AppRoute } from "./route-types.ts";
 import { createElement } from "./runtime.ts";
 
@@ -130,11 +130,19 @@ export function NavLink({
   ...props
 }: NavLinkProps): ReactNode {
   const location = useURLLocation();
-  const target = new URL(to, location.href).pathname;
+  const destination = resolveApplicationURL(new URL(to, location.href));
+  const target = destination.pathname;
   const isActive =
-    location.pathname === target ||
-    (!end && target !== "/" && location.pathname.startsWith(`${target}/`));
-  const state = { isActive, isPending: false };
+    destination.origin === location.origin &&
+    (location.pathname === target ||
+      (!end && target !== "/" && location.pathname.startsWith(`${target}/`)));
+  const pending = useNavigation().location;
+  const isPending =
+    !!pending &&
+    pending.origin === destination.origin &&
+    (pending.pathname === target ||
+      (!end && target !== "/" && pending.pathname.startsWith(`${target}/`)));
+  const state = { isActive, isPending };
 
   return createElement(Link, {
     ...props,

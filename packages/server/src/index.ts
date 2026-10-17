@@ -117,3 +117,5 @@ export async function handleRequest(
 ): Promise<Response> {
   return privateResponse(await dispatchRequest(routes, request));
 }
+
+export { dispatchRoute } from "./dispatch.ts";

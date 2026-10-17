@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.4
+
+- Remove the separate `/react/data` resource router. Both main adapters provide route data, forms, submissions and independent fetchers through `createDataRouter`; migrate ResourceProvider/Resource hooks to RouterProvider and the main data hooks. The old pathless resource store and tuple fetcher API are removed, not aliased to incompatible signatures.
+
+- Complete React routing-hook parity: navigation/submission state, URL/search/history helpers, route errors, root data and route-ID data. Add React RouterApplication and match Preact loader/fetcher type inference.
+- Support React application SSR and hydration, document helpers, lazy routes and application Vite middleware. React DOM 19+ powers integrated documents; routing hooks and manual loadRouter SSR retain React 18 support. Share transport, root revalidation, hash history, hydration payloads and server orchestration across renderers.
+- Export renderer-independent dispatchRoute from both server entries. Preserve scoped endpoints, private caching, redirects, cancellation and mutation ownership.
+- Add React link intent prefetching, structured/GET fetcher submissions and real NavLink pending state in both adapters. Report pending destinations under plain providers as well as retained application views.
+- Update compatibility badges, guides, package-isolation checks and bundle tables. Verify React production early hydration, persistent input, root refresh, CSP and abandoned deferred boundaries.
+
 ## 0.4.3
 
 - Prefetch individual guide articles on pointer, keyboard and touch intent. Keep the shared header, sidebar and current article visible during cold guide navigation; show a quiet pending status without replacing the layout. Link the header directly to the canonical Getting started guide.

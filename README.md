@@ -18,6 +18,12 @@ and [React Router](https://reactrouter.com/).
 
 Start with [loaders](https://kasperrt.github.io/smolter/docs/loaders/), [actions](https://kasperrt.github.io/smolter/docs/actions/), [forms and validation](https://kasperrt.github.io/smolter/docs/forms/), or [fetcher reads and mutations](https://kasperrt.github.io/smolter/docs/fetchers/). Each guide connects the handler to an actual route URL and its consuming view.
 
+## React and Preact application APIs
+
+Both adapters expose navigation, submission, error, root-data and route-data hooks. Both server entries expose `dispatchRoute` and `renderApplication`; both client entries provide `mountApplication`, scoped transport and deployment recovery. Import `applicationPlugins` from the matching renderer's `/vite` entry for lazy file routes and development SSR.
+
+Integrated React documents use React DOM 19+ (`react/document`, `react/client`, `react/server`). React 18 remains supported for routing hooks and manual `loadRouter` SSR. Use React's `use(promise)` inside `Suspense` for deferred rendering. Preact uses `Await` with an explicit `fallback` for early hydration. These renderer choices share transport and data ownership, without loading the other framework.
+
 ## Contents
 
 - [Deployment updates](#deployment-updates)
@@ -540,36 +546,30 @@ The adapter has no Express dependency and forwards failures to `next(error)`.
 See the [Express guide](https://kasperrt.github.io/smolter/docs/express)
 for a complete server example and streaming and hydration behavior.
 
-## Resource subscriptions
+## Independent data requests
 
-`@kasperrt/smolter/react/data` adds subscriptions to named resources when their
-lifetime is independent of URL navigation. The state and cancellation logic
-lives in core; the entry adds React bindings without DOM or HTTP globals.
+Both adapters include `useFetcher`, `useSubmit`, `Form` and the loader/action hooks
+in their main entrypoint. Use `createDataRouter` for data routes and `useFetcher`
+for reads or mutations that should not navigate the page. There is no separate
+React resource router or `/react/data` entrypoint.
 
-```ts
-import { createResourceRouter } from "@kasperrt/smolter/react/data";
+```tsx
+import { useFetcher } from "@kasperrt/smolter/react";
 
-const resources = createResourceRouter(new Map([
-  ["settings", {
-    loader: async ({ signal }) => ({
-      data: await readSettings(signal),
-      error: "",
-    }),
-    action: async ({ input, signal }) => ({
-      data: await saveSettings(input, signal),
-      error: "",
-    }),
-  }],
-]));
+function Settings() {
+  const settings = useFetcher();
+  return (
+    <settings.Form method="post" action="/settings">
+      <input name="name" aria-label="Profile name" />
+      <button disabled={settings.state !== "idle"}>Save</button>
+    </settings.Form>
+  );
+}
 ```
 
-`ResourceProvider` owns the store lifetime. `Resource` selects a resource by
-`routeId` and params. `useResourceData` reads it; `useRouteLoaderData` reads a
-named resource. `useResourceFetcher` returns `[state, operations]`, with
-independent `load` and `submit` operations. Successful mutations consult the
-resource's `shouldRevalidate` before reloading its data. Last-subscriber cleanup
-aborts pending work; `persistent` keeps a resource until explicitly disposed.
-This optional entry does not contribute to the base React bundle measurement.
+Use the same imports from `/preact` in a Preact application. Independent
+fetchers share the application router's cancellation, revalidation and deployment
+recovery ownership; they do not require another provider or store.
 
 ## Size and checks
 
@@ -581,7 +581,6 @@ This optional entry does not contribute to the base React bundle measurement.
 | Preact application hydration | `@kasperrt/smolter/preact/client` |
 | Preact document components | `@kasperrt/smolter/preact/document` |
 | Lazy Preact route modules | `@kasperrt/smolter/preact/lazy-route` |
-| Optional React resources | `@kasperrt/smolter/react/data` |
 | Server rendering / Vite integration | Renderer `/server` / `/vite` subpaths; keep out of browser imports |
 
 The measurements below describe retained exports, not the cost of an import
@@ -605,16 +604,17 @@ a claim of identical features.
 | --- | ---: |
 | `React Router: declarative routing subset` | 12882 |
 | `React Router: data routing subset` | 29780 |
-| `React: routing-only named exports` | 1245 |
+| `React: routing-only named exports` | 1419 |
 | `Preact: routing-only named exports` | 1405 |
-| `@kasperrt/smolter/react` | 3082 |
-| `@kasperrt/smolter/preact` | 5016 |
-| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4419 |
-| `@kasperrt/smolter/preact + server transport` | 6291 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9398 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9685 |
-| `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
-| `React: common routing/data exports` | 2761 |
+| `@kasperrt/smolter/react` | 4801 |
+| `@kasperrt/smolter/preact` | 5076 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 6060 |
+| `@kasperrt/smolter/preact + server transport` | 6345 |
+| `@kasperrt/smolter/react + client + document (application)` | 9124 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 9401 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9435 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9721 |
+| `React: common routing/data exports` | 3071 |
 | `Preact: common routing/data exports` | 3046 |
 | `wouter: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact: same routing subset` | 2211 |

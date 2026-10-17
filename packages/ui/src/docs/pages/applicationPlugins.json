@@ -23,6 +23,11 @@
       "title": "Behavior and limits",
       "body": "The default SSR integration loads src/entry.server.tsx and starts src/entry.client.tsx. ssr: false supports browser-only apps. See the virtual routes guide; these plugins do not create a production Express server.",
       "code": ""
+    },
+    {
+      "title": "Renderer selection",
+      "body": "Import applicationPlugins from react/vite or preact/vite. The React entry selects React without compatibility aliases; the Preact entry retains its Preact configuration. Both support SSR middleware, app-scoped transport, lazy file routes and route changes during development.",
+      "code": "import { applicationPlugins } from \"@kasperrt/smolter/react/vite\";\n\nexport default { plugins: applicationPlugins({ dataEndpoint: \"/admin/_smolter\" }) };"
     }
   ]
 }

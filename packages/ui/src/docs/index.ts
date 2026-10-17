@@ -43,7 +43,8 @@ sizeGuide.sections[1].code = [
   `Preact complete entry: ${sizes.preact} B gzip`,
   `React + server transport: ${sizes.reactServer} B gzip`,
   `Preact + server transport: ${sizes.preactServer} B gzip`,
-  `React optional resource API: ${sizes.reactData} B gzip`,
+  `React + client + document: ${sizes.reactApplication} B gzip`,
+  `React + client + document + lazy routes: ${sizes.reactLazyApplication} B gzip`,
   `Preact + client + document: ${sizes.preactApplication} B gzip`,
   `Preact + client + document + lazy routes: ${sizes.preactLazyApplication} B gzip`,
 ].join("\n");

@@ -6,12 +6,12 @@
   "sections": [
     {
       "title": "Contract",
-      "body": "Contains isActive and isPending booleans. isActive uses pathname matching; end disables descendant matching. isPending is currently always false.",
+      "body": "Contains isActive and isPending booleans. isActive uses pathname matching; end disables descendant matching. isPending matches the pending navigation destination using the same pathname and end rules.",
       "code": "import type { NavLinkRenderProps } from \"@kasperrt/smolter/preact\";\n\nexport function activeClass({ isActive }: NavLinkRenderProps): string {\n  return isActive ? \"active\" : \"\";\n}"
     },
     {
       "title": "Usage and limits",
-      "body": "Use useNavigation for page request state. Do not rely on isPending to show a loader or action indicator in the current implementation.",
+      "body": "isPending follows page navigation, including retained views. It does not include independent fetcher activity.",
       "code": ""
     }
   ]
