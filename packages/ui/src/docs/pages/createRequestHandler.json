@@ -15,13 +15,13 @@
       "code": ""
     },
     {
-      "title": "Transport",
-      "body": "Document requests call build.default. Requests to /_smolter with a local url query parameter call build.handleDataRequest with the original method, headers and body. Invalid targets return 400. Client disconnection aborts the Request signal. Response bodies are currently buffered; streaming SSR is not supported by this helper.",
+      "title": "Returns",
+      "body": "Document requests call build.default. dataEndpoint defaults to /_smolter; set it to an app-scoped path on shared origins. Matching requests with a local url parameter call build.handleDataRequest. Invalid targets return 400. Every transport response uses private, no-store. Client disconnection aborts the Request. Response bodies stream with backpressure and compression flush support.",
       "code": ""
     },
     {
-      "title": "Returns",
-      "body": "Document requests call build.default. dataEndpoint defaults to /_smolter; set it to an app-scoped path on shared origins. Matching requests with a local url parameter call build.handleDataRequest. Invalid targets return 400. Every transport response uses private, no-store. Client disconnection aborts the Request. Response bodies stream with backpressure and compression flush support.",
+      "title": "Early shell interactivity",
+      "body": "Configure earlyHydration on renderApplication in your server entry, not on this middleware. Keep reverse-proxy buffering disabled if the shell must arrive before optional data. The adapter respects response backpressure and flushes compression when the response provides flush(). A disconnected browser aborts the request and cancels its response reader.",
       "code": ""
     }
   ]

@@ -20,11 +20,6 @@
       "code": ""
     },
     {
-      "title": "Metrics and streaming",
-      "body": "Your Prometheus request middleware wraps the full SSR/action handler. Keep /metrics or a separate metrics listener under your application\u2019s access policy. The current send helper buffers Response bodies; it does not provide streaming SSR. Renderers and Node helpers live in server-only subpaths and are not imported by the browser router.",
-      "code": ""
-    },
-    {
       "title": "Entry files",
       "body": "Your metrics and tracing middleware wraps the SSR/action handler. Node helpers stream Response bodies with backpressure and flush compression middleware when supported. Keep proxies configured to permit streaming. Server code stays in server-only subpaths.",
       "code": ""

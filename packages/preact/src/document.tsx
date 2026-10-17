@@ -72,10 +72,12 @@ export interface ScriptProps {
 }
 
 export function Scripts({ nonce }: ScriptProps): import("preact").JSX.Element {
-  const { root, rootError, router, entry, streaming } = useApplication();
+  const { root, rootError, router, entry, streaming, initialData } =
+    useApplication();
   // The bootstrap payload describes this document's initial SSR snapshot.
   // Navigation and revalidation update the router, not the hydration script.
   const [json] = useState(() => {
+    if (initialData !== undefined) return initialData;
     if (streaming) return "";
 
     const current = router.getSnapshot();
@@ -105,7 +107,14 @@ export function Scripts({ nonce }: ScriptProps): import("preact").JSX.Element {
         {...(nonce && { nonce })}
         dangerouslySetInnerHTML={{ __html: json }}
       />
-      {entry && <script type="module" src={entry} {...(nonce && { nonce })} />}
+      {entry && (
+        <script
+          type="module"
+          async={initialData !== undefined}
+          src={entry}
+          {...(nonce && { nonce })}
+        />
+      )}
     </Fragment>
   );
 }

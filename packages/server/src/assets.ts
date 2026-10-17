@@ -3,6 +3,7 @@ import { matchRoutes } from "@smolter/core";
 export interface RouteAssets {
   path: string;
   files: string[];
+  styles?: string[];
 }
 
 export function routePreloads(
@@ -13,7 +14,14 @@ export function routePreloads(
   const match = matchRoutes(routes, pathname);
   const route = match?.route as RouteAssets | undefined;
 
-  return (route?.files ?? [])
-    .map((file) => `<${base.replace(/\/$/, "")}/${file}>; rel=modulepreload`)
-    .join(", ");
+  const prefix = base.replace(/\/$/, "");
+
+  return [
+    ...(route?.styles ?? []).map(
+      (file) => `<${prefix}/${file}>; rel=preload; as=style`,
+    ),
+    ...(route?.files ?? []).map(
+      (file) => `<${prefix}/${file}>; rel=modulepreload`,
+    ),
+  ].join(", ");
 }

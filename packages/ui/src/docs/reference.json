@@ -1842,11 +1842,16 @@
     "entries": ["preact/server"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface RenderApplicationOptions {\n  nonce?: string;\n}",
+    "signature": "interface RenderApplicationOptions {\n  nonce?: string;\n  earlyHydration?: boolean;\n}",
     "fields": [
       {
         "name": "nonce",
         "signature": "nonce?: string;",
+        "summary": ""
+      },
+      {
+        "name": "earlyHydration",
+        "signature": "earlyHydration?: boolean;",
         "summary": ""
       }
     ],

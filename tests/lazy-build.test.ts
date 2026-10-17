@@ -9,6 +9,7 @@ import { fileRouter } from "../packages/vite/src/index.ts";
 interface RouteAssets {
   path: string;
   files: string[];
+  styles: string[];
 }
 
 it("splits route views and records their shared assets without bundling server handlers", async (context) => {
@@ -22,8 +23,12 @@ it("splits route views and records their shared assets without bundling server h
 
   const files = {
     "entry.ts": 'export { default } from "virtual:smolter/routes";',
-    "optional.ts": 'export const detail = "Optional interaction content";',
-    "shared.ts": 'export const label = "Shared route content";',
+    "shared.css": "main { color: rebeccapurple; }",
+    "optional.css": "aside { color: blue; }",
+    "optional.ts":
+      'import "./optional.css"; export const detail = "Optional interaction content";',
+    "shared.ts":
+      'import "./shared.css"; export const label = "Shared route content";',
     "server.ts":
       'import { readFile } from "node:fs/promises"; export const loader = () => readFile("SERVER_ONLY");',
     "src/routes/_index.ts": `
@@ -82,6 +87,11 @@ it("splits route views and records their shared assets without bundling server h
 
   for (const route of routes) {
     expect(route.files.length).toBeGreaterThan(1);
+    expect(route.styles).toHaveLength(1);
+    const style = result.output.find(
+      (item) => item.fileName === route.styles[0],
+    );
+    expect(style?.type === "asset" && String(style.source)).toContain("main{");
     expect(
       route.files.every((file) =>
         chunks.some((chunk) => chunk.fileName === file),

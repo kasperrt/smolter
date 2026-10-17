@@ -3,6 +3,10 @@ import { resolve } from "node:path";
 import { flatRoutes } from "@smolter/files";
 import { type Plugin, transformWithOxc } from "vite";
 
+interface ChunkMetadata {
+  importedCss?: Set<string>;
+}
+
 // Reuse Smolter's file discovery and server-export stripping. Only the browser
 // route manifest changes: matched routes load before their data is committed.
 export function lazyFiles(
@@ -31,6 +35,7 @@ export function lazyFiles(
         if (!path) continue;
 
         const files = new Set<string>();
+        const styles = new Set<string>();
 
         function visit(file: string) {
           if (files.has(file)) return;
@@ -41,11 +46,16 @@ export function lazyFiles(
 
           files.add(file);
 
+          const metadata = dependency.viteMetadata as ChunkMetadata | undefined;
+          for (const stylesheet of metadata?.importedCss ?? []) {
+            if (bundle[stylesheet]?.type === "asset") styles.add(stylesheet);
+          }
+
           for (const imported of dependency.imports) visit(imported);
         }
 
         visit(chunk.fileName);
-        routes.push({ path, files: [...files] });
+        routes.push({ path, files: [...files], styles: [...styles] });
       }
 
       const paths = [...modules.values()];

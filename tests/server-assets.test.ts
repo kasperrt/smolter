@@ -48,13 +48,17 @@ for (const mode of ["document", "data"]) {
 
 it("preloads only the first matching route's files under the configured asset base", () => {
   const routes = [
-    { path: "/items/new", files: ["assets/new.js"] },
+    {
+      path: "/items/new",
+      files: ["assets/new.js"],
+      styles: ["assets/new.css"],
+    },
     { path: "/items/:id", files: ["assets/item.js", "assets/shared.js"] },
     { path: "/empty", files: [] },
   ];
 
   expect(routePreloads(routes, "/items/new", "/app/")).toBe(
-    "</app/assets/new.js>; rel=modulepreload",
+    "</app/assets/new.css>; rel=preload; as=style, </app/assets/new.js>; rel=modulepreload",
   );
   expect(routePreloads(routes, "/items/42", "https://cdn.example/app/")).toBe(
     "<https://cdn.example/app/assets/item.js>; rel=modulepreload, <https://cdn.example/app/assets/shared.js>; rel=modulepreload",

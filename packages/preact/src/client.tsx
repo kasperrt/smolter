@@ -11,6 +11,7 @@ import { connectNavigation } from "@smolter/core/navigation";
 import { retainRoute } from "@smolter/core/presentation";
 import { hydrate, render } from "preact";
 import { flushSync } from "preact/compat";
+import { readHydration } from "./deferred-hydration.ts";
 import { attachRootData } from "./root-data.ts";
 import type { AppRoute, Hydration, RootModule } from "./route-types.ts";
 import { prepareRoutes, RouterApplication } from "./router.tsx";
@@ -46,25 +47,10 @@ export async function mountApplication(
 
   routes = prepareRoutes(routes);
   const element = document.getElementById("smolter-data");
-  const hydration: Hydration | undefined = element?.textContent
-    ? JSON.parse(element.textContent, (_key, value) => {
-        if (
-          !value ||
-          typeof value !== "object" ||
-          !("__smolterRejected" in value)
-        )
-          return value;
-
-        const error = Object.assign(
-          new Error(value.__smolterRejected.message),
-          value.__smolterRejected,
-        );
-        const rejected = Promise.reject(error);
-        void rejected.catch(() => {});
-
-        return rejected;
-      })
+  const initial = element?.textContent
+    ? readHydration(element.textContent)
     : undefined;
+  const hydration: Hydration | undefined = initial?.hydration;
 
   if (hydration?.snapshot.error)
     hydration.snapshot.error = Object.assign(
@@ -79,6 +65,11 @@ export async function mountApplication(
       : location.href,
     ...(hydration && { hydrationData: hydration.snapshot }),
   });
+  const dispose = router.dispose;
+  router.dispose = () => {
+    initial?.dispose();
+    dispose();
+  };
   watchDeployment(router, deployment);
   if (hash) connectHashHistory(router);
 
@@ -98,19 +89,18 @@ export async function mountApplication(
   if (hydration) {
     // Explicitly unmanaged head nodes must not participate in positional hydration.
     const preserved = Array.from(
-      document.head.querySelectorAll(":scope > [data-smolter-preserve]"),
-      (node) => ({ node, next: node.nextSibling }),
+      document.querySelectorAll(
+        "head > [data-smolter-preserve], body > [data-smolter-stream]",
+      ),
+      (node) => ({ node, next: node.nextSibling, parent: node.parentNode! }),
     );
     for (const { node } of preserved) node.remove();
 
     await Promise.resolve()
       .then(() => hydrate(<RouterApplication {...props} document />, document))
       .finally(() => {
-        for (const { node, next } of preserved.reverse())
-          document.head.insertBefore(
-            node,
-            next?.parentNode === document.head ? next : null,
-          );
+        for (const { node, next, parent } of preserved.reverse())
+          parent.insertBefore(node, next?.parentNode === parent ? next : null);
       });
 
     return router;
