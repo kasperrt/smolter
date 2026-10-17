@@ -18,6 +18,8 @@ fs.readFileSync = (file, ...args) => {
 };
 
 let publications = 0;
+let jsrPublications = 0;
+let jsrVisible = false;
 let waits = 0;
 
 timers.setTimeout = async (delay) => {
@@ -28,7 +30,16 @@ timers.setTimeout = async (delay) => {
 globalThis.fetch = async (input) => {
   const url = new URL(input);
 
-  if (url.hostname === "jsr.io") return new Response(null);
+  if (url.hostname === "jsr.io") {
+    if (scenario === "jsr-unavailable")
+      return new Response(null, { status: 503 });
+
+    jsrVisible =
+      !scenario?.startsWith("jsr-") ||
+      (jsrPublications > 0 && scenario === "jsr-delayed" && waits >= 2);
+
+    return new Response(null, { status: jsrVisible ? 200 : 404 });
+  }
 
   assert.equal(url.hostname, "registry.npmjs.org");
 
@@ -44,6 +55,17 @@ globalThis.fetch = async (input) => {
 };
 
 childProcess.execFileSync = (binary, args, options) => {
+  if (binary === "node") {
+    assert.deepEqual(args, ["scripts/jsr.mjs", "--publish"]);
+    jsrPublications++;
+
+    if (scenario === "jsr-rejected")
+      throw new Error("JSR rejected publication");
+
+    return "";
+  }
+
+  assert.ok(jsrVisible, "npm must wait for the published JSR version");
   assert.equal(binary, "npm");
   assert.deepEqual(args, [
     "publish",
@@ -70,9 +92,19 @@ fs.writeFileSync = (file, contents) => {
 syncBuiltinESMExports();
 
 process.on("exit", (code) => {
-  if (code === 0) assert.equal(publications, scenario === "published" ? 0 : 1);
+  if (code === 0)
+    assert.equal(
+      publications,
+      scenario === "published" || process.argv[2] === "publish-jsr" ? 0 : 1,
+    );
+  if (["jsr-rejected", "jsr-missing", "jsr-unavailable"].includes(scenario))
+    assert.equal(publications, 0);
   assert.equal(
     waits,
-    scenario === "delayed" ? 2 : scenario === "staged" ? 19 : 0,
+    ["delayed", "jsr-delayed"].includes(scenario)
+      ? 2
+      : ["staged", "jsr-missing"].includes(scenario)
+        ? 19
+        : 0,
   );
 });

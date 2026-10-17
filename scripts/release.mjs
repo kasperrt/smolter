@@ -80,16 +80,12 @@ if (mode === "verify") {
     fail("A newer main commit exists; release that commit instead.");
 }
 
-if (mode === "publish") {
+if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
   if (process.env.GITHUB_ACTIONS !== "true")
     fail("Publishing requires GitHub Actions.");
 
-  const npmExists = await published(
-    `https://registry.npmjs.org/${manifest.name}/${manifest.version}`,
-  );
-  const jsrExists = await published(
-    `https://jsr.io/${jsr.name}/${jsr.version}_meta.json`,
-  );
+  const jsrUrl = `https://jsr.io/${jsr.name}/${jsr.version}_meta.json`;
+  const npmUrl = `https://registry.npmjs.org/${manifest.name}/${manifest.version}`;
 
   // Registry README badges become visible only when this version is published.
   const readme = new URL("README.md", directory);
@@ -99,7 +95,19 @@ if (mode === "publish") {
     withSizeBadges(readFileSync(readme, "utf8"), manifest.version),
   );
 
-  if (!npmExists) {
+  if (mode !== "publish-npm" && !(await published(jsrUrl)))
+    command("node", ["scripts/jsr.mjs", "--publish"]);
+
+  // JSR acceptance and registry visibility are prerequisites for touching npm.
+  for (let attempt = 0; !(await published(jsrUrl)); attempt++) {
+    if (mode === "publish-npm" || attempt === 19)
+      fail("JSR publication is not available; npm publication is blocked.");
+
+    console.log("Waiting for JSR publication to become available...");
+    await setTimeout(15_000);
+  }
+
+  if (mode !== "publish-jsr" && !(await published(npmUrl))) {
     const env = { ...process.env };
 
     delete env.SMOLTER_NPM_BOOTSTRAP_TOKEN;
@@ -122,10 +130,8 @@ if (mode === "publish") {
     );
   }
 
-  if (!jsrExists) command("node", ["scripts/jsr.mjs", "--publish"]);
-
   // Registries can accept a publication before their read endpoints expose it.
-  for (let attempt = 0; attempt < 20; attempt++) {
+  for (let attempt = 0; mode !== "publish-jsr" && attempt < 20; attempt++) {
     const available = await Promise.all([
       published(
         `https://registry.npmjs.org/${manifest.name}/${manifest.version}`,
