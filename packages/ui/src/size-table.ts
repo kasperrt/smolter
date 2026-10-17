@@ -49,9 +49,16 @@ export const entryRows: (string | number)[][] = [
     sizes.reactServer,
     sizes.preactServer,
   ],
-  ["Application: /preact + /client + /document", "—", sizes.preactApplication],
-  ["Application + /preact/lazy-route", "—", sizes.preactLazyApplication],
-  ["Optional /react/data entry, by itself", sizes.reactData, "—"],
+  [
+    "Application: adapter + /client + /document",
+    sizes.reactApplication,
+    sizes.preactApplication,
+  ],
+  [
+    "Application + /lazy-route",
+    sizes.reactLazyApplication,
+    sizes.preactLazyApplication,
+  ],
 ];
 
 export const comparisonRows: (string | number)[][] = [

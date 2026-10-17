@@ -57,7 +57,7 @@
     "wouter": "3.13.0",
     "wouter-preact": "3.13.0"
   },
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "A tiny typed data router for React and Preact.",
   "sideEffects": false,
   "license": "MIT",
@@ -75,16 +75,16 @@
       "import": "./dist/preact/index.js"
     },
     "./react/server": {
-      "types": "./dist/server/index.d.ts",
-      "import": "./dist/server/index.js"
+      "types": "./dist/server/react.d.ts",
+      "import": "./dist/server/react.js"
     },
     "./preact/server": {
       "types": "./dist/server/preact.d.ts",
       "import": "./dist/server/preact.js"
     },
     "./react/client": {
-      "types": "./dist/client/index.d.ts",
-      "import": "./dist/client/index.js"
+      "types": "./dist/react/client.d.ts",
+      "import": "./dist/react/client.js"
     },
     "./preact/client": {
       "types": "./dist/preact/client.d.ts",
@@ -114,10 +114,6 @@
       "types": "./dist/core/responses.d.ts",
       "import": "./dist/core/responses.js"
     },
-    "./react/data": {
-      "types": "./dist/react/data.d.ts",
-      "import": "./dist/react/data.js"
-    },
     "./preact/lazy-route": {
       "types": "./dist/preact/lazy-route.d.ts",
       "import": "./dist/preact/lazy-route.js"
@@ -125,6 +121,14 @@
     "./preact/document": {
       "types": "./dist/preact/document.d.ts",
       "import": "./dist/preact/document.js"
+    },
+    "./react/document": {
+      "types": "./dist/react/document.d.ts",
+      "import": "./dist/react/document.js"
+    },
+    "./react/lazy-route": {
+      "types": "./dist/react/lazy-route.d.ts",
+      "import": "./dist/react/lazy-route.js"
     }
   },
   "files": [
@@ -139,7 +143,8 @@
     "preact": ">=11.0.1",
     "preact-render-to-string": ">=6.8.1",
     "react": ">=18",
-    "vite": ">=8"
+    "vite": ">=8",
+    "react-dom": ">=18"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -152,6 +157,9 @@
       "optional": true
     },
     "preact-render-to-string": {
+      "optional": true
+    },
+    "react-dom": {
       "optional": true
     }
   },

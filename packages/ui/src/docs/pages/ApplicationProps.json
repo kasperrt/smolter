@@ -1,0 +1,13 @@
+{
+  "slug": "ApplicationProps",
+  "title": "ApplicationProps",
+  "summary": "Router, root data and document composition for RouterApplication.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Application context",
+      "body": "Pass a request-scoped router, its route table and initial root loader data. rootModule supplies the layout and root error boundary. document renders the full Layout; omit it when rendering into a container. A rootStore lets custom integrations publish root refreshes. Prefer mountApplication and renderApplication for the complete browser/server setup.",
+      "code": "import type { ApplicationProps } from \"@kasperrt/smolter/react\";\n\nconst props: ApplicationProps = { router, routes, root: initialRoot };"
+    }
+  ]
+}

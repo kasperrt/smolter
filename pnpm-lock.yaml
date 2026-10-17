@@ -193,12 +193,18 @@ importers:
 
   packages/react:
     dependencies:
+      '@smolter/client':
+        specifier: workspace:*
+        version: link:../client
       '@smolter/core':
         specifier: workspace:*
         version: link:../core
       react:
         specifier: 'catalog:'
         version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
 
   packages/server:
     dependencies:
@@ -208,6 +214,9 @@ importers:
       '@smolter/preact':
         specifier: workspace:*
         version: link:../preact
+      '@smolter/react':
+        specifier: workspace:*
+        version: link:../react
 
   packages/ui:
     dependencies:

@@ -21,7 +21,7 @@
     },
     {
       "title": "Pending state and inherited behavior",
-      "body": "isPending is currently always false. Use useNavigation for page pending state rather than relying on this field. NavLink forwards link prefetching, reloadDocument, event handlers, and navigation options to Link. It does not create nested route matches.",
+      "body": "isPending matches the pending navigation destination using the same pathname and end rules. Independent fetchers do not mark a navigation link pending. NavLink forwards link prefetching, reloadDocument, event handlers, and navigation options to Link. It does not create nested route matches.",
       "code": ""
     }
   ]

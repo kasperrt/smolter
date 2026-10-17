@@ -6,13 +6,18 @@
   "sections": [
     {
       "title": "Who creates virtual:smolter/routes?",
-      "body": "This is a Vite-generated module, not a file to create and not an npm package. fileRouter (also called routerPlugin) provides it. applicationPlugins includes that plugin plus the optional Preact application integration. The spelling is virtual:smolter/routes, not virtual:smolter/router. Importing it outside a Vite build with the plugin installed will fail.",
+      "body": "This is a Vite-generated module, not a file to create and not an npm package. fileRouter (also called routerPlugin) provides it. applicationPlugins includes that plugin plus the matching React or Preact application integration. The spelling is virtual:smolter/routes, not virtual:smolter/router. Importing it outside a Vite build with the plugin installed will fail.",
       "code": "import { defineConfig } from \"vite\";\nimport { applicationPlugins } from \"@kasperrt/smolter/preact/vite\";\n\nexport default defineConfig({\n  plugins: applicationPlugins({ directory: \"src/routes\" }),\n});"
+    },
+    {
+      "title": "Choose the renderer",
+      "body": "Use matching react/server, react/client and react/document imports with React DOM 19+. Preact uses the corresponding preact paths. Routing hooks and manual loadRouter SSR continue to support React 18. Application middleware, scoped data endpoints and lazy file discovery work with either renderer.",
+      "code": "// Server\nimport { renderApplication } from \"@kasperrt/smolter/react/server\";\n// Browser\nimport { mountApplication } from \"@kasperrt/smolter/react/client\";\n// Root Layout\nimport { Document, Meta, Links, Scripts } from \"@kasperrt/smolter/react/document\";"
     },
     {
       "title": "What does it export?",
       "body": "Its default export is a route array discovered from src/routes. Dots separate URL segments; $name captures a parameter; _index maps to the index path. Route modules export their default view and colocated behavior. No second file-routes directory is needed.",
-      "code": "src/routes/_index/route.tsx           \u2192 /\nsrc/routes/tasks/route.tsx            \u2192 /tasks\nsrc/routes/tasks.$id/route.tsx        \u2192 /tasks/:id\n\n// src/routes/tasks.$id/route.tsx\nexport { loader } from \"./loader\";\nexport { action } from \"./action\";\nexport { clientLoader } from \"./clientLoader\";\nexport { clientAction } from \"./clientAction\";\nexport { shouldRevalidate } from \"./shouldRevalidate\";\nexport { Task as default } from \"./components/Task\";"
+      "code": "src/routes/_index/route.tsx           → /\nsrc/routes/tasks/route.tsx            → /tasks\nsrc/routes/tasks.$id/route.tsx        → /tasks/:id\n\n// src/routes/tasks.$id/route.tsx\nexport { loader } from \"./loader\";\nexport { action } from \"./action\";\nexport { clientLoader } from \"./clientLoader\";\nexport { clientAction } from \"./clientAction\";\nexport { shouldRevalidate } from \"./shouldRevalidate\";\nexport { Task as default } from \"./components/Task\";"
     },
     {
       "title": "Different browser and server manifests",
@@ -21,7 +26,7 @@
     },
     {
       "title": "entry.client.tsx is application-owned",
-      "body": "For the optional Preact application integration, this file starts hydration. Smolter supplies mountApplication, not the physical file. The Vite application plugin defaults to this path. It can configure application-wide URL policy before mounting. It must not import server handlers.",
+      "body": "For the matching React or Preact application integration, this file starts hydration. Smolter supplies mountApplication, not the physical file. The Vite application plugin defaults to this path. It can configure application-wide URL policy before mounting. It must not import server handlers.",
       "code": "import routes from \"virtual:smolter/routes\";\nimport { mountApplication } from \"@kasperrt/smolter/preact/client\";\nimport * as root from \"./root\";\n\nmountApplication(routes, root);"
     },
     {
@@ -51,7 +56,7 @@
     },
     {
       "title": "Development updates and HMR",
-      "body": "The dev server watches flat route entry files. Adding, removing or renaming a route refreshes discovery in both the browser and SSR module graphs and reloads the browser. Editing a route entry also reloads so changed paths, IDs and handler exports cannot leave an old router running. Colocated components and helpers use normal Vite HMR; state preservation depends on your framework plugin and its accepted update boundaries. Manual clientRoutes/serverRoutes modules use Vite\u2019s import graph, including edits that add or remove entries. Without an accepting HMR boundary, Vite reloads the page. No server restart is needed for route changes. Vite configuration changes still follow Vite\u2019s normal restart behavior. Production deployment manifests are disabled during development.",
+      "body": "The dev server watches flat route entry files. Adding, removing or renaming a route refreshes discovery in both the browser and SSR module graphs and reloads the browser. Editing a route entry also reloads so changed paths, IDs and handler exports cannot leave an old router running. Colocated components and helpers use normal Vite HMR; state preservation depends on your framework plugin and its accepted update boundaries. Manual clientRoutes/serverRoutes modules use Vite’s import graph, including edits that add or remove entries. Without an accepting HMR boundary, Vite reloads the page. No server restart is needed for route changes. Vite configuration changes still follow Vite’s normal restart behavior. Production deployment manifests are disabled during development.",
       "code": ""
     },
     {

@@ -1,0 +1,52 @@
+import type { RevalidationArgs, Router } from "@smolter/core";
+
+interface RootModule {
+  default?: unknown;
+  Layout?: unknown;
+  id?: string;
+  loaderPath?: string;
+  shouldRevalidate?: (args: RevalidationArgs) => boolean;
+}
+
+export { createStore as createRootStore } from "@smolter/core/store";
+
+import { createStore } from "@smolter/core/store";
+
+export function attachRootData(
+  router: Router,
+  initial: unknown,
+  rootModule?: RootModule,
+) {
+  const store = createStore(initial);
+  const loaderPath = rootModule?.loaderPath;
+
+  if (!rootModule || !loaderPath) return store;
+
+  let pending: ReturnType<Router["createFetcher"]> | undefined;
+  const unregister = router.registerRevalidator(
+    rootModule.id ?? "root",
+    async (args) => {
+      if (rootModule.shouldRevalidate?.(args) === false) return;
+
+      pending?.dispose();
+      const fetcher = router.createFetcher();
+      pending = fetcher;
+      const result = await fetcher.load(loaderPath);
+
+      if (pending === fetcher && !result.error) store.update(result.data);
+
+      fetcher.dispose();
+
+      if (pending === fetcher) pending = undefined;
+    },
+  );
+  const dispose = router.dispose;
+  router.dispose = () => {
+    pending?.dispose();
+    pending = undefined;
+    unregister();
+    dispose();
+  };
+
+  return store;
+}

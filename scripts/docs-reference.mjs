@@ -14,6 +14,7 @@ for (const entry of [
   "react/client",
   "preact/client",
   "preact/document",
+  "react/document",
   "react/server",
   "preact/server",
   "react/vite",

@@ -17,7 +17,18 @@ export function routerPlugin(options: FileRouterOptions = {}): Plugin {
 /** File routing is the default; this alias keeps configuration explicit. */
 export const fileRouter = routerPlugin;
 
+export type { ApplicationOptions } from "./application/vite.ts";
 export {
   type DeploymentPluginOptions,
   deploymentPlugin,
 } from "./deployment.ts";
+
+import {
+  type ApplicationOptions,
+  applicationPlugins as plugins,
+} from "./application/vite.ts";
+
+/** Configure React application SSR, scoped data transport and lazy file routing. */
+export function applicationPlugins(options: ApplicationOptions = {}): Plugin[] {
+  return plugins({ ...options, framework: "react" });
+}

@@ -1,0 +1,145 @@
+import { matchRoutes, type NavigateOptions } from "@smolter/core";
+import {
+  handoffDocument,
+  resolveApplicationURL,
+} from "@smolter/core/environment";
+import { navigationClick } from "@smolter/core/url";
+import { useRouter, useSnapshot } from "./context.ts";
+import { useNavigation, useURLLocation } from "./route-hooks.ts";
+import type { AppRoute } from "./route-types.ts";
+import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "./runtime.ts";
+import { createElement } from "./runtime.ts";
+
+export type { NavigateOptions } from "@smolter/core";
+
+export type { NavigationType } from "@smolter/core/navigation";
+
+/** Navigate to a URL or move through browser history using a numeric offset. */
+export type NavigateFunction = (
+  to: string | number | Partial<Pick<URL, "pathname" | "search" | "hash">>,
+  options?: NavigateOptions,
+) => void;
+
+/** Anchor properties and router navigation options, including document reload and prefetch controls. */
+export interface LinkProps
+  extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+  to?: string;
+  href?: string;
+  replace?: boolean;
+  prefetch?: string;
+  state?: unknown;
+  preventScrollReset?: boolean;
+  viewTransition?: boolean;
+  reloadDocument?: boolean;
+}
+
+/** Active and pending flags supplied to NavLink render callbacks. */
+export interface NavLinkRenderProps {
+  isActive: boolean;
+  isPending: boolean;
+}
+
+/** Link options with matching rules and state-aware class or children callbacks. */
+export interface NavLinkProps
+  extends Omit<LinkProps, "className" | "children"> {
+  end?: boolean;
+  className?: string | ((state: NavLinkRenderProps) => string);
+  children?: ReactNode | ((state: NavLinkRenderProps) => ReactNode);
+}
+
+/** Render an anchor with same-origin router navigation and optional intent prefetching. */
+export function Link(options: LinkProps): ReactNode {
+  const {
+    href: hrefProp,
+    to = hrefProp ?? "/",
+    replace,
+    preventScrollReset,
+    viewTransition,
+    prefetch,
+    state,
+    reloadDocument,
+    ...props
+  } = options;
+  const router = useRouter();
+  const current = new URL(useSnapshot("url"));
+  const destination = resolveApplicationURL(new URL(to, current));
+  const internal = destination.origin === current.origin;
+  const preload = () => {
+    const route = matchRoutes(router.routes, destination.pathname)?.route as
+      | AppRoute
+      | undefined;
+
+    void route?.preload?.().catch(() => {});
+  };
+
+  if (!reloadDocument && prefetch !== "none" && internal) {
+    for (const name of ["onPointerEnter", "onFocus", "onTouchStart"] as const) {
+      const handler = props[name] as ((event: unknown) => void) | undefined;
+
+      props[name] = (event) => {
+        handler?.(event);
+        preload();
+      };
+    }
+  }
+
+  return createElement("a", {
+    ...props,
+    href: destination.href,
+    onClick(event: MouseEvent<HTMLAnchorElement>) {
+      props.onClick?.(event);
+
+      if (reloadDocument || !navigationClick(event, event.currentTarget))
+        return;
+
+      if (!internal) {
+        handoffDocument(event.nativeEvent, destination);
+
+        return;
+      }
+
+      event.preventDefault();
+      void router.navigate(destination.href, options);
+    },
+  });
+}
+
+/** Render a Link with active-route state and aria-current for the matching destination. */
+export function NavLink({
+  href,
+  to = href ?? "/",
+  end,
+  className,
+  children,
+  ...props
+}: NavLinkProps): ReactNode {
+  const location = useURLLocation();
+  const destination = resolveApplicationURL(new URL(to, location.href));
+  const target = destination.pathname;
+  const isActive =
+    destination.origin === location.origin &&
+    (location.pathname === target ||
+      (!end && target !== "/" && location.pathname.startsWith(`${target}/`)));
+  const pending = useNavigation().location;
+  const isPending =
+    !!pending &&
+    pending.origin === destination.origin &&
+    (pending.pathname === target ||
+      (!end && target !== "/" && pending.pathname.startsWith(`${target}/`)));
+  const state = { isActive, isPending };
+
+  return createElement(Link, {
+    ...props,
+    to,
+    className: typeof className === "function" ? className(state) : className,
+    ...(isActive && { "aria-current": "page" }),
+    children: typeof children === "function" ? children(state) : children,
+  });
+}
+
+export {
+  useNavigate,
+  useNavigationType,
+  useSearchParams,
+  useURLLocation,
+} from "./route-hooks.ts";

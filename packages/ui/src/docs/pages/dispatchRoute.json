@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Parameters",
-      "body": "request is the original web Request; routes is the server route table; document controls redirect handling.",
+      "body": "request must contain the normalized application route URL, not the transport endpoint URL. Pass the server route table. document defaults to false: data responses use private, no-store and encode redirects for browser transport. document: true preserves document redirect/status behavior.",
       "code": ""
     },
     {
@@ -17,7 +17,7 @@
     {
       "title": "Usage",
       "body": "Dispatch one server loader or action from a Request.",
-      "code": "const response = await dispatchRoute(request, routes);"
+      "code": "import { dispatchRoute } from \"@kasperrt/smolter/react/server\";\n// The same function is exported from preact/server.\nconst response = await dispatchRoute(request, routes);"
     },
     {
       "title": "Behavior and limits",

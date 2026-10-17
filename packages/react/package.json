@@ -5,10 +5,17 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./router": "./src/router.ts",
+    "./route-types": "./src/route-types.ts",
+    "./client": "./src/client.tsx",
+    "./document": "./src/document.tsx",
+    "./lazy-route": "./src/lazy-route.ts"
   },
   "dependencies": {
     "@smolter/core": "workspace:*",
-    "react": "catalog:"
+    "react": "catalog:",
+    "@smolter/client": "workspace:*",
+    "react-dom": "catalog:"
   }
 }

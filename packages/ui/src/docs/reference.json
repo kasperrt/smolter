@@ -30,6 +30,83 @@
     "source": "packages/core/src/match.ts"
   },
   {
+    "slug": "ApplicationEnvironment",
+    "title": "ApplicationEnvironment",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Application base URLs, navigation handoff and document-transition settings shared by browser integrations.",
+    "signature": "interface ApplicationEnvironment {\n  resolveURL?: (url: URL) => URL;\n  isDocumentHandoff?: (from: URL, to: URL) => boolean;\n  leaveDocument?: (destination: URL) => void;\n  entryScript?: string;\n}",
+    "fields": [
+      {
+        "name": "resolveURL",
+        "signature": "resolveURL?: (url: URL) => URL;",
+        "summary": ""
+      },
+      {
+        "name": "isDocumentHandoff",
+        "signature": "isDocumentHandoff?: (from: URL, to: URL) => boolean;",
+        "summary": ""
+      },
+      {
+        "name": "leaveDocument",
+        "signature": "leaveDocument?: (destination: URL) => void;",
+        "summary": ""
+      },
+      {
+        "name": "entryScript",
+        "signature": "entryScript?: string;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/environment.ts"
+  },
+  {
+    "slug": "Submission",
+    "title": "Submission",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Values accepted by programmatic route submissions.",
+    "signature": "type Submission = FormData | HTMLFormElement | Record<string, unknown>;",
+    "fields": [],
+    "source": "packages/core/src/submission.ts"
+  },
+  {
+    "slug": "SubmissionOptions",
+    "title": "SubmissionOptions",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Destination and encoding for a programmatic route submission.",
+    "signature": "interface SubmissionOptions {\n  action?: string;\n  encType?: string;\n  method?: string;\n  replace?: boolean;\n  preventScrollReset?: boolean;\n}",
+    "fields": [
+      {
+        "name": "action",
+        "signature": "action?: string;",
+        "summary": ""
+      },
+      {
+        "name": "encType",
+        "signature": "encType?: string;",
+        "summary": ""
+      },
+      {
+        "name": "method",
+        "signature": "method?: string;",
+        "summary": ""
+      },
+      {
+        "name": "replace",
+        "signature": "replace?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "preventScrollReset",
+        "signature": "preventScrollReset?: boolean;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/submission.ts"
+  },
+  {
     "slug": "RouterProvider",
     "title": "RouterProvider",
     "entries": ["react", "preact"],
@@ -120,6 +197,87 @@
     "signature": "function useOutletContext<T>(): T;",
     "fields": [],
     "source": "packages/react/src/outlet.ts"
+  },
+  {
+    "slug": "useNavigation",
+    "title": "useNavigation",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Read the current page navigation or submission state.",
+    "signature": "function useNavigation(): {\n  state: \"idle\" | \"loading\" | \"submitting\";\n  location: URL | undefined;\n};",
+    "fields": [],
+    "source": "packages/react/src/route-hooks.ts"
+  },
+  {
+    "slug": "useRootData",
+    "title": "useRootData",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Read root loader data from the application context.",
+    "signature": "function useRootData<T = unknown>(): RouteData<T>;",
+    "fields": [],
+    "source": "packages/react/src/route-hooks.ts"
+  },
+  {
+    "slug": "useRouteError",
+    "title": "useRouteError",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Read the current route error for an error boundary.",
+    "signature": "function useRouteError(): Error | undefined;",
+    "fields": [],
+    "source": "packages/react/src/route-hooks.ts"
+  },
+  {
+    "slug": "useRouteLoaderData",
+    "title": "useRouteLoaderData",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Read root data or the active route's data by its manifest identifier.",
+    "signature": "function useRouteLoaderData<T = unknown>(\n  id: string,\n): RouteData<T> | undefined;",
+    "fields": [],
+    "source": "packages/react/src/route-hooks.ts"
+  },
+  {
+    "slug": "useSubmit",
+    "title": "useSubmit",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Return a function that submits form data through the current router.",
+    "signature": "function useSubmit(): (\n  value: Submission,\n  options?: SubmissionOptions,\n) => Promise<void> | Promise<import(\"@smolter/core\").Result<unknown>>;",
+    "fields": [],
+    "source": "packages/react/src/route-hooks.ts"
+  },
+  {
+    "slug": "ApplicationProps",
+    "title": "ApplicationProps",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Root data, document components and request-scoped router for an application.",
+    "signature": "interface ApplicationProps extends ApplicationContext {\n  document?: boolean;\n  rootStore?: ReturnType<typeof createStore>;\n}",
+    "fields": [
+      {
+        "name": "document",
+        "signature": "document?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "rootStore",
+        "signature": "rootStore?: ReturnType<typeof createStore>;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/router.ts"
+  },
+  {
+    "slug": "RouterApplication",
+    "title": "RouterApplication",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Compose a persistent root layout with route views and observable root loader data.",
+    "signature": "function RouterApplication(props: ApplicationProps): ReactNode;",
+    "fields": [],
+    "source": "packages/react/src/router.ts"
   },
   {
     "slug": "NavigationRouter",
@@ -698,12 +856,64 @@
     "source": "packages/core/src/types.ts"
   },
   {
+    "slug": "RouteError",
+    "title": "RouteError",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Normalized route failure with an HTTP status, status text and optional response data.",
+    "signature": "interface RouteError extends Error {\n  status: number;\n  statusText: string;\n  data?: unknown;\n}",
+    "fields": [
+      {
+        "name": "status",
+        "signature": "status: number;",
+        "summary": ""
+      },
+      {
+        "name": "statusText",
+        "signature": "statusText: string;",
+        "summary": ""
+      },
+      {
+        "name": "data",
+        "signature": "data?: unknown;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/responses.ts"
+  },
+  {
+    "slug": "DataResponse",
+    "title": "DataResponse",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Loader value paired with HTTP response metadata.",
+    "signature": "interface DataResponse<T> {\n  value: T;\n  init: ResponseInit;\n  __routeData: true;\n}",
+    "fields": [
+      {
+        "name": "value",
+        "signature": "value: T;",
+        "summary": ""
+      },
+      {
+        "name": "init",
+        "signature": "init: ResponseInit;",
+        "summary": ""
+      },
+      {
+        "name": "__routeData",
+        "signature": "__routeData: true;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/responses.ts"
+  },
+  {
     "slug": "useFetcher",
     "title": "useFetcher",
     "entries": ["react", "preact"],
     "kind": "API",
     "summary": "Create a fetcher for independent route reads and mutations; its data stays local.",
-    "signature": "function useFetcher<T extends RouteModule>(\n  route: RouteDefinition<T>,\n): TypedFetcher<\n  | DataOf<Extract<T[\"action\"] | T[\"clientAction\"], AnyDataFunction>>\n  | DataOf<Extract<T[\"loader\"] | T[\"clientLoader\"], AnyDataFunction>>\n>;\n\nfunction useFetcher<\n  T extends AnyDataFunction = DataFunction,\n>(): TypedFetcher<DataOf<T>>;",
+    "signature": "function useFetcher<T extends RouteModule>(\n  route: RouteDefinition<T>,\n): TypedFetcher<\n  | DataOf<Extract<T[\"action\"] | T[\"clientAction\"], AnyDataFunction>>\n  | DataOf<Extract<T[\"loader\"] | T[\"clientLoader\"], AnyDataFunction>>\n>;\n\nfunction useFetcher<T = DataFunction>(): TypedFetcher<RouteData<T>>;",
     "fields": [],
     "source": "packages/react/src/fetcher.ts"
   },
@@ -713,7 +923,7 @@
     "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Action method and optional explicit route URL for a fetcher submission.",
-    "signature": "interface FetcherSubmitOptions extends SubmitOptions {\n  action?: string;\n}",
+    "signature": "interface FetcherSubmitOptions extends SubmissionOptions {\n  action?: string;\n}",
     "fields": [
       {
         "name": "action",
@@ -729,7 +939,7 @@
     "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Typed independent request state, methods, and a bound Form component.",
-    "signature": "interface TypedFetcher<T> extends Omit<FetcherSnapshot, \"data\"> {\n  data?: T;\n  Form: ComponentType<FormProps>;\n  load: (url?: string) => Promise<Result>;\n  submit: (body: FormData, options?: FetcherSubmitOptions) => Promise<Result>;\n}",
+    "signature": "interface TypedFetcher<T> extends Omit<FetcherSnapshot, \"data\"> {\n  data?: T;\n  Form: ComponentType<FormProps>;\n  load: (url?: string) => Promise<Result>;\n  submit: (body: Submission, options?: FetcherSubmitOptions) => Promise<Result>;\n}",
     "fields": [
       {
         "name": "data",
@@ -748,10 +958,20 @@
       },
       {
         "name": "submit",
-        "signature": "submit: (body: FormData, options?: FetcherSubmitOptions) => Promise<Result>;",
+        "signature": "submit: (body: Submission, options?: FetcherSubmitOptions) => Promise<Result>;",
         "summary": ""
       }
     ],
+    "source": "packages/react/src/fetcher.ts"
+  },
+  {
+    "slug": "FetcherWithComponents",
+    "title": "FetcherWithComponents",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "A fetcher with a bound form and inferred result data.",
+    "signature": "type FetcherWithComponents<T> = TypedFetcher<RouteData<T>>;",
+    "fields": [],
     "source": "packages/react/src/fetcher.ts"
   },
   {
@@ -780,7 +1000,7 @@
     "entries": ["react", "preact"],
     "kind": "API",
     "summary": "Pass a route for inference, or use useLoaderData<typeof loader>() in its module.",
-    "signature": "function useLoaderData<T extends LoaderSource = RouteModule>(\n  route?: T,\n): LoaderData<T> | undefined;",
+    "signature": "function useLoaderData<T = RouteModule>(\n  route?: T & LoaderSource,\n): LoaderData<T>;",
     "fields": [],
     "source": "packages/react/src/hooks.ts"
   },
@@ -790,7 +1010,7 @@
     "entries": ["react", "preact"],
     "kind": "API",
     "summary": "Read the last page action result, optionally inferring its type from a route.",
-    "signature": "function useActionData<T extends LoaderSource = RouteModule>(\n  route?: T,\n): ActionData<T> | undefined;",
+    "signature": "function useActionData<T = RouteModule>(\n  route?: T & LoaderSource,\n): ActionData<T> | undefined;",
     "fields": [],
     "source": "packages/react/src/hooks.ts"
   },
@@ -800,7 +1020,7 @@
     "entries": ["react", "preact"],
     "kind": "API",
     "summary": "Read path parameters for the active route.",
-    "signature": "function useParams(): Snapshot[\"params\"];",
+    "signature": "function useParams<\n  T extends Snapshot[\"params\"] = Snapshot[\"params\"],\n>(): T;",
     "fields": [],
     "source": "packages/react/src/hooks.ts"
   },
@@ -840,7 +1060,7 @@
     "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Infer server and client loader data from a route module or function.",
-    "signature": "type LoaderData<T> = T extends AnyDataFunction\n  ? DataOf<T>\n  : T extends RouteModule\n    ? DataOf<Extract<T[\"loader\"] | T[\"clientLoader\"], AnyDataFunction>>\n    : unknown;",
+    "signature": "type LoaderData<T> = T extends AnyDataFunction\n  ? RouteData<T>\n  : T extends RouteModule\n    ? RouteData<Extract<T[\"loader\"] | T[\"clientLoader\"], AnyDataFunction>>\n    : RouteData<T>;",
     "fields": [],
     "source": "packages/react/src/hooks.ts"
   },
@@ -850,7 +1070,7 @@
     "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Infer server and client action data from a route module or function.",
-    "signature": "type ActionData<T> = T extends AnyDataFunction\n  ? DataOf<T>\n  : T extends RouteModule\n    ? DataOf<Extract<T[\"action\"] | T[\"clientAction\"], AnyDataFunction>>\n    : unknown;",
+    "signature": "type ActionData<T> = T extends AnyDataFunction\n  ? RouteData<T>\n  : T extends RouteModule\n    ? RouteData<Extract<T[\"action\"] | T[\"clientAction\"], AnyDataFunction>>\n    : RouteData<T>;",
     "fields": [],
     "source": "packages/react/src/hooks.ts"
   },
@@ -859,31 +1079,450 @@
     "title": "Link",
     "entries": ["react", "preact"],
     "kind": "API",
-    "summary": "Render an anchor that handles internal navigation and preserves native modified clicks.",
+    "summary": "Render an anchor with same-origin router navigation and optional intent prefetching.",
     "signature": "function Link(options: LinkProps): ReactNode;",
     "fields": [],
-    "source": "packages/react/src/link.ts"
+    "source": "packages/react/src/navigation.ts"
+  },
+  {
+    "slug": "NavLink",
+    "title": "NavLink",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Render a Link with active-route state and aria-current for the matching destination.",
+    "signature": "function NavLink({\n  href,\n  to = href ?? \"/\",\n  end,\n  className,\n  children,\n  ...props\n}: NavLinkProps): ReactNode;",
+    "fields": [],
+    "source": "packages/react/src/navigation.ts"
+  },
+  {
+    "slug": "NavigationType",
+    "title": "NavigationType",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Browser history operation: POP, PUSH or REPLACE.",
+    "signature": "type NavigationType = \"POP\" | \"PUSH\" | \"REPLACE\";",
+    "fields": [],
+    "source": "packages/core/src/navigation.ts"
+  },
+  {
+    "slug": "NavigateFunction",
+    "title": "NavigateFunction",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Navigate to a URL or move through browser history using a numeric offset.",
+    "signature": "type NavigateFunction = (\n  to: string | number | Partial<Pick<URL, \"pathname\" | \"search\" | \"hash\">>,\n  options?: NavigateOptions,\n) => void;",
+    "fields": [],
+    "source": "packages/react/src/navigation.ts"
   },
   {
     "slug": "LinkProps",
     "title": "LinkProps",
     "entries": ["react", "preact"],
     "kind": "Types",
-    "summary": "Anchor attributes with internal navigation and optional history replacement.",
-    "signature": "interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {\n  href: string;\n  replace?: boolean;\n}",
+    "summary": "Anchor properties and router navigation options, including document reload and prefetch controls.",
+    "signature": "interface LinkProps\n  extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, \"href\"> {\n  to?: string;\n  href?: string;\n  replace?: boolean;\n  prefetch?: string;\n  state?: unknown;\n  preventScrollReset?: boolean;\n  viewTransition?: boolean;\n  reloadDocument?: boolean;\n}",
     "fields": [
       {
+        "name": "to",
+        "signature": "to?: string;",
+        "summary": ""
+      },
+      {
         "name": "href",
-        "signature": "href: string;",
+        "signature": "href?: string;",
         "summary": ""
       },
       {
         "name": "replace",
         "signature": "replace?: boolean;",
         "summary": ""
+      },
+      {
+        "name": "prefetch",
+        "signature": "prefetch?: string;",
+        "summary": ""
+      },
+      {
+        "name": "state",
+        "signature": "state?: unknown;",
+        "summary": ""
+      },
+      {
+        "name": "preventScrollReset",
+        "signature": "preventScrollReset?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "viewTransition",
+        "signature": "viewTransition?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "reloadDocument",
+        "signature": "reloadDocument?: boolean;",
+        "summary": ""
       }
     ],
-    "source": "packages/react/src/link.ts"
+    "source": "packages/react/src/navigation.ts"
+  },
+  {
+    "slug": "NavLinkRenderProps",
+    "title": "NavLinkRenderProps",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Active and pending flags supplied to NavLink render callbacks.",
+    "signature": "interface NavLinkRenderProps {\n  isActive: boolean;\n  isPending: boolean;\n}",
+    "fields": [
+      {
+        "name": "isActive",
+        "signature": "isActive: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "isPending",
+        "signature": "isPending: boolean;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/navigation.ts"
+  },
+  {
+    "slug": "NavLinkProps",
+    "title": "NavLinkProps",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Link options with matching rules and state-aware class or children callbacks.",
+    "signature": "interface NavLinkProps\n  extends Omit<LinkProps, \"className\" | \"children\"> {\n  end?: boolean;\n  className?: string | ((state: NavLinkRenderProps) => string);\n  children?: ReactNode | ((state: NavLinkRenderProps) => ReactNode);\n}",
+    "fields": [
+      {
+        "name": "end",
+        "signature": "end?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "className",
+        "signature": "className?: string | ((state: NavLinkRenderProps) => string);",
+        "summary": ""
+      },
+      {
+        "name": "children",
+        "signature": "children?: ReactNode | ((state: NavLinkRenderProps) => ReactNode);",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/navigation.ts"
+  },
+  {
+    "slug": "useNavigate",
+    "title": "useNavigate",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Return the application navigation function, including history offsets and relative destinations.",
+    "signature": "function useNavigate(): NavigateFunction;",
+    "fields": [],
+    "source": "packages/react/src/route-hooks.ts"
+  },
+  {
+    "slug": "useNavigationType",
+    "title": "useNavigationType",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Read the last browser history operation.",
+    "signature": "function useNavigationType(): NavigationType;",
+    "fields": [],
+    "source": "packages/react/src/route-hooks.ts"
+  },
+  {
+    "slug": "useSearchParams",
+    "title": "useSearchParams",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Read URL search parameters and update them through router navigation.",
+    "signature": "function useSearchParams(): [\n  URLSearchParams,\n  (\n    value: URLSearchParams | Record<string, string>,\n    options?: NavigateOptions,\n  ) => void,\n];",
+    "fields": [],
+    "source": "packages/react/src/route-hooks.ts"
+  },
+  {
+    "slug": "useURLLocation",
+    "title": "useURLLocation",
+    "entries": ["react", "preact"],
+    "kind": "API",
+    "summary": "Read the current router location as a URL.",
+    "signature": "function useURLLocation(): URL & { state: unknown; key: string };",
+    "fields": [],
+    "source": "packages/react/src/route-hooks.ts"
+  },
+  {
+    "slug": "LoaderFunctionArgs",
+    "title": "LoaderFunctionArgs",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Request, route parameters and cancellation signal supplied to a loader.",
+    "signature": "interface LoaderFunctionArgs extends DataArgs {\n  context?: unknown;\n}",
+    "fields": [
+      {
+        "name": "context",
+        "signature": "context?: unknown;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "ActionFunctionArgs",
+    "title": "ActionFunctionArgs",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Request, route parameters and cancellation signal supplied to an action.",
+    "signature": "type ActionFunctionArgs = LoaderFunctionArgs;",
+    "fields": [],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "ClientLoaderFunctionArgs",
+    "title": "ClientLoaderFunctionArgs",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Loader arguments with a serverLoader callback for the server transport.",
+    "signature": "interface ClientLoaderFunctionArgs extends LoaderFunctionArgs {\n  serverLoader: <T = unknown>() => Promise<T>;\n}",
+    "fields": [
+      {
+        "name": "serverLoader",
+        "signature": "serverLoader: <T = unknown>() => Promise<T>;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "ClientActionFunctionArgs",
+    "title": "ClientActionFunctionArgs",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Action arguments with a serverAction callback for the server transport.",
+    "signature": "interface ClientActionFunctionArgs extends LoaderFunctionArgs {\n  serverAction: <T = unknown>() => Promise<T>;\n}",
+    "fields": [
+      {
+        "name": "serverAction",
+        "signature": "serverAction: <T = unknown>() => Promise<T>;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "ShouldRevalidateFunctionArgs",
+    "title": "ShouldRevalidateFunctionArgs",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Navigation or mutation context used to decide whether loader data should refresh.",
+    "signature": "type ShouldRevalidateFunctionArgs = RevalidationArgs;",
+    "fields": [],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "RouteData",
+    "title": "RouteData",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Infer successful loader data, unwrapping promises and data responses.",
+    "signature": "type RouteData<T> = T extends (...args: never[]) => infer R\n  ? UnwrapData<Exclude<Awaited<R>, Response | Error>>\n  : T;",
+    "fields": [],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "MetaDescriptor",
+    "title": "MetaDescriptor",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "A document metadata descriptor, such as a title, meta tag or structured-data record.",
+    "signature": "type MetaDescriptor = Record<string, unknown>;",
+    "fields": [],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "MetaArgs",
+    "title": "MetaArgs",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Loader data, error, parameters and location supplied to a route metadata function.",
+    "signature": "interface MetaArgs<T> {\n  data: RouteData<T> | undefined;\n  loaderData: RouteData<T> | undefined;\n  error?: unknown;\n  params: Record<string, string>;\n  location: URL;\n}",
+    "fields": [
+      {
+        "name": "data",
+        "signature": "data: RouteData<T> | undefined;",
+        "summary": ""
+      },
+      {
+        "name": "loaderData",
+        "signature": "loaderData: RouteData<T> | undefined;",
+        "summary": ""
+      },
+      {
+        "name": "error",
+        "signature": "error?: unknown;",
+        "summary": ""
+      },
+      {
+        "name": "params",
+        "signature": "params: Record<string, string>;",
+        "summary": ""
+      },
+      {
+        "name": "location",
+        "signature": "location: URL;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "MetaFunction",
+    "title": "MetaFunction",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Derive document metadata descriptors from the current route data and location.",
+    "signature": "type MetaFunction<T = unknown> = (args: MetaArgs<T>) => MetaDescriptor[];",
+    "fields": [],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "LinksFunction",
+    "title": "LinksFunction",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Return link descriptors rendered in the document head.",
+    "signature": "type LinksFunction = () => Record<string, string>[];",
+    "fields": [],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "AppRoute",
+    "title": "AppRoute",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Data route with optional lazy component, preload and document metadata integration.",
+    "signature": "interface AppRoute extends Route {\n  resolveComponent?: () => ComponentType | undefined;\n  preload?: () => Promise<void>;\n  id?: string;\n  routePath?: string;\n  meta?: MetaFunction;\n}",
+    "fields": [
+      {
+        "name": "resolveComponent",
+        "signature": "resolveComponent?: () => ComponentType | undefined;",
+        "summary": ""
+      },
+      {
+        "name": "preload",
+        "signature": "preload?: () => Promise<void>;",
+        "summary": ""
+      },
+      {
+        "name": "id",
+        "signature": "id?: string;",
+        "summary": "Stable identifier for targeted revalidation; defaults to the path."
+      },
+      {
+        "name": "routePath",
+        "signature": "routePath?: string;",
+        "summary": ""
+      },
+      {
+        "name": "meta",
+        "signature": "meta?: MetaFunction;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "RootModule",
+    "title": "RootModule",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Root document components, loader, metadata and revalidation policy for a React application.",
+    "signature": "interface RootModule {\n  /** Route identity used by targeted revalidation. Defaults to root. */\n  id?: string;\n  /** Optional registered route URL used to revalidate root data after mutations. */\n  loaderPath?: string;\n  ErrorBoundary?: ComponentType;\n  default: ComponentType;\n  Layout: ComponentType<{ children: ReactNode }>;\n  loader?: (args: LoaderFunctionArgs) => unknown;\n  links?: LinksFunction;\n  meta?: MetaFunction;\n  shouldRevalidate?: (args: RevalidationArgs) => boolean;\n}",
+    "fields": [
+      {
+        "name": "id",
+        "signature": "id?: string;",
+        "summary": "Route identity used by targeted revalidation. Defaults to root."
+      },
+      {
+        "name": "loaderPath",
+        "signature": "loaderPath?: string;",
+        "summary": "Optional registered route URL used to revalidate root data after mutations."
+      },
+      {
+        "name": "ErrorBoundary",
+        "signature": "ErrorBoundary?: ComponentType;",
+        "summary": ""
+      },
+      {
+        "name": "default",
+        "signature": "default: ComponentType;",
+        "summary": ""
+      },
+      {
+        "name": "Layout",
+        "signature": "Layout: ComponentType<{ children: ReactNode }>;",
+        "summary": ""
+      },
+      {
+        "name": "loader",
+        "signature": "loader?: (args: LoaderFunctionArgs) => unknown;",
+        "summary": ""
+      },
+      {
+        "name": "links",
+        "signature": "links?: LinksFunction;",
+        "summary": ""
+      },
+      {
+        "name": "meta",
+        "signature": "meta?: MetaFunction;",
+        "summary": ""
+      },
+      {
+        "name": "shouldRevalidate",
+        "signature": "shouldRevalidate?: (args: RevalidationArgs) => boolean;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "Hydration",
+    "title": "Hydration",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Serialized root data and route snapshot used to hydrate without repeating initial loaders.",
+    "signature": "interface Hydration {\n  rootError?: boolean;\n  root: unknown;\n  snapshot: Snapshot;\n}",
+    "fields": [
+      {
+        "name": "rootError",
+        "signature": "rootError?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "root",
+        "signature": "root: unknown;",
+        "summary": ""
+      },
+      {
+        "name": "snapshot",
+        "signature": "snapshot: Snapshot;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/react/src/route-types.ts"
+  },
+  {
+    "slug": "HandleDataRequestFunction",
+    "title": "HandleDataRequestFunction",
+    "entries": ["react", "preact"],
+    "kind": "Types",
+    "summary": "Transform a data transport response using the current request context.",
+    "signature": "type HandleDataRequestFunction = (\n  response: Response,\n  args: LoaderFunctionArgs,\n) => Response | Promise<Response>;",
+    "fields": [],
+    "source": "packages/react/src/route-types.ts"
   },
   {
     "slug": "Routes",
@@ -954,83 +1593,6 @@
     "source": "packages/react/src/routes.ts"
   },
   {
-    "slug": "ApplicationEnvironment",
-    "title": "ApplicationEnvironment",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Application base URLs, navigation handoff and document-transition settings shared by browser integrations.",
-    "signature": "interface ApplicationEnvironment {\n  resolveURL?: (url: URL) => URL;\n  isDocumentHandoff?: (from: URL, to: URL) => boolean;\n  leaveDocument?: (destination: URL) => void;\n  entryScript?: string;\n}",
-    "fields": [
-      {
-        "name": "resolveURL",
-        "signature": "resolveURL?: (url: URL) => URL;",
-        "summary": ""
-      },
-      {
-        "name": "isDocumentHandoff",
-        "signature": "isDocumentHandoff?: (from: URL, to: URL) => boolean;",
-        "summary": ""
-      },
-      {
-        "name": "leaveDocument",
-        "signature": "leaveDocument?: (destination: URL) => void;",
-        "summary": ""
-      },
-      {
-        "name": "entryScript",
-        "signature": "entryScript?: string;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/core/src/environment.ts"
-  },
-  {
-    "slug": "Submission",
-    "title": "Submission",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Values accepted by programmatic route submissions.",
-    "signature": "type Submission = FormData | HTMLFormElement | Record<string, unknown>;",
-    "fields": [],
-    "source": "packages/core/src/submission.ts"
-  },
-  {
-    "slug": "SubmissionOptions",
-    "title": "SubmissionOptions",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Destination and encoding for a programmatic route submission.",
-    "signature": "interface SubmissionOptions {\n  action?: string;\n  encType?: string;\n  method?: string;\n  replace?: boolean;\n  preventScrollReset?: boolean;\n}",
-    "fields": [
-      {
-        "name": "action",
-        "signature": "action?: string;",
-        "summary": ""
-      },
-      {
-        "name": "encType",
-        "signature": "encType?: string;",
-        "summary": ""
-      },
-      {
-        "name": "method",
-        "signature": "method?: string;",
-        "summary": ""
-      },
-      {
-        "name": "replace",
-        "signature": "replace?: boolean;",
-        "summary": ""
-      },
-      {
-        "name": "preventScrollReset",
-        "signature": "preventScrollReset?: boolean;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/core/src/submission.ts"
-  },
-  {
     "slug": "Await",
     "title": "Await",
     "entries": ["preact"],
@@ -1041,515 +1603,50 @@
     "source": "packages/preact/src/await.tsx"
   },
   {
-    "slug": "useNavigation",
-    "title": "useNavigation",
-    "entries": ["preact"],
+    "slug": "mountApplication",
+    "title": "mountApplication",
+    "entries": ["react/client", "preact/client"],
     "kind": "API",
-    "summary": "Read the current page navigation or submission state.",
-    "signature": "function useNavigation(): {\n  state: \"idle\" | \"loading\" | \"submitting\";\n  location: URL | undefined;\n};",
+    "summary": "Create the browser application router and hydrate the document, installing recovery before initial lazy loading.",
+    "signature": "function mountApplication(\n  routes: AppRoute[],\n  rootModule?: RootModule,\n  options: boolean | MountApplicationOptions = false,\n): Promise<Router>;",
     "fields": [],
-    "source": "packages/preact/src/route-hooks.tsx"
+    "source": "packages/react/src/client.tsx"
   },
   {
-    "slug": "useRootData",
-    "title": "useRootData",
-    "entries": ["preact"],
+    "slug": "configureApplication",
+    "title": "configureApplication",
+    "entries": ["react/client", "preact/client"],
     "kind": "API",
-    "summary": "Read root loader data from the application context.",
-    "signature": "function useRootData<T = unknown>(): RouteData<T>;",
+    "summary": "Configure deployment-specific navigation before rendering or mounting.",
+    "signature": "function configureApplication(\n  environment: ApplicationEnvironment,\n): void;",
     "fields": [],
-    "source": "packages/preact/src/route-hooks.tsx"
+    "source": "packages/core/src/environment.ts"
   },
   {
-    "slug": "useRouteError",
-    "title": "useRouteError",
-    "entries": ["preact"],
-    "kind": "API",
-    "summary": "Read the current route error for an error boundary.",
-    "signature": "function useRouteError(): Error | undefined;",
-    "fields": [],
-    "source": "packages/preact/src/route-hooks.tsx"
-  },
-  {
-    "slug": "useRouteLoaderData",
-    "title": "useRouteLoaderData",
-    "entries": ["preact"],
-    "kind": "API",
-    "summary": "Read root data or the active route's data by its manifest identifier.",
-    "signature": "function useRouteLoaderData<T = unknown>(\n  id: string,\n): RouteData<T> | undefined;",
-    "fields": [],
-    "source": "packages/preact/src/route-hooks.tsx"
-  },
-  {
-    "slug": "useSubmit",
-    "title": "useSubmit",
-    "entries": ["preact"],
-    "kind": "API",
-    "summary": "Return a function that submits form data through the current router.",
-    "signature": "function useSubmit(): (\n  value: Submission,\n  options?: SubmissionOptions,\n) => Promise<void> | Promise<import(\"@smolter/core\").Result<unknown>>;",
-    "fields": [],
-    "source": "packages/preact/src/route-hooks.tsx"
-  },
-  {
-    "slug": "RouterApplication",
-    "title": "RouterApplication",
-    "entries": ["preact"],
-    "kind": "API",
-    "summary": "Render a Preact root document and active route with shared root data and application context.",
-    "signature": "function RouterApplication(\n  props: ApplicationProps,\n): import(\"preact\").JSX.Element;",
-    "fields": [],
-    "source": "packages/preact/src/router.tsx"
-  },
-  {
-    "slug": "RouteError",
-    "title": "RouteError",
-    "entries": ["preact"],
+    "slug": "MountApplicationOptions",
+    "title": "MountApplicationOptions",
+    "entries": ["react/client", "preact/client"],
     "kind": "Types",
-    "summary": "Normalized route failure with an HTTP status, status text and optional response data.",
-    "signature": "interface RouteError extends Error {\n  status: number;\n  statusText: string;\n  data?: unknown;\n}",
+    "summary": "Browser hydration settings for hash history, deployment recovery and deferred-data timeout.",
+    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000. */\n  deferredTimeout?: number;\n}",
     "fields": [
       {
-        "name": "status",
-        "signature": "status: number;",
+        "name": "hash",
+        "signature": "hash?: boolean;",
         "summary": ""
       },
       {
-        "name": "statusText",
-        "signature": "statusText: string;",
+        "name": "deployment",
+        "signature": "deployment?: DeploymentOptions | null;",
         "summary": ""
       },
       {
-        "name": "data",
-        "signature": "data?: unknown;",
-        "summary": ""
+        "name": "deferredTimeout",
+        "signature": "deferredTimeout?: number;",
+        "summary": "Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000."
       }
     ],
-    "source": "packages/core/src/responses.ts"
-  },
-  {
-    "slug": "DataResponse",
-    "title": "DataResponse",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Loader value paired with HTTP response metadata.",
-    "signature": "interface DataResponse<T> {\n  value: T;\n  init: ResponseInit;\n  __routeData: true;\n}",
-    "fields": [
-      {
-        "name": "value",
-        "signature": "value: T;",
-        "summary": ""
-      },
-      {
-        "name": "init",
-        "signature": "init: ResponseInit;",
-        "summary": ""
-      },
-      {
-        "name": "__routeData",
-        "signature": "__routeData: true;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/core/src/responses.ts"
-  },
-  {
-    "slug": "FetcherWithComponents",
-    "title": "FetcherWithComponents",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "A fetcher with a bound form and inferred result data.",
-    "signature": "type FetcherWithComponents<T> = TypedFetcher<RouteData<T>>;",
-    "fields": [],
-    "source": "packages/preact/src/fetcher.ts"
-  },
-  {
-    "slug": "NavLink",
-    "title": "NavLink",
-    "entries": ["preact"],
-    "kind": "API",
-    "summary": "Render a Link with active-route state and aria-current for the matching destination.",
-    "signature": "function NavLink({\n  href,\n  to = href ?? \"/\",\n  end,\n  className,\n  children,\n  ...props\n}: NavLinkProps): ReactNode;",
-    "fields": [],
-    "source": "packages/preact/src/navigation.tsx"
-  },
-  {
-    "slug": "NavigationType",
-    "title": "NavigationType",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Browser history operation: POP, PUSH or REPLACE.",
-    "signature": "type NavigationType = \"POP\" | \"PUSH\" | \"REPLACE\";",
-    "fields": [],
-    "source": "packages/core/src/navigation.ts"
-  },
-  {
-    "slug": "NavigateFunction",
-    "title": "NavigateFunction",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Navigate to a URL or move through browser history using a numeric offset.",
-    "signature": "type NavigateFunction = (\n  to: string | number | Partial<Pick<URL, \"pathname\" | \"search\" | \"hash\">>,\n  options?: NavigateOptions,\n) => void;",
-    "fields": [],
-    "source": "packages/preact/src/navigation.tsx"
-  },
-  {
-    "slug": "NavLinkRenderProps",
-    "title": "NavLinkRenderProps",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Active and pending flags supplied to NavLink render callbacks.",
-    "signature": "interface NavLinkRenderProps {\n  isActive: boolean;\n  isPending: boolean;\n}",
-    "fields": [
-      {
-        "name": "isActive",
-        "signature": "isActive: boolean;",
-        "summary": ""
-      },
-      {
-        "name": "isPending",
-        "signature": "isPending: boolean;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/preact/src/navigation.tsx"
-  },
-  {
-    "slug": "NavLinkProps",
-    "title": "NavLinkProps",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Link options with matching rules and state-aware class or children callbacks.",
-    "signature": "interface NavLinkProps\n  extends Omit<LinkProps, \"className\" | \"children\"> {\n  end?: boolean;\n  className?: string | ((state: NavLinkRenderProps) => string);\n  children?: ReactNode | ((state: NavLinkRenderProps) => ReactNode);\n}",
-    "fields": [
-      {
-        "name": "end",
-        "signature": "end?: boolean;",
-        "summary": ""
-      },
-      {
-        "name": "className",
-        "signature": "className?: string | ((state: NavLinkRenderProps) => string);",
-        "summary": ""
-      },
-      {
-        "name": "children",
-        "signature": "children?: ReactNode | ((state: NavLinkRenderProps) => ReactNode);",
-        "summary": ""
-      }
-    ],
-    "source": "packages/preact/src/navigation.tsx"
-  },
-  {
-    "slug": "useNavigate",
-    "title": "useNavigate",
-    "entries": ["preact"],
-    "kind": "API",
-    "summary": "Return the application navigation function, including history offsets and relative destinations.",
-    "signature": "function useNavigate(): NavigateFunction;",
-    "fields": [],
-    "source": "packages/preact/src/route-hooks.tsx"
-  },
-  {
-    "slug": "useNavigationType",
-    "title": "useNavigationType",
-    "entries": ["preact"],
-    "kind": "API",
-    "summary": "Read the last browser history operation.",
-    "signature": "function useNavigationType(): NavigationType;",
-    "fields": [],
-    "source": "packages/preact/src/route-hooks.tsx"
-  },
-  {
-    "slug": "useSearchParams",
-    "title": "useSearchParams",
-    "entries": ["preact"],
-    "kind": "API",
-    "summary": "Read URL search parameters and update them through router navigation.",
-    "signature": "function useSearchParams(): [\n  URLSearchParams,\n  (\n    value: URLSearchParams | Record<string, string>,\n    options?: NavigateOptions,\n  ) => void,\n];",
-    "fields": [],
-    "source": "packages/preact/src/route-hooks.tsx"
-  },
-  {
-    "slug": "useURLLocation",
-    "title": "useURLLocation",
-    "entries": ["preact"],
-    "kind": "API",
-    "summary": "Read the current router location as a URL.",
-    "signature": "function useURLLocation(): URL & { state: unknown; key: string };",
-    "fields": [],
-    "source": "packages/preact/src/route-hooks.tsx"
-  },
-  {
-    "slug": "LoaderFunctionArgs",
-    "title": "LoaderFunctionArgs",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Request, route parameters and cancellation signal supplied to a loader.",
-    "signature": "interface LoaderFunctionArgs extends DataArgs {\n  context?: unknown;\n}",
-    "fields": [
-      {
-        "name": "context",
-        "signature": "context?: unknown;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "ActionFunctionArgs",
-    "title": "ActionFunctionArgs",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Request, route parameters and cancellation signal supplied to an action.",
-    "signature": "type ActionFunctionArgs = LoaderFunctionArgs;",
-    "fields": [],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "ClientLoaderFunctionArgs",
-    "title": "ClientLoaderFunctionArgs",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Loader arguments with a serverLoader callback for the server transport.",
-    "signature": "interface ClientLoaderFunctionArgs extends LoaderFunctionArgs {\n  serverLoader: <T = unknown>() => Promise<T>;\n}",
-    "fields": [
-      {
-        "name": "serverLoader",
-        "signature": "serverLoader: <T = unknown>() => Promise<T>;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "ClientActionFunctionArgs",
-    "title": "ClientActionFunctionArgs",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Action arguments with a serverAction callback for the server transport.",
-    "signature": "interface ClientActionFunctionArgs extends LoaderFunctionArgs {\n  serverAction: <T = unknown>() => Promise<T>;\n}",
-    "fields": [
-      {
-        "name": "serverAction",
-        "signature": "serverAction: <T = unknown>() => Promise<T>;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "ShouldRevalidateFunctionArgs",
-    "title": "ShouldRevalidateFunctionArgs",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Navigation or mutation context used to decide whether loader data should refresh.",
-    "signature": "type ShouldRevalidateFunctionArgs = RevalidationArgs;",
-    "fields": [],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "RouteData",
-    "title": "RouteData",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Infer successful loader data, unwrapping promises and data responses.",
-    "signature": "type RouteData<T> = T extends (...args: never[]) => infer R\n  ? UnwrapData<Exclude<Awaited<R>, Response | Error>>\n  : T;",
-    "fields": [],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "MetaDescriptor",
-    "title": "MetaDescriptor",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "A document metadata descriptor, such as a title, meta tag or structured-data record.",
-    "signature": "type MetaDescriptor = Record<string, unknown>;",
-    "fields": [],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "MetaArgs",
-    "title": "MetaArgs",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Loader data, error, parameters and location supplied to a route metadata function.",
-    "signature": "interface MetaArgs<T> {\n  data: RouteData<T> | undefined;\n  loaderData: RouteData<T> | undefined;\n  error?: unknown;\n  params: Record<string, string>;\n  location: URL;\n}",
-    "fields": [
-      {
-        "name": "data",
-        "signature": "data: RouteData<T> | undefined;",
-        "summary": ""
-      },
-      {
-        "name": "loaderData",
-        "signature": "loaderData: RouteData<T> | undefined;",
-        "summary": ""
-      },
-      {
-        "name": "error",
-        "signature": "error?: unknown;",
-        "summary": ""
-      },
-      {
-        "name": "params",
-        "signature": "params: Record<string, string>;",
-        "summary": ""
-      },
-      {
-        "name": "location",
-        "signature": "location: URL;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "MetaFunction",
-    "title": "MetaFunction",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Derive document metadata descriptors from the current route data and location.",
-    "signature": "type MetaFunction<T = unknown> = (args: MetaArgs<T>) => MetaDescriptor[];",
-    "fields": [],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "LinksFunction",
-    "title": "LinksFunction",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Return link descriptors rendered in the document head.",
-    "signature": "type LinksFunction = () => Record<string, string>[];",
-    "fields": [],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "AppRoute",
-    "title": "AppRoute",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Data route with optional lazy component, preload and document metadata integration.",
-    "signature": "interface AppRoute extends Route {\n  resolveComponent?: () => ComponentType | undefined;\n  preload?: () => Promise<void>;\n  id?: string;\n  routePath?: string;\n  meta?: MetaFunction;\n}",
-    "fields": [
-      {
-        "name": "resolveComponent",
-        "signature": "resolveComponent?: () => ComponentType | undefined;",
-        "summary": ""
-      },
-      {
-        "name": "preload",
-        "signature": "preload?: () => Promise<void>;",
-        "summary": ""
-      },
-      {
-        "name": "id",
-        "signature": "id?: string;",
-        "summary": "Stable identifier for targeted revalidation; defaults to the path."
-      },
-      {
-        "name": "routePath",
-        "signature": "routePath?: string;",
-        "summary": ""
-      },
-      {
-        "name": "meta",
-        "signature": "meta?: MetaFunction;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "RootModule",
-    "title": "RootModule",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Root document components, loader, metadata and revalidation policy for a Preact application.",
-    "signature": "interface RootModule {\n  /** Route identity used by targeted revalidation. Defaults to root. */\n  id?: string;\n  /** Optional registered route URL used to revalidate root data after mutations. */\n  loaderPath?: string;\n  ErrorBoundary?: ComponentType;\n  default: ComponentType;\n  Layout: ComponentType<{ children: ReactNode }>;\n  loader?: (args: LoaderFunctionArgs) => unknown;\n  links?: LinksFunction;\n  meta?: MetaFunction;\n  shouldRevalidate?: (args: RevalidationArgs) => boolean;\n}",
-    "fields": [
-      {
-        "name": "id",
-        "signature": "id?: string;",
-        "summary": "Route identity used by targeted revalidation. Defaults to root."
-      },
-      {
-        "name": "loaderPath",
-        "signature": "loaderPath?: string;",
-        "summary": "Optional registered route URL used to revalidate root data after mutations."
-      },
-      {
-        "name": "ErrorBoundary",
-        "signature": "ErrorBoundary?: ComponentType;",
-        "summary": ""
-      },
-      {
-        "name": "default",
-        "signature": "default: ComponentType;",
-        "summary": ""
-      },
-      {
-        "name": "Layout",
-        "signature": "Layout: ComponentType<{ children: ReactNode }>;",
-        "summary": ""
-      },
-      {
-        "name": "loader",
-        "signature": "loader?: (args: LoaderFunctionArgs) => unknown;",
-        "summary": ""
-      },
-      {
-        "name": "links",
-        "signature": "links?: LinksFunction;",
-        "summary": ""
-      },
-      {
-        "name": "meta",
-        "signature": "meta?: MetaFunction;",
-        "summary": ""
-      },
-      {
-        "name": "shouldRevalidate",
-        "signature": "shouldRevalidate?: (args: RevalidationArgs) => boolean;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "Hydration",
-    "title": "Hydration",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Serialized root data and route snapshot used to hydrate without repeating initial loaders.",
-    "signature": "interface Hydration {\n  rootError?: boolean;\n  root: unknown;\n  snapshot: Snapshot;\n}",
-    "fields": [
-      {
-        "name": "rootError",
-        "signature": "rootError?: boolean;",
-        "summary": ""
-      },
-      {
-        "name": "root",
-        "signature": "root: unknown;",
-        "summary": ""
-      },
-      {
-        "name": "snapshot",
-        "signature": "snapshot: Snapshot;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/preact/src/route-types.ts"
-  },
-  {
-    "slug": "HandleDataRequestFunction",
-    "title": "HandleDataRequestFunction",
-    "entries": ["preact"],
-    "kind": "Types",
-    "summary": "Transform a data transport response using the current request context.",
-    "signature": "type HandleDataRequestFunction = (\n  response: Response,\n  args: LoaderFunctionArgs,\n) => Response | Promise<Response>;",
-    "fields": [],
-    "source": "packages/preact/src/route-types.ts"
+    "source": "packages/react/src/client.tsx"
   },
   {
     "slug": "serverRoute",
@@ -1695,55 +1792,9 @@
     "source": "packages/client/src/deployment.ts"
   },
   {
-    "slug": "mountApplication",
-    "title": "mountApplication",
-    "entries": ["preact/client"],
-    "kind": "API",
-    "summary": "Create the browser application router and hydrate the document, installing recovery before initial lazy loading.",
-    "signature": "function mountApplication(\n  routes: AppRoute[],\n  rootModule?: RootModule,\n  options: boolean | MountApplicationOptions = false,\n): Promise<Router>;",
-    "fields": [],
-    "source": "packages/preact/src/client.tsx"
-  },
-  {
-    "slug": "configureApplication",
-    "title": "configureApplication",
-    "entries": ["preact/client"],
-    "kind": "API",
-    "summary": "Configure deployment-specific navigation before rendering or mounting.",
-    "signature": "function configureApplication(\n  environment: ApplicationEnvironment,\n): void;",
-    "fields": [],
-    "source": "packages/core/src/environment.ts"
-  },
-  {
-    "slug": "MountApplicationOptions",
-    "title": "MountApplicationOptions",
-    "entries": ["preact/client"],
-    "kind": "Types",
-    "summary": "Browser hydration settings for hash history, deployment recovery and deferred-data timeout.",
-    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000. */\n  deferredTimeout?: number;\n}",
-    "fields": [
-      {
-        "name": "hash",
-        "signature": "hash?: boolean;",
-        "summary": ""
-      },
-      {
-        "name": "deployment",
-        "signature": "deployment?: DeploymentOptions | null;",
-        "summary": ""
-      },
-      {
-        "name": "deferredTimeout",
-        "signature": "deferredTimeout?: number;",
-        "summary": "Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000."
-      }
-    ],
-    "source": "packages/preact/src/client.tsx"
-  },
-  {
     "slug": "Meta",
     "title": "Meta",
-    "entries": ["preact/document"],
+    "entries": ["preact/document", "react/document"],
     "kind": "API",
     "summary": "Render root or active-route metadata in the document head.",
     "signature": "function Meta(): import(\"preact\").JSX.Element;",
@@ -1753,7 +1804,7 @@
   {
     "slug": "Links",
     "title": "Links",
-    "entries": ["preact/document"],
+    "entries": ["preact/document", "react/document"],
     "kind": "API",
     "summary": "Render stylesheet and other link descriptors from the application root.",
     "signature": "function Links(): import(\"preact\").JSX.Element;",
@@ -1763,7 +1814,7 @@
   {
     "slug": "Scripts",
     "title": "Scripts",
-    "entries": ["preact/document"],
+    "entries": ["preact/document", "react/document"],
     "kind": "API",
     "summary": "Render the hydration snapshot and browser entry script with an optional CSP nonce.",
     "signature": "function Scripts({ nonce }: ScriptProps): import(\"preact\").JSX.Element;",
@@ -1773,7 +1824,7 @@
   {
     "slug": "ScrollRestoration",
     "title": "ScrollRestoration",
-    "entries": ["preact/document"],
+    "entries": ["preact/document", "react/document"],
     "kind": "API",
     "summary": "Reset scroll after navigation unless the navigation requests preservation.",
     "signature": "function ScrollRestoration(_props: ScriptProps): null;",
@@ -1783,7 +1834,7 @@
   {
     "slug": "Document",
     "title": "Document",
-    "entries": ["preact/document"],
+    "entries": ["preact/document", "react/document"],
     "kind": "API",
     "summary": "Render the server document and preserve client-managed theme classes on hydration.",
     "signature": "function Document(props: DocumentProps): import(\"preact\").JSX.Element;",
@@ -1793,7 +1844,7 @@
   {
     "slug": "ScriptProps",
     "title": "ScriptProps",
-    "entries": ["preact/document"],
+    "entries": ["preact/document", "react/document"],
     "kind": "Types",
     "summary": "Nonce and browser entry options for the document hydration scripts.",
     "signature": "interface ScriptProps {\n  nonce?: string;\n}",
@@ -1809,7 +1860,7 @@
   {
     "slug": "DocumentProps",
     "title": "DocumentProps",
-    "entries": ["preact/document"],
+    "entries": ["preact/document", "react/document"],
     "kind": "Types",
     "summary": "HTML attributes for server markup and client document reconciliation.",
     "signature": "interface DocumentProps extends ComponentProps<\"html\"> {\n  \"data-debug\"?: boolean;\n}",
@@ -1821,6 +1872,37 @@
       }
     ],
     "source": "packages/preact/src/document.tsx"
+  },
+  {
+    "slug": "renderApplication",
+    "title": "renderApplication",
+    "entries": ["react/server", "preact/server"],
+    "kind": "API",
+    "summary": "Render a React document with root and route data using React's streaming renderer.",
+    "signature": "function renderApplication(\n  request: Request,\n  routes: AppRoute[],\n  rootModule: RootModule,\n  entry: string,\n  options: RenderApplicationOptions = {},\n): Promise<Response>;",
+    "fields": [],
+    "source": "packages/server/src/react.ts"
+  },
+  {
+    "slug": "RenderApplicationOptions",
+    "title": "RenderApplicationOptions",
+    "entries": ["react/server", "preact/server"],
+    "kind": "Types",
+    "summary": "SSR settings for CSP nonce and early deferred-data hydration.",
+    "signature": "interface RenderApplicationOptions {\n  nonce?: string;\n  earlyHydration?: boolean;\n}",
+    "fields": [
+      {
+        "name": "nonce",
+        "signature": "nonce?: string;",
+        "summary": ""
+      },
+      {
+        "name": "earlyHydration",
+        "signature": "earlyHydration?: boolean;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/server/src/render-application.ts"
   },
   {
     "slug": "loadRouter",
@@ -1855,43 +1937,12 @@
   {
     "slug": "dispatchRoute",
     "title": "dispatchRoute",
-    "entries": ["preact/server"],
+    "entries": ["react/server", "preact/server"],
     "kind": "API",
     "summary": "Dispatch a normalized application URL to its route loader or action and return an HTTP response.",
-    "signature": "function dispatchRoute(\n  request: Request,\n  routes: AppRoute[],\n  document = false,\n): Promise<Response>;",
+    "signature": "function dispatchRoute(\n  request: Request,\n  routes: readonly (Route & { routePath?: string })[],\n  document = false,\n): Promise<Response>;",
     "fields": [],
-    "source": "packages/server/src/application.tsx"
-  },
-  {
-    "slug": "RenderApplicationOptions",
-    "title": "RenderApplicationOptions",
-    "entries": ["preact/server"],
-    "kind": "Types",
-    "summary": "SSR settings for CSP nonce and early deferred-data hydration.",
-    "signature": "interface RenderApplicationOptions {\n  nonce?: string;\n  earlyHydration?: boolean;\n}",
-    "fields": [
-      {
-        "name": "nonce",
-        "signature": "nonce?: string;",
-        "summary": ""
-      },
-      {
-        "name": "earlyHydration",
-        "signature": "earlyHydration?: boolean;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/server/src/application.tsx"
-  },
-  {
-    "slug": "renderApplication",
-    "title": "renderApplication",
-    "entries": ["preact/server"],
-    "kind": "API",
-    "summary": "Render a Preact application response with root and route data, streaming deferred content when enabled.",
-    "signature": "function renderApplication(\n  request: Request,\n  routes: AppRoute[],\n  rootModule: RootModule,\n  entry: string,\n  options: RenderApplicationOptions = {},\n): Promise<Response>;",
-    "fields": [],
-    "source": "packages/server/src/application.tsx"
+    "source": "packages/server/src/dispatch.ts"
   },
   {
     "slug": "routerPlugin",
@@ -1900,6 +1951,16 @@
     "kind": "API",
     "summary": "Configure flat routes and server transport for React.",
     "signature": "function routerPlugin(options: FileRouterOptions = {}): Plugin;",
+    "fields": [],
+    "source": "packages/vite/src/react.ts"
+  },
+  {
+    "slug": "applicationPlugins",
+    "title": "applicationPlugins",
+    "entries": ["react/vite", "preact/vite"],
+    "kind": "API",
+    "summary": "Configure React application SSR, scoped data transport and lazy file routing.",
+    "signature": "function applicationPlugins(options: ApplicationOptions = {}): Plugin[];",
     "fields": [],
     "source": "packages/vite/src/react.ts"
   },
@@ -1948,6 +2009,47 @@
     "signature": "const fileRouter: (options?: FileRouterOptions) => Plugin;",
     "fields": [],
     "source": "packages/vite/src/react.ts"
+  },
+  {
+    "slug": "ApplicationOptions",
+    "title": "ApplicationOptions",
+    "entries": ["react/vite", "preact/vite"],
+    "kind": "Types",
+    "summary": "",
+    "signature": "interface ApplicationOptions {\n  directory?: string;\n  framework?: \"react\" | \"preact\";\n  dataEndpoint?: string;\n  ssr?: boolean;\n  splitRoutes?: boolean;\n  resourceRequest?: (url: string) => boolean;\n}",
+    "fields": [
+      {
+        "name": "directory",
+        "signature": "directory?: string;",
+        "summary": ""
+      },
+      {
+        "name": "framework",
+        "signature": "framework?: \"react\" | \"preact\";",
+        "summary": ""
+      },
+      {
+        "name": "dataEndpoint",
+        "signature": "dataEndpoint?: string;",
+        "summary": ""
+      },
+      {
+        "name": "ssr",
+        "signature": "ssr?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "splitRoutes",
+        "signature": "splitRoutes?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "resourceRequest",
+        "signature": "resourceRequest?: (url: string) => boolean;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/vite/src/application/vite.ts"
   },
   {
     "slug": "DeploymentPluginOptions",
@@ -2005,52 +2107,6 @@
       }
     ],
     "source": "packages/files/src/index.ts"
-  },
-  {
-    "slug": "ApplicationOptions",
-    "title": "ApplicationOptions",
-    "entries": ["preact/vite"],
-    "kind": "Types",
-    "summary": "",
-    "signature": "interface ApplicationOptions {\n  directory?: string;\n  dataEndpoint?: string;\n  ssr?: boolean;\n  splitRoutes?: boolean;\n  resourceRequest?: (url: string) => boolean;\n}",
-    "fields": [
-      {
-        "name": "directory",
-        "signature": "directory?: string;",
-        "summary": ""
-      },
-      {
-        "name": "dataEndpoint",
-        "signature": "dataEndpoint?: string;",
-        "summary": ""
-      },
-      {
-        "name": "ssr",
-        "signature": "ssr?: boolean;",
-        "summary": ""
-      },
-      {
-        "name": "splitRoutes",
-        "signature": "splitRoutes?: boolean;",
-        "summary": ""
-      },
-      {
-        "name": "resourceRequest",
-        "signature": "resourceRequest?: (url: string) => boolean;",
-        "summary": ""
-      }
-    ],
-    "source": "packages/vite/src/application/vite.ts"
-  },
-  {
-    "slug": "applicationPlugins",
-    "title": "applicationPlugins",
-    "entries": ["preact/vite"],
-    "kind": "API",
-    "summary": "",
-    "signature": "function applicationPlugins({\n  directory = \"src/routes\",\n  dataEndpoint = \"/_smolter\",\n  ssr = true,\n  splitRoutes = true,\n  resourceRequest,\n}: ApplicationOptions = {}): Plugin[];",
-    "fields": [],
-    "source": "packages/vite/src/application/vite.ts"
   },
   {
     "slug": "preactConfig",

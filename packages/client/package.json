@@ -5,7 +5,10 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./root-data": "./src/root-data.ts",
+    "./hydration": "./src/hydration.ts",
+    "./hash-history": "./src/hash-history.ts"
   },
   "dependencies": {
     "@smolter/core": "workspace:*"

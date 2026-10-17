@@ -8,13 +8,12 @@
     ".": "./src/index.ts",
     "./responses": "./src/responses.ts",
     "./environment": "./src/environment.ts",
-    "./resource-types": "./src/resource-types.ts",
-    "./resources": "./src/resources.ts",
     "./submission": "./src/submission.ts",
     "./navigation": "./src/navigation.ts",
     "./presentation": "./src/presentation.ts",
     "./store": "./src/store.ts",
     "./url": "./src/url.ts",
-    "./serialize": "./src/serialize.ts"
+    "./serialize": "./src/serialize.ts",
+    "./prepare-routes": "./src/prepare-routes.ts"
   }
 }

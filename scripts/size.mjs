@@ -32,10 +32,18 @@ if (!process.argv.includes("--write-only")) {
     ["@kasperrt/smolter/react", sizes.react],
     ["@kasperrt/smolter/preact", sizes.preact],
     [
-      "@kasperrt/smolter/react + @kasperrt/smolter/react/client",
+      "@kasperrt/smolter/react + server transport (named client exports)",
       sizes.reactServer,
     ],
     ["@kasperrt/smolter/preact + server transport", sizes.preactServer],
+    [
+      "@kasperrt/smolter/react + client + document (application)",
+      sizes.reactApplication,
+    ],
+    [
+      "@kasperrt/smolter/react + client + document + lazy-route",
+      sizes.reactLazyApplication,
+    ],
     [
       "@kasperrt/smolter/preact + client + document (application without lazy routes)",
       sizes.preactApplication,
@@ -44,7 +52,6 @@ if (!process.argv.includes("--write-only")) {
       "@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)",
       sizes.preactLazyApplication,
     ],
-    ["@kasperrt/smolter/react/data (optional resource API)", sizes.reactData],
     ["React: common routing/data exports", shared[0]],
     ["Preact: common routing/data exports", shared[1]],
     [

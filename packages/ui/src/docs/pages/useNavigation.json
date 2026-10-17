@@ -11,13 +11,13 @@
     },
     {
       "title": "Returns",
-      "body": "Returns { state, location }. state is idle, loading, or submitting. location is the pending URL when retained-view navigation is installed, otherwise undefined. It is also undefined after the underlying request reaches idle; a view transition may still be finishing its visual commit.",
+      "body": "Returns { state, location }. state is idle, loading, or submitting. location is the pending URL under either RouterProvider or mountApplication, and undefined when idle. Retained navigation keeps the visible URL separate until the destination commits.",
       "code": ""
     },
     {
       "title": "Example",
       "body": "Use page navigation state for page-level feedback. A fetcher has its own state and should render its own pending feedback.",
-      "code": "import { useNavigation } from \"@kasperrt/smolter/preact\";\n\nexport function NavigationStatus() {\n  const navigation = useNavigation();\n  const busy = navigation.state !== \"idle\";\n\n  return <span role=\"status\">{busy ? \"Updating page\u2026\" : \"\"}</span>;\n}"
+      "code": "import { useNavigation } from \"@kasperrt/smolter/preact\";\n\nexport function NavigationStatus() {\n  const navigation = useNavigation();\n  const busy = navigation.state !== \"idle\";\n\n  return <span role=\"status\">{busy ? \"Updating page…\" : \"\"}</span>;\n}"
     },
     {
       "title": "Retained views",

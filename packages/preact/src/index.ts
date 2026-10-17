@@ -34,5 +34,10 @@ export {
   useSubmit,
 } from "./route-hooks.tsx";
 export * from "./route-types.ts";
-export { Outlet, type OutletProps, RouterApplication } from "./router.tsx";
+export {
+  type ApplicationProps,
+  Outlet,
+  type OutletProps,
+  RouterApplication,
+} from "./router.tsx";
 export * from "./routes.ts";

@@ -12,6 +12,7 @@ interface ChunkMetadata {
 export function lazyFiles(
   directory: string,
   dataEndpoint = "/_smolter",
+  framework: "react" | "preact" = "preact",
 ): Plugin {
   let root: string;
   const modules = new Map<string, string>();
@@ -139,7 +140,7 @@ export function lazyFiles(
       }
 
       return [
-        'import { lazyRoute } from "@kasperrt/smolter/preact/lazy-route";',
+        `import { lazyRoute } from "@kasperrt/smolter/${framework}/lazy-route";`,
         `export default [${definitions.join(",\n")}];`,
       ].join("\n");
     },
