@@ -393,3 +393,75 @@ it("uses the latest overlapping history destination including its query and hash
   expect(reload.mock.calls[0][0].href).toBe(location.href);
   expect(fetcher).toHaveBeenCalledOnce();
 });
+
+it("does not reload an older chunk failure after independent fetcher mutations", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { options, events, fetcher, reload, storage } = setup();
+  let resolve!: (response: Response) => void;
+  fetcher.mockReturnValue(
+    new Promise<Response>((done) => {
+      resolve = done;
+    }),
+  );
+  const action = vi.fn(() => ({ saved: true }));
+  const router = createDataRouter([{ path: "/", action }], {
+    url: "https://app.test/",
+  });
+  cleanups.push(watchDeployment(router, options));
+  router.getSnapshot().state = "loading";
+  events.dispatchEvent(new Event("vite:preloadError"));
+  const first = router.createFetcher();
+  const second = router.createFetcher();
+
+  await Promise.all([
+    first.submit("/", new FormData()),
+    second.submit("/", new FormData()),
+  ]);
+  resolve(Response.json({ version: "new" }));
+  await new Promise((done) => setTimeout(done, 0));
+
+  expect(action).toHaveBeenCalledTimes(2);
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+});
+
+it("keeps navigation usable without reloading while either fetcher mutation is pending", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { options, reload, storage } = setup("new");
+  const finishes: (() => void)[] = [];
+  const action = vi.fn(() => new Promise<void>((done) => finishes.push(done)));
+  const router = createDataRouter([{ path: "/", action }, { path: "/next" }], {
+    url: "https://app.test/",
+  });
+  const original = router.createFetcher;
+  const cleanup = watchDeployment(router, options);
+  cleanups.push(cleanup);
+  const first = router.createFetcher();
+  const second = router.createFetcher();
+  const submissions = [
+    first.submit("/", new FormData()),
+    second.submit("/", new FormData()),
+  ];
+  await vi.waitFor(() => expect(finishes).toHaveLength(2));
+  finishes[0]();
+  await submissions[0];
+  await router.navigate("/next?pending=1#details");
+
+  expect(router.getSnapshot().url).toBe(
+    "https://app.test/next?pending=1#details",
+  );
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+
+  finishes[1]();
+  await submissions[1];
+  await router.navigate("/next?ready=1#details");
+
+  expect(action).toHaveBeenCalledTimes(2);
+  expect(reload).toHaveBeenCalledOnce();
+  expect(reload.mock.calls[0][0].href).toBe(
+    "https://app.test/next?ready=1#details",
+  );
+  cleanup();
+  expect(router.createFetcher).toBe(original);
+});

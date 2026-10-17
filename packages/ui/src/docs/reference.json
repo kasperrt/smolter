@@ -1668,7 +1668,7 @@
     "title": "watchDeployment",
     "entries": ["react/client", "preact/client"],
     "kind": "API",
-    "summary": "Check for deployment changes before navigation. Returns a cleanup function.",
+    "summary": "Check for deployment changes before navigation. Install before creating fetchers. Returns a cleanup function.",
     "signature": "function watchDeployment(\n  router: NavigationRouter,\n  options: DeploymentOptions | null,\n): () => void;",
     "fields": [],
     "source": "packages/client/src/deployment.ts"

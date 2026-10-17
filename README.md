@@ -605,10 +605,10 @@ a claim of identical features.
 | `Preact: routing-only named exports` | 1405 |
 | `@kasperrt/smolter/react` | 2948 |
 | `@kasperrt/smolter/preact` | 4842 |
-| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4104 |
-| `@kasperrt/smolter/preact + server transport` | 5950 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 8949 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9227 |
+| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4186 |
+| `@kasperrt/smolter/preact + server transport` | 6033 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9034 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9314 |
 | `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
 | `React: common routing/data exports` | 2761 |
 | `Preact: common routing/data exports` | 3046 |
@@ -778,3 +778,5 @@ The generated route asset manifest follows static imports for each route and lea
 ### Matched-route asset hints
 
 The file-router build emits `.vite/route-assets.json` with each route's static JavaScript dependency closure and its CSS in `styles`. `routePreloads` from `@kasperrt/smolter/utils/assets` produces modulepreload hints for JavaScript and `preload; as=style; crossorigin` hints for CSS (matching Vite’s anonymous CORS mode), respecting your CDN/base URL. Set these hints on the document response or send Early Hints from your host. Stylesheet preloads fetch files; they do not apply styles. Keep the application stylesheet links and Vite's CSS handling in place. Optional dynamic imports are excluded, and unrelated routes stay lazy.
+
+Root stylesheet URL imports such as `import stylesUrl from "./index.css?url"` are not route CSS imports. Keep rendering `<link rel="stylesheet" href={stylesUrl}>` in the root document; an empty route `styles` array is expected when all CSS is loaded this way. Smolter does not infer stylesheet use from arbitrary asset URLs. If measurements show late root CSS discovery, your host can send an explicit preload or Early Hint for that same resolved URL, with the same CORS mode as the stylesheet link. Preloading does not replace the stylesheet link. Do not reorganize CSS merely to populate the route manifest.

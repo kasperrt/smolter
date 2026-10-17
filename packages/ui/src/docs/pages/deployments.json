@@ -33,6 +33,11 @@
       "title": "Type the virtual module",
       "body": "Include this declaration in the application TypeScript project. No physical deployment module needs to be created.",
       "code": "declare module \"virtual:smolter/deployment\" {\n  const deployment: import(\"@kasperrt/smolter/preact/client\").DeploymentOptions | null;\n  export default deployment;\n}"
+    },
+    {
+      "title": "Fetcher mutation ownership",
+      "body": "Install watchDeployment before creating fetchers; mountApplication does this automatically. Independent fetcher submissions invalidate older recovery checks. While any tracked fetcher submission is pending, document recovery is suppressed and its marker remains unused. Ordinary client navigation can continue. A later eligible navigation can recover after submissions settle. Fetchers created before watcher installation are not tracked.",
+      "code": ""
     }
   ]
 }

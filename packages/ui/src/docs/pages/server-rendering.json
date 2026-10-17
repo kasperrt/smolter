@@ -35,6 +35,11 @@
       "code": ""
     },
     {
+      "title": "Root stylesheets and route CSS",
+      "body": "Route asset manifests collect static CSS imports from matched route chunks. A root import such as index.css?url provides an asset URL, not a route CSS dependency; an empty styles array is expected when all CSS is loaded this way. Keep rendering the root stylesheet link. Smolter does not infer stylesheet use from arbitrary URLs. If measurements show late discovery, the host can send an explicit preload or Early Hint for the same resolved URL and matching CORS mode. A preload fetches CSS but does not apply it. Do not restructure CSS merely to populate the manifest.",
+      "code": "import stylesUrl from \"./index.css?url\";\n\n// Keep this in the root document head.\n<link rel=\"stylesheet\" href={stylesUrl} />"
+    },
+    {
       "title": "Externally injected head elements",
       "body": "Whole-document hydration expects the server and client layouts to match. Mark externally injected direct children of head with data-smolter-preserve. mountApplication temporarily excludes those nodes from hydration and restores the same nodes afterward; the application must not also render them. This is an explicit integration contract, not automatic tolerance of arbitrary HTML rewriting. Do not use it for application-owned tags, body content, or changes to the hydration payload.",
       "code": "<script data-smolter-preserve src=\"/infrastructure-instrumentation.js\"></script>\n<meta data-smolter-preserve name=\"infrastructure-tag\" content=\"example\">"
