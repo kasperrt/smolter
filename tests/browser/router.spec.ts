@@ -312,6 +312,9 @@ test("all examples use the same branding and responsive geometry", async ({
       await expect(page.getByRole("button", { name: "Add one" })).toBeEnabled();
 
       await expect(page.locator(".brand-mark")).toHaveText("s_");
+      await expect(
+        page.getByTestId("source-panel").locator("code"),
+      ).not.toBeEmpty();
 
       const layout = await page.evaluate(() =>
         ["header", ".intro", ".panel-tabs", ".playground", "aside"].map(
