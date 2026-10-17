@@ -19,6 +19,7 @@ if (!match || manifests.some((manifest) => manifest.version !== current)) {
 
 const [major, minor, patch] = match.slice(1, 4).map(Number);
 const versions = {
+  major: `${major + 1}.0.0`,
   patch: `${major}.${minor}.${patch + 1}`,
   minor: `${major}.${minor + 1}.0`,
   release: match[4] && `${major}.${minor}.${patch}`,
@@ -26,7 +27,9 @@ const versions = {
 const version = versions[process.argv[2]];
 
 if (typeof version !== "string") {
-  console.error("Use patch, minor, or release (to promote a prerelease).");
+  console.error(
+    "Use major, minor, patch, or release (to promote a prerelease).",
+  );
   process.exit(1);
 }
 

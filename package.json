@@ -24,7 +24,8 @@
     "smoke:site": "node scripts/site-smoke.mjs",
     "docs:badges": "node scripts/readme-badges.mjs",
     "docs:reference": "pnpm build && node scripts/docs-reference.mjs",
-    "docs:check": "pnpm build && node scripts/docs-reference.mjs --check"
+    "docs:check": "pnpm build && node scripts/docs-reference.mjs --check",
+    "version:major": "node scripts/version.mjs major"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
@@ -56,7 +57,7 @@
     "wouter": "3.13.0",
     "wouter-preact": "3.13.0"
   },
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "A tiny typed data router for React and Preact.",
   "sideEffects": false,
   "license": "MIT",

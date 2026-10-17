@@ -1,18 +1,18 @@
 {
   "slug": "migration-0.3",
-  "title": "Migrating to 0.3",
-  "summary": "Choose the router engine explicitly and upgrade the Preact runtime.",
+  "title": "Migrating to 1.0",
+  "summary": "Upgrade from 0.2 to the stable navigation and data APIs. No API changes from 0.3.",
   "kind": "Guides",
   "sections": [
     {
       "title": "Data routers now have an explicit factory",
-      "body": "In 0.2, createRouter included data handling. In 0.3, replace it with createDataRouter wherever routes use loaders, actions, fetchers or revalidation. Keep createRouter for navigation-only applications. The server and application helpers already choose the data engine.",
+      "body": "In 0.2, createRouter included data handling. In 1.0 (introduced in 0.3), replace it with createDataRouter wherever routes use loaders, actions, fetchers or revalidation. Keep createRouter for navigation-only applications. The server and application helpers already choose the data engine.",
       "code": "import { createDataRouter } from \"@kasperrt/smolter/react\";\n\nconst router = createDataRouter(routes, { browser: true });"
     },
     {
       "title": "Preact 11",
       "body": "Upgrade Preact to 11.0.1 or newer. React and Preact still have separate scoped imports; no React runtime is required for a Preact application.",
-      "code": "pnpm add @kasperrt/smolter@^0.3.0 preact@^11.0.1"
+      "code": "pnpm add @kasperrt/smolter@^1.0.0 preact@^11.0.1"
     },
     {
       "title": "Optional application entry points",
@@ -21,7 +21,7 @@
     },
     {
       "title": "Size and release notes",
-      "body": "The bundle-size guide reports separate routing, data, transport and application measurements. Do not add overlapping rows. The changelog lists all 0.3.0 changes.",
+      "body": "The bundle-size guide reports separate routing, data, transport and application measurements. Do not add overlapping rows. The changelog lists the 1.0.0 release and preceding 0.3.0 changes.",
       "code": "",
       "links": [
         {

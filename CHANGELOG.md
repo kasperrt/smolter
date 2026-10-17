@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0
+
+- Promote the checked 0.3.0 API to the first 1.x release; no runtime changes from 0.3.0.
+- Use `createRouter` for navigation only and `createDataRouter` for loader/action applications.
+- Preact requires 11.0.1 or newer; renderer-scoped and optional server/build entry points remain unchanged.
+- Consumers upgrading from 0.2.0 should follow the migration guide below. Existing 0.3.0 consumers need only update the dependency version.
+- Preserve 0.3.0 in the release history because publication had completed before promotion to 1.0.0.
+
 ## 0.3.0
 
 ### Migration from 0.2.0
