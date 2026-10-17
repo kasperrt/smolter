@@ -6,16 +6,14 @@ interface PendingValue {
   reject: (reason: Error) => void;
 }
 
-declare global {
-  interface Window {
-    __smolterDeferred?: Settlement[];
-  }
+export interface DeferredWindow extends Window {
+  __smolterDeferred?: Settlement[];
 }
 
 /** Restore promise identity before hydrating Suspense boundaries. */
 export function readHydration(json: string) {
   const pending = new Map<number, PendingValue>();
-  const queue = (window.__smolterDeferred ??= []);
+  const queue = ((window as DeferredWindow).__smolterDeferred ??= []);
 
   function revive(_key: string, value: unknown): unknown {
     if (!value || typeof value !== "object") return value;
