@@ -1,0 +1,28 @@
+{
+  "slug": "watchDeployment",
+  "title": "watchDeployment",
+  "summary": "Recover stale production navigation without adding code to the core router.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Pass a Smolter navigation or data router and DeploymentOptions from virtual:smolter/deployment. Null metadata is a no-op for development and SSR. Install once before starting a manual router, or after mountApplication resolves.",
+      "code": "import deployment from \"virtual:smolter/deployment\";\nimport { watchDeployment } from \"@kasperrt/smolter/preact/client\";\n\nconst stop = watchDeployment(router, deployment);"
+    },
+    {
+      "title": "Result and disposal",
+      "body": "Returns a cleanup function. Cleanup removes the popstate and Vite listeners, aborts a pending manifest request and restores router methods. router.dispose() also calls cleanup.",
+      "code": "stop();"
+    },
+    {
+      "title": "Navigation behavior",
+      "body": "Pathname and query navigation checks the no-store manifest, including Back/Forward. Confirmed build changes reload the destination with its query and hash; hash-only or external links do not check. Concurrent requests share a probe and only the latest navigation may reload. Mutations are never replayed.",
+      "code": ""
+    },
+    {
+      "title": "Failures and cache policy",
+      "body": "Network errors, bad JSON and timeouts fall back to normal navigation. A session marker limits recovery to one reload per old build/manifest URL. Blocked storage disables automatic reload. Serve the manifest with no-store and HTML with no-cache. A custom reload callback owns confirmation/navigation and receives the destination URL.",
+      "code": "watchDeployment(router, deployment && { ...deployment, timeout: 1500 });"
+    }
+  ]
+}

@@ -83,3 +83,5 @@ export function serverRoute<M extends RouteModule = RouteModule>(
     }),
   } as Route<M>;
 }
+
+export { type DeploymentOptions, watchDeployment } from "./deployment.ts";

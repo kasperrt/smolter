@@ -16,3 +16,8 @@ export function routerPlugin(options: FileRouterOptions = {}): Plugin {
 
 /** File routing is the default; this alias keeps configuration explicit. */
 export const fileRouter = routerPlugin;
+
+export {
+  type DeploymentPluginOptions,
+  deploymentPlugin,
+} from "./deployment.ts";

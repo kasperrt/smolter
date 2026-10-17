@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1
+
+- Refresh browser and SSR file-route discovery on additions, renames and removals; preserve normal Vite HMR for colocated helpers and components.
+
+- Add optional production deployment manifests through `deploymentPlugin` for both React and Preact Vite integrations.
+- Add `watchDeployment` to both client entrypoints: check before navigation and Back/Forward, recover stale Vite chunks after confirmed build changes, and preserve the requested URL.
+- Skip hash-only links, development builds and SSR; bound failed checks and prevent repeated reloads. Keep routing-only bundles unchanged.
+- Document production cache headers, CDN/application-specific manifest paths, unsaved state and rollout limitations.
+
 ## 0.3.0
 
 ### Migration from 0.2.0

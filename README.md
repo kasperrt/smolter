@@ -20,6 +20,8 @@ Start with [loaders](https://kasperrt.github.io/smolter/react/docs/loaders/), [a
 
 ## Contents
 
+- [Deployment updates](#deployment-updates)
+
 - [Install](#install)
 - [Try the four standalone examples](#try-the-four-standalone-examples)
 - [Choose file routing or manual routes](#choose-file-routing-or-manual-routes)
@@ -603,10 +605,10 @@ a claim of identical features.
 | `Preact: routing-only named exports` | 1405 |
 | `@kasperrt/smolter/react` | 2873 |
 | `@kasperrt/smolter/preact` | 4748 |
-| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 3219 |
-| `@kasperrt/smolter/preact + server transport` | 5059 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 7415 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 7696 |
+| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 3870 |
+| `@kasperrt/smolter/preact + server transport` | 5697 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 8033 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 8317 |
 | `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
 | `React: common routing/data exports` | 2683 |
 | `Preact: common routing/data exports` | 2966 |
@@ -708,3 +710,26 @@ pnpm add /absolute/path/to/kasperrt-smolter-0.0.1.tgz
 ```
 
 Workspace structure and rendering checks are documented in [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## Deployment updates
+
+For production tabs that survive a deployment, add `deploymentPlugin()` from
+`@kasperrt/smolter/react/vite` or `/preact/vite`, then connect the router:
+
+```ts
+import deployment from "virtual:smolter/deployment";
+import { watchDeployment } from "@kasperrt/smolter/preact/client";
+
+watchDeployment(router, deployment);
+```
+
+Serve the emitted `smolter-manifest.json` with `Cache-Control: no-store` and HTML
+with `no-cache`. Navigation checks its build version before loading another route;
+a newer version reloads the destination, including its query and hash. Vite chunk
+failures are checked again. Hash-only links skip the check, failed checks continue
+normally, and a session marker prevents reload loops. Development/SSR builds
+disable the helper. This optional client module adds nothing to the routing-only
+entrypoints and never replays form submissions.
+
+See [deployment updates](https://kasperrt.github.io/smolter/react/docs/deployments/)
+for Express, CDN paths, TypeScript declarations and unsaved-state handling.

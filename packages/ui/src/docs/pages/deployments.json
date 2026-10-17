@@ -1,0 +1,38 @@
+{
+  "slug": "deployments",
+  "title": "Deployment updates",
+  "summary": "Recover stale tabs when production deployments replace routes and hashed assets.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Production build checks",
+      "body": "Use deploymentPlugin with watchDeployment to recover long-lived browser tabs after a deployment. The plugin emits smolter-manifest.json with a unique build version and provides virtual:smolter/deployment. Development and server builds export null, so no update requests run in development or SSR. This is separate from Vite\u2019s asset manifest: it detects replacement builds, including changed routes and hashed bundles.",
+      "code": "import { defineConfig } from \"vite\";\nimport { deploymentPlugin, fileRouter } from \"@kasperrt/smolter/react/vite\";\n\nexport default defineConfig({\n  plugins: [fileRouter(), deploymentPlugin()],\n});\n\n// Preact uses the same exports from /preact/vite.\n// With applicationPlugins(), add deploymentPlugin() beside it."
+    },
+    {
+      "title": "Connect the browser router",
+      "body": "Connect once before starting a manually created router, or after mountApplication resolves. Import from /react/client or /preact/client. The helper wraps navigation and Back/Forward, checks a fresh manifest before changing pathname or search, and reloads the intended destination when its version differs. Hash-only changes and external navigations do not check. router.dispose() removes the listeners; the returned cleanup function can disconnect them earlier. No polling runs in the background.",
+      "code": "import deployment from \"virtual:smolter/deployment\";\nimport { createDataRouter } from \"@kasperrt/smolter/react\";\nimport { watchDeployment } from \"@kasperrt/smolter/react/client\";\n\nconst router = createDataRouter(routes, { browser: true });\nwatchDeployment(router, deployment);\n\n// Preact application integration:\nconst router = await mountApplication(routes, root);\nwatchDeployment(router, deployment);"
+    },
+    {
+      "title": "Serve production documents and manifests fresh",
+      "body": "Serve smolter-manifest.json from the same deployed release as its HTML and assets. Set Cache-Control: no-store on the manifest and no-cache on HTML; keep content-hashed assets immutable. Install this route before SPA/SSR fallbacks and generic static-file middleware. The browser also uses fetch cache: no-store. If your CDN ignores these headers, configure its cache rules explicitly. Keep old assets during rollout when possible: the guard cannot run if the initial JavaScript entry itself is missing.",
+      "code": "app.get(\"/smolter-manifest.json\", (_request, response) => {\n  response.set(\"Cache-Control\", \"no-store\");\n  response.sendFile(path.resolve(\"dist/client/smolter-manifest.json\"));\n});\n\napp.use(\"/assets\", express.static(\"dist/client/assets\", {\n  immutable: true,\n  maxAge: \"1y\",\n}));"
+    },
+    {
+      "title": "Bases, CDNs and multiple applications",
+      "body": "By default the public manifest URL uses Vite base. Set manifestURL explicitly for a relative base, a reverse proxy or multiple applications sharing a domain. Each application must read its own manifest. The emitted filename remains smolter-manifest.json; your server maps the public URL to that file. Cross-origin asset hosts must allow CORS for manifest reads. Packaged/offline applications can omit the plugin and helper.",
+      "code": "deploymentPlugin({ manifestURL: \"/admin/smolter-manifest.json\" })"
+    },
+    {
+      "title": "Failures, forms and reload loops",
+      "body": "Failed, invalid or timed-out checks continue normal navigation; the default timeout is 2000 ms. The helper never submits or replays mutations. Vite chunk-load failures trigger another version check, but only a confirmed newer build permits recovery, and recovery is skipped while the router is submitting. A sessionStorage marker permits at most one reload per old build and manifest URL. If storage is blocked or the same stale HTML survives a reload, normal errors remain visible instead of creating a reload loop. Unsaved in-memory state is lost on document reload; supply reload(destination) to implement your own confirmation policy. A deployment rolled out across inconsistent servers still requires a consistent host/CDN deployment policy.",
+      "code": "watchDeployment(router, deployment && {\n  ...deployment,\n  timeout: 1500,\n  reload: (destination) => {\n    if (confirm(\"A new version is available. Reload?\")) {\n      location.assign(destination.href);\n    }\n  },\n});"
+    },
+    {
+      "title": "Type the virtual module",
+      "body": "Include this declaration in the application TypeScript project. No physical deployment module needs to be created.",
+      "code": "declare module \"virtual:smolter/deployment\" {\n  const deployment: import(\"@kasperrt/smolter/preact/client\").DeploymentOptions | null;\n  export default deployment;\n}"
+    }
+  ]
+}
