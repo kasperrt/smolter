@@ -1,3 +1,5 @@
+> Current status: no 0.4.2 release. The follow-up section below supersedes the initial interruption/candidate findings. Upstream fix: https://github.com/preactjs/preact/pull/5314. Earlier measurements and failures below are retained as historical evidence; current sizes are in streaming-sizes.json.
+
 # 0.4.2 correctness investigation — release blocked
 
 No 0.4.2 version bump, merge or publication is authorized by passing only the recovery tests. The production ownership regression remains red with published Preact 11.0.1 and preact-render-to-string 6.8.1. Vibes was not changed.
@@ -105,3 +107,18 @@ No matched TTFB, LCP, request-count or interaction-readiness improvement is clai
 - Full new offline/CDN/CSP/head-preservation combinations are not signed off by older regressions. Existing regression passes are preserved, not generalized into a complete matrix claim.
 
 Do not publish 0.4.2 while these correctness gates are red. The package version and dependencies remain unchanged. No consumer configuration change is requested, and no workaround should be added to Vibes.
+
+
+## Follow-up: bounded interruption handling and upstream candidate
+
+The unpublished Smolter candidate now supports `mountApplication(routes, root, { deferredTimeout: 30000 })`. The default is 30 seconds from reading initial deferred hydration data; accepted values are 1 through 2147483647 milliseconds. This is a single bounded deadline, not polling or immediate network-disconnect detection. Resolved hydration schedules no timer. Terminal completion and disposal clear it. Expiry rejects outstanding deferred values without retrying requests or mutations. Slow legitimate data needs an explicitly larger budget.
+
+An abruptly terminated Chromium document can remain `loading` without DOMContentLoaded or a useful terminal event. The production interruption fixture verifies the transport actually aborts and uses Playwright's controlled clock to expire the deadline. It no longer incorrectly waits for a successful document load after deliberately breaking the response.
+
+The Preact candidate now retains the balanced opening/closing marker range on its owning component and retires it on unmount. Re-suspension also preserves the closing insertion cursor so newly inserted siblings are not accidentally placed inside the pending range. A previous source-alias diagnostic mixed unmangled source fields with published renderer field names; its broader failures were not a valid evaluation of this candidate. The current experiment uses Preact's official built/minified output.
+
+Three Preact-only tests fail against unchanged 11.0.1 (40 existing tests pass), and all 43 pass with the candidate. The full minified upstream suite passes 1402 tests across 107 files, with 11 existing skips; lint and JavaScript typechecking pass. All ten Smolter production ownership fixtures pass using the isolated candidate. This is not a released dependency: the diagnostic alias has been removed from Smolter, and the published-dependency ownership failures remain a release gate.
+
+Smolter lint, typechecking, packed React/Preact installation/SSR, JSR dry-run and 100% implementation line coverage (1796/1796) pass. The size JSON records a remeasurement of the candidate with the same toolchain/settings as the previously rebuilt 0.4.1 baseline. It excludes framework peers. Complete application growth versus 0.4.1 is +279 raw / +124 gzip / +118 Brotli bytes; lazy application growth is +279 / +123 / +116. Routing/data entries remain unchanged. No speed superiority is established.
+
+No Vibes edits, renderer patch, new runtime dependency, polling, mutation retry, release or change to JSR-before-npm ordering is included. Upstream merge/publication and a clean dependency-based full regression run are required before 0.4.2 can be published.

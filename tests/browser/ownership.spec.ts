@@ -33,6 +33,7 @@ for (const mode of [
     const output = await mkdtemp(join(tmpdir(), "smolter-ownership-"));
     const result = await build({
       configFile: false,
+      define: { DEFERRED_TIMEOUT: mode === "disconnect" ? "2000" : "30000" },
       logLevel: "silent",
       build: {
         outDir: output,
@@ -163,6 +164,7 @@ for (const mode of [
       throw new Error("Missing port");
     await Promise.resolve()
       .then(async () => {
+        if (mode === "disconnect") await page.clock.install();
         const errors: string[] = [];
         const failedRequests: string[] = [];
         page.on("requestfailed", (request) =>
@@ -215,6 +217,7 @@ for (const mode of [
           documentResponse!.destroy();
           await expect.poll(() => aborted).toBe(1);
           await expect.poll(() => failedRequests.length).toBeGreaterThan(0);
+          await page.clock.runFor(2001);
           await test.info().attach("interrupted-document", {
             body: JSON.stringify({
               failedRequests,
@@ -267,7 +270,11 @@ for (const mode of [
             page.getByText("Root data pending", { exact: true }),
           ).toBeVisible();
         rootSettle("Original root content");
-        await page.waitForLoadState("load");
+        if (mode !== "disconnect") await page.waitForLoadState("load");
+        if (mode !== "return")
+          await expect(
+            page.getByRole("heading", { name: "Destination ready" }),
+          ).toBeVisible();
         await expect
           .soft(page.getByText("Optional data pending", { exact: true }))
           .toHaveCount(0);

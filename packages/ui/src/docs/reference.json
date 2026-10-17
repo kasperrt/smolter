@@ -1699,7 +1699,7 @@
     "entries": ["preact/client"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n}",
+    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n  /** Maximum wait for initial deferred data, in milliseconds. Defaults to 30,000. */\n  deferredTimeout?: number;\n}",
     "fields": [
       {
         "name": "hash",
@@ -1710,6 +1710,11 @@
         "name": "deployment",
         "signature": "deployment?: DeploymentOptions | null;",
         "summary": ""
+      },
+      {
+        "name": "deferredTimeout",
+        "signature": "deferredTimeout?: number;",
+        "summary": "Maximum wait for initial deferred data, in milliseconds. Defaults to 30,000."
       }
     ],
     "source": "packages/preact/src/client.tsx"

@@ -11,7 +11,10 @@ export interface DeferredWindow extends Window {
 }
 
 /** Restore promise identity before hydrating Suspense boundaries. */
-export function readHydration(json: string) {
+export function readHydration(json: string, timeout = 30_000) {
+  if (!(timeout >= 1 && timeout <= 2_147_483_647))
+    throw new RangeError("deferredTimeout must be between 1 and 2147483647 ms");
+
   const pending = new Map<number, PendingValue>();
   const queue = ((window as DeferredWindow).__smolterDeferred ??= []);
 
@@ -54,12 +57,20 @@ export function readHydration(json: string) {
 
   const hydration = JSON.parse(json, revive);
   const dispose = () => {
+    clearTimeout(deadline);
     window.removeEventListener("DOMContentLoaded", dispose);
     for (const target of pending.values())
       target.reject(new Error("Hydration stream closed"));
     pending.clear();
     queue.push = () => 0;
   };
+  const deadline = pending.size
+    ? setTimeout(() => {
+        for (const target of pending.values())
+          target.reject(new Error("Hydration stream timed out"));
+        dispose();
+      }, timeout)
+    : undefined;
   const receive = (packet: Settlement) => {
     const [id, value, error] = packet;
     if (id === -1) return dispose();

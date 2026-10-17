@@ -607,8 +607,8 @@ a claim of identical features.
 | `@kasperrt/smolter/preact` | 4842 |
 | `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4199 |
 | `@kasperrt/smolter/preact + server transport` | 6045 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9053 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9333 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9158 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9437 |
 | `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
 | `React: common routing/data exports` | 2761 |
 | `Preact: common routing/data exports` | 3046 |
@@ -748,7 +748,7 @@ import { mountApplication } from "@kasperrt/smolter/preact/client";
 await mountApplication(routes, root, { deployment });
 ```
 
-Preact SSR starts root and route loaders concurrently. Return nested promises and render them with `Await` inside `Suspense` to stream a shell before optional data resolves. The Node/Express adapter streams the response; hydration starts after the document stream finishes by default. Pass `{ earlyHydration: true }` to `renderApplication` to hydrate the shell while optional promises stream independently. Root-loader failures render the root error boundary. Vite development HTML transformation still buffers the document.
+Preact SSR starts root and route loaders concurrently. Return nested promises and render them with `Await` inside `Suspense` to stream a shell before optional data resolves. The Node/Express adapter streams the response; hydration starts after the document stream finishes by default. Pass `{ earlyHydration: true }` to `renderApplication` to hydrate the shell while optional promises stream independently. Initial deferred values have a 30-second deadline after their payload is read; configure `mountApplication` with `{ deferredTimeout: 60_000 }` for intentionally slower data. A broken document can emit no completion event, so this deadline rejects unfinished values without retrying requests. Root-loader failures render the root error boundary. Vite development HTML transformation still buffers the document.
 
 Successful action redirects refresh registered root data without replaying the mutation. Loader arguments expose `reason` to distinguish initial loads, navigation, revalidation and fetcher reads without comparing browser URLs.
 

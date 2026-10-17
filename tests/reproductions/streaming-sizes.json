@@ -90,9 +90,9 @@
         "brotli": 8230
       },
       "candidate": {
-        "raw": 24788,
-        "gzip": 9053,
-        "brotli": 8246
+        "raw": 25046,
+        "gzip": 9158,
+        "brotli": 8348
       }
     },
     {
@@ -103,9 +103,9 @@
         "brotli": 8486
       },
       "candidate": {
-        "raw": 25676,
-        "gzip": 9333,
-        "brotli": 8509
+        "raw": 25934,
+        "gzip": 9437,
+        "brotli": 8602
       }
     },
     {
@@ -129,9 +129,9 @@
         "brotli": 5426
       },
       "candidate": {
-        "raw": 15519,
-        "gzip": 5980,
-        "brotli": 5439
+        "raw": 15777,
+        "gzip": 6086,
+        "brotli": 5526
       }
     },
     {

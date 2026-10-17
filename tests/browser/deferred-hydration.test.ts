@@ -6,6 +6,59 @@ import {
 
 const deferredWindow = window as DeferredWindow;
 
+it("bounds unfinished streams without retrying or waiting for document completion", async (context) => {
+  vi.useFakeTimers();
+  const state = vi
+    .spyOn(document, "readyState", "get")
+    .mockReturnValue("loading");
+  context.onTestFinished(() => {
+    state.mockRestore();
+    vi.useRealTimers();
+  });
+  Reflect.deleteProperty(window, "__smolterDeferred");
+  const { hydration, dispose } = readHydration(
+    '{"pending":{"__smolterPending":0}}',
+    100,
+  );
+  const rejected = expect(hydration.pending).rejects.toThrow(
+    "Hydration stream timed out",
+  );
+
+  await vi.advanceTimersByTimeAsync(100);
+  await rejected;
+  expect(deferredWindow.__smolterDeferred?.push([0, "late", null])).toBe(0);
+  expect(vi.getTimerCount()).toBe(0);
+  dispose();
+});
+
+it("cancels the deadline on settlement completion and does not schedule it for resolved data", async (context) => {
+  vi.useFakeTimers();
+  const state = vi
+    .spyOn(document, "readyState", "get")
+    .mockReturnValue("loading");
+  context.onTestFinished(() => {
+    state.mockRestore();
+    vi.useRealTimers();
+  });
+  Reflect.deleteProperty(window, "__smolterDeferred");
+  const resolved = readHydration('{"value":42}');
+  expect(vi.getTimerCount()).toBe(0);
+  resolved.dispose();
+  const { hydration } = readHydration(
+    '{"pending":{"__smolterPending":0}}',
+    100,
+  );
+  expect(vi.getTimerCount()).toBe(1);
+  deferredWindow.__smolterDeferred?.push([0, "done", null], [-1, null, null]);
+  expect(await hydration.pending).toBe("done");
+  expect(vi.getTimerCount()).toBe(0);
+});
+
+it("rejects invalid deferred deadlines before creating pending promises", () => {
+  for (const timeout of [0, 0.5, -1, NaN, Infinity, 2_147_483_648])
+    expect(() => readHydration("{}", timeout)).toThrow(RangeError);
+});
+
 it("revives shared promises and nested settlements before or after the browser entry loads", async (context) => {
   const state = vi
     .spyOn(document, "readyState", "get")
