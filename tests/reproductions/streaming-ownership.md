@@ -1,3 +1,5 @@
+> Latest alternative: the integrated `Await fallback` path now passes on published Preact without upstream changes. The native Suspense reproduction remains failing. See the final section; previous upstream-PR plans below are historical and are not the implementation plan.
+
 > Current status: no 0.4.2 release. The follow-up section below supersedes the initial interruption/candidate findings. Upstream fix: https://github.com/preactjs/preact/pull/5314. Earlier measurements and failures below are retained as historical evidence; current sizes are in streaming-sizes.json.
 
 # 0.4.2 correctness investigation — release blocked
@@ -140,3 +142,28 @@ The optional-loading experiment remains a fixture-only investigation. No deferre
 
 
 Validation of this follow-up: published-runtime ownership matrix 4 pass / 10 fail (blocking); eight deferred-hydration tests and 33 recovery tests pass; lint/typecheck, packed SSR, JSR dry-run and 100% line coverage (1802/1802) pass. The first broader browser run overlapped ownership teardown and lost its shared example servers (connection refused); this was a harness collision, not a rendering assertion. The isolated-port rerun passed all 46 remaining correctness/browser checks. Performance sampling was deliberately excluded from the correctness rerun; no new timing claim is made.
+
+
+## Integrated fallback alternative on published Preact
+
+The solution stays inside Smolter and its existing `@kasperrt/smolter/preact` entrypoint. There is no new public subpath, dependency patch, renderer fork or external PR requirement.
+
+```tsx
+import { Await } from "@kasperrt/smolter/preact";
+
+<Await resolve={data.optional}
+  fallback={<p>Optional data pending</p>}
+  errorElement={<p>Optional data unavailable</p>}>
+  {(value) => <p>{value}</p>}
+</Await>
+```
+
+For early hydration, replace the surrounding native Suspense with this explicit fallback on each deferred field, including persistent root fields. The server renders ordinary fallback HTML. Existing deferred packets resolve the same promises, and a mounted component updates its own subtree. Cleanup disables its settlement callback; promise identity prevents old results from rendering for replacement props. The component starts no request and adds no cache or global observer. Normal non-early SSR retains resolved HTML streaming through a server-only boundary function, without introducing native Suspense into the browser bundle.
+
+This is an explicit markup migration, not a transparent repair of Preact's native streamed Suspense. Early-mode deferred results require JavaScript to replace fallback HTML. `Await` without an explicit fallback retains the existing behavior and known limitation. Arbitrary native Suspense/lazy component boundaries are not repaired. No Vibes files were changed or linked to the candidate.
+
+All 13 application ownership scenarios pass on published Preact 11.0.1 / renderer 6.8.1 using the new built-in behavior. The native matrix and new matrix register through the same assertion harness, including stale fallback/resolved absence, destination retention, query/hash, loader counts, persistent state and focus. The native-only reduction is not attributed to Smolter's new path. Five additional production streaming cases pass for values, rejection, mutation, navigation, preserved head nodes and CSP. Ordinary SSR has a regression asserting resolved content. The broader supported-path browser run passed 59 tests; no timing/performance ranking is claimed.
+
+The integrated behavior costs +192 gzip bytes in the framework-external complete application compared with the preceding candidate (9237 -> 9429). Including published Preact, the candidate changes 16253 -> 16382 gzip bytes (+129). Relative to 0.4.1, complete application inventory including Preact is 42548/16046/14602 -> 43571/16382/14885 raw/gzip/Brotli (+1023/+336/+283), including all preceding recovery/deadline fixes. Main Preact data exports grow 4842 -> 5044 gzip as requested for the integrated implementation. Routing-only and React entries do not grow from this change. This is an export-inventory comparison, not Vibes initial transfer.
+
+No release has been made. Remaining native ownership failures remain visible; a release must clearly scope the supported component-owned path and migration rather than claiming arbitrary native Suspense is fixed. Any decision to change existing early-hydration defaults needs explicit versioning rather than being hidden in a patch.

@@ -1,18 +1,18 @@
 {
   "slug": "Await",
   "title": "Await",
-  "summary": "Render a stable promise through Preact Suspense, with a local rejection fallback.",
+  "summary": "Render deferred values with component-owned loading and error content.",
   "kind": "API",
   "sections": [
     {
       "title": "Parameters",
-      "body": "resolve accepts a value or Promise. children receives the resolved value, inferred as Awaited<T>. errorElement is optional and may be null to deliberately render nothing on rejection.",
+      "body": "resolve accepts a value or Promise. children receives Awaited<T>. fallback supplies component-owned pending content; pass null to render nothing. errorElement is optional and may be null on rejection.",
       "code": ""
     },
     {
       "title": "Pending and resolved values",
-      "body": "Place Await inside Suspense from preact/compat. Pending promises suspend to that boundary; fulfilled promises call children. A non-Promise value calls children immediately. Preserve the promise identity between renders instead of creating a new promise inside the component.",
-      "code": "import { Await } from \"@kasperrt/smolter/preact\";\nimport { Suspense } from \"preact/compat\";\n\ninterface ReviewsProps {\n  reviews: Promise<string[]>;\n}\n\nexport function Reviews({ reviews }: ReviewsProps) {\n  return (\n    <Suspense fallback={<p role=\"status\">Loading reviews\u2026</p>}>\n      <Await resolve={reviews} errorElement={<p>Reviews are unavailable.</p>}>\n        {(items) => <ul>{items.map((item) => <li key={item}>{item}</li>)}</ul>}\n      </Await>\n    </Suspense>\n  );\n}"
+      "body": "For early hydration, put fallback directly on Await. The server renders ordinary fallback HTML; the existing deferred-data stream delivers the result, and the mounted component updates its own content. No streamed Suspense DOM is inserted. Preserve the promise identity between renders.",
+      "code": "import { Await } from \"@kasperrt/smolter/preact\";\n\nexport function Reviews({ reviews }: { reviews: Promise<string[]> }) {\n  return (\n    <Await resolve={reviews}\n      fallback={<p role=\"status\">Loading reviews…</p>}\n      errorElement={<p>Reviews are unavailable.</p>}>\n      {(items) => <ul>{items.map((item) => <li key={item}>{item}</li>)}</ul>}\n    </Await>\n  );\n}"
     },
     {
       "title": "Rejections",
@@ -21,7 +21,12 @@
     },
     {
       "title": "Server rendering",
-      "body": "Await does not start requests. With renderApplication, nested loader promises remain pending during SSR: wrap Await in Suspense to stream a fallback. By default, hydration begins after the document completes. Set renderApplication options.earlyHydration to true to hydrate the shell before optional promises settle. Route-data HTTP transport still resolves deferred fields before JSON serialization.",
+      "body": "Await starts no requests. With earlyHydration enabled, an explicit fallback is rendered and hydrated normally; promise settlements update only mounted components. Deferred results are sent as data, not resolved HTML, so JavaScript is required to replace these fallbacks. Ordinary SSR without early hydration still streams resolved HTML. Returning resolved data renders immediately. Route-data HTTP transport continues to resolve promises before serialization.",
+      "code": ""
+    },
+    {
+      "title": "Existing Suspense usage",
+      "body": "Await without a fallback retains its existing Suspense behavior. Published Preact 11.0.1 can retain abandoned fallback nodes when native streamed Suspense is hydrated before settlement. For early hydration, replace the outer Suspense with Await fallback on each deferred section, including persistent root sections. This integrated path needs no dependency patch or separate import. It does not fix arbitrary native Suspense or lazy-component boundaries.",
       "code": ""
     }
   ]

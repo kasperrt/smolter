@@ -604,11 +604,11 @@ a claim of identical features.
 | `React: routing-only named exports` | 1245 |
 | `Preact: routing-only named exports` | 1405 |
 | `@kasperrt/smolter/react` | 2948 |
-| `@kasperrt/smolter/preact` | 4842 |
+| `@kasperrt/smolter/preact` | 5044 |
 | `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4281 |
-| `@kasperrt/smolter/preact + server transport` | 6110 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9237 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9522 |
+| `@kasperrt/smolter/preact + server transport` | 6316 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9429 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9716 |
 | `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
 | `React: common routing/data exports` | 2761 |
 | `Preact: common routing/data exports` | 3046 |
@@ -748,7 +748,7 @@ import { mountApplication } from "@kasperrt/smolter/preact/client";
 await mountApplication(routes, root, { deployment });
 ```
 
-Preact SSR starts root and route loaders concurrently. Return nested promises and render them with `Await` inside `Suspense` to stream a shell before optional data resolves. The Node/Express adapter streams the response; hydration starts after the document stream finishes by default. Pass `{ earlyHydration: true }` to `renderApplication` to hydrate the shell while optional promises stream independently. Initial deferred values share a total 30-second budget after their payload is read, not an inactivity timeout or reliable disconnect detector. Settlements do not extend it; configure `mountApplication` with `{ deferredTimeout: 60_000 }` for intentionally slower data (integer milliseconds from 1 through 2147483647; invalid values throw RangeError). A broken document can emit no completion event, so this deadline rejects unfinished values without retrying requests. Root-loader failures render the root error boundary. Vite development HTML transformation still buffers the document.
+Preact SSR starts root and route loaders concurrently. Return nested promises and use `Await` with an explicit `fallback` for component-owned pending content during early hydration. The Node/Express adapter streams the response; hydration starts after the document stream finishes by default. Pass `{ earlyHydration: true }` to `renderApplication` to hydrate the shell while optional promises stream independently. Initial deferred values share a total 30-second budget after their payload is read, not an inactivity timeout or reliable disconnect detector. Settlements do not extend it; configure `mountApplication` with `{ deferredTimeout: 60_000 }` for intentionally slower data (integer milliseconds from 1 through 2147483647; invalid values throw RangeError). A broken document can emit no completion event, so this deadline rejects unfinished values without retrying requests. Root-loader failures render the root error boundary. Vite development HTML transformation still buffers the document.
 
 Successful action redirects refresh registered root data without replaying the mutation. Loader arguments expose `reason` to distinguish initial loads, navigation, revalidation and fetcher reads without comparing browser URLs.
 
@@ -780,3 +780,19 @@ The generated route asset manifest follows static imports for each route and lea
 The file-router build emits `.vite/route-assets.json` with each route's static JavaScript dependency closure and its CSS in `styles`. `routePreloads` from `@kasperrt/smolter/utils/assets` produces modulepreload hints for JavaScript and `preload; as=style; crossorigin` hints for CSS (matching Vite’s anonymous CORS mode), respecting your CDN/base URL. Set these hints on the document response or send Early Hints from your host. Stylesheet preloads fetch files; they do not apply styles. Keep the application stylesheet links and Vite's CSS handling in place. Optional dynamic imports are excluded, and unrelated routes stay lazy.
 
 Root stylesheet URL imports such as `import stylesUrl from "./index.css?url"` are not route CSS imports. Keep rendering `<link rel="stylesheet" href={stylesUrl}>` in the root document; an empty route `styles` array is expected when all CSS is loaded this way. Smolter does not infer stylesheet use from arbitrary asset URLs. If measurements show late root CSS discovery, your host can send an explicit preload or Early Hint for that same resolved URL, with the same CORS mode as the stylesheet link. Preloading does not replace the stylesheet link. Do not reorganize CSS merely to populate the route manifest.
+
+
+### Component-owned deferred loading
+
+For early Preact hydration, pass pending content directly to the built-in `Await`:
+
+```tsx
+import { Await } from "@kasperrt/smolter/preact";
+
+<Await resolve={data.stats} fallback={<p>Loading statistics…</p>}
+  errorElement={<p>Statistics unavailable.</p>}>
+  {(stats) => <Stats value={stats} />}
+</Await>
+```
+
+Replace the surrounding native `Suspense` for each deferred section, including root sections. This uses ordinary component-owned fallback HTML and the existing deferred data stream, avoiding Preact 11.0.1's abandoned streamed-boundary problem. No separate entrypoint, dependency patch, DOM cleanup, extra request or polling is needed. Late results cannot update an unmounted owner. Early-mode resolved content requires JavaScript; ordinary SSR without early hydration still streams resolved HTML. Existing `Await` without `fallback` keeps its Suspense semantics and its known early-hydration limitation. This does not repair arbitrary native Suspense/lazy boundaries.

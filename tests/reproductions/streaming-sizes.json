@@ -51,9 +51,9 @@
         "brotli": 4403
       },
       "candidate": {
-        "raw": 12529,
-        "gzip": 4842,
-        "brotli": 4403
+        "raw": 13138,
+        "gzip": 5024,
+        "brotli": 4577
       }
     },
     {
@@ -77,9 +77,9 @@
         "brotli": 5509
       },
       "candidate": {
-        "raw": 16106,
-        "gzip": 6110,
-        "brotli": 5581
+        "raw": 16715,
+        "gzip": 6300,
+        "brotli": 5749
       }
     },
     {
@@ -90,9 +90,9 @@
         "brotli": 8230
       },
       "candidate": {
-        "raw": 25297,
-        "gzip": 9237,
-        "brotli": 8421
+        "raw": 25906,
+        "gzip": 9405,
+        "brotli": 8575
       }
     },
     {
@@ -103,9 +103,9 @@
         "brotli": 8486
       },
       "candidate": {
-        "raw": 26185,
-        "gzip": 9522,
-        "brotli": 8676
+        "raw": 26794,
+        "gzip": 9692,
+        "brotli": 8831
       }
     },
     {
@@ -129,9 +129,9 @@
         "brotli": 5426
       },
       "candidate": {
-        "raw": 16025,
+        "raw": 16021,
         "gzip": 6153,
-        "brotli": 5586
+        "brotli": 5587
       }
     },
     {
@@ -144,7 +144,7 @@
       "candidate": {
         "raw": 3672,
         "gzip": 1604,
-        "brotli": 1441
+        "brotli": 1435
       }
     },
     {
@@ -184,17 +184,16 @@
         "brotli": 14602
       },
       "candidate": {
-        "raw": 43078,
-        "gzip": 16253,
-        "brotli": 14741
+        "raw": 43571,
+        "gzip": 16382,
+        "brotli": 14885
       }
     }
   ],
   "dependencyStatus": {
     "preact": "11.0.1",
     "preact-render-to-string": "6.8.1",
-    "ownership": "known failing; upstream fix unpublished",
-    "baseline": "registry 0.4.1; framework-external values match previously rebuilt baseline",
-    "completeApplication": "all application exports bundled including published Preact runtime; not an initial-route transfer measurement"
+    "ownership": "integrated explicit Await fallback passes; native Suspense remains broken",
+    "baseline": "previous matched registry/rebuilt 0.4.1 measurements; same toolchain"
   }
 }

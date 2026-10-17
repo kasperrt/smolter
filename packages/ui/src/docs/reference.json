@@ -985,7 +985,7 @@
     "entries": ["preact"],
     "kind": "API",
     "summary": "",
-    "signature": "function Await<T>({\n  resolve,\n  children,\n  errorElement,\n}: AwaitProps<T>): ComponentChildren;",
+    "signature": "function Await<T>(props: AwaitProps<T>): ComponentChildren;",
     "fields": [],
     "source": "packages/preact/src/await.tsx"
   },
