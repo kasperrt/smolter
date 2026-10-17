@@ -40,6 +40,8 @@ it("splits route views and records their shared assets without bundling server h
     `,
     "src/routes/robots[.]txt.ts": `
       import { label } from "../../shared.ts";
+      export const path = "/not-the-filename";
+      export const dataEndpoint = "/not-the-transport";
       export const handle = { title: "Other" };
       export default function Other() { return label; }
     `,
@@ -121,6 +123,8 @@ it("splits route views and records their shared assets without bundling server h
 
   expect(shared).toHaveLength(1);
   expect(entry?.dynamicImports).toHaveLength(3);
+  expect(entry?.code).not.toContain("/not-the-filename");
+  expect(entry?.code).not.toContain("/not-the-transport");
   expect(chunks.map((chunk) => chunk.code).join("\n")).not.toMatch(
     /SERVER_ONLY|node:fs/,
   );

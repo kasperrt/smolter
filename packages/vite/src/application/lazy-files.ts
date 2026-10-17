@@ -87,10 +87,7 @@ export function lazyFiles(
         const source = await readFile(route.file, "utf8");
         const transformed = await transformWithOxc(source, route.file);
         const ast = this.parse(transformed.code);
-        const fields: Record<string, string | boolean> = {
-          path: route.path,
-          dataEndpoint,
-        };
+        const fields: Record<string, string | boolean> = {};
 
         for (const statement of ast.body) {
           if (statement.type === "ExportDefaultDeclaration") {
@@ -127,6 +124,10 @@ export function lazyFiles(
           return this.error(
             `File routes derive identity and paths from filenames: remove id/routePath exports from ${route.file}. Use [.] for a literal dot.`,
           );
+
+        // Export discovery records capabilities, never routing configuration.
+        fields.path = route.path;
+        fields.dataEndpoint = dataEndpoint;
 
         const file = `${route.file.replaceAll("\\", "/")}?smolter-client`;
 
