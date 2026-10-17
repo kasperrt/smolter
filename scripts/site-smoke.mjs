@@ -51,6 +51,14 @@ const result = await (async () => {
       !sitemap.includes("/preact/") &&
       !sitemap.includes("/tasks"),
   );
+  assert(
+    !sitemap.includes("migration-0.3"),
+    "Removed migration guide remains discoverable",
+  );
+  assert(!existsSync("site/docs/migration-0.3/index.html"));
+  const awaitHtml = readFileSync("site/docs/Await/index.html", "utf8");
+  assert(awaitHtml.includes("React 19+ provides use(promise)"));
+  assert(awaitHtml.includes("https://react.dev/reference/react/use"));
   const landingHtml = readFileSync("site/index.html", "utf8");
   assert(
     landingHtml.includes("Data flow you can follow."),
@@ -202,7 +210,10 @@ const result = await (async () => {
     const documentSupport = hydrated.locator(
       '.docs-sidebar a[href$="/docs/Document"] .docs-support-mini',
     );
-    assert.equal(await documentSupport.locator(".support-no").count(), 2);
+    assert.equal(
+      await documentSupport.locator(".support-alternative").count(),
+      2,
+    );
     assert.equal(await documentSupport.locator(".support-yes").count(), 2);
     const actionsLink = hydrated
       .getByRole("navigation", { name: "Documentation", exact: true })

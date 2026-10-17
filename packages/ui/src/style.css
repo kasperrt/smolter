@@ -1112,3 +1112,16 @@ nav a.active {
   font-size: 12px;
   color: var(--muted);
 }
+
+.support-alternative {
+  color: var(--purple);
+  text-decoration: none;
+  font-weight: 600;
+}
+.docs-support-mini .support-alternative {
+  background: rgb(100 60 138 / 12%);
+}
+.docs-support a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
