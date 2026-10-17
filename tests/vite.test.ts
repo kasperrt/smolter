@@ -3,6 +3,10 @@ import { join } from "node:path";
 import { expect, it, vi } from "vitest";
 import { viteFixture } from "./helpers/vite";
 
+interface RoutePath {
+  path: string;
+}
+
 it("refreshes server transport when route handler exports change", async (context) => {
   const view = "export default function View() { return null; }\n";
   const { route, server } = await viteFixture(context, view);
@@ -36,7 +40,7 @@ it.for(["react", "preact"] as const)(
       (await server.transformRequest("virtual:smolter/routes"))?.code ?? "";
     const paths = async () =>
       (await server.ssrLoadModule("virtual:smolter/routes")).default.map(
-        (route: { path: string }) => route.path,
+        (route: RoutePath) => route.path,
       );
 
     expect(await browser()).not.toContain("/added");
@@ -103,7 +107,7 @@ it("updates manually defined route arrays through the Vite import graph", async 
     (await server.transformRequest("/client-routes.ts"))?.code ?? "";
   const paths = async () =>
     (await server.ssrLoadModule("virtual:smolter/routes")).default.map(
-      (route: { path: string }) => route.path,
+      (route: RoutePath) => route.path,
     );
 
   await server.transformRequest("virtual:smolter/routes");
