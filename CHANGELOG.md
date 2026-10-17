@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.2
+
+- Configure transport endpoints consistently across browser handlers, file routes, Express and development middleware for multiple apps sharing one origin.
+- Refresh root data after action redirects, preserve redirect cookies and synchronize hash-history redirects.
+- Recover missing initial route chunks when deployment metadata is passed to mountApplication.
+- Stream Preact SSR with concurrent root/route loading, deferred data, root error boundaries and disconnect cleanup. Hydration begins after the document stream completes; requires preact-render-to-string >=6.8.1.
+- Enforce private, no-store on route-data responses, including errors and mutations.
+- Expose loader execution reason for explicit navigation/revalidation handling.
+- Add regression coverage, production streaming browser tests and updated API documentation.
+
 ## 0.3.1
 
 - Refresh browser and SSR file-route discovery on additions, renames and removals; preserve normal Vite HMR for colocated helpers and components.

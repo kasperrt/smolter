@@ -116,8 +116,13 @@
     "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Request, path parameters, and cancellation signal passed to a data handler.",
-    "signature": "interface DataArgs {\n  request: Request;\n  params: Params;\n  signal: AbortSignal;\n}",
+    "signature": "interface DataArgs {\n  /** Why this handler ran; independent of when browser history is committed. */\n  reason?: \"initial\" | \"navigation\" | \"revalidation\" | \"fetcher\" | \"action\";\n  request: Request;\n  params: Params;\n  signal: AbortSignal;\n}",
     "fields": [
+      {
+        "name": "reason",
+        "signature": "reason?: \"initial\" | \"navigation\" | \"revalidation\" | \"fetcher\" | \"action\";",
+        "summary": "Why this handler ran; independent of when browser history is committed."
+      },
       {
         "name": "request",
         "signature": "request: Request;",
@@ -1495,8 +1500,13 @@
     "entries": ["preact"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface Hydration {\n  root: unknown;\n  snapshot: Snapshot;\n}",
+    "signature": "interface Hydration {\n  rootError?: boolean;\n  root: unknown;\n  snapshot: Snapshot;\n}",
     "fields": [
+      {
+        "name": "rootError",
+        "signature": "rootError?: boolean;",
+        "summary": ""
+      },
       {
         "name": "root",
         "signature": "root: unknown;",
@@ -1592,7 +1602,7 @@
     "entries": ["react/client", "preact/client"],
     "kind": "Types",
     "summary": "Select the server loader and action proxies available on a browser route.",
-    "signature": "interface ServerHandlers {\n  loader?: boolean;\n  action?: boolean;\n}",
+    "signature": "interface ServerHandlers {\n  loader?: boolean;\n  action?: boolean;\n  /** Application-scoped HTTP transport path. Defaults to /_smolter. */\n  dataEndpoint?: string;\n}",
     "fields": [
       {
         "name": "loader",
@@ -1603,6 +1613,11 @@
         "name": "action",
         "signature": "action?: boolean;",
         "summary": ""
+      },
+      {
+        "name": "dataEndpoint",
+        "signature": "dataEndpoint?: string;",
+        "summary": "Application-scoped HTTP transport path. Defaults to /_smolter."
       }
     ],
     "source": "packages/client/src/index.ts"
@@ -1639,6 +1654,16 @@
     "source": "packages/client/src/deployment.ts"
   },
   {
+    "slug": "recoverDeployment",
+    "title": "recoverDeployment",
+    "entries": ["react/client", "preact/client"],
+    "kind": "API",
+    "summary": "Recover an initial lazy-import failure before a router has mounted. Returns whether a reload was requested.",
+    "signature": "function recoverDeployment(\n  options: DeploymentOptions | null,\n  destination?: URL,\n): Promise<boolean>;",
+    "fields": [],
+    "source": "packages/client/src/deployment.ts"
+  },
+  {
     "slug": "watchDeployment",
     "title": "watchDeployment",
     "entries": ["react/client", "preact/client"],
@@ -1654,7 +1679,7 @@
     "entries": ["preact/client"],
     "kind": "API",
     "summary": "",
-    "signature": "function mountApplication(\n  routes: AppRoute[],\n  rootModule?: RootModule,\n  hash = false,\n): Promise<Router>;",
+    "signature": "function mountApplication(\n  routes: AppRoute[],\n  rootModule?: RootModule,\n  options: boolean | MountApplicationOptions = false,\n): Promise<Router>;",
     "fields": [],
     "source": "packages/preact/src/client.tsx"
   },
@@ -1667,6 +1692,27 @@
     "signature": "function configureApplication(\n  environment: ApplicationEnvironment,\n): void;",
     "fields": [],
     "source": "packages/core/src/environment.ts"
+  },
+  {
+    "slug": "MountApplicationOptions",
+    "title": "MountApplicationOptions",
+    "entries": ["preact/client"],
+    "kind": "Types",
+    "summary": "",
+    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n}",
+    "fields": [
+      {
+        "name": "hash",
+        "signature": "hash?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "deployment",
+        "signature": "deployment?: DeploymentOptions | null;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/preact/src/client.tsx"
   },
   {
     "slug": "Meta",
@@ -1765,7 +1811,7 @@
     "title": "handleRequest",
     "entries": ["react/server", "preact/server"],
     "kind": "API",
-    "summary": "Dispatch an HTTP data request to a registered server loader or action.",
+    "summary": "Dispatch a server data request with an explicit private cache policy.",
     "signature": "function handleRequest(\n  routes: readonly Route[],\n  request: Request,\n): Promise<Response>;",
     "fields": [],
     "source": "packages/server/src/index.ts"
@@ -1791,12 +1837,28 @@
     "source": "packages/server/src/application.tsx"
   },
   {
+    "slug": "RenderApplicationOptions",
+    "title": "RenderApplicationOptions",
+    "entries": ["preact/server"],
+    "kind": "Types",
+    "summary": "",
+    "signature": "interface RenderApplicationOptions {\n  nonce?: string;\n}",
+    "fields": [
+      {
+        "name": "nonce",
+        "signature": "nonce?: string;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/server/src/application.tsx"
+  },
+  {
     "slug": "renderApplication",
     "title": "renderApplication",
     "entries": ["preact/server"],
     "kind": "API",
     "summary": "",
-    "signature": "function renderApplication(\n  request: Request,\n  routes: AppRoute[],\n  rootModule: RootModule,\n  entry: string,\n): Promise<Response>;",
+    "signature": "function renderApplication(\n  request: Request,\n  routes: AppRoute[],\n  rootModule: RootModule,\n  entry: string,\n  options: RenderApplicationOptions = {},\n): Promise<Response>;",
     "fields": [],
     "source": "packages/server/src/application.tsx"
   },
@@ -1816,11 +1878,16 @@
     "entries": ["react/vite", "preact/vite"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface FileRouterOptions {\n  directory?: string;\n  clientRoutes?: string;\n  serverRoutes?: string;\n  framework?: \"react\" | \"preact\";\n}",
+    "signature": "interface FileRouterOptions {\n  directory?: string;\n  dataEndpoint?: string;\n  clientRoutes?: string;\n  serverRoutes?: string;\n  framework?: \"react\" | \"preact\";\n}",
     "fields": [
       {
         "name": "directory",
         "signature": "directory?: string;",
+        "summary": ""
+      },
+      {
+        "name": "dataEndpoint",
+        "signature": "dataEndpoint?: string;",
         "summary": ""
       },
       {
@@ -1914,11 +1981,16 @@
     "entries": ["preact/vite"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface ApplicationOptions {\n  directory?: string;\n  ssr?: boolean;\n  splitRoutes?: boolean;\n  resourceRequest?: (url: string) => boolean;\n}",
+    "signature": "interface ApplicationOptions {\n  directory?: string;\n  dataEndpoint?: string;\n  ssr?: boolean;\n  splitRoutes?: boolean;\n  resourceRequest?: (url: string) => boolean;\n}",
     "fields": [
       {
         "name": "directory",
         "signature": "directory?: string;",
+        "summary": ""
+      },
+      {
+        "name": "dataEndpoint",
+        "signature": "dataEndpoint?: string;",
         "summary": ""
       },
       {
@@ -1945,7 +2017,7 @@
     "entries": ["preact/vite"],
     "kind": "API",
     "summary": "",
-    "signature": "function applicationPlugins({\n  directory = \"src/routes\",\n  ssr = true,\n  splitRoutes = true,\n  resourceRequest,\n}: ApplicationOptions = {}): Plugin[];",
+    "signature": "function applicationPlugins({\n  directory = \"src/routes\",\n  dataEndpoint = \"/_smolter\",\n  ssr = true,\n  splitRoutes = true,\n  resourceRequest,\n}: ApplicationOptions = {}): Plugin[];",
     "fields": [],
     "source": "packages/vite/src/application/vite.ts"
   },
@@ -2015,7 +2087,7 @@
     "entries": ["utils/http"],
     "kind": "API",
     "summary": "Node/Express middleware; mount after metrics, tracing and static assets.",
-    "signature": "function createRequestHandler({\n  build,\n  entry,\n}: RequestHandlerOptions): (\n  incoming: ServerIncomingMessage,\n  outgoing: ServerResponse,\n  next: NextHandler,\n) => Promise<void>;",
+    "signature": "function createRequestHandler({\n  build,\n  entry,\n  dataEndpoint = \"/_smolter\",\n}: RequestHandlerOptions): (\n  incoming: ServerIncomingMessage,\n  outgoing: ServerResponse,\n  next: NextHandler,\n) => Promise<void>;",
     "fields": [],
     "source": "packages/server/src/handler.ts"
   },
@@ -2046,7 +2118,7 @@
     "entries": ["utils/http"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface RequestHandlerOptions {\n  build: ServerBuild;\n  /** Browser entry URL resolved from Vite's production manifest. */\n  entry: string;\n}",
+    "signature": "interface RequestHandlerOptions {\n  build: ServerBuild;\n  /** Browser entry URL resolved from Vite's production manifest. */\n  entry: string;\n  /** Must match the browser and Vite transport endpoint. */\n  dataEndpoint?: string;\n}",
     "fields": [
       {
         "name": "build",
@@ -2057,6 +2129,11 @@
         "name": "entry",
         "signature": "entry: string;",
         "summary": "Browser entry URL resolved from Vite's production manifest."
+      },
+      {
+        "name": "dataEndpoint",
+        "signature": "dataEndpoint?: string;",
+        "summary": "Must match the browser and Vite transport endpoint."
       }
     ],
     "source": "packages/server/src/handler.ts"
@@ -2108,7 +2185,7 @@
     "entries": ["utils/http"],
     "kind": "API",
     "summary": "",
-    "signature": "function send(response: Response, outgoing: ServerResponse);",
+    "signature": "function send(response: Response, outgoing: StreamingResponse);",
     "fields": [],
     "source": "packages/server/src/http.ts"
   }

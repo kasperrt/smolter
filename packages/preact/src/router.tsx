@@ -51,7 +51,7 @@ export function RouterApplication(
   );
   const route = props.routes.find((item) => item.path === snapshot.path);
   const Root =
-    snapshot.error && !route?.ErrorBoundary
+    snapshot.error && (props.rootError || !route?.ErrorBoundary)
       ? (props.rootModule?.ErrorBoundary ?? Outlet)
       : (props.rootModule?.default ?? Outlet);
   const Layout = props.rootModule?.Layout;
@@ -66,7 +66,10 @@ export function RouterApplication(
   );
 }
 
-export function prepareRoutes(routes: AppRoute[]): AppRoute[] {
+export function prepareRoutes(
+  routes: AppRoute[],
+  preserveDeferred = false,
+): AppRoute[] {
   return routes.map((route) => {
     const wrapped: AppRoute = {
       ...route,
@@ -99,7 +102,10 @@ export function prepareRoutes(routes: AppRoute[]): AppRoute[] {
       wrapped[key] = (args) =>
         Promise.resolve()
           .then(() => handler(args))
-          .then(normalizeResult, normalizeResult);
+          .then(
+            (value) => normalizeResult(value, !preserveDeferred),
+            (error) => normalizeResult(error, !preserveDeferred),
+          );
     }
 
     return wrapped;

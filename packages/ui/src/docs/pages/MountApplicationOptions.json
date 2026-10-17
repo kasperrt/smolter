@@ -1,0 +1,13 @@
+{
+  "slug": "MountApplicationOptions",
+  "title": "MountApplicationOptions",
+  "kind": "Types",
+  "summary": "Configure hash history and deployment recovery before hydration.",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "hash defaults to false. deployment accepts DeploymentOptions or null. Pass generated deployment metadata during mounting to recover a missing initial route chunk. The previous boolean hash argument remains supported.",
+      "code": "await mountApplication(routes, root, { hash: false, deployment });"
+    }
+  ]
+}

@@ -6,12 +6,12 @@
   "sections": [
     {
       "title": "Parameters",
-      "body": "Pass request, the server routes, the root module and the deployed browser entry URL.",
+      "body": "Pass request, server routes, root module, browser entry URL and optional { nonce } for streaming scripts under CSP.",
       "code": ""
     },
     {
       "title": "Returns",
-      "body": "Returns a Promise<Response> containing the complete HTML document or a redirect/resource response.",
+      "body": "Returns a Promise<Response> with a streaming HTML body, or a redirect/resource response. Root and matched-route loaders start concurrently. Top-level loader promises determine critical data and HTTP status; nested promises remain deferred.",
       "code": ""
     },
     {
@@ -26,7 +26,7 @@
     },
     {
       "title": "Behavior and limits",
-      "body": "Requires preact-render-to-string. Each request creates and disposes its own router. Use the Express guide for HTTP hosting; this API buffers the document.",
+      "body": "Requires preact-render-to-string >=6.8.1. Wrap deferred fields in Suspense and Await to stream fallbacks before values settle. The JSON snapshot is finalized before the module entry executes; hydration starts after the document stream completes. Rejected deferred fields retain Await errorElement behavior. Errors after headers have been sent cannot change the HTTP status. Vite development HTML transformation buffers; production Node/Express hosting streams. Each request router is disposed when its stream completes or is cancelled.",
       "code": ""
     }
   ]

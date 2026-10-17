@@ -1,4 +1,6 @@
 import type { ServerResponse } from "node:http";
+import { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import type { ServerIncomingMessage } from "./handler.ts";
 
 export async function webRequest(
@@ -34,7 +36,11 @@ export async function webRequest(
   );
 }
 
-export async function send(response: Response, outgoing: ServerResponse) {
+interface StreamingResponse extends ServerResponse {
+  flush?: () => void;
+}
+
+export async function send(response: Response, outgoing: StreamingResponse) {
   outgoing.statusCode = response.status;
   response.headers.forEach((value, name) => {
     if (name !== "set-cookie") outgoing.setHeader(name, value);
@@ -51,5 +57,21 @@ export async function send(response: Response, outgoing: ServerResponse) {
       ),
     );
 
-  outgoing.end(new Uint8Array(await response.arrayBuffer()));
+  if (!response.body) {
+    outgoing.end();
+    return;
+  }
+
+  await pipeline(
+    Readable.fromWeb(
+      response.body as import("node:stream/web").ReadableStream<Uint8Array>,
+    ),
+    new Transform({
+      transform(chunk, _encoding, done) {
+        done(null, chunk);
+        outgoing.flush?.();
+      },
+    }),
+    outgoing,
+  );
 }

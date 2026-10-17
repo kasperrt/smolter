@@ -56,7 +56,7 @@
     "wouter": "3.13.0",
     "wouter-preact": "3.13.0"
   },
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A tiny typed data router for React and Preact.",
   "sideEffects": false,
   "license": "MIT",
@@ -138,7 +138,7 @@
     "react": ">=18",
     "preact": ">=11.0.1",
     "vite": ">=8",
-    "preact-render-to-string": ">=6"
+    "preact-render-to-string": ">=6.8.1"
   },
   "peerDependenciesMeta": {
     "react": {

@@ -130,6 +130,15 @@ export function createDataRouter(
         if (!fn) return body && Error("No action");
 
         return (fn as DataFunction)({
+          reason: body
+            ? "action"
+            : navigation !== undefined
+              ? "navigation"
+              : local
+                ? "fetcher"
+                : previous.loaded
+                  ? "revalidation"
+                  : "initial",
           request: new Request(url, {
             signal,
             method: body && method,
@@ -153,6 +162,29 @@ export function createDataRouter(
           true,
           redirects - 1,
         );
+
+        if (body) {
+          const destination = new URL(main.getSnapshot().url);
+          const args: RevalidationArgs = {
+            url: destination,
+            currentUrl: destination,
+            nextUrl: destination,
+            defaultShouldRevalidate: true,
+            reason: "action",
+            formMethod: method,
+            formAction: url!.href,
+            formData: body,
+            actionResult: result.data,
+          };
+
+          // The destination loader just ran. Refresh root data and other fetchers
+          // without loading that page twice or replaying the mutation.
+          await Promise.all(
+            [...revalidators]
+              .filter((task) => task !== main)
+              .map((task) => task.revalidate(args)),
+          );
+        }
 
         if (!signal.aborted) {
           submission = undefined;

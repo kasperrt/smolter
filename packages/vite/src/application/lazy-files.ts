@@ -5,7 +5,10 @@ import { type Plugin, transformWithOxc } from "vite";
 
 // Reuse Smolter's file discovery and server-export stripping. Only the browser
 // route manifest changes: matched routes load before their data is committed.
-export function lazyFiles(directory: string): Plugin {
+export function lazyFiles(
+  directory: string,
+  dataEndpoint = "/_smolter",
+): Plugin {
   let root: string;
   const modules = new Map<string, string>();
 
@@ -74,7 +77,10 @@ export function lazyFiles(directory: string): Plugin {
         const source = await readFile(route.file, "utf8");
         const transformed = await transformWithOxc(source, route.file);
         const ast = this.parse(transformed.code);
-        const fields: Record<string, string | boolean> = { path: route.path };
+        const fields: Record<string, string | boolean> = {
+          path: route.path,
+          dataEndpoint,
+        };
 
         for (const statement of ast.body) {
           if (statement.type === "ExportDefaultDeclaration") {

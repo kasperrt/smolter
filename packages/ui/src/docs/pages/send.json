@@ -11,7 +11,7 @@
     },
     {
       "title": "Returns",
-      "body": "Returns Promise<void> after buffering and sending the response body.",
+      "body": "Returns Promise<void> after streaming the response body with backpressure.",
       "code": ""
     },
     {
@@ -21,7 +21,7 @@
     },
     {
       "title": "Behavior and limits",
-      "body": "Preserves status, headers and multiple Set-Cookie headers. Secure cookies are relaxed for local non-production HTTP. This helper does not stream; errors propagate to the caller.",
+      "body": "Preserves status, headers and separate Set-Cookie headers. Secure cookies are relaxed for local non-production HTTP. Streams response chunks and calls an available compression flush method. Stream errors propagate to the caller.",
       "code": ""
     }
   ]

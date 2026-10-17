@@ -8,6 +8,11 @@
       "title": "Contract",
       "body": "This type describes the optional server or Vite integration. See the Express and virtual routes guides for complete usage. It is not a browser runtime dependency.",
       "code": "interface ApplicationOptions {\n  directory?: string;\n  ssr?: boolean;\n  splitRoutes?: boolean;\n  resourceRequest?: (url: string) => boolean;\n}"
+    },
+    {
+      "title": "Application data endpoint",
+      "body": "dataEndpoint defaults to /_smolter. On a shared origin, configure an app-specific path consistently in the browser routes, Vite middleware and production HTTP adapter. The asset/CDN base is independent.",
+      "code": ""
     }
   ]
 }

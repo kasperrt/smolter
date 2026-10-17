@@ -29,6 +29,8 @@ export interface ClientRouteModule {
 export interface ServerHandlers {
   loader?: boolean;
   action?: boolean;
+  /** Application-scoped HTTP transport path. Defaults to /_smolter. */
+  dataEndpoint?: string;
 }
 
 /** Browser transport for server routes. File-router builds generate this call. */
@@ -40,7 +42,7 @@ export function serverRoute<M extends RouteModule = RouteModule>(
   const remote = async ({ request, signal }: DataArgs) => {
     const url = new URL(request.url);
     const response = await fetch(
-      `/_smolter?url=${encodeURIComponent(url.pathname + url.search)}`,
+      `${handlers.dataEndpoint ?? "/_smolter"}?url=${encodeURIComponent(url.pathname + url.search)}`,
       {
         method: request.method,
         signal,
@@ -84,4 +86,8 @@ export function serverRoute<M extends RouteModule = RouteModule>(
   } as Route<M>;
 }
 
-export { type DeploymentOptions, watchDeployment } from "./deployment.ts";
+export {
+  type DeploymentOptions,
+  recoverDeployment,
+  watchDeployment,
+} from "./deployment.ts";

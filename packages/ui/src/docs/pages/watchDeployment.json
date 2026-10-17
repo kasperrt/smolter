@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Parameters",
-      "body": "Pass a Smolter navigation or data router and DeploymentOptions from virtual:smolter/deployment. Null metadata is a no-op for development and SSR. Install once before starting a manual router, or after mountApplication resolves.",
+      "body": "Pass a Smolter navigation or data router and DeploymentOptions from virtual:smolter/deployment. Null metadata is a no-op for development and SSR. Install once before starting a manual router, or pass deployment metadata directly to mountApplication so recovery also covers the initial route import.",
       "code": "import deployment from \"virtual:smolter/deployment\";\nimport { watchDeployment } from \"@kasperrt/smolter/preact/client\";\n\nconst stop = watchDeployment(router, deployment);"
     },
     {

@@ -72,10 +72,12 @@ export interface ScriptProps {
 }
 
 export function Scripts({ nonce }: ScriptProps): import("preact").JSX.Element {
-  const { root, router, entry } = useApplication();
+  const { root, rootError, router, entry, streaming } = useApplication();
   // The bootstrap payload describes this document's initial SSR snapshot.
   // Navigation and revalidation update the router, not the hydration script.
   const [json] = useState(() => {
+    if (streaming) return "";
+
     const current = router.getSnapshot();
     const snapshot = {
       ...current,
@@ -86,7 +88,7 @@ export function Scripts({ nonce }: ScriptProps): import("preact").JSX.Element {
       },
     };
 
-    return serializeData({ root, snapshot });
+    return serializeData({ root, snapshot, ...(rootError && { rootError }) });
   });
 
   return (

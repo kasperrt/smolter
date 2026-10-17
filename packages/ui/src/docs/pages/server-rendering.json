@@ -16,12 +16,17 @@
     },
     {
       "title": "Production transport",
-      "body": "The browser proxy requests /_smolter?url=<route>. Your server must reconstruct a Request for the requested route and pass it to handleRequest. The Vite plugin installs this in development; use the standalone SSR example server as the production integration.",
+      "body": "The browser proxy uses the configured dataEndpoint, defaulting to /_smolter, with a local route URL parameter. Match that endpoint in Vite and createRequestHandler. Use distinct app-scoped paths when several applications share one origin.",
       "code": ""
     },
     {
       "title": "Hosting",
       "body": "GitHub Pages serves the browser examples and documentation. It cannot run server loaders. Run apps/react-ssr or apps/preact-ssr on a Node server to try request-time rendering and server mutations.",
+      "code": ""
+    },
+    {
+      "title": "Deferred Preact documents",
+      "body": "renderApplication starts root and route loaders concurrently and streams the shell with Suspense fallbacks. Keep optional work as nested promises and consume it with Await. The final snapshot is installed before hydration begins. Top-level loader failures render their route or root boundary; root failures retain root-boundary ownership during hydration.",
       "code": ""
     }
   ]

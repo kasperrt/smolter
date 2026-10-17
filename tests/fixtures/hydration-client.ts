@@ -25,6 +25,7 @@ const snapshot: Snapshot = {
   state: "idle",
 };
 const payload = JSON.stringify({
+  root: { deferred: { __smolterRejected: { message: "Deferred failure" } } },
   snapshot: {
     ...snapshot,
     ...(failed && {

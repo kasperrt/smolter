@@ -1,0 +1,28 @@
+{
+  "slug": "recoverDeployment",
+  "title": "recoverDeployment",
+  "kind": "API",
+  "summary": "Check for a newer deployment after an initial import fails.",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Accepts DeploymentOptions or null and an optional destination URL, defaulting to the current location. mountApplication calls this automatically when deployment metadata is supplied.",
+      "code": "import { recoverDeployment } from \"@kasperrt/smolter/preact/client\";"
+    },
+    {
+      "title": "Result",
+      "body": "Returns a promise of a boolean: true when recovery was requested, false when no reload was permitted. A custom reload callback receives the destination URL.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "For custom bootstraps, call recovery from the initial import failure handler and retain the original failure when no reload occurs. For application mounting, pass metadata before the initial import.",
+      "code": "await mountApplication(routes, root, { deployment });"
+    },
+    {
+      "title": "Safeguards",
+      "body": "Null metadata and server rendering are no-ops. Offline, invalid, unchanged or timed-out manifests never reload. A session marker prevents loops; blocked storage disables reload. The original entry script must still be available. Mutations are not replayed.",
+      "code": ""
+    }
+  ]
+}

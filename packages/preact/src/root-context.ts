@@ -6,6 +6,8 @@ export interface ApplicationContext {
   router: Router;
   routes: AppRoute[];
   root: unknown;
+  rootError?: boolean;
+  streaming?: boolean;
   rootModule?: RootModule;
   hydration?: Hydration;
   entry?: string;

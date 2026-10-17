@@ -21,7 +21,7 @@
     },
     {
       "title": "Server rendering",
-      "body": "Await does not start requests and does not implement streaming. renderApplication buffers the document, and route transport resolves deferred fields before JSON serialization. Use this component for promises whose lifecycle is owned outside the rendering component; do not assume a loader promise will remain pending after transport normalization.",
+      "body": "Await does not start requests. With renderApplication, nested loader promises remain pending during SSR: wrap Await in Suspense to stream a fallback. Hydration begins after the stream and its JSON snapshot complete. Route-data HTTP transport still resolves deferred fields before JSON serialization.",
       "code": ""
     }
   ]

@@ -8,6 +8,11 @@
       "title": "Usage",
       "body": "Every loader and action receives the Request, decoded params, and an AbortSignal. Use request.url for query parameters and request.formData() for mutations. Forward signal to cancellable work.",
       "code": "export async function loader({ request, params, signal }: DataArgs) {\n  return fetch(`/api/tasks/${params.id}`, { signal });\n}"
+    },
+    {
+      "title": "Handler reason",
+      "body": "The router supplies reason: initial, navigation, revalidation, fetcher or action. Use it to choose paginated navigation reads versus refresh behavior; browser history may already reflect the destination when a loader runs. Direct HTTP dispatch may omit this optional field.",
+      "code": "export async function clientLoader({ reason, signal }: DataArgs) {\n  const limit = reason === \"navigation\" || reason === \"initial\" ? 12 : undefined;\n\n  return loadItems({ limit, signal });\n}"
     }
   ]
 }

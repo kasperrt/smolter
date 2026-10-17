@@ -133,3 +133,19 @@ it("updates manually defined route arrays through the Vite import graph", async 
   await expect.poll(paths).toEqual(["/"]);
   server.watcher.emit("change", join(root, "src/routes/_index.ts"));
 });
+
+it("generates and serves a configured app-scoped transport endpoint", async (context) => {
+  const { server } = await viteFixture(
+    context,
+    'export { loader, action } from "../../handlers.ts"; export default function Page() { return null; }',
+    { dataEndpoint: "/admin/_smolter" },
+  );
+  const source = (await server.transformRequest("virtual:smolter/routes"))!
+    .code;
+  expect(source).toContain("/admin/_smolter");
+  const response = await fetch(
+    new URL("/admin/_smolter?url=/", server.resolvedUrls!.local[0]),
+  );
+  expect(await response.json()).toBe(1);
+  expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+});

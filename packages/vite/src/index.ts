@@ -6,6 +6,7 @@ import { configureTransport } from "./transport.ts";
 
 export interface FileRouterOptions {
   directory?: string;
+  dataEndpoint?: string;
   clientRoutes?: string;
   serverRoutes?: string;
   framework?: "react" | "preact";
@@ -14,6 +15,7 @@ export interface FileRouterOptions {
 /** Build-time flat route discovery and the optional server data transport. */
 export function routerPlugin({
   directory = "src/routes",
+  dataEndpoint = "/_smolter",
   clientRoutes,
   serverRoutes,
   framework = "react",
@@ -166,7 +168,7 @@ export function routerPlugin({
         definitions.push(
           options?.ssr || !Object.keys(handlers).length
             ? `{ ...route${index}, path: ${JSON.stringify(route.path)} }`
-            : `serverRoute(${JSON.stringify(route.path)}, route${index}, ${JSON.stringify(handlers)})`,
+            : `serverRoute(${JSON.stringify(route.path)}, route${index}, ${JSON.stringify({ ...handlers, dataEndpoint })})`,
         );
       }
 
@@ -210,7 +212,7 @@ export function routerPlugin({
         server.watcher.off("unlink", refresh);
       });
 
-      configureTransport(server, publicId, framework);
+      configureTransport(server, publicId, framework, dataEndpoint);
     },
   };
 }

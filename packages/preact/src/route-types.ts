@@ -66,6 +66,7 @@ export interface RootModule {
 }
 
 export interface Hydration {
+  rootError?: boolean;
   root: unknown;
   snapshot: Snapshot;
 }

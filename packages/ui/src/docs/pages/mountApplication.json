@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Parameters",
-      "body": "routes is an AppRoute array. rootModule is an optional browser-safe RootModule for shared layout, metadata, and root data. hash defaults to false; true derives the route URL from the location hash and connects hash history. This API is browser-only and lives in the optional Preact client entry.",
+      "body": "Pass routes, an optional browser-safe rootModule, and an optional options object. options.hash enables hash history. options.deployment accepts the virtual deployment metadata and protects both the initial lazy import and later navigation. A boolean third argument remains supported for hash routing.",
       "code": ""
     },
     {
@@ -28,6 +28,11 @@
       "title": "Navigation and root data",
       "body": "Mounting retains the committed view while a new route loads and connects navigation metadata. A rootModule with loaderPath registers root revalidation under rootModule.id or \"root\". loaderPath must identify a registered data route; mounting does not invent an endpoint. With neither hydration data nor #root, a router is returned but no application is rendered.",
       "code": ""
+    },
+    {
+      "title": "Bootstrap recovery",
+      "body": "Pass deployment metadata during mounting; installing watchDeployment only after mounting cannot recover an initial import failure. A failed bootstrap checks for a different build and requests one reload per old build. Offline checks and unchanged builds preserve the original import error. The initial entry script itself must still be available.",
+      "code": "import deployment from \"virtual:smolter/deployment\";\nimport routes from \"virtual:smolter/routes\";\nimport { mountApplication } from \"@kasperrt/smolter/preact/client\";\nimport * as root from \"./root\";\n\nawait mountApplication(routes, root, { deployment });"
     }
   ]
 }
