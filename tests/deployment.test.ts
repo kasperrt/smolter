@@ -1,4 +1,4 @@
-import { createRouter } from "@smolter/core";
+import { createRouter, type DataArgs } from "@smolter/core";
 import { afterEach, expect, it, vi } from "vitest";
 import { watchDeployment } from "../packages/client/src/deployment.ts";
 
@@ -464,4 +464,153 @@ it("keeps navigation usable without reloading while either fetcher mutation is p
   );
   cleanup();
   expect(router.createFetcher).toBe(original);
+});
+
+it("does not recover a new navigation while a page mutation remains pending", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { options, reload, storage } = setup("new");
+  let finish!: () => void;
+  const action = vi.fn(
+    () =>
+      new Promise<void>((done) => {
+        finish = done;
+      }),
+  );
+  const router = createDataRouter([{ path: "/", action }, { path: "/next" }], {
+    url: "https://app.test/",
+  });
+  cleanups.push(watchDeployment(router, options));
+  const submitted = router.submit("/", new FormData());
+  await vi.waitFor(() => expect(action).toHaveBeenCalledOnce());
+  await router.navigate("/next?pending=1#scope");
+
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+
+  finish();
+  await submitted;
+  expect(action).toHaveBeenCalledOnce();
+});
+
+it("invalidates an older recovery probe across overlapping page and fetcher submissions", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { options, events, fetcher, reload, storage } = setup();
+  let manifest!: (response: Response) => void;
+  fetcher.mockReturnValue(
+    new Promise<Response>((done) => {
+      manifest = done;
+    }),
+  );
+  const action = vi.fn(() => ({ saved: true }));
+  const router = createDataRouter([{ path: "/", action }], {
+    url: "https://app.test/",
+  });
+  cleanups.push(watchDeployment(router, options));
+  router.getSnapshot().state = "loading";
+  events.dispatchEvent(new Event("vite:preloadError"));
+  await Promise.all([
+    router.submit("/", new FormData()),
+    router.createFetcher().submit("/", new FormData()),
+  ]);
+  manifest(Response.json({ version: "new" }));
+  await new Promise((done) => setTimeout(done, 0));
+
+  expect(action).toHaveBeenCalledTimes(2);
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+});
+
+for (const ending of ["failure", "abort", "dispose"] as const) {
+  it(`keeps recovery blocked when one fetcher ends by ${ending} and another remains pending`, async () => {
+    const { createDataRouter } = await import("@smolter/core");
+    const { options, reload, storage } = setup("new");
+    let finish!: () => void;
+    let fail!: (error: Error) => void;
+    const action = vi.fn(
+      ({ signal }: DataArgs) =>
+        new Promise<void>((resolve, reject) => {
+          fail = reject;
+          signal.addEventListener("abort", () => reject(new Error("Aborted")), {
+            once: true,
+          });
+        }),
+    );
+    const otherAction = vi.fn(
+      () =>
+        new Promise<void>((done) => {
+          finish = done;
+        }),
+    );
+    const router = createDataRouter(
+      [
+        { path: "/" },
+        { path: "/first", action },
+        { path: "/second", action: otherAction },
+        { path: "/next" },
+      ],
+      { url: "https://app.test/" },
+    );
+    cleanups.push(watchDeployment(router, options));
+    const first = router.createFetcher();
+    const second = router.createFetcher();
+    const firstPending = first.submit("/first", new FormData());
+    const secondPending = second.submit("/second", new FormData());
+    await vi.waitFor(() => expect(otherAction).toHaveBeenCalledOnce());
+
+    if (ending === "failure") fail(new Error("Action failed"));
+    if (ending === "dispose") first.dispose();
+    if (ending === "abort") await first.load("/next");
+    const failed = await firstPending;
+    if (ending === "failure")
+      expect(failed.error?.message).toContain("Action failed");
+    await router.navigate("/next?pending=1#scope");
+    expect(reload).not.toHaveBeenCalled();
+    expect(storage.size).toBe(0);
+    finish();
+    await secondPending;
+    await router.navigate("/next?ready=1#scope");
+    expect(reload).toHaveBeenCalledOnce();
+    expect(action).toHaveBeenCalledOnce();
+    expect(otherAction).toHaveBeenCalledOnce();
+  });
+}
+
+it("restores methods before watcher reinstallation and ignores the disposed probe", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { options, fetcher, reload, storage } = setup();
+  let manifest!: (response: Response) => void;
+  fetcher.mockReturnValueOnce(
+    new Promise<Response>((done) => {
+      manifest = done;
+    }),
+  );
+  const router = createDataRouter([{ path: "/" }, { path: "/next" }], {
+    url: "https://app.test/",
+  });
+  const original = {
+    navigate: router.navigate,
+    submit: router.submit,
+    createFetcher: router.createFetcher,
+    dispose: router.dispose,
+  };
+  const stop = watchDeployment(router, options);
+  const pending = router.navigate("/next?old=1");
+  stop();
+  for (const name of [
+    "navigate",
+    "submit",
+    "createFetcher",
+    "dispose",
+  ] as const)
+    expect(router[name]).toBe(original[name]);
+  cleanups.push(watchDeployment(router, options));
+  manifest(Response.json({ version: "new" }));
+  await pending;
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+  await router.navigate("/next?current=1#scope");
+  expect(router.getSnapshot().url).toBe(
+    "https://app.test/next?current=1#scope",
+  );
+  expect(fetcher).toHaveBeenCalledTimes(2);
 });

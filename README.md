@@ -605,10 +605,10 @@ a claim of identical features.
 | `Preact: routing-only named exports` | 1405 |
 | `@kasperrt/smolter/react` | 2948 |
 | `@kasperrt/smolter/preact` | 4842 |
-| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4186 |
-| `@kasperrt/smolter/preact + server transport` | 6033 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9034 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9314 |
+| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4199 |
+| `@kasperrt/smolter/preact + server transport` | 6045 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9053 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9333 |
 | `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
 | `React: common routing/data exports` | 2761 |
 | `Preact: common routing/data exports` | 3046 |

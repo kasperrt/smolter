@@ -28,32 +28,33 @@ export function watchDeployment(
   let replay = false;
   let mutations = 0;
   const dataRouter = router as NavigationRouter &
-    Partial<Pick<Router, "createFetcher">>;
+    Partial<Pick<Router, "createFetcher" | "submit">>;
   const createFetcher = dataRouter.createFetcher;
+  const submit = dataRouter.submit;
+  const trackSubmission =
+    (submit: Router["submit"]): Router["submit"] =>
+    (...args) => {
+      sequence++;
+      mutations++;
+
+      return submit(...args).finally(() => {
+        mutations--;
+      });
+    };
+  const guardedSubmit = submit && trackSubmission(submit);
   const guardedFetcher =
     createFetcher &&
     (() => {
       const fetcher = createFetcher();
-      const submit = fetcher.submit;
-
-      fetcher.submit = (...args) => {
-        sequence++;
-        mutations++;
-
-        return submit(...args).finally(() => {
-          mutations--;
-        });
-      };
+      fetcher.submit = trackSubmission(fetcher.submit);
 
       return fetcher;
     });
 
+  if (guardedSubmit) dataRouter.submit = guardedSubmit;
   if (guardedFetcher) dataRouter.createFetcher = guardedFetcher;
   const valid = (current: number) => current === sequence && !stopped;
   const canReload = (current: number) => valid(current) && mutations === 0;
-  const unsubscribe = router.subscribe(() => {
-    if (read().state === "submitting") sequence++;
-  });
 
   const guarded: NavigationRouter["navigate"] = async (href, operation) => {
     const target = new URL(href, router.getSnapshot().url);
@@ -123,11 +124,12 @@ export function watchDeployment(
     stopped = true;
     sequence++;
     check.dispose();
-    unsubscribe();
     window.removeEventListener("popstate", pop, true);
     window.removeEventListener("vite:preloadError", preloadError);
 
-    if (dataRouter.createFetcher === guardedFetcher)
+    if (guardedSubmit && dataRouter.submit === guardedSubmit)
+      dataRouter.submit = submit;
+    if (guardedFetcher && dataRouter.createFetcher === guardedFetcher)
       dataRouter.createFetcher = createFetcher;
     if (router.navigate === guarded) router.navigate = navigate;
     if (router.dispose === guardedDispose) router.dispose = dispose;

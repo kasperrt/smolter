@@ -1,0 +1,180 @@
+{
+  "runtime": "v25.9.0",
+  "esbuild": "0.28.2",
+  "terser": "5.44.1",
+  "vite": "8.3.4",
+  "rows": [
+    {
+      "name": "React routing",
+      "baseline": {
+        "raw": 2461,
+        "gzip": 1245,
+        "brotli": 1106
+      },
+      "candidate": {
+        "raw": 2461,
+        "gzip": 1245,
+        "brotli": 1106
+      }
+    },
+    {
+      "name": "Preact routing",
+      "baseline": {
+        "raw": 2760,
+        "gzip": 1405,
+        "brotli": 1239
+      },
+      "candidate": {
+        "raw": 2760,
+        "gzip": 1405,
+        "brotli": 1239
+      }
+    },
+    {
+      "name": "React data entry",
+      "baseline": {
+        "raw": 7255,
+        "gzip": 2948,
+        "brotli": 2659
+      },
+      "candidate": {
+        "raw": 7255,
+        "gzip": 2948,
+        "brotli": 2659
+      }
+    },
+    {
+      "name": "Preact data entry",
+      "baseline": {
+        "raw": 12529,
+        "gzip": 4842,
+        "brotli": 4403
+      },
+      "candidate": {
+        "raw": 12529,
+        "gzip": 4842,
+        "brotli": 4403
+      }
+    },
+    {
+      "name": "React + client",
+      "baseline": {
+        "raw": 10577,
+        "gzip": 4186,
+        "brotli": 3792
+      },
+      "candidate": {
+        "raw": 10598,
+        "gzip": 4199,
+        "brotli": 3807
+      }
+    },
+    {
+      "name": "Preact + transport",
+      "baseline": {
+        "raw": 15862,
+        "gzip": 6033,
+        "brotli": 5509
+      },
+      "candidate": {
+        "raw": 15883,
+        "gzip": 6045,
+        "brotli": 5512
+      }
+    },
+    {
+      "name": "Preact application",
+      "baseline": {
+        "raw": 24767,
+        "gzip": 9034,
+        "brotli": 8230
+      },
+      "candidate": {
+        "raw": 24788,
+        "gzip": 9053,
+        "brotli": 8246
+      }
+    },
+    {
+      "name": "Preact lazy application",
+      "baseline": {
+        "raw": 25655,
+        "gzip": 9314,
+        "brotli": 8486
+      },
+      "candidate": {
+        "raw": 25676,
+        "gzip": 9333,
+        "brotli": 8509
+      }
+    },
+    {
+      "name": "React resource API",
+      "baseline": {
+        "raw": 9300,
+        "gzip": 2962,
+        "brotli": 2654
+      },
+      "candidate": {
+        "raw": 9300,
+        "gzip": 2962,
+        "brotli": 2654
+      }
+    },
+    {
+      "name": "Preact client",
+      "baseline": {
+        "raw": 15498,
+        "gzip": 5963,
+        "brotli": 5426
+      },
+      "candidate": {
+        "raw": 15519,
+        "gzip": 5980,
+        "brotli": 5439
+      }
+    },
+    {
+      "name": "Preact document",
+      "baseline": {
+        "raw": 3672,
+        "gzip": 1604,
+        "brotli": 1441
+      },
+      "candidate": {
+        "raw": 3672,
+        "gzip": 1604,
+        "brotli": 1441
+      }
+    },
+    {
+      "name": "Preact lazy route",
+      "baseline": {
+        "raw": 1773,
+        "gzip": 888,
+        "brotli": 772
+      },
+      "candidate": {
+        "raw": 1773,
+        "gzip": 888,
+        "brotli": 772
+      }
+    },
+    {
+      "name": "wouter",
+      "comparison": {
+        "raw": 5916,
+        "gzip": 2854,
+        "brotli": 2550
+      }
+    },
+    {
+      "name": "wouter-preact",
+      "comparison": {
+        "raw": 4432,
+        "gzip": 2211,
+        "brotli": 1989
+      }
+    }
+  ]
+}
