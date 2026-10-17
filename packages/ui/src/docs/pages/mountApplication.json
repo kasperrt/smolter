@@ -33,6 +33,11 @@
       "title": "Bootstrap recovery",
       "body": "Pass deployment metadata during mounting; installing watchDeployment only after mounting cannot recover an initial import failure. A failed bootstrap checks for a different build and requests one reload per old build. Offline checks and unchanged builds preserve the original import error. The initial entry script itself must still be available.",
       "code": "import deployment from \"virtual:smolter/deployment\";\nimport routes from \"virtual:smolter/routes\";\nimport { mountApplication } from \"@kasperrt/smolter/preact/client\";\nimport * as root from \"./root\";\n\nawait mountApplication(routes, root, { deployment });"
+    },
+    {
+      "title": "Externally injected head elements",
+      "body": "Whole-document hydration expects the server and client layouts to match. Mark externally injected direct children of head with data-smolter-preserve. mountApplication temporarily excludes those nodes from hydration and restores the same nodes afterward; the application must not also render them. This is an explicit integration contract, not automatic tolerance of arbitrary HTML rewriting. Do not use it for application-owned tags, body content, or changes to the hydration payload.",
+      "code": "<script data-smolter-preserve src=\"/infrastructure-instrumentation.js\"></script>\n<meta data-smolter-preserve name=\"infrastructure-tag\" content=\"example\">"
     }
   ]
 }

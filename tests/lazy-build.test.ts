@@ -22,6 +22,7 @@ it("splits route views and records their shared assets without bundling server h
 
   const files = {
     "entry.ts": 'export { default } from "virtual:smolter/routes";',
+    "optional.ts": 'export const detail = "Optional interaction content";',
     "shared.ts": 'export const label = "Shared route content";',
     "server.ts":
       'import { readFile } from "node:fs/promises"; export const loader = () => readFile("SERVER_ONLY");',
@@ -29,7 +30,7 @@ it("splits route views and records their shared assets without bundling server h
       import { label } from "../../shared.ts";
       export { loader } from "../../server.ts";
       export const id = "home";
-      export function clientLoader() { return label; }
+      export function clientLoader() { return { label, optional: () => import("../../optional.ts") }; }
       export default function Home() { return label; }
     `,
     "src/routes/other.ts": `
@@ -92,6 +93,22 @@ it("splits route views and records their shared assets without bundling server h
     routes[1].files.includes(file),
   );
   const entry = chunks.find((chunk) => chunk.isEntry);
+  const optional = chunks.find((chunk) =>
+    chunk.code.includes("Optional interaction content"),
+  );
+
+  expect(optional).toBeDefined();
+  for (const route of routes) {
+    expect(route.files).not.toContain(optional!.fileName);
+    expect(route.files).not.toContain("@kasperrt/smolter/preact/lazy-route");
+    expect(new Set(route.files).size).toBe(route.files.length);
+    for (const file of route.files) {
+      const chunk = chunks.find((chunk) => chunk.fileName === file)!;
+      for (const dependency of chunk.imports)
+        if (chunks.some((chunk) => chunk.fileName === dependency))
+          expect(route.files).toContain(dependency);
+    }
+  }
 
   expect(shared).toHaveLength(1);
   expect(entry?.dynamicImports).toHaveLength(3);

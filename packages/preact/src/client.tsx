@@ -96,7 +96,22 @@ export async function mountApplication(
   };
 
   if (hydration) {
-    hydrate(<RouterApplication {...props} document />, document);
+    // Explicitly unmanaged head nodes must not participate in positional hydration.
+    const preserved = Array.from(
+      document.head.querySelectorAll(":scope > [data-smolter-preserve]"),
+      (node) => ({ node, next: node.nextSibling }),
+    );
+    for (const { node } of preserved) node.remove();
+
+    await Promise.resolve()
+      .then(() => hydrate(<RouterApplication {...props} document />, document))
+      .finally(() => {
+        for (const { node, next } of preserved.reverse())
+          document.head.insertBefore(
+            node,
+            next?.parentNode === document.head ? next : null,
+          );
+      });
 
     return router;
   }

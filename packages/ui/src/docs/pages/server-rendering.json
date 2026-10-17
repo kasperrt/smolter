@@ -5,6 +5,11 @@
   "kind": "Guides",
   "sections": [
     {
+      "title": "Streaming is not early interactivity",
+      "body": "The Preact shell can be visible while deferred data is pending, but mountApplication hydrates only after the document stream completes. An event-handler button cannot respond before then. TTFB and DOMContentLoaded are not measures of hydration completion. Test a successful interaction with deliberately delayed data; do not claim progressive hydration or lower LCP from smaller bundles alone.",
+      "code": ""
+    },
+    {
       "title": "Load on the server",
       "body": "Create a router per request. Passing a Request forwards headers and cancellation. Avoid sharing router state or user data between requests.",
       "code": "import { loadRouter, serialize } from \"@kasperrt/smolter/react/server\";\n\nconst router = await loadRouter(serverRoutes, request);\nconst html = renderToString(<RouterProvider router={router}><Routes /></RouterProvider>);\nconst hydration = serialize(router.getSnapshot());\n// Embed hydration as script text in the HTML response."
@@ -28,6 +33,11 @@
       "title": "Deferred Preact documents",
       "body": "renderApplication starts root and route loaders concurrently and streams the shell with Suspense fallbacks. Keep optional work as nested promises and consume it with Await. The final snapshot is installed before hydration begins. Top-level loader failures render their route or root boundary; root failures retain root-boundary ownership during hydration.",
       "code": ""
+    },
+    {
+      "title": "Externally injected head elements",
+      "body": "Whole-document hydration expects the server and client layouts to match. Mark externally injected direct children of head with data-smolter-preserve. mountApplication temporarily excludes those nodes from hydration and restores the same nodes afterward; the application must not also render them. This is an explicit integration contract, not automatic tolerance of arbitrary HTML rewriting. Do not use it for application-owned tags, body content, or changes to the hydration payload.",
+      "code": "<script data-smolter-preserve src=\"/infrastructure-instrumentation.js\"></script>\n<meta data-smolter-preserve name=\"infrastructure-tag\" content=\"example\">"
     }
   ]
 }

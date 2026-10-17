@@ -35,11 +35,11 @@ export function lazyFiles(
         function visit(file: string) {
           if (files.has(file)) return;
 
-          files.add(file);
-
           const dependency = bundle[file];
 
           if (dependency?.type !== "chunk") return;
+
+          files.add(file);
 
           for (const imported of dependency.imports) visit(imported);
         }

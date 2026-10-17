@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.5
+
+- Preserve explicitly unmanaged head elements marked data-smolter-preserve during Preact document hydration, without matching them to application-owned nodes.
+- Test injected script/meta preservation, one-time script execution, styling and subsequent navigation.
+- Add interaction-before/after-deferred-completion assertions and document that streaming does not provide progressive hydration.
+- Fix route asset manifests incorrectly including external module specifiers as preload file URLs; retain transitive emitted chunks and leave optional dynamic imports lazy. No general request-count or latency improvement is claimed.
+
 ## 0.3.4
 
 - Cancel stale deployment checks when newer Back/Forward operations return to the current route, including hash changes.
