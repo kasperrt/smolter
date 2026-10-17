@@ -7,47 +7,56 @@
     {
       "title": "Define the read once",
       "body": "A loader receives the URL, decoded path params, and a cancellation signal. Return the data the view needs. clientLoader runs in the browser; a server loader runs on the server when connected through the Vite integration or serverRoute. A plain manually registered function executes in the environment where that router runs.",
-      "code": "// routes/tasks.$id/clientLoader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\nimport { tasks } from \"../../data/tasks\";\n\nexport async function clientLoader({ params, signal }: DataArgs) {\n  return tasks.read(params.id, { signal });\n}"
+      "code": "// routes/tasks.$id/clientLoader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\nimport { tasks } from \"../../data/tasks\";\n\nexport async function clientLoader({ params, signal }: DataArgs) {\n  return tasks.read(params.id, { signal });\n}",
+      "group": "Define & connect"
     },
     {
       "title": "Register and render the route",
       "body": "Manual registration associates a URL pattern with the module. File routing derives /tasks/:id from tasks.$id/route.ts. Export the handler and view from that module. The tasks service above is application code: its read method returns a typed task or an Error.",
-      "code": "// routes/tasks.$id/route.ts\nexport { clientLoader } from \"./clientLoader\";\nexport { default } from \"./view\";\nexport { HydrateFallback } from \"./HydrateFallback\";\n\n// router.ts\nimport { createDataRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as task from \"./routes/tasks.$id/route\";\n\nexport const router = createDataRouter([defineRoute(\"/tasks/:id\", task)], {\n  browser: true,\n});"
+      "code": "// routes/tasks.$id/route.ts\nexport { clientLoader } from \"./clientLoader\";\nexport { default } from \"./view\";\nexport { HydrateFallback } from \"./HydrateFallback\";\n\n// router.ts\nimport { createDataRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as task from \"./routes/tasks.$id/route\";\n\nexport const router = createDataRouter([defineRoute(\"/tasks/:id\", task)], {\n  browser: true,\n});",
+      "group": "Define & connect"
     },
     {
       "title": "Consume the inferred result",
-      "body": "typeof connects the hook to the handler return type without importing that handler at runtime. File proximity alone does not supply a generic type to TypeScript. Passing a typed route definition to useLoaderData is the alternative that infers the result from an argument.",
-      "code": "// routes/tasks.$id/view.tsx\nimport { useLoaderData } from \"@kasperrt/smolter/react\";\nimport type { clientLoader } from \"./clientLoader\";\n\nexport default function Task() {\n  const task = useLoaderData<typeof clientLoader>();\n\n  return <h1>{task?.title}</h1>;\n}"
+      "body": "useLoaderData<typeof loader>() derives the result from the handler’s return type. Use a type-only import. TypeScript cannot infer a handler from a nearby file; passing a typed route to useLoaderData is the argument-based alternative.",
+      "code": "// routes/tasks.$id/view.tsx\nimport { useLoaderData } from \"@kasperrt/smolter/react\";\nimport type { clientLoader } from \"./clientLoader\";\n\nexport default function Task() {\n  const task = useLoaderData<typeof clientLoader>();\n\n  return <h1>{task?.title}</h1>;\n}",
+      "group": "Define & connect"
     },
     {
       "title": "Query strings belong to request.url",
-      "body": "params contains path captures, not search fields. Use URLSearchParams for filters and sorting. A GET Form navigates to the query URL and triggers this loader. Keep the filter in the returned data if the view needs to render the active value.",
-      "code": "const url = new URL(request.url);\nconst q = url.searchParams.get(\"q\") ?? \"\";\nconst page = Number(url.searchParams.get(\"page\") ?? \"1\");\n\nreturn tasks.search({ q, page, signal });"
+      "body": "params holds path captures. Read filters with new URL(request.url).searchParams. A GET Form navigates to that query URL and runs the loader.",
+      "code": "const url = new URL(request.url);\nconst q = url.searchParams.get(\"q\") ?? \"\";\nconst page = Number(url.searchParams.get(\"page\") ?? \"1\");\n\nreturn tasks.search({ q, page, signal });",
+      "group": "URLs & loading"
     },
     {
       "title": "Initial loading and later revalidation",
       "body": "Routes renders HydrateFallback while the initial data is unavailable. A successful undefined result still counts as loaded. Later revalidation can keep the current view visible with its existing data. shouldRevalidate controls subsequent reads; it cannot eliminate the first necessary load.",
-      "code": ""
+      "code": "",
+      "group": "URLs & loading"
     },
     {
       "title": "Server loader with a client wrapper",
       "body": "Keep loader and clientLoader as separate named exports. During SSR the server loader supplies the HTML data. Later browser loads use clientLoader, which may call serverLoader. A hydrated loaded snapshot avoids an automatic duplicate initial read. A client-only route with no server data loads in the browser.",
-      "code": "// clientLoader.ts\nimport type { ClientLoaderArgs } from \"@kasperrt/smolter/react\";\nimport type { loader } from \"./loader\";\n\nexport async function clientLoader({\n  serverLoader,\n}: ClientLoaderArgs<typeof loader>) {\n  const data = await serverLoader();\n\n  return { ...data, compact: localStorage.getItem(\"compact\") === \"true\" };\n}\n\n// route.ts\nexport { loader } from \"./loader\";\nexport { clientLoader } from \"./clientLoader\";\nexport { default } from \"./view\";"
+      "code": "// clientLoader.ts\nimport type { ClientLoaderArgs } from \"@kasperrt/smolter/react\";\nimport type { loader } from \"./loader\";\n\nexport async function clientLoader({\n  serverLoader,\n}: ClientLoaderArgs<typeof loader>) {\n  const data = await serverLoader();\n\n  return { ...data, compact: localStorage.getItem(\"compact\") === \"true\" };\n}\n\n// route.ts\nexport { loader } from \"./loader\";\nexport { clientLoader } from \"./clientLoader\";\nexport { default } from \"./view\";",
+      "group": "Server & browser"
     },
     {
       "title": "Load without navigating",
-      "body": "fetcher.load(\"/tasks/42\") invokes the registered task loader but puts its result in fetcher.data. It does not replace the active page useLoaderData result or change the URL. This is useful for previews, dependent selects, and independent search. Reads do not trigger page revalidation.",
-      "code": ""
+      "body": "fetcher.load(\"/tasks/42\") reads that route into fetcher.data. It leaves the URL and active page data unchanged and does not trigger revalidation.",
+      "code": "",
+      "group": "Independent reads"
     },
     {
       "title": "Cancellation and parallel requests",
       "body": "Pass the provided signal into each network request. A newer navigation aborts the previous navigation request and prevents stale results from winning. Independent fetchers have their own cancellation channels. Use Promise.all for independent reads within a loader, and handle returned Error values before rendering the combined data.",
-      "code": ""
+      "code": "",
+      "group": "Independent reads"
     },
     {
       "title": "JSON across the server boundary",
       "body": "Server transport and hydration serialize data. Prefer plain records, arrays, strings, numbers, booleans, and null. Dates become strings; functions and class instances do not retain their runtime behavior. A TypeScript return annotation cannot make a value survive serialization unchanged.",
-      "code": ""
+      "code": "",
+      "group": "Independent reads"
     }
   ]
 }

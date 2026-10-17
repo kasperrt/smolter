@@ -62,7 +62,7 @@ export const wouterRoutingExports = [
   "useLocation",
 ];
 
-export async function measureAdapters() {
+export async function measureAdapters(previous = {}) {
   const [
     react,
     preact,
@@ -103,27 +103,29 @@ export async function measureAdapters() {
     measure("./dist/preact/index.js", commonExports),
     measure("wouter", wouterRoutingExports),
     measure("wouter-preact", wouterRoutingExports),
-    measure("react-router", [
-      "BrowserRouter",
-      "Routes",
-      "Route",
-      "Link",
-      "useParams",
-      "useLocation",
-    ]),
-    measure("react-router", [
-      "createBrowserRouter",
-      "RouterProvider",
-      "Link",
-      "Form",
-      "useLoaderData",
-      "useActionData",
-      "useParams",
-      "useLocation",
-      "useRevalidator",
-      "useFetcher",
-    ]),
-    measure("react-router"),
+    previous.reactRouterRouting ??
+      measure("react-router", [
+        "BrowserRouter",
+        "Routes",
+        "Route",
+        "Link",
+        "useParams",
+        "useLocation",
+      ]),
+    previous.reactRouterData ??
+      measure("react-router", [
+        "createBrowserRouter",
+        "RouterProvider",
+        "Link",
+        "Form",
+        "useLoaderData",
+        "useActionData",
+        "useParams",
+        "useLocation",
+        "useRevalidator",
+        "useFetcher",
+      ]),
+    previous.reactRouter ?? measure("react-router"),
   ]);
 
   return {

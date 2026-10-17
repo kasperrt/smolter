@@ -2,6 +2,7 @@ import sizes from "../size.json";
 import reference from "./reference.json";
 
 export interface DocSection {
+  group?: string;
   title: string;
   body: string;
   code: string;

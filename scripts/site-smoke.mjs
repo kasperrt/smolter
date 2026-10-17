@@ -40,16 +40,70 @@ const errors = [];
 page.on("pageerror", (error) => errors.push(error.message));
 
 const result = await (async () => {
+  for (const framework of ["react", "preact"]) {
+    const hydrated = await browser.newPage();
+    hydrated.setDefaultTimeout(10_000);
+    console.log(`${framework}: checking pre-rendered documentation`);
+    let allowScripts;
+    const scriptsReady = new Promise((resolve) => {
+      allowScripts = resolve;
+    });
+
+    await hydrated.route("**/assets/*.js", async (route) => {
+      await scriptsReady;
+      await route.continue();
+    });
+    hydrated.on("pageerror", (error) => errors.push(error.message));
+    hydrated.on("console", (message) => {
+      if (message.type() === "error")
+        errors.push(`${message.text()} ${message.location().url}`);
+    });
+    await hydrated.goto(`${origin}/smolter/${framework}/docs/fetchers/`, {
+      waitUntil: "commit",
+    });
+    await hydrated
+      .getByRole("heading", {
+        name: "Independent reads and writes",
+        exact: true,
+      })
+      .waitFor();
+    await hydrated.evaluate(() => {
+      window.initialArticle = document.querySelector(".docs-article");
+    });
+    allowScripts();
+    await hydrated.waitForLoadState("networkidle");
+    assert(
+      await hydrated.evaluate(
+        () => window.initialArticle === document.querySelector(".docs-article"),
+      ),
+      `${framework}: ${errors.join("\n")}`,
+    );
+    console.log(`${framework}: hydration retained the article`);
+    await hydrated
+      .getByRole("navigation", { name: "Documentation", exact: true })
+      .getByRole("link", { name: "Actions", exact: true })
+      .click();
+    await hydrated
+      .getByRole("heading", { name: "Actions", exact: true })
+      .waitFor();
+    await hydrated.close();
+  }
+
   await page.goto(`${origin}/smolter/react/`);
   const sizes = JSON.parse(readFileSync("packages/ui/src/size.json", "utf8"));
   const entries = page.getByRole("table", {
-    name: "Entry points · gzip bytes",
+    name: "Complete entries & optional features · gzip bytes",
   });
   const comparisons = page.getByRole("table", {
     name: "Same measurement tools · gzip bytes",
   });
 
-  assert((await entries.innerText()).includes(String(sizes.preactRouting)));
+  assert((await entries.innerText()).includes(String(sizes.preact)));
+  assert(
+    (await page.locator(".size-cards").innerText()).includes(
+      String(sizes.preactRouting),
+    ),
+  );
   assert(
     (await comparisons.innerText()).includes(String(sizes.reactRouterData)),
   );

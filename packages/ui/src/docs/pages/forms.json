@@ -6,63 +6,75 @@
   "sections": [
     {
       "title": "Choose Form or fetcher.Form",
-      "body": "Form submits through page navigation: GET changes the URL and reads the destination loader; mutation methods call the destination action and update page data. fetcher.Form keeps the current page and places its result in fetcher.data. Use it for inline editing, row controls, and independent search. An action redirect still navigates.",
-      "code": ""
+      "body": "Form navigates: GET reads the destination loader; mutations call its action. fetcher.Form keeps the URL and stores the result in fetcher.data. Either can navigate when a handler redirects.",
+      "code": "",
+      "group": "Choose a form"
     },
     {
       "title": "Connect the form to a route",
-      "body": "The action prop is a URL, not a JavaScript callback and not a handler filename. /settings must resolve to a registered route with clientAction or action for a mutation, or clientLoader or loader for a GET. The Actions guide contains the complete handler and view for this route.",
-      "code": "// router.ts\nimport { createDataRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as settings from \"./routes/settings/route\";\n\nexport const settingsRoute = defineRoute(\"/settings\", settings);\nexport const router = createDataRouter([settingsRoute], { browser: true });\n\n// app.tsx\nimport { RouterProvider, Routes } from \"@kasperrt/smolter/react\";\nimport { router } from \"./router\";\n\nexport function App() {\n  return (\n    <RouterProvider router={router}>\n      <Routes />\n    </RouterProvider>\n  );\n}"
+      "body": "action is a registered URL, such as /settings. Mutations require an action or clientAction; GET requires a loader or clientLoader. See Actions for the complete /settings example.",
+      "code": "// router.ts\nimport { createDataRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as settings from \"./routes/settings/route\";\n\nexport const settingsRoute = defineRoute(\"/settings\", settings);\nexport const router = createDataRouter([settingsRoute], { browser: true });\n\n// app.tsx\nimport { RouterProvider, Routes } from \"@kasperrt/smolter/react\";\nimport { router } from \"./router\";\n\nexport function App() {\n  return (\n    <RouterProvider router={router}>\n      <Routes />\n    </RouterProvider>\n  );\n}",
+      "group": "Choose a form"
     },
     {
       "title": "GET search with a shareable URL",
       "body": "Use named fields and method=\"get\". Submission replaces the target query string with the successful form fields. Include hidden fields for query values that must survive. The loader reads request.url, and useLoaderData reads its result. GET does not invoke an action.",
-      "code": "// routes/tasks.search/view.tsx\n<Form action=\"/tasks/search\" method=\"get\">\n  <label htmlFor=\"q\">Search tasks</label>\n  <input id=\"q\" name=\"q\" type=\"search\" />\n  <input name=\"sort\" type=\"hidden\" value=\"recent\" />\n  <button>Search</button>\n</Form>;\n\n// routes/tasks.search/loader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\nimport { tasks } from \"../../data/tasks\";\n\nexport async function clientLoader({ request }: DataArgs) {\n  const q = new URL(request.url).searchParams.get(\"q\") ?? \"\";\n  const results = await tasks.search(q);\n\n  return { q, results };\n}"
+      "code": "// routes/tasks.search/view.tsx\n<Form action=\"/tasks/search\" method=\"get\">\n  <label htmlFor=\"q\">Search tasks</label>\n  <input id=\"q\" name=\"q\" type=\"search\" />\n  <input name=\"sort\" type=\"hidden\" value=\"recent\" />\n  <button>Search</button>\n</Form>;\n\n// routes/tasks.search/loader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\nimport { tasks } from \"../../data/tasks\";\n\nexport async function clientLoader({ request }: DataArgs) {\n  const q = new URL(request.url).searchParams.get(\"q\") ?? \"\";\n  const results = await tasks.search(q);\n\n  return { q, results };\n}",
+      "group": "Read & save"
     },
     {
       "title": "Save without leaving the page",
-      "body": "The action returns validation data or a successful result. The fetcher is independent from the page loader, so display action feedback from fetcher.data and the refreshed saved value from useLoaderData. Keep a stable button label and show pending text separately to avoid moving controls.",
-      "code": "// routes/settings/view.tsx\nimport { useFetcher, useLoaderData } from \"@kasperrt/smolter/react\";\nimport type { clientAction } from \"./action\";\nimport type { clientLoader } from \"./loader\";\n\nexport default function Settings() {\n  const data = useLoaderData<typeof clientLoader>();\n  const fetcher = useFetcher<typeof clientAction>();\n  const busy = fetcher.state !== \"idle\";\n\n  return (\n    <section>\n      <h1>Settings</h1>\n      <p>Saved name: {data?.displayName}</p>\n      <fetcher.Form action=\"/settings\" method=\"post\" aria-busy={busy}>\n        <label htmlFor=\"displayName\">Display name</label>\n        <input\n          id=\"displayName\"\n          name=\"displayName\"\n          defaultValue={data?.displayName}\n          required\n          minLength={2}\n        />\n        <button disabled={busy}>Save name</button>\n        <p role=\"status\">{busy && \"Saving…\"}</p>\n        {fetcher.data?.ok === false && <p role=\"alert\">{fetcher.data.error}</p>}\n        {fetcher.data?.ok === true && <p role=\"status\">Saved.</p>}\n        {fetcher.error && <p role=\"alert\">{fetcher.error.message}</p>}\n      </fetcher.Form>\n    </section>\n  );\n}"
+      "body": "Show submission feedback from fetcher.data and saved page data from useLoaderData. Keep button labels stable; put pending feedback in a separate status element.",
+      "code": "// routes/settings/view.tsx\nimport { useFetcher, useLoaderData } from \"@kasperrt/smolter/react\";\nimport type { clientAction } from \"./action\";\nimport type { clientLoader } from \"./loader\";\n\nexport default function Settings() {\n  const data = useLoaderData<typeof clientLoader>();\n  const fetcher = useFetcher<typeof clientAction>();\n  const busy = fetcher.state !== \"idle\";\n\n  return (\n    <section>\n      <h1>Settings</h1>\n      <p>Saved name: {data?.displayName}</p>\n      <fetcher.Form action=\"/settings\" method=\"post\" aria-busy={busy}>\n        <label htmlFor=\"displayName\">Display name</label>\n        <input\n          id=\"displayName\"\n          name=\"displayName\"\n          defaultValue={data?.displayName}\n          required\n          minLength={2}\n        />\n        <button disabled={busy}>Save name</button>\n        <p role=\"status\">{busy && \"Saving…\"}</p>\n        {fetcher.data?.ok === false && <p role=\"alert\">{fetcher.data.error}</p>}\n        {fetcher.data?.ok === true && <p role=\"status\">Saved.</p>}\n        {fetcher.error && <p role=\"alert\">{fetcher.error.message}</p>}\n      </fetcher.Form>\n    </section>\n  );\n}",
+      "group": "Read & save"
     },
     {
       "title": "Fields and submit buttons",
       "body": "Only successful named controls are serialized. Unchecked checkboxes and disabled inputs are omitted. Repeated names are available through form.getAll(name). A named submit button adds its own value. Inputs without name do not appear in the action request.",
-      "code": "const form = await request.formData();\nconst title = String(form.get(\"title\") ?? \"\");\nconst tags = form.getAll(\"tag\").map(String);\nconst completed = form.get(\"completed\") === \"on\";\nconst intent = form.get(\"intent\");"
+      "code": "const form = await request.formData();\nconst title = String(form.get(\"title\") ?? \"\");\nconst tags = form.getAll(\"tag\").map(String);\nconst completed = form.get(\"completed\") === \"on\";\nconst intent = form.get(\"intent\");",
+      "group": "Fields & validation"
     },
     {
       "title": "Validate in the handler",
       "body": "required, minLength, and type=\"email\" provide browser feedback, but handlers must validate submitted values too. Return a discriminated result such as { ok: false, error } for a correctable input problem. Connect field messages with aria-describedby and render async feedback in a status or alert region. Unexpected request failures belong in fetcher.error or a route error boundary.",
-      "code": "// routes/settings/action.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\n\nexport async function clientAction({ request }: DataArgs) {\n  const form = await request.formData();\n  const displayName = String(form.get(\"displayName\") ?? \"\").trim();\n\n  if (displayName.length < 2) {\n    return { ok: false as const, error: \"Use at least two characters.\" };\n  }\n\n  localStorage.setItem(\"displayName\", displayName);\n\n  return { ok: true as const, displayName };\n}"
+      "code": "// routes/settings/action.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\n\nexport async function clientAction({ request }: DataArgs) {\n  const form = await request.formData();\n  const displayName = String(form.get(\"displayName\") ?? \"\").trim();\n\n  if (displayName.length < 2) {\n    return { ok: false as const, error: \"Use at least two characters.\" };\n  }\n\n  localStorage.setItem(\"displayName\", displayName);\n\n  return { ok: true as const, displayName };\n}",
+      "group": "Fields & validation"
     },
     {
       "title": "Target another route and method",
       "body": "A form can call a route other than the currently rendered page. Use a concrete URL for dynamic routes, such as /tasks/42. The pattern /tasks/:id is registered in the table; it is not the URL to submit. Each form below calls the same task route with a different method.",
-      "code": "<fetcher.Form action=\"/tasks/42\" method=\"patch\">\n  <label>Title <input name=\"title\" required /></label>\n  <button>Rename</button>\n</fetcher.Form>\n\n<fetcher.Form action=\"/tasks/42\" method=\"delete\">\n  <button>Delete task</button>\n</fetcher.Form>"
+      "code": "<fetcher.Form action=\"/tasks/42\" method=\"patch\">\n  <label>Title <input name=\"title\" required /></label>\n  <button>Rename</button>\n</fetcher.Form>\n\n<fetcher.Form action=\"/tasks/42\" method=\"delete\">\n  <button>Delete task</button>\n</fetcher.Form>",
+      "group": "Targets & methods"
     },
     {
       "title": "Override the target per button",
-      "body": "The clicked submitter can supply formAction and formMethod. smolter reads these overrides and includes the selected submit button when creating FormData. Prefer separate forms when that makes the interaction easier to understand.",
-      "code": "<Form action=\"/tasks/42\" method=\"post\">\n  <input name=\"title\" />\n  <button name=\"intent\" value=\"save\">\n    Save\n  </button>\n  <button formAction=\"/tasks/42\" formMethod=\"delete\">\n    Delete\n  </button>\n</Form>;"
+      "body": "formAction and formMethod on the clicked button override the form’s target and method. Its name/value is included in FormData.",
+      "code": "<Form action=\"/tasks/42\" method=\"post\">\n  <input name=\"title\" />\n  <button name=\"intent\" value=\"save\">\n    Save\n  </button>\n  <button formAction=\"/tasks/42\" formMethod=\"delete\">\n    Delete\n  </button>\n</Form>;",
+      "group": "Targets & methods"
     },
     {
       "title": "Submit from application code",
       "body": "Use fetcher.submit for interactions that already have structured values. Pass a FormData instance and an explicit route URL. This invokes the same action as fetcher.Form. Calling submit does not run native input constraint validation; validate in the handler.",
-      "code": "const body = new FormData();\nbody.set(\"title\", \"Review documentation\");\n\nawait fetcher.submit(body, {\n  action: \"/tasks/42\",\n  method: \"PATCH\",\n});"
+      "code": "const body = new FormData();\nbody.set(\"title\", \"Review documentation\");\n\nawait fetcher.submit(body, {\n  action: \"/tasks/42\",\n  method: \"PATCH\",\n});",
+      "group": "Targets & methods"
     },
     {
       "title": "Intercept submission deliberately",
-      "body": "onSubmit runs before smolter intercepts the form. Calling event.preventDefault() stops smolter as well. Keep normal data work in the action instead of duplicating it in onSubmit. External form destinations are left to the browser.",
-      "code": ""
+      "body": "onSubmit runs first. event.preventDefault() also stops smolter. Keep requests in the action. External destinations use the browser’s normal form submission.",
+      "code": "",
+      "group": "Targets & methods"
     },
     {
       "title": "Files and encoding",
       "body": "Mutation forms create FormData, which can contain File values. Read them with request.formData() in the action. The server transport forwards multipart FormData; it does not implement upload storage, size limits, or streaming policies. GET serializes a selected file as its filename. Setting encType does not turn the intercepted mutation into a JSON request.",
-      "code": ""
+      "code": "",
+      "group": "Server behavior"
     },
     {
       "title": "SSR and JavaScript requirements",
       "body": "Server rendering outputs a real form element, but a complete no-JavaScript submission flow requires an HTTP application that accepts the native form URL and returns HTML or a redirect. handleRequest returns data, not a complete HTML response. PATCH, PUT, and DELETE rely on the JavaScript handler; the underlying HTML form uses POST. Do not assume SSR alone provides progressive enhancement.",
-      "code": ""
+      "code": "",
+      "group": "Server behavior"
     }
   ]
 }
