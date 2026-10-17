@@ -19,6 +19,7 @@ export function readHydration(json: string) {
 
   function revive(_key: string, value: unknown): unknown {
     if (!value || typeof value !== "object") return value;
+    if ("__smolterUndefined" in value) return undefined;
 
     if (
       "__smolterPending" in value &&

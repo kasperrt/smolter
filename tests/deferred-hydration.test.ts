@@ -135,3 +135,14 @@ it("turns non-serializable deferred values into boundary errors instead of hangi
   expect(result).toContain("BigInt");
   expect(result).toContain("[-1,null,null]");
 });
+
+it("distinguishes undefined deferred values from null", async () => {
+  const payload = deferredHydration([
+    Promise.resolve(undefined),
+    Promise.resolve(null),
+  ]);
+  const result = await new Response(payload.stream).text();
+
+  expect(result).toContain('[0,{"__smolterUndefined":true},null]');
+  expect(result).toContain("[1,null,null]");
+});

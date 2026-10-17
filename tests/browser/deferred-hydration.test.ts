@@ -11,8 +11,8 @@ it("revives shared promises and nested settlements before or after the browser e
     '{"first":{"__smolterPending":0},"same":{"__smolterPending":0}}',
   );
   expect(hydration.first).toBe(hydration.same);
-  window.__smolterDeferred.push([1, "ready", null]);
-  expect(await (await hydration.first).nested).toBe("ready");
+  window.__smolterDeferred.push([1, { __smolterUndefined: true }, null]);
+  expect(await (await hydration.first).nested).toBeUndefined();
   window.__smolterDeferred.push([99, "unknown", null]);
   window.__smolterDeferred.push([-1, null, null]);
   expect(window.__smolterDeferred.push([99, "ignored", null])).toBe(0);

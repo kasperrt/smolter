@@ -57,7 +57,11 @@ export function deferredHydration(value: unknown, nonce?: string) {
   function settle(id: number, value: unknown, error?: string) {
     if (closed) return;
 
-    const packet = serializeData([id, value, error]);
+    const packet = serializeData([
+      id,
+      value === undefined ? { __smolterUndefined: true } : value,
+      error,
+    ]);
     controller.enqueue(
       encoder.encode(
         `<script${attribute}>(window.__smolterDeferred??=[]).push(${packet});document.currentScript.remove()</script>`,

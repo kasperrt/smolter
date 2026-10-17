@@ -607,8 +607,8 @@ a claim of identical features.
 | `@kasperrt/smolter/preact` | 4842 |
 | `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4104 |
 | `@kasperrt/smolter/preact + server transport` | 5950 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 8935 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9214 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 8949 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9227 |
 | `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
 | `React: common routing/data exports` | 2761 |
 | `Preact: common routing/data exports` | 3046 |
