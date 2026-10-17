@@ -64,6 +64,8 @@ export function lazyFiles(directory: string): Plugin {
 
       if (routes instanceof Error) return this.error(routes.message);
 
+      modules.clear();
+
       const definitions: string[] = [];
 
       for (const route of routes) {

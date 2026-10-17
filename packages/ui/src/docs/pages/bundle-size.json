@@ -16,7 +16,7 @@
     },
     {
       "title": "Full applications",
-      "body": "Full applications use createDataRouter. The SSR and file-router client helpers already select it. SSR applications additionally use /preact/client and /preact/document; lazy file routes use /preact/lazy-route. Server rendering and the Vite plugin stay in their dedicated subpaths.",
+      "body": "Full applications use createDataRouter. The SSR and file-router client helpers already select it. SSR applications additionally use /preact/client and /preact/document; lazy file routes use /preact/lazy-route. Server rendering and the Vite plugin stay in their dedicated subpaths. Complete client-entry measurements include the optional deployment watcher. Named imports that do not use watchDeployment remove it; the routing and data entrypoints do not import it.",
       "code": ""
     },
     {

@@ -1,0 +1,28 @@
+{
+  "slug": "deploymentPlugin",
+  "title": "deploymentPlugin",
+  "summary": "Generate production build identity and a virtual browser manifest reference.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Configuration",
+      "body": "Add alongside fileRouter or applicationPlugins in the browser Vite configuration. Import from /react/vite or /preact/vite. It does not introduce a runtime dependency on Vite.",
+      "code": "import { deploymentPlugin, applicationPlugins } from \"@kasperrt/smolter/preact/vite\";\n\nexport default {\n  plugins: [...applicationPlugins(), deploymentPlugin()],\n};"
+    },
+    {
+      "title": "Build outputs",
+      "body": "Emits smolter-manifest.json containing a unique version for the browser build. virtual:smolter/deployment exports that version and the public manifest URL. Development and SSR export null and emit no deployment file.",
+      "code": "import deployment from \"virtual:smolter/deployment\";"
+    },
+    {
+      "title": "Hosting and base paths",
+      "body": "The default public URL is Vite base plus smolter-manifest.json. Set manifestURL explicitly for a relative base or reverse proxy. Your host must serve the emitted file at that URL with Cache-Control: no-store, before fallback routes. Cross-origin reads require CORS.",
+      "code": "deploymentPlugin({ manifestURL: \"/admin/smolter-manifest.json\" });"
+    },
+    {
+      "title": "Connect the client",
+      "body": "The plugin only produces metadata. Connect watchDeployment to the browser router to check updates during navigation. Static offline packages can omit both helpers.",
+      "code": "import { watchDeployment } from \"@kasperrt/smolter/react/client\";\n\nwatchDeployment(router, deployment);"
+    }
+  ]
+}

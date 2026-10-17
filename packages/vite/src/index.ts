@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import { flatRoutes } from "@smolter/files";
 import { type Plugin, transformWithOxc } from "vite";
 import { configureTransport } from "./transport.ts";
@@ -185,11 +185,18 @@ export function routerPlugin({
       server.watcher.add(root);
 
       const refresh = (file: string) => {
-        if (!file.startsWith(`${root}/`)) return;
+        if (clientRoutes || serverRoutes) return;
 
-        const module = server.moduleGraph.getModuleById(virtualId);
+        const path = relative(root, file).replaceAll("\\", "/");
 
-        if (module) server.moduleGraph.invalidateModule(module);
+        if (!/^(?:[^/]+\.[jt]sx?|[^/]+\/route\.[jt]sx?)$/.test(path)) return;
+        if (path.endsWith(".d.ts")) return;
+
+        for (const environment of Object.values(server.environments)) {
+          const module = environment.moduleGraph.getModuleById(virtualId);
+
+          if (module) environment.moduleGraph.invalidateModule(module);
+        }
 
         server.ws.send({ type: "full-reload" });
       };

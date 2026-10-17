@@ -22,3 +22,8 @@ export {
   applicationPlugins,
   preactConfig,
 } from "./application/vite.ts";
+
+export {
+  type DeploymentPluginOptions,
+  deploymentPlugin,
+} from "./deployment.ts";

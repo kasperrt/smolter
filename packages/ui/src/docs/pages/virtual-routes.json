@@ -48,6 +48,11 @@
       "title": "Root data and static assets",
       "body": "Root loader data is serialized during SSR. Root revalidation after a successful mutation is opt-in: provide loaderPath when mounting, and register that URL in the route manifest. Without loaderPath, Smolter makes no extra root request. The root shouldRevalidate callback can skip that request. Static CSS, fonts, and images should use Vite asset imports and document links, not loader data or an artificial resource route. Vite applies the configured base, including a CDN origin, to emitted asset URLs. Call revalidate({ route: \"root\" }) to refresh only the root. Give the root an id to change that target name.",
       "code": "import stylesheetUrl from \"./index.css?url\";\n\n// In the document head:\n<link rel=\"stylesheet\" href={stylesheetUrl} />\n\n// Only when root data needs server revalidation:\nmountApplication(routes, { ...root, loaderPath: \"/session\" });"
+    },
+    {
+      "title": "Development updates and HMR",
+      "body": "The dev server watches flat route entry files. Adding, removing or renaming a route refreshes discovery in both the browser and SSR module graphs and reloads the browser. Editing a route entry also reloads so changed paths, IDs and handler exports cannot leave an old router running. Colocated components and helpers use normal Vite HMR; state preservation depends on your framework plugin and its accepted update boundaries. Manual clientRoutes/serverRoutes modules use Vite\u2019s import graph, including edits that add or remove entries. Without an accepting HMR boundary, Vite reloads the page. No server restart is needed for route changes. Vite configuration changes still follow Vite\u2019s normal restart behavior. Production deployment manifests are disabled during development.",
+      "code": ""
     }
   ]
 }
