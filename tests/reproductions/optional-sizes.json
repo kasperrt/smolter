@@ -1,0 +1,53 @@
+{
+  "runtime": "v25.9.0",
+  "baseline": "npm @kasperrt/smolter@0.4.1",
+  "library": [
+    {
+      "variant": "current",
+      "raw": 24767,
+      "gzip": 9034,
+      "brotli": 8230
+    },
+    {
+      "variant": "resolved-prototype",
+      "raw": 23807,
+      "gzip": 8702,
+      "brotli": 7934
+    }
+  ],
+  "application": [
+    {
+      "strategy": "stream",
+      "assets": [
+        {
+          "file": "assets/optional-client-BuYUy3ZS.js",
+          "raw": 39222,
+          "gzip": 15109,
+          "brotli": 13756
+        }
+      ]
+    },
+    {
+      "strategy": "request",
+      "assets": [
+        {
+          "file": "assets/optional-client-BSLoPHpV.js",
+          "raw": 37361,
+          "gzip": 14494,
+          "brotli": 13161
+        }
+      ]
+    },
+    {
+      "strategy": "request-resolved-reader",
+      "assets": [
+        {
+          "file": "assets/optional-client-DhHbX849.js",
+          "raw": 36413,
+          "gzip": 14161,
+          "brotli": 12870
+        }
+      ]
+    }
+  ]
+}

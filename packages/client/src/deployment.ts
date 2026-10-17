@@ -1,6 +1,14 @@
 import type { NavigationRouter, Router } from "@smolter/core";
 import { deploymentCheck } from "./deployment-check.ts";
 
+interface WatcherState {
+  sequence: number;
+  mutations: number;
+  cleanup?: () => void;
+}
+
+const watchers = new WeakMap<NavigationRouter, WatcherState>();
+
 /** Build identity and the fresh, non-cacheable manifest URL emitted by deploymentPlugin. */
 export interface DeploymentOptions {
   version: string;
@@ -18,47 +26,50 @@ export function watchDeployment(
 ): () => void {
   if (!options || typeof window === "undefined") return () => {};
 
+  const state = watchers.get(router) ?? { sequence: 0, mutations: 0 };
+  state.cleanup?.();
+  watchers.set(router, state);
   const check = deploymentCheck(options);
   const { changed, reload } = check;
   const read = router.getSnapshot;
   const navigate = router.navigate;
   const dispose = router.dispose;
-  let sequence = 0;
   let stopped = false;
   let replay = false;
-  let mutations = 0;
   const dataRouter = router as NavigationRouter &
-    Partial<Pick<Router, "createFetcher">>;
+    Partial<Pick<Router, "createFetcher" | "submit">>;
   const createFetcher = dataRouter.createFetcher;
+  const submit = dataRouter.submit;
+  const trackSubmission =
+    (submit: Router["submit"]): Router["submit"] =>
+    (...args) => {
+      state.sequence++;
+      state.mutations++;
+
+      return submit(...args).finally(() => {
+        state.mutations--;
+      });
+    };
+  const guardedSubmit = submit && trackSubmission(submit);
   const guardedFetcher =
     createFetcher &&
     (() => {
       const fetcher = createFetcher();
-      const submit = fetcher.submit;
-
-      fetcher.submit = (...args) => {
-        sequence++;
-        mutations++;
-
-        return submit(...args).finally(() => {
-          mutations--;
-        });
-      };
+      fetcher.submit = trackSubmission(fetcher.submit);
 
       return fetcher;
     });
 
+  if (guardedSubmit) dataRouter.submit = guardedSubmit;
   if (guardedFetcher) dataRouter.createFetcher = guardedFetcher;
-  const valid = (current: number) => current === sequence && !stopped;
-  const canReload = (current: number) => valid(current) && mutations === 0;
-  const unsubscribe = router.subscribe(() => {
-    if (read().state === "submitting") sequence++;
-  });
+  const valid = (current: number) => current === state.sequence && !stopped;
+  const canReload = (current: number) =>
+    valid(current) && state.mutations === 0;
 
   const guarded: NavigationRouter["navigate"] = async (href, operation) => {
     const target = new URL(href, router.getSnapshot().url);
     const currentURL = new URL(router.getSnapshot().url);
-    const current = ++sequence;
+    const current = ++state.sequence;
 
     if (
       target.origin === location.origin &&
@@ -70,7 +81,7 @@ export function watchDeployment(
         return;
     }
 
-    if (current === sequence && !stopped) await navigate(href, operation);
+    if (current === state.sequence && !stopped) await navigate(href, operation);
   };
 
   const pop = (event: PopStateEvent) => {
@@ -78,7 +89,7 @@ export function watchDeployment(
 
     const target = new URL(location.href);
     const previous = new URL(read().url);
-    const current = ++sequence;
+    const current = ++state.sequence;
 
     if (
       target.pathname === previous.pathname &&
@@ -105,7 +116,7 @@ export function watchDeployment(
     // consume the recovery marker before a click records its destination.
     if (read().state !== "loading") return;
 
-    const current = sequence;
+    const current = state.sequence;
     const target = new URL(read().url);
     void changed().then((updated) => {
       if (updated)
@@ -120,14 +131,17 @@ export function watchDeployment(
   };
 
   function cleanup() {
+    if (stopped) return;
+    if (state.cleanup === cleanup) state.cleanup = undefined;
     stopped = true;
-    sequence++;
+    state.sequence++;
     check.dispose();
-    unsubscribe();
     window.removeEventListener("popstate", pop, true);
     window.removeEventListener("vite:preloadError", preloadError);
 
-    if (dataRouter.createFetcher === guardedFetcher)
+    if (guardedSubmit && dataRouter.submit === guardedSubmit)
+      dataRouter.submit = submit;
+    if (guardedFetcher && dataRouter.createFetcher === guardedFetcher)
       dataRouter.createFetcher = createFetcher;
     if (router.navigate === guarded) router.navigate = navigate;
     if (router.dispose === guardedDispose) router.dispose = dispose;
@@ -138,6 +152,7 @@ export function watchDeployment(
     dispose();
   }
 
+  state.cleanup = cleanup;
   router.navigate = guarded;
   router.dispose = guardedDispose;
   window.addEventListener("popstate", pop, true);

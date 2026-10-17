@@ -22,6 +22,8 @@ export { configureApplication } from "@smolter/core/environment";
 export interface MountApplicationOptions {
   hash?: boolean;
   deployment?: DeploymentOptions | null;
+  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000. */
+  deferredTimeout?: number;
 }
 
 export async function mountApplication(
@@ -29,8 +31,11 @@ export async function mountApplication(
   rootModule?: RootModule,
   options: boolean | MountApplicationOptions = false,
 ): Promise<Router> {
-  const { hash = false, deployment = null } =
-    typeof options === "boolean" ? { hash: options } : options;
+  const {
+    hash = false,
+    deployment = null,
+    deferredTimeout,
+  } = typeof options === "boolean" ? { hash: options } : options;
   const initialURL = new URL(
     hash ? location.hash.slice(1) || "/" : location.href,
     location.origin,
@@ -48,7 +53,7 @@ export async function mountApplication(
   routes = prepareRoutes(routes);
   const element = document.getElementById("smolter-data");
   const initial = element?.textContent
-    ? readHydration(element.textContent)
+    ? readHydration(element.textContent, deferredTimeout)
     : undefined;
   const hydration: Hydration | undefined = initial?.hydration;
 

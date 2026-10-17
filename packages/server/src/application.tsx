@@ -9,6 +9,8 @@ import {
 import type { AppRoute, RootModule } from "@smolter/preact/route-types";
 import { prepareRoutes, RouterApplication } from "@smolter/preact/router";
 import { loadRouter } from "@smolter/server";
+import type { ComponentChildren } from "preact";
+import { Suspense } from "preact/compat";
 import { renderToReadableStream } from "preact-render-to-string/stream";
 import { deferredHydration } from "./deferred-hydration.ts";
 import { privateResponse } from "./private-response.ts";
@@ -147,6 +149,7 @@ export async function renderApplication(
       entry={entry}
       rootError={Boolean(rootError)}
       streaming
+      deferredBoundary={options.earlyHydration ? undefined : deferredBoundary}
       initialData={deferred?.initial}
       document
     />,
@@ -179,6 +182,13 @@ export async function renderApplication(
       headers,
     },
   );
+}
+
+function deferredBoundary(
+  children: ComponentChildren,
+  fallback: ComponentChildren,
+) {
+  return <Suspense fallback={fallback}>{children}</Suspense>;
 }
 
 async function dispatch(

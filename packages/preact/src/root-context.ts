@@ -8,6 +8,10 @@ export interface ApplicationContext {
   root: unknown;
   rootError?: boolean;
   streaming?: boolean;
+  deferredBoundary?: (
+    children: import("preact").ComponentChildren,
+    fallback: import("preact").ComponentChildren,
+  ) => import("preact").ComponentChildren;
   initialData?: string;
   rootModule?: RootModule;
   hydration?: Hydration;

@@ -985,7 +985,7 @@
     "entries": ["preact"],
     "kind": "API",
     "summary": "",
-    "signature": "function Await<T>({\n  resolve,\n  children,\n  errorElement,\n}: AwaitProps<T>): ComponentChildren;",
+    "signature": "function Await<T>(props: AwaitProps<T>): ComponentChildren;",
     "fields": [],
     "source": "packages/preact/src/await.tsx"
   },
@@ -1699,7 +1699,7 @@
     "entries": ["preact/client"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n}",
+    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000. */\n  deferredTimeout?: number;\n}",
     "fields": [
       {
         "name": "hash",
@@ -1710,6 +1710,11 @@
         "name": "deployment",
         "signature": "deployment?: DeploymentOptions | null;",
         "summary": ""
+      },
+      {
+        "name": "deferredTimeout",
+        "signature": "deferredTimeout?: number;",
+        "summary": "Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000."
       }
     ],
     "source": "packages/preact/src/client.tsx"

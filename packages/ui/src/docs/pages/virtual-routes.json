@@ -53,6 +53,11 @@
       "title": "Development updates and HMR",
       "body": "The dev server watches flat route entry files. Adding, removing or renaming a route refreshes discovery in both the browser and SSR module graphs and reloads the browser. Editing a route entry also reloads so changed paths, IDs and handler exports cannot leave an old router running. Colocated components and helpers use normal Vite HMR; state preservation depends on your framework plugin and its accepted update boundaries. Manual clientRoutes/serverRoutes modules use Vite\u2019s import graph, including edits that add or remove entries. Without an accepting HMR boundary, Vite reloads the page. No server restart is needed for route changes. Vite configuration changes still follow Vite\u2019s normal restart behavior. Production deployment manifests are disabled during development.",
       "code": ""
+    },
+    {
+      "title": "Literal dots and route identity",
+      "body": "Dots separate URL segments. Escape a literal dot as [.]: robots[.]txt.ts or robots[.]txt/route.ts maps to /robots.txt; feeds.rss[.]xml maps to /feeds/rss.xml. File-route paths and identity come from filenames. Do not export id or routePath: the Vite plugin rejects those overrides. Target generated route data with its path and root data with root. Explicit IDs remain available in manually defined route arrays. Other bracket escapes and optional segments are unsupported.",
+      "code": ""
     }
   ]
 }

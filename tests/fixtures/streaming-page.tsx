@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { Link, Outlet, useFetcher, useLoaderData } from "@smolter/preact";
-import { Suspense, useState } from "preact/compat";
+import { useState } from "preact/compat";
 import { Await } from "../../packages/preact/src/await.tsx";
 import { Document, Scripts } from "../../packages/preact/src/document.tsx";
 import type { RootModule } from "../../packages/preact/src/route-types.ts";
@@ -16,15 +16,19 @@ export function StreamingPage() {
   return (
     <main>
       <h1>Immediate shell</h1>
-      <Suspense fallback={<p>Pending detail</p>}>
-        <Await resolve={data!.detail} errorElement={<p>Detail unavailable</p>}>
-          {(detail) => <p>{detail}</p>}
-        </Await>
-      </Suspense>
+
+      <Await
+        fallback={<p>Pending detail</p>}
+        resolve={data!.detail}
+        errorElement={<p>Detail unavailable</p>}
+      >
+        {(detail) => <p>{detail}</p>}
+      </Await>
+
       {data?.later && (
-        <Suspense fallback={<p>Pending later</p>}>
-          <Await resolve={data.later}>{(value) => <p>{value}</p>}</Await>
-        </Suspense>
+        <Await fallback={<p>Pending later</p>} resolve={data.later}>
+          {(value) => <p>{value}</p>}
+        </Await>
       )}
       <Link to="/other">Other route</Link>
       <fetcher.Form method="post" action="/">

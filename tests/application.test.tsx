@@ -1021,3 +1021,35 @@ test("early hydration includes pending references and an async entry in the init
   assert.match(html, /\[0,"ready",null\]/);
   assert.match(html, /nonce="test-nonce"/);
 });
+
+test("explicit Await fallback retains settled HTML with ordinary SSR", async () => {
+  const response = await renderApplication(
+    new Request("http://localhost/"),
+    [
+      {
+        path: "/",
+        default: () => (
+          <Await
+            resolve={Promise.resolve("Resolved SSR detail")}
+            fallback={<p>Pending SSR detail</p>}
+          >
+            {(value) => <p>{value}</p>}
+          </Await>
+        ),
+      },
+    ],
+    { ...root, default: Outlet },
+    "/entry.js",
+  );
+  const html = await response.text();
+  assert.match(html, /Resolved SSR detail/);
+});
+
+test("Await renders resolved values without a pending boundary", async () => {
+  const html = await renderToStringAsync(
+    <Await resolve="ready" fallback="pending">
+      {(value) => <p>{value}</p>}
+    </Await>,
+  );
+  assert.equal(html, "<p>ready</p>");
+});

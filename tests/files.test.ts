@@ -105,3 +105,21 @@ it("rejects unsupported syntax and ambiguous route files", async () => {
 
   expect(await flatRoutes(root)).toBeInstanceOf(Error);
 });
+
+it("preserves escaped dots in folders and flat files", async () => {
+  const root = await fixture([
+    "robots[.]txt",
+    "feeds.rss[.]xml",
+    "[.]well-known.security[.]txt",
+  ]);
+  await writeFile(join(root, "sitemap[.]xml.ts"), "export default null;");
+  const routes = await flatRoutes(root);
+  expect(routes).not.toBeInstanceOf(Error);
+  if (routes instanceof Error) return;
+  expect(routes.map(({ path }) => path).sort()).toEqual([
+    "/.well-known/security.txt",
+    "/feeds/rss.xml",
+    "/robots.txt",
+    "/sitemap.xml",
+  ]);
+});

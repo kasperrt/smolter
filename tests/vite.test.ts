@@ -149,3 +149,35 @@ it("generates and serves a configured app-scoped transport endpoint", async (con
   expect(await response.json()).toBe(1);
   expect(response.headers.get("Cache-Control")).toBe("private, no-store");
 });
+
+it.for([
+  'export const id = "custom";',
+  'export const routePath = "/custom";',
+  'const custom = "/custom"; export { custom as routePath };',
+])("rejects file-route identity overrides: %s", async (source, context) => {
+  const { server } = await viteFixture(context, source);
+  await expect(
+    server.transformRequest("virtual:smolter/routes"),
+  ).rejects.toThrow("remove id/routePath");
+  await expect(server.ssrLoadModule("virtual:smolter/routes")).rejects.toThrow(
+    "remove id/routePath",
+  );
+});
+
+it("serves a literal-dot resource through generated transport without overrides", async (context) => {
+  const { root, server } = await viteFixture(context, "export default null;");
+  await writeFile(
+    join(root, "src/routes/robots[.]txt.ts"),
+    'export { loader } from "../../handlers.ts";',
+  );
+  const routes = (await server.ssrLoadModule("virtual:smolter/routes")).default;
+  expect(routes.map((route: RoutePath) => route.path)).toContain("/robots.txt");
+  const source = (await server.transformRequest("virtual:smolter/routes"))!
+    .code;
+  expect(source).toContain("/robots.txt");
+  const response = await fetch(
+    new URL("/_smolter?url=/robots.txt", server.resolvedUrls!.local[0]),
+  );
+  expect(response.status).toBe(200);
+  expect(await response.json()).toBe(1);
+});

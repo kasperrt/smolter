@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Contract",
-      "body": "Extends Route with id, routePath, meta, preload, and resolveComponent. path is the pattern matched by the router. routePath can supply a normalized runtime URL pattern for a generated route.",
+      "body": "Extends Route with id, routePath, meta, preload, and resolveComponent. path is the pattern matched by the router. Explicit id and the legacy routePath override apply only to manually defined arrays. File routes derive identity and paths from filenames and reject those exports; use [.] for literal dots.",
       "code": "import type { AppRoute } from \"@kasperrt/smolter/preact\";\n\nexport const route: AppRoute = {\n  id: \"task\",\n  path: \"/tasks/:id\",\n  loader: ({ params }) => ({ id: params.id }),\n};"
     },
     {

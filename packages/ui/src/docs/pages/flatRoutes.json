@@ -23,6 +23,11 @@
       "title": "Behavior and edge cases",
       "body": "Node filesystem access is required; do not import this entry into browser components. Only immediate flat files and route folders are discovered. Invalid patterns and conflicting parameter shapes return Error values. The Vite plugin normally calls this for you.",
       "code": ""
+    },
+    {
+      "title": "Literal dots and route identity",
+      "body": "Dots separate URL segments. Escape a literal dot as [.]: robots[.]txt.ts or robots[.]txt/route.ts maps to /robots.txt; feeds.rss[.]xml maps to /feeds/rss.xml. File-route paths and identity come from filenames. Do not export id or routePath: the Vite plugin rejects those overrides. Target generated route data with its path and root data with root. Explicit IDs remain available in manually defined route arrays. Other bracket escapes and optional segments are unsupported.",
+      "code": ""
     }
   ]
 }
