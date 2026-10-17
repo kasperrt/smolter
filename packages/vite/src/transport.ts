@@ -4,9 +4,12 @@ export function configureTransport(
   server: ViteDevServer,
   publicId: string,
   framework: "react" | "preact" = "react",
+  dataEndpoint = "/_smolter",
 ): void {
   server.middlewares.use((incoming, outgoing, next) => {
-    if (!incoming.url?.startsWith("/_smolter?")) return next();
+    if (!incoming.url?.startsWith(`${dataEndpoint}?`)) return next();
+
+    outgoing.setHeader("Cache-Control", "private, no-store");
 
     const dispatch = async () => {
       const origin = `http://${incoming.headers.host}`;

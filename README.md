@@ -534,7 +534,7 @@ consume request bodies with Express body parsers before this handler.
 The adapter has no Express dependency and forwards failures to `next(error)`.
 
 See the [Express guide](https://kasperrt.github.io/smolter/react/docs/express)
-for a complete server example and current buffering limitations.
+for a complete server example and streaming and hydration behavior.
 
 ## Resource subscriptions
 
@@ -603,15 +603,15 @@ a claim of identical features.
 | `React Router: data routing subset` | 29780 |
 | `React: routing-only named exports` | 1245 |
 | `Preact: routing-only named exports` | 1405 |
-| `@kasperrt/smolter/react` | 2873 |
-| `@kasperrt/smolter/preact` | 4748 |
-| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 3870 |
-| `@kasperrt/smolter/preact + server transport` | 5697 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 8033 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 8317 |
+| `@kasperrt/smolter/react` | 2948 |
+| `@kasperrt/smolter/preact` | 4842 |
+| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4046 |
+| `@kasperrt/smolter/preact + server transport` | 5886 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 8418 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 8704 |
 | `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
-| `React: common routing/data exports` | 2683 |
-| `Preact: common routing/data exports` | 2966 |
+| `React: common routing/data exports` | 2761 |
+| `Preact: common routing/data exports` | 3046 |
 | `wouter: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |
@@ -733,3 +733,21 @@ entrypoints and never replays form submissions.
 
 See [deployment updates](https://kasperrt.github.io/smolter/react/docs/deployments/)
 for Express, CDN paths, TypeScript declarations and unsaved-state handling.
+
+
+### Shared origins and streaming SSR
+
+Set the same `dataEndpoint` in `applicationPlugins` (or `fileRouter`), browser `serverRoute` handlers and `createRequestHandler`. For example, Admin can use `/admin/_smolter` while Platform uses `/_smolter`. Transport responses, including errors and redirects, use `Cache-Control: private, no-store`.
+
+Pass deployment metadata before mounting so recovery covers the initial route import:
+
+```ts
+import deployment from "virtual:smolter/deployment";
+import { mountApplication } from "@kasperrt/smolter/preact/client";
+
+await mountApplication(routes, root, { deployment });
+```
+
+Preact SSR starts root and route loaders concurrently. Return nested promises and render them with `Await` inside `Suspense` to stream a shell before optional data resolves. The Node/Express adapter streams the response; hydration starts after the document stream finishes. Root-loader failures render the root error boundary. Vite development HTML transformation still buffers the document.
+
+Successful action redirects refresh registered root data without replaying the mutation. Loader arguments expose `reason` to distinguish initial loads, navigation, revalidation and fetcher reads without comparing browser URLs.

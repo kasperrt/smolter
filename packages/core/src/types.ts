@@ -8,6 +8,8 @@ export type Params = Record<string, string>;
 
 /** Request, path parameters, and cancellation signal passed to a data handler. */
 export interface DataArgs {
+  /** Why this handler ran; independent of when browser history is committed. */
+  reason?: "initial" | "navigation" | "revalidation" | "fetcher" | "action";
   request: Request;
   params: Params;
   signal: AbortSignal;

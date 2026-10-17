@@ -33,7 +33,10 @@ export function isRouteErrorResponse(value: unknown): value is RouteError {
   return value instanceof Error && "status" in value;
 }
 
-export async function normalizeResult(value: unknown): Promise<unknown> {
+export async function normalizeResult(
+  value: unknown,
+  resolveDeferred = true,
+): Promise<unknown> {
   if (value && typeof value === "object" && "__routeError" in value) {
     const error = value.__routeError as {
       message: string;
@@ -57,9 +60,11 @@ export async function normalizeResult(value: unknown): Promise<unknown> {
   }
 
   if (value && typeof value === "object" && "__routeData" in value)
-    return resolveData((value as DataResponse<unknown>).value);
+    return resolveDeferred
+      ? resolveData((value as DataResponse<unknown>).value)
+      : (value as DataResponse<unknown>).value;
 
-  return resolveData(value);
+  return resolveDeferred ? resolveData(value) : value;
 }
 
 // Smolter transfers JSON snapshots. Resolve deferred fields before serialization.

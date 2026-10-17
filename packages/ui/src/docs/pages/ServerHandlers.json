@@ -8,6 +8,11 @@
       "title": "Usage",
       "body": "Select which server proxies are attached to a browser route. Both loader and action default to enabled when the whole argument is omitted. When provided, only truthy fields are enabled.",
       "code": "serverRoute(\"/tasks\", browserModule, { loader: true });"
+    },
+    {
+      "title": "Application data endpoint",
+      "body": "dataEndpoint defaults to /_smolter. On a shared origin, configure an app-specific path consistently in the browser routes, Vite middleware and production HTTP adapter. The asset/CDN base is independent.",
+      "code": ""
     }
   ]
 }

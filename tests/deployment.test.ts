@@ -212,3 +212,21 @@ it("reloads the document when a failed chunk has already committed its URL", asy
   events.dispatchEvent(new Event("vite:preloadError"));
   await vi.waitFor(() => expect(location.reload).toHaveBeenCalledTimes(1));
 });
+
+it("recovers bootstrap failures before mounting and shares the reload-loop safeguard", async () => {
+  const { recoverDeployment } = await import(
+    "../packages/client/src/deployment.ts"
+  );
+  expect(await recoverDeployment(null)).toBe(false);
+  expect(
+    await recoverDeployment({ version: "old", manifestURL: "/manifest" }),
+  ).toBe(false);
+  const { options, reload, fetcher } = setup("new");
+  expect(await recoverDeployment(options)).toBe(true);
+  expect(reload).toHaveBeenCalledOnce();
+  expect(
+    await recoverDeployment(options, new URL("https://app.test/next")),
+  ).toBe(false);
+  fetcher.mockResolvedValue(Response.json({ version: "old" }));
+  expect(await recoverDeployment(options)).toBe(false);
+});

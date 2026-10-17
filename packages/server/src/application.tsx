@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 
-import { createDataRouter, matchRoutes } from "@smolter/core";
+import { createDataRouter, matchRoutes, safeWrapAsync } from "@smolter/core";
 import {
   type DataResponse,
   normalizeResult,
@@ -9,13 +9,20 @@ import {
 import type { AppRoute, RootModule } from "@smolter/preact/route-types";
 import { prepareRoutes, RouterApplication } from "@smolter/preact/router";
 import { loadRouter } from "@smolter/server";
-import { renderToStringAsync } from "preact-render-to-string";
+import { renderToReadableStream } from "preact-render-to-string/stream";
+import { privateResponse } from "./private-response.ts";
+import { resolveHydration, streamDocument } from "./stream-document.ts";
+
+export interface RenderApplicationOptions {
+  nonce?: string;
+}
 
 export async function renderApplication(
   request: Request,
   routes: AppRoute[],
   rootModule: RootModule,
   entry: string,
+  options: RenderApplicationOptions = {},
 ): Promise<Response> {
   routes = routes.map((route) => ({
     ...route,
@@ -41,12 +48,20 @@ export async function renderApplication(
     actionData = await normalizeResult(await actionResponse.json());
   }
 
-  const root = await resolveData(
-    await rootModule.loader?.({
-      request,
-      params: {},
-      signal: request.signal,
-    }),
+  const rootResult = safeWrapAsync(() =>
+    Promise.resolve()
+      .then(() =>
+        rootModule.loader?.({ request, params: {}, signal: request.signal }),
+      )
+      .then(
+        (value) => normalizeResult(value, false),
+        (error: unknown) =>
+          error instanceof Response
+            ? normalizeResult(error, false)
+            : error instanceof Error
+              ? error
+              : new Error(String(error), { cause: error }),
+      ),
   );
   let redirectResponse: Response | undefined;
   const prepared = prepareRoutes(
@@ -54,6 +69,7 @@ export async function renderApplication(
       ...route,
       ErrorBoundary: route.ErrorBoundary ?? rootModule.ErrorBoundary,
     })),
+    true,
   ).map((route) => {
     if (!route.loader) return route;
 
@@ -71,7 +87,20 @@ export async function renderApplication(
       },
     };
   });
-  let router = await loadRouter(prepared, request);
+  const [rootState, loadedRouter] = await Promise.all([
+    rootResult,
+    loadRouter(prepared, request),
+  ]);
+  let router = loadedRouter;
+  const rootError =
+    rootState.error ??
+    (rootState.data instanceof Error ? rootState.data : undefined);
+  const root = rootError ? undefined : rootState.data;
+
+  if (root instanceof Response && root.headers.has("Location")) {
+    router.dispose();
+    return root;
+  }
 
   if (redirectResponse) {
     router.dispose();
@@ -79,43 +108,68 @@ export async function renderApplication(
     return redirectResponse;
   }
 
-  if (actionResponse) {
+  if (actionResponse || rootError) {
     const hydrationData = {
       ...router.getSnapshot(),
       actionData: actionData instanceof Error ? undefined : actionData,
       ...(actionData instanceof Error && { error: actionData }),
+      ...(rootError && { error: rootError }),
     };
     router.dispose();
     router = createDataRouter(router.routes, { hydrationData });
   }
 
   const snapshot = router.getSnapshot();
-  const html = await renderToStringAsync(
+  const stream = renderToReadableStream(
     <RouterApplication
       router={router}
       routes={routes}
       root={root}
       rootModule={rootModule}
       entry={entry}
+      rootError={Boolean(rootError)}
+      streaming
       document
     />,
+    options,
   );
-  router.dispose();
+  const hydration = resolveHydration({
+    root,
+    snapshot: {
+      ...snapshot,
+      error: snapshot.error && {
+        ...snapshot.error,
+        name: snapshot.error.name,
+        message: snapshot.error.message,
+      },
+    },
+    ...(rootError && { rootError: true }),
+  });
+  // The renderer reports the same rejection through its stream reader.
+  void stream.allReady.catch(() => {});
   const headers = new Headers(actionResponse?.headers);
   headers.delete("Content-Length");
   headers.delete("Content-Encoding");
   headers.set("Content-Type", "text/html; charset=utf-8");
   headers.set("Cache-Control", "no-store");
 
-  return new Response(`<!doctype html>${html}`, {
-    status: snapshot.error
-      ? Number("status" in snapshot.error ? snapshot.error.status : 500)
-      : (actionResponse?.status ?? 200),
-    headers,
-  });
+  return new Response(
+    streamDocument(stream, {
+      hydration,
+      signal: request.signal,
+      nonce: options.nonce,
+      dispose: () => router.dispose(),
+    }),
+    {
+      status: snapshot.error
+        ? Number("status" in snapshot.error ? snapshot.error.status : 500)
+        : (actionResponse?.status ?? 200),
+      headers,
+    },
+  );
 }
 
-export async function dispatchRoute(
+async function dispatch(
   request: Request,
   routes: AppRoute[],
   document = false,
@@ -182,4 +236,14 @@ export async function dispatchRoute(
   }
 
   return Response.json((await normalizeResult(value)) ?? null);
+}
+
+export async function dispatchRoute(
+  request: Request,
+  routes: AppRoute[],
+  document = false,
+): Promise<Response> {
+  const response = await dispatch(request, routes, document);
+
+  return document ? response : privateResponse(response);
 }

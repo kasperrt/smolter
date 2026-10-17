@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { send, webRequest } from "./http.ts";
+import { privateResponse } from "./private-response.ts";
 
 /** Server module produced by an application's SSR entrypoint. */
 export interface ServerBuild {
@@ -11,6 +12,8 @@ export interface RequestHandlerOptions {
   build: ServerBuild;
   /** Browser entry URL resolved from Vite's production manifest. */
   entry: string;
+  /** Must match the browser and Vite transport endpoint. */
+  dataEndpoint?: string;
 }
 
 export interface ServerIncomingMessage extends IncomingMessage {
@@ -25,6 +28,7 @@ export type NextHandler = (error?: unknown) => void;
 export function createRequestHandler({
   build,
   entry,
+  dataEndpoint = "/_smolter",
 }: RequestHandlerOptions): (
   incoming: ServerIncomingMessage,
   outgoing: ServerResponse,
@@ -40,7 +44,9 @@ export function createRequestHandler({
         incoming.originalUrl ?? incoming.url ?? "/",
         "http://local",
       );
-      const dataRequest = url.pathname === "/_smolter";
+      const dataRequest = url.pathname === dataEndpoint;
+      if (dataRequest) outgoing.setHeader("Cache-Control", "private, no-store");
+
       const target = dataRequest ? url.searchParams.get("url") : undefined;
 
       if (
@@ -61,7 +67,7 @@ export function createRequestHandler({
         ? await build.handleDataRequest(request)
         : await build.default(request, entry);
 
-      await send(response, outgoing);
+      await send(dataRequest ? privateResponse(response) : response, outgoing);
     };
 
     return handle().catch(next);

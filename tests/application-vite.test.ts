@@ -65,6 +65,7 @@ it("serves SSR documents and explicit resources while keeping development script
       },
     },
     plugins: applicationPlugins({
+      dataEndpoint: "/app/_smolter",
       resourceRequest: (url) => url === "/robots.txt",
     }),
     server: { port: 0 },
@@ -97,7 +98,7 @@ it("serves SSR documents and explicit resources while keeping development script
   expect(resource.headers.get("Content-Type")).toContain("text/plain");
   expect(await resource.text()).toBe("User-agent: *");
 
-  const data = await fetch(new URL("/_smolter?url=%2F", origin));
+  const data = await fetch(new URL("/app/_smolter?url=%2F", origin));
 
   expect(data.status).toBe(200);
   expect(await data.json()).toEqual({ path: "/" });
@@ -108,7 +109,7 @@ it("serves SSR documents and explicit resources while keeping development script
 
   for (const target of ["", "https://outside.test/", "//outside.test/"]) {
     const invalid = await fetch(
-      new URL(`/_smolter?url=${encodeURIComponent(target)}`, origin),
+      new URL(`/app/_smolter?url=${encodeURIComponent(target)}`, origin),
     );
 
     expect(invalid.status).toBe(400);

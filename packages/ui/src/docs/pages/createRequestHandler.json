@@ -21,7 +21,7 @@
     },
     {
       "title": "Returns",
-      "body": "A middleware function accepting incoming, outgoing and next. It returns Promise<void> and forwards request/response failures to next.",
+      "body": "Document requests call build.default. dataEndpoint defaults to /_smolter; set it to an app-scoped path on shared origins. Matching requests with a local url parameter call build.handleDataRequest. Invalid targets return 400. Every transport response uses private, no-store. Client disconnection aborts the Request. Response bodies stream with backpressure and compression flush support.",
       "code": ""
     }
   ]

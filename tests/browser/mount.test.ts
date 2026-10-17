@@ -124,3 +124,74 @@ for (const scenario of [
       .toBe("Next page");
   });
 }
+
+it("commits action redirects to hash history and restores the route on Back", async (context) => {
+  const original = location.href;
+  const container = document.createElement("div");
+  container.id = "root";
+  document.body.append(container);
+  history.replaceState(null, "", "/hash-audit#/join");
+  const router = await mountApplication(
+    [
+      {
+        path: "/join",
+        default: () => createElement("p", null, "Join"),
+        action: () =>
+          new Response(null, { status: 303, headers: { Location: "/room" } }),
+      },
+      { path: "/room", default: () => createElement("p", null, "Room") },
+      { path: "/next", default: () => createElement("p", null, "Next") },
+    ],
+    undefined,
+    { hash: true },
+  );
+  context.onTestFinished(() => {
+    render(null, container);
+    router.dispose();
+    container.remove();
+    history.replaceState(null, "", original);
+  });
+  await expect.poll(() => container.textContent).toBe("Join");
+  await router.createFetcher().submit("/join", new FormData());
+  expect(location.hash).toBe("#/room");
+  await expect.poll(() => container.textContent).toBe("Room");
+  await router.navigate("/next");
+  history.back();
+  await expect.poll(() => location.hash).toBe("#/room");
+  await expect.poll(() => container.textContent).toBe("Room");
+});
+
+it("checks deployment metadata when the initial route import fails", async (context) => {
+  const { vi } = await import("vitest");
+  const original = location.href;
+  history.replaceState(null, "", "/bootstrap-audit");
+  const reload = vi.fn();
+  const fetcher = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(Response.json({ version: "new" }));
+  context.onTestFinished(() => {
+    fetcher.mockRestore();
+    history.replaceState(null, "", original);
+    sessionStorage.clear();
+  });
+  await expect(
+    mountApplication(
+      [
+        {
+          path: "/bootstrap-audit",
+          preload: () => Promise.reject(new Error("Chunk missing")),
+        },
+      ],
+      undefined,
+      {
+        deployment: {
+          version: "bootstrap-old",
+          manifestURL: "/manifest.json",
+          reload,
+        },
+      },
+    ),
+  ).rejects.toThrow("Chunk missing");
+  expect(fetcher).toHaveBeenCalledOnce();
+  expect(reload).toHaveBeenCalledOnce();
+});

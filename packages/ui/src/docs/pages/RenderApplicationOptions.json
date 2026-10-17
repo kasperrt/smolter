@@ -1,0 +1,13 @@
+{
+  "slug": "RenderApplicationOptions",
+  "title": "RenderApplicationOptions",
+  "kind": "Types",
+  "summary": "Configure streamed document rendering.",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "nonce applies to the streaming hydration scripts. Use the same nonce on Scripts and in the document Content-Security-Policy. Preact SSR requires preact-render-to-string 6.8.1 or newer.",
+      "code": "return renderApplication(request, routes, root, entry, { nonce });"
+    }
+  ]
+}

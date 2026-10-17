@@ -21,8 +21,8 @@
     },
     {
       "title": "Behavior and edge cases",
-      "body": "Requests use /_smolter?url=... on the current origin. GET runs loader; mutation methods run action. Pass an empty handlers object for a view-only manual browser route. The generated Vite routes supply the exact server exports. JSON is the transport format; runtime validation remains application-owned.",
-      "code": ""
+      "body": "Requests use handlers.dataEndpoint, defaulting to /_smolter, with a url query parameter naming the target route. On shared origins use an app-scoped endpoint, such as /admin/_smolter, matching the host and Vite configuration. GET runs loaders; mutations run actions. Set loader/action flags explicitly when supplying options. JSON transport resolves data before returning; runtime validation remains application-owned.",
+      "code": "serverRoute(\"/admin/users\", browserModule, {\n  loader: true,\n  action: true,\n  dataEndpoint: \"/admin/_smolter\",\n});"
     }
   ]
 }

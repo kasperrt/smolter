@@ -98,3 +98,91 @@ test.each(["production", "development"])(
     expect(await response.text()).toBe("cookies");
   },
 );
+
+test("isolates application data endpoints on one origin and streams documents before their tail resolves", async () => {
+  const { deferred } = await import("./helpers/deferred.ts");
+  const tail = deferred<void>();
+  const encoder = new TextEncoder();
+  const handlers = ["", "/admin", "/remotes", "/embed"].map((base) => ({
+    base,
+    handle: createRequestHandler({
+      entry: "/entry.js",
+      dataEndpoint: `${base}/_smolter`,
+      build: {
+        default: () =>
+          new Response(
+            new ReadableStream({
+              async start(controller) {
+                controller.enqueue(encoder.encode("Shell"));
+                await tail.promise;
+                controller.enqueue(encoder.encode("Tail"));
+                controller.close();
+              },
+            }),
+          ),
+        handleDataRequest: (request) =>
+          Response.json(
+            { app: base || "platform", method: request.method },
+            { headers: { "Cache-Control": "public, max-age=3600" } },
+          ),
+      },
+    }),
+  }));
+  const server = createServer((request, response) => {
+    const path = new URL(request.url!, "http://local").pathname;
+    const selected =
+      handlers.find(({ base }) => path === `${base}/_smolter`) ?? handlers[0];
+    void selected.handle(request, response, () => response.end());
+  });
+  onTestFinished(() => {
+    tail.resolve();
+    server.closeAllConnections();
+    server.close();
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+
+  for (const { base } of handlers) {
+    for (const method of ["GET", "POST"]) {
+      const response = await fetch(
+        `${origin}${base}/_smolter?url=${base || "/"}`,
+        { method },
+      );
+      expect(await response.json()).toEqual({
+        app: base || "platform",
+        method,
+      });
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    }
+  }
+  const document = await fetch(origin);
+  const reader = document.body!.getReader();
+  expect(new TextDecoder().decode((await reader.read()).value)).toBe("Shell");
+  tail.resolve();
+  expect(new TextDecoder().decode((await reader.read()).value)).toBe("Tail");
+});
+
+test("ends empty document responses without buffering a body", async () => {
+  const handler = createRequestHandler({
+    entry: "/entry.js",
+    build: {
+      default: () => new Response(null, { status: 204 }),
+      handleDataRequest: () => new Response(null),
+    },
+  });
+  const server = createServer((request, response) => {
+    void handler(request, response, () => response.end());
+  });
+  onTestFinished(() => {
+    server.closeAllConnections();
+    server.close();
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const response = await fetch(
+    `http://127.0.0.1:${(server.address() as AddressInfo).port}/`,
+  );
+  expect(response.status).toBe(204);
+  expect(await response.text()).toBe("");
+});

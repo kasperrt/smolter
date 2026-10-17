@@ -26,8 +26,13 @@
     },
     {
       "title": "Entry files",
-      "body": "See the Virtual routes and entry files guide for complete browser and server entry modules. The virtual route module comes from Vite; it is compiled away during the build. Express imports the built server module, never a virtual: specifier directly.",
+      "body": "Your metrics and tracing middleware wraps the SSR/action handler. Node helpers stream Response bodies with backpressure and flush compression middleware when supported. Keep proxies configured to permit streaming. Server code stays in server-only subpaths.",
       "code": ""
+    },
+    {
+      "title": "Multiple applications on one origin",
+      "body": "Configure the same dataEndpoint in the browser route manifest and the HTTP adapter. Do not derive it from Vite base when base points at a CDN. Route /admin/_smolter to Admin, /remotes/_smolter to Remote, and so on in your host or reverse proxy.",
+      "code": "applicationPlugins({ dataEndpoint: \"/admin/_smolter\" });\n\napp.use(createRequestHandler({\n  build,\n  entry: \"/admin/assets/client.js\",\n  dataEndpoint: \"/admin/_smolter\",\n}));"
     }
   ]
 }

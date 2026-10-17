@@ -8,6 +8,11 @@
       "title": "Usage",
       "body": "Vite plugin configuration. directory defaults to src/routes. clientRoutes and serverRoutes switch to explicit manual tables and must be supplied together. Paths are resolved relative to the Vite project root.",
       "code": "routerPlugin({\n  clientRoutes: \"src/manual-browser-routes.ts\",\n  serverRoutes: \"src/manual-routes.ts\",\n});"
+    },
+    {
+      "title": "Application data endpoint",
+      "body": "dataEndpoint defaults to /_smolter. On a shared origin, configure an app-specific path consistently in the browser routes, Vite middleware and production HTTP adapter. The asset/CDN base is independent.",
+      "code": ""
     }
   ]
 }

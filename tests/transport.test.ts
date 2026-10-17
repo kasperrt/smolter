@@ -238,3 +238,28 @@ it("follows a redirect returned through the server transport", async () => {
 
   expect(router.getSnapshot().data).toBe("Finished");
 });
+
+it("keeps each browser proxy inside its configured application endpoint", async () => {
+  const requests: string[] = [];
+  vi.stubGlobal("fetch", async (input: string) => {
+    requests.push(input);
+    return Response.json({ ok: true });
+  });
+  for (const prefix of ["", "/admin", "/remotes", "/embed"]) {
+    const router = createDataRouter([
+      serverRoute(
+        `${prefix}/page`,
+        {},
+        { loader: true, action: true, dataEndpoint: `${prefix}/_smolter` },
+      ),
+    ]);
+    await router.navigate(`${prefix}/page`);
+    await router.createFetcher().submit(`${prefix}/page`, new FormData());
+    expect(requests.splice(0)).toEqual(
+      Array(3).fill(
+        `${prefix}/_smolter?url=${encodeURIComponent(`${prefix}/page`)}`,
+      ),
+    );
+    router.dispose();
+  }
+});

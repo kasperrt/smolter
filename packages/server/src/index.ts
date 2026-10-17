@@ -1,3 +1,4 @@
+import { privateResponse } from "./private-response.ts";
 /**
  * Request-scoped server rendering and HTTP data dispatch.
  * @module
@@ -63,7 +64,7 @@ export async function loadRouter(
 export { serialize } from "@smolter/core";
 
 /** Dispatch an HTTP data request to a registered server loader or action. */
-export async function handleRequest(
+async function dispatchRequest(
   routes: readonly Route[],
   request: Request,
 ): Promise<Response> {
@@ -93,10 +94,13 @@ export async function handleRequest(
   if (result.data instanceof Response) {
     const location = result.data.headers.get("Location");
 
-    if (location)
-      return new Response(null, {
-        headers: { "X-Smolter-Redirect": location },
-      });
+    if (location) {
+      const headers = new Headers(result.data.headers);
+      headers.delete("Location");
+      headers.set("X-Smolter-Redirect", location);
+
+      return new Response(null, { headers });
+    }
 
     return result.data;
   }
@@ -104,4 +108,12 @@ export async function handleRequest(
   return Response.json(result.data ?? null, {
     headers: { "Cache-Control": "no-store" },
   });
+}
+
+/** Dispatch a server data request with an explicit private cache policy. */
+export async function handleRequest(
+  routes: readonly Route[],
+  request: Request,
+): Promise<Response> {
+  return privateResponse(await dispatchRequest(routes, request));
 }

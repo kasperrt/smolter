@@ -6,6 +6,7 @@ import { lazyFiles } from "./lazy-files.ts";
 
 export interface ApplicationOptions {
   directory?: string;
+  dataEndpoint?: string;
   ssr?: boolean;
   splitRoutes?: boolean;
   resourceRequest?: (url: string) => boolean;
@@ -42,6 +43,7 @@ export const preactConfig: UserConfig = {
 
 export function applicationPlugins({
   directory = "src/routes",
+  dataEndpoint = "/_smolter",
   ssr = true,
   splitRoutes = true,
   resourceRequest,
@@ -72,7 +74,9 @@ export function applicationPlugins({
     configureServer(server) {
       // Own the HTTP adapter so redirects retain authentication cookies.
       server.middlewares.use((incoming, outgoing, next) => {
-        if (!incoming.url?.startsWith("/_smolter?")) return next();
+        if (!incoming.url?.startsWith(`${dataEndpoint}?`)) return next();
+
+        outgoing.setHeader("Cache-Control", "private, no-store");
 
         const run = async () => {
           const target = new URL(
@@ -106,6 +110,8 @@ export function applicationPlugins({
           )
             return next();
 
+          outgoing.setHeader("Cache-Control", "private, no-store");
+
           const run = async () => {
             const request = await webRequest(incoming, outgoing);
             const entry = await server.ssrLoadModule("/src/entry.server.tsx");
@@ -138,7 +144,7 @@ export function applicationPlugins({
   return [
     application,
     browserBoundary(),
-    ...(splitRoutes ? [lazyFiles(directory)] : []),
-    routerPlugin({ directory, framework: "preact" }),
+    ...(splitRoutes ? [lazyFiles(directory, dataEndpoint)] : []),
+    routerPlugin({ directory, framework: "preact", dataEndpoint }),
   ];
 }

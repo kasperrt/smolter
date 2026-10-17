@@ -8,6 +8,7 @@ import { useSyncExternalStore } from "./runtime.ts";
 
 export interface LazyRouteOptions {
   path: string;
+  dataEndpoint?: string;
   id?: string;
   loader?: boolean;
   action?: boolean;
@@ -48,6 +49,7 @@ export function lazyRoute(
         module = serverRoute(options.path, loaded, {
           loader: options.loader,
           action: options.action,
+          dataEndpoint: options.dataEndpoint,
         });
       })
       .catch((error: unknown) => {

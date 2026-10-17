@@ -11,8 +11,8 @@
     },
     {
       "title": "Connect the browser router",
-      "body": "Connect once before starting a manually created router, or after mountApplication resolves. Import from /react/client or /preact/client. The helper wraps navigation and Back/Forward, checks a fresh manifest before changing pathname or search, and reloads the intended destination when its version differs. Hash-only changes and external navigations do not check. router.dispose() removes the listeners; the returned cleanup function can disconnect them earlier. No polling runs in the background.",
-      "code": "import deployment from \"virtual:smolter/deployment\";\nimport { createDataRouter } from \"@kasperrt/smolter/react\";\nimport { watchDeployment } from \"@kasperrt/smolter/react/client\";\n\nconst router = createDataRouter(routes, { browser: true });\nwatchDeployment(router, deployment);\n\n// Preact application integration:\nconst router = await mountApplication(routes, root);\nwatchDeployment(router, deployment);"
+      "body": "Connect once before starting a manually created router, or pass deployment metadata directly to mountApplication so recovery also covers the initial route import. Import from /react/client or /preact/client. The helper wraps navigation and Back/Forward, checks a fresh manifest before changing pathname or search, and reloads the intended destination when its version differs. Hash-only changes and external navigations do not check. router.dispose() removes the listeners; the returned cleanup function can disconnect them earlier. No polling runs in the background.",
+      "code": "import deployment from \"virtual:smolter/deployment\";\nimport { createDataRouter } from \"@kasperrt/smolter/react\";\nimport { watchDeployment } from \"@kasperrt/smolter/react/client\";\n\nconst router = createDataRouter(routes, { browser: true });\nwatchDeployment(router, deployment);\n\n// Preact application integration:\nconst router = await mountApplication(routes, root, { deployment });"
     },
     {
       "title": "Serve production documents and manifests fresh",
