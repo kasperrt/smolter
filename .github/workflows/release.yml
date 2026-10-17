@@ -43,8 +43,10 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - name: Publish registry versions
-        run: node scripts/release.mjs publish
+      - name: Publish JSR and verify availability
+        run: node scripts/release.mjs publish-jsr
+      - name: Publish npm after JSR succeeds
+        run: node scripts/release.mjs publish-npm
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
