@@ -1,10 +1,16 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 
 const sizes = JSON.parse(readFileSync("packages/ui/src/size.json", "utf8"));
 const reference = JSON.parse(
   readFileSync("packages/ui/src/docs/reference.json", "utf8"),
 );
+const guideDirectory = "packages/ui/src/docs/pages";
+const guides = readdirSync(guideDirectory)
+  .filter((file) => file.endsWith(".json"))
+  .map((file) => JSON.parse(readFileSync(`${guideDirectory}/${file}`, "utf8")))
+  .filter((page) => page.kind === "Guides");
+
 const basePort = Number(process.env.SMOLTER_TEST_PORT ?? 4173);
 const examples = [
   { name: "React", port: basePort + 0, ssr: false, bytes: sizes.react },
@@ -54,7 +60,7 @@ for (const example of examples) {
       page
         .getByRole("navigation", { name: "Documentation", exact: true })
         .getByRole("link"),
-    ).toHaveCount(reference.length + 13);
+    ).toHaveCount(reference.length + guides.length);
     await expect(page.getByTestId("source-panel")).toHaveCount(0);
     expect(
       await page.evaluate(() => document.documentElement.dataset.docs),
