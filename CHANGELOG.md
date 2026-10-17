@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3
+
+- Ignore idle intent-prefetch chunk failures in deployment recovery so the next click retains its destination and reload marker.
+- Keep active-navigation chunk recovery and latest-navigation wins behavior, with unit and production-browser regressions.
+
 ## 0.3.2
 
 - Configure transport endpoints consistently across browser handlers, file routes, Express and development middleware for multiple apps sharing one origin.

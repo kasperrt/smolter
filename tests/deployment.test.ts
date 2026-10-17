@@ -166,7 +166,7 @@ it("recovers chunk failures only after a confirmed deployment and never during a
   router.getSnapshot().state = "submitting";
   events.dispatchEvent(new Event("vite:preloadError"));
   expect(fetcher).not.toHaveBeenCalled();
-  router.getSnapshot().state = "idle";
+  router.getSnapshot().state = "loading";
   events.dispatchEvent(new Event("vite:preloadError"));
   await vi.waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
 });
@@ -209,6 +209,7 @@ it("reloads the document when a failed chunk has already committed its URL", asy
   const { router, location, options, events } = setup("new");
   router.dispose();
   cleanups.push(watchDeployment(router, { ...options, reload: undefined }));
+  router.getSnapshot().state = "loading";
   events.dispatchEvent(new Event("vite:preloadError"));
   await vi.waitFor(() => expect(location.reload).toHaveBeenCalledTimes(1));
 });
@@ -229,4 +230,45 @@ it("recovers bootstrap failures before mounting and shares the reload-loop safeg
   ).toBe(false);
   fetcher.mockResolvedValue(Response.json({ version: "old" }));
   expect(await recoverDeployment(options)).toBe(false);
+});
+
+it("leaves intent-prefetch failures idle until a click records its destination", async () => {
+  const { router, events, fetcher, reload, storage } = setup("new");
+
+  events.dispatchEvent(new Event("vite:preloadError"));
+  await Promise.resolve();
+
+  expect(fetcher).not.toHaveBeenCalled();
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+
+  await router.navigate("/next?security#settings");
+
+  expect(reload).toHaveBeenCalledOnce();
+  expect(reload.mock.calls[0][0].href).toBe(
+    "https://app.test/next?security#settings",
+  );
+});
+
+it("preserves the newest click after prefetch failure and overlapping navigation", async () => {
+  const { router, events, fetcher, reload } = setup();
+  let resolve!: (response: Response) => void;
+  fetcher.mockReturnValue(
+    new Promise<Response>((done) => {
+      resolve = done;
+    }),
+  );
+
+  events.dispatchEvent(new Event("vite:preloadError"));
+  const first = router.navigate("/first");
+  router.getSnapshot().state = "loading";
+  events.dispatchEvent(new Event("vite:preloadError"));
+  const last = router.navigate("/next");
+
+  resolve(Response.json({ version: "new" }));
+  await Promise.all([first, last]);
+
+  expect(fetcher).toHaveBeenCalledOnce();
+  expect(reload).toHaveBeenCalledOnce();
+  expect(reload.mock.calls[0][0].pathname).toBe("/next");
 });

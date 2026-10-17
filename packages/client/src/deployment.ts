@@ -73,7 +73,9 @@ export function watchDeployment(
   };
 
   const preloadError = () => {
-    if (router.getSnapshot().state === "submitting") return;
+    // Intent prefetch is speculative: it must not reload the current page or
+    // consume the recovery marker before a click records its destination.
+    if (router.getSnapshot().state !== "loading") return;
 
     const current = sequence;
     const target = destination;
