@@ -18,7 +18,7 @@ export function routePreloads(
 
   return [
     ...(route?.styles ?? []).map(
-      (file) => `<${prefix}/${file}>; rel=preload; as=style`,
+      (file) => `<${prefix}/${file}>; rel=preload; as=style; crossorigin`,
     ),
     ...(route?.files ?? []).map(
       (file) => `<${prefix}/${file}>; rel=modulepreload`,

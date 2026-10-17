@@ -58,7 +58,7 @@ it("preloads only the first matching route's files under the configured asset ba
   ];
 
   expect(routePreloads(routes, "/items/new", "/app/")).toBe(
-    "</app/assets/new.css>; rel=preload; as=style, </app/assets/new.js>; rel=modulepreload",
+    "</app/assets/new.css>; rel=preload; as=style; crossorigin, </app/assets/new.js>; rel=modulepreload",
   );
   expect(routePreloads(routes, "/items/42", "https://cdn.example/app/")).toBe(
     "<https://cdn.example/app/assets/item.js>; rel=modulepreload, <https://cdn.example/app/assets/shared.js>; rel=modulepreload",

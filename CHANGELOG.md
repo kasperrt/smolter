@@ -5,7 +5,7 @@
 - Add opt-in `earlyHydration: true` to Preact `renderApplication`: hydrate the shell before optional nested loader promises settle, using Preact Suspense and independently streamed values/errors. Default hydration timing is unchanged.
 - Preserve shared promise identity, nonce-aware script serialization and the renderer's streaming container. Reject unfinished values when the document stream ends or the router is disposed; cancel server readers on disconnect.
 - Add production regressions for interaction and input retention during a 1,500 ms delay, independent deferred boundaries, rejection, one-time mutation, navigation before settlement, injected head nodes and CSP nonces. These are fixture results, not Vibes performance or device sign-off.
-- Include matched-route CSS in generated asset manifests and stylesheet preload hints. Keep transitive JavaScript dependencies discoverable and optional dynamic imports lazy. Preload hints do not apply styles or imply a measured latency improvement.
+- Include matched-route CSS in generated asset manifests and stylesheet preload hints using Vite’s anonymous CORS mode. Verify cross-origin preload reuse in Chromium. Keep transitive JavaScript dependencies discoverable and optional dynamic imports lazy. Preload hints do not apply styles or imply a measured latency improvement.
 - Update SSR and loading documentation, including removal of stale claims that the Express adapter buffers responses.
 
 ## 0.3.5
