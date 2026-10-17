@@ -1,4 +1,4 @@
-import type { NavigationRouter } from "@smolter/core";
+import type { NavigationRouter, Router } from "@smolter/core";
 import { deploymentCheck } from "./deployment-check.ts";
 
 /** Build identity and the fresh, non-cacheable manifest URL emitted by deploymentPlugin. */
@@ -11,7 +11,7 @@ export interface DeploymentOptions {
   reload?: (destination: URL) => void;
 }
 
-/** Check for deployment changes before navigation. Returns a cleanup function. */
+/** Check for deployment changes before navigation. Install before creating fetchers. Returns a cleanup function. */
 export function watchDeployment(
   router: NavigationRouter,
   options: DeploymentOptions | null,
@@ -26,7 +26,31 @@ export function watchDeployment(
   let sequence = 0;
   let stopped = false;
   let replay = false;
+  let mutations = 0;
+  const dataRouter = router as NavigationRouter &
+    Partial<Pick<Router, "createFetcher">>;
+  const createFetcher = dataRouter.createFetcher;
+  const guardedFetcher =
+    createFetcher &&
+    (() => {
+      const fetcher = createFetcher();
+      const submit = fetcher.submit;
+
+      fetcher.submit = (...args) => {
+        sequence++;
+        mutations++;
+
+        return submit(...args).finally(() => {
+          mutations--;
+        });
+      };
+
+      return fetcher;
+    });
+
+  if (guardedFetcher) dataRouter.createFetcher = guardedFetcher;
   const valid = (current: number) => current === sequence && !stopped;
+  const canReload = (current: number) => valid(current) && mutations === 0;
   const unsubscribe = router.subscribe(() => {
     if (read().state === "submitting") sequence++;
   });
@@ -42,7 +66,7 @@ export function watchDeployment(
         target.search !== currentURL.search) &&
       (await changed())
     ) {
-      if (!valid(current) || (await reload(target, () => valid(current))))
+      if (!valid(current) || (await reload(target, () => canReload(current))))
         return;
     }
 
@@ -65,7 +89,7 @@ export function watchDeployment(
     event.stopImmediatePropagation();
     void changed().then(async (updated) => {
       if (!valid(current)) return;
-      if (updated && (await reload(target, () => valid(current)))) return;
+      if (updated && (await reload(target, () => canReload(current)))) return;
       if (!valid(current)) return;
 
       replay = true;
@@ -88,7 +112,7 @@ export function watchDeployment(
         return reload(
           target,
           () =>
-            valid(current) &&
+            canReload(current) &&
             read().state !== "submitting" &&
             read().url === target.href,
         );
@@ -103,6 +127,8 @@ export function watchDeployment(
     window.removeEventListener("popstate", pop, true);
     window.removeEventListener("vite:preloadError", preloadError);
 
+    if (dataRouter.createFetcher === guardedFetcher)
+      dataRouter.createFetcher = createFetcher;
     if (router.navigate === guarded) router.navigate = navigate;
     if (router.dispose === guardedDispose) router.dispose = dispose;
   }

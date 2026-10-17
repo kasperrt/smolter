@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1
+
+- Invalidate pending deployment recovery when an independent fetcher submits. Prevent recovery reloads while any tracked fetcher submission is pending, without blocking ordinary client navigation. Install the watcher before creating fetchers; mountApplication already does this.
+- Add regressions for two fetcher mutations completing before an older manifest check, overlapping pending submissions, unused recovery markers, later recovery, and watcher cleanup. These deterministic tests do not establish the complete streaming/offline browser matrix.
+- Clarify that root stylesheet URL imports rely on rendered stylesheet links and are outside route CSS discovery. Empty route styles arrays are expected in that setup; explicit host preload hints should be justified by measurements.
+
 ## 0.4.0
 
 - Add opt-in `earlyHydration: true` to Preact `renderApplication`: hydrate the shell before optional nested loader promises settle, using Preact Suspense and independently streamed values/errors. Default hydration timing is unchanged.
