@@ -1,8 +1,11 @@
 import { version } from "../../../package.json";
 import sizes from "./size.json";
+import { comparisonRows, createSizeTable, entryRows } from "./size-table";
 import type { ElementFactory, LinkFactory, ShellProps } from "./types";
 
 export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
+  const SizeTable = createSizeTable(h);
+
   function Brand(renderLink = link) {
     return renderLink(
       "/",
@@ -56,6 +59,37 @@ export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
         "Typed data, forms without page reloads, and revalidation you control. For React and Preact, in the browser or on the server.",
       ),
       renderLink("/docs/getting-started", "Get started →", "landing-link"),
+      h("h3", null, "Choose what you ship."),
+      h(
+        "p",
+        null,
+        "Import from @kasperrt/smolter/react or /preact. createRouter keeps navigation lean; createDataRouter adds loaders, actions and fetchers.",
+      ),
+      SizeTable(
+        "Entry points · gzip bytes",
+        ["Browser bundle", "React", "Preact"],
+        entryRows,
+      ),
+      h(
+        "p",
+        null,
+        "Optional /client handles browser transport or hydration; /document and /lazy-route add application features. /server and /vite belong in server and build code, not the browser.",
+      ),
+      SizeTable(
+        "Same measurement tools · gzip bytes",
+        ["Selected API", "React", "Preact"],
+        comparisonRows,
+      ),
+      h(
+        "p",
+        { className: "size-method" },
+        "Production ESM, esbuild + Terser, gzip level 9. Framework runtimes excluded; library dependencies included. Rows overlap and are not additive. API capabilities differ; React Router has no dedicated Preact entry.",
+      ),
+      renderLink(
+        "/docs/bundle-size",
+        "Exports, versions & measurement method →",
+        "landing-link",
+      ),
     );
   }
 

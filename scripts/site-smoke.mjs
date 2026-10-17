@@ -41,6 +41,26 @@ page.on("pageerror", (error) => errors.push(error.message));
 
 const result = await (async () => {
   await page.goto(`${origin}/smolter/react/`);
+  const sizes = JSON.parse(readFileSync("packages/ui/src/size.json", "utf8"));
+  const entries = page.getByRole("table", {
+    name: "Entry points · gzip bytes",
+  });
+  const comparisons = page.getByRole("table", {
+    name: "Same measurement tools · gzip bytes",
+  });
+
+  assert((await entries.innerText()).includes(String(sizes.preactRouting)));
+  assert(
+    (await comparisons.innerText()).includes(String(sizes.reactRouterData)),
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  );
+  await page.setViewportSize({ width: 1280, height: 900 });
+
   await page
     .getByRole("heading", { name: "Data flow you can follow.", exact: true })
     .waitFor();

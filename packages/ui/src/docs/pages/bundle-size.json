@@ -20,6 +20,11 @@
       "code": ""
     },
     {
+      "title": "Comparison exports and versions",
+      "body": "Measured against wouter and wouter-preact 3.13.0, and react-router 8.4.0. React Router has no dedicated Preact export: its React API is measured here, not a Preact compatibility build. These APIs differ in capabilities; sizes are not claims of feature equivalence. All measurements use the same production minification and gzip settings.",
+      "code": "// React Router declarative subset\nBrowserRouter, Routes, Route, Link, useParams, useLocation\n\n// React Router data subset\ncreateBrowserRouter, RouterProvider, Link, Form, useLoaderData,\nuseActionData, useParams, useLocation, useRevalidator, useFetcher\n\n// Smolter routing subset\ncreateRouter, defineRoute, RouterProvider, Routes, Link, useParams, useLocation\n\n// Smolter data subset\ncreateDataRouter, defineRoute, RouterProvider, Routes, Link, Form,\nuseRouter, useLoaderData, useActionData, useParams, useLocation,\nuseRevalidator, useFetcher"
+    },
+    {
       "title": "Reproduce",
       "body": "pnpm size builds the package and measures production ESM with esbuild, Terser and gzip level 9. Runtime library dependencies are included; React, React DOM and Preact are external. Your own bundler and selected exports can produce different results.",
       "code": "pnpm size\npnpm size -- --breakdown"

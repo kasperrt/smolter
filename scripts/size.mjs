@@ -21,6 +21,8 @@ if (!process.argv.includes("--write-only")) {
   const sharedExports = commonExports;
   const shared = [sizes.reactCommon, sizes.preactCommon];
   const rows = [
+    ["React Router: declarative routing subset", sizes.reactRouterRouting],
+    ["React Router: data routing subset", sizes.reactRouterData],
     ["React: routing-only named exports", sizes.reactRouting],
     ["Preact: routing-only named exports", sizes.preactRouting],
     ["@kasperrt/smolter/react", sizes.react],

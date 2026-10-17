@@ -867,3 +867,37 @@ nav a.active {
   background: #bd1676;
   color: white;
 }
+
+.size-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-block: 1.5rem;
+}
+
+.size-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.size-table caption {
+  text-align: left;
+  font-weight: 700;
+  padding-bottom: 0.75rem;
+}
+
+.size-table th,
+.size-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid currentColor;
+  text-align: left;
+}
+
+.size-table td {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing .size-method {
+  font-size: 0.85rem;
+}

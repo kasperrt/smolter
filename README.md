@@ -567,6 +567,22 @@ This optional entry does not contribute to the base React bundle measurement.
 
 ## Size and checks
 
+| Need | Public import |
+| --- | --- |
+| Navigation only | `@kasperrt/smolter/react` or `/preact`, using `createRouter` |
+| Loaders, actions, forms and fetchers | Same entry, using `createDataRouter` |
+| Browser server-request transport | Renderer `/client` subpath |
+| Preact application hydration | `@kasperrt/smolter/preact/client` |
+| Preact document components | `@kasperrt/smolter/preact/document` |
+| Lazy Preact route modules | `@kasperrt/smolter/preact/lazy-route` |
+| Optional React resources | `@kasperrt/smolter/react/data` |
+| Server rendering / Vite integration | Renderer `/server` / `/vite` subpaths; keep out of browser imports |
+
+The measurements below describe retained exports, not the cost of an import
+statement. Browser transport rows include the router and transport together;
+application rows include the listed modules together. Server and Vite modules
+have no browser cost when kept in their intended server/build entrypoints.
+
 Use `createRouter` for navigation only, or `createDataRouter` for loaders,
 actions, fetchers and revalidation. Both are named exports from
 `@kasperrt/smolter/preact` and `/react`. No extra package or plugin is required.
@@ -581,6 +597,8 @@ a claim of identical features.
 <!-- size-comparison:start -->
 | Browser exports | Gzip bytes |
 | --- | ---: |
+| `React Router: declarative routing subset` | 12882 |
+| `React Router: data routing subset` | 29780 |
 | `React: routing-only named exports` | 1245 |
 | `Preact: routing-only named exports` | 1405 |
 | `@kasperrt/smolter/react` | 2873 |
@@ -604,6 +622,13 @@ The common-export rows measure the same named API set: `createDataRouter`,
 `useLoaderData`, `useActionData`, `useParams`, `useLocation`,
 `useRevalidator` and `useFetcher`. Preact’s link and submission APIs currently
 have additional behavior; equal names do not imply identical implementations.
+React Router's declarative subset retains `BrowserRouter`, `Routes`, `Route`,
+`Link`, `useParams`, and `useLocation`. Its data subset retains
+`createBrowserRouter`, `RouterProvider`, `Link`, `Form`, `useLoaderData`,
+`useActionData`, `useParams`, `useLocation`, `useRevalidator`, and `useFetcher`.
+React Router has no dedicated Preact entry; these are React API measurements,
+not a Preact compatibility build. The selected APIs have different capabilities.
+
 The routing-only rows retain `createRouter`, `defineRoute`, `RouterProvider`,
 `Routes`, `Link`, `useParams` and `useLocation`. Full Preact also exposes richer
 application APIs. These tiers overlap: do not add the rows together.

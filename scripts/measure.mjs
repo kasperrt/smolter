@@ -77,6 +77,9 @@ export async function measureAdapters() {
     preactCommon,
     wouterRouting,
     wouterPreactRouting,
+    reactRouterRouting,
+    reactRouterData,
+    reactRouter,
   ] = await Promise.all([
     measure("./dist/react/index.js"),
     measure("./dist/preact/index.js"),
@@ -100,6 +103,27 @@ export async function measureAdapters() {
     measure("./dist/preact/index.js", commonExports),
     measure("wouter", wouterRoutingExports),
     measure("wouter-preact", wouterRoutingExports),
+    measure("react-router", [
+      "BrowserRouter",
+      "Routes",
+      "Route",
+      "Link",
+      "useParams",
+      "useLocation",
+    ]),
+    measure("react-router", [
+      "createBrowserRouter",
+      "RouterProvider",
+      "Link",
+      "Form",
+      "useLoaderData",
+      "useActionData",
+      "useParams",
+      "useLocation",
+      "useRevalidator",
+      "useFetcher",
+    ]),
+    measure("react-router"),
   ]);
 
   return {
@@ -116,5 +140,8 @@ export async function measureAdapters() {
     preactCommon,
     wouterRouting,
     wouterPreactRouting,
+    reactRouterRouting,
+    reactRouterData,
+    reactRouter,
   };
 }
