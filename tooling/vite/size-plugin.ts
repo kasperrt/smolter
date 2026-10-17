@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import type { Plugin } from "vite";
 
 export function measuredSize(): Plugin {
+  let write = true;
   const root = resolve(import.meta.dirname, "../..");
   const update = () => {
     execFileSync(
@@ -14,7 +15,13 @@ export function measuredSize(): Plugin {
 
   return {
     name: "measured-router-size",
-    buildStart: update,
+    configResolved(config) {
+      write = config.build.write;
+    },
+
+    buildStart() {
+      if (write) update();
+    },
 
     configureServer(server) {
       server.watcher.add(resolve(root, "packages"));
