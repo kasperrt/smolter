@@ -384,6 +384,16 @@ const result = await (async () => {
     }
   }
 
+  for (const slug of ["constructor", "__proto__", "missing-page"]) {
+    await page.goto(`${origin}/smolter/docs/${slug}`);
+    await page
+      .getByText("Documentation page not found", { exact: true })
+      .waitFor();
+    assert.equal(
+      await page.locator('meta[name="robots"]').getAttribute("content"),
+      "noindex,follow",
+    );
+  }
   assert.deepEqual(errors, []);
 })().then(
   () => ({ ok: true }),
