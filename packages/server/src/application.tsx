@@ -10,11 +10,14 @@ import type { AppRoute, RootModule } from "@smolter/preact/route-types";
 import { prepareRoutes, RouterApplication } from "@smolter/preact/router";
 import { loadRouter } from "@smolter/server";
 import { renderToReadableStream } from "preact-render-to-string/stream";
+import { deferredHydration } from "./deferred-hydration.ts";
 import { privateResponse } from "./private-response.ts";
+import { progressiveDocument } from "./progressive-document.ts";
 import { resolveHydration, streamDocument } from "./stream-document.ts";
 
 export interface RenderApplicationOptions {
   nonce?: string;
+  earlyHydration?: boolean;
 }
 
 export async function renderApplication(
@@ -120,20 +123,7 @@ export async function renderApplication(
   }
 
   const snapshot = router.getSnapshot();
-  const stream = renderToReadableStream(
-    <RouterApplication
-      router={router}
-      routes={routes}
-      root={root}
-      rootModule={rootModule}
-      entry={entry}
-      rootError={Boolean(rootError)}
-      streaming
-      document
-    />,
-    options,
-  );
-  const hydration = resolveHydration({
+  const hydrationData = {
     root,
     snapshot: {
       ...snapshot,
@@ -144,7 +134,24 @@ export async function renderApplication(
       },
     },
     ...(rootError && { rootError: true }),
-  });
+  };
+  const deferred = options.earlyHydration
+    ? deferredHydration(hydrationData, options.nonce)
+    : undefined;
+  const stream = renderToReadableStream(
+    <RouterApplication
+      router={router}
+      routes={routes}
+      root={root}
+      rootModule={rootModule}
+      entry={entry}
+      rootError={Boolean(rootError)}
+      streaming
+      initialData={deferred?.initial}
+      document
+    />,
+    options,
+  );
   // The renderer reports the same rejection through its stream reader.
   void stream.allReady.catch(() => {});
   const headers = new Headers(actionResponse?.headers);
@@ -154,12 +161,17 @@ export async function renderApplication(
   headers.set("Cache-Control", "no-store");
 
   return new Response(
-    streamDocument(stream, {
-      hydration,
-      signal: request.signal,
-      nonce: options.nonce,
-      dispose: () => router.dispose(),
-    }),
+    deferred
+      ? progressiveDocument(stream, deferred.stream, {
+          signal: request.signal,
+          dispose: () => router.dispose(),
+        })
+      : streamDocument(stream, {
+          hydration: resolveHydration(hydrationData),
+          signal: request.signal,
+          nonce: options.nonce,
+          dispose: () => router.dispose(),
+        }),
     {
       status: snapshot.error
         ? Number("status" in snapshot.error ? snapshot.error.status : 500)

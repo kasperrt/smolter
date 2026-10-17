@@ -8,6 +8,11 @@
       "title": "Fields",
       "body": "nonce applies to the streaming hydration scripts. Use the same nonce on Scripts and in the document Content-Security-Policy. Preact SSR requires preact-render-to-string 6.8.1 or newer.",
       "code": "return renderApplication(request, routes, root, entry, { nonce });"
+    },
+    {
+      "title": "Early hydration",
+      "body": "earlyHydration defaults to false. Set it to true to run the async browser entry after the initial shell arrives, while optional loader promises are pending. Use Suspense and Await for those values. Keep the same CSP nonce on Scripts and this renderer. Critical loader data still completes before the shell. Streamed value/error packets are an internal protocol; do not edit the hydration payload or inject application-owned body nodes.",
+      "code": "return renderApplication(request, routes, root, entry, {\n  earlyHydration: true,\n  nonce,\n});"
     }
   ]
 }

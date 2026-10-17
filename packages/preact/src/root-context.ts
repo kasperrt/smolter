@@ -8,6 +8,7 @@ export interface ApplicationContext {
   root: unknown;
   rootError?: boolean;
   streaming?: boolean;
+  initialData?: string;
   rootModule?: RootModule;
   hydration?: Hydration;
   entry?: string;

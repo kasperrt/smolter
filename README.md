@@ -607,8 +607,8 @@ a claim of identical features.
 | `@kasperrt/smolter/preact` | 4842 |
 | `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4104 |
 | `@kasperrt/smolter/preact + server transport` | 5950 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 8607 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 8890 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 8949 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9227 |
 | `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
 | `React: common routing/data exports` | 2761 |
 | `Preact: common routing/data exports` | 3046 |
@@ -748,14 +748,23 @@ import { mountApplication } from "@kasperrt/smolter/preact/client";
 await mountApplication(routes, root, { deployment });
 ```
 
-Preact SSR starts root and route loaders concurrently. Return nested promises and render them with `Await` inside `Suspense` to stream a shell before optional data resolves. The Node/Express adapter streams the response; hydration starts after the document stream finishes. Root-loader failures render the root error boundary. Vite development HTML transformation still buffers the document.
+Preact SSR starts root and route loaders concurrently. Return nested promises and render them with `Await` inside `Suspense` to stream a shell before optional data resolves. The Node/Express adapter streams the response; hydration starts after the document stream finishes by default. Pass `{ earlyHydration: true }` to `renderApplication` to hydrate the shell while optional promises stream independently. Root-loader failures render the root error boundary. Vite development HTML transformation still buffers the document.
 
 Successful action redirects refresh registered root data without replaying the mutation. Loader arguments expose `reason` to distinguish initial loads, navigation, revalidation and fetcher reads without comparing browser URLs.
 
 
 ### Document hydration and injected tags
 
-Preact hydrates the complete document after the response finishes. A streamed shell is visible before optional data settles, but event handlers are not active yet. Measure a successful interaction rather than treating TTFB or DOMContentLoaded as hydration completion.
+Preact hydrates after document completion by default. For an interactive shell while optional data is pending:
+
+```ts
+return renderApplication(request, routes, root, entry, {
+  earlyHydration: true,
+  nonce,
+});
+```
+
+Keep optional nested promises inside `Suspense` and `Await`. The browser entry runs asynchronously; each deferred result settles without rerunning the initial loader. Required top-level loader data still blocks the shell. Use production streaming hosting; Vite development HTML transformation buffers. Measure a successful interaction rather than treating TTFB or DOMContentLoaded as hydration completion.
 
 Infrastructure that injects direct children of `<head>` can mark those external nodes with `data-smolter-preserve`. Smolter excludes them from positional hydration and restores the same nodes afterward. Do not also render them in the application layout. Unmarked HTML rewriting, body injection and changes to the hydration payload are not supported.
 
@@ -764,3 +773,8 @@ Infrastructure that injects direct children of `<head>` can mark those external 
 ```
 
 The generated route asset manifest follows static imports for each route and leaves optional dynamic imports lazy. Serve the matched route's preload hints with the correct asset base; do not preload every route to reduce a waterfall. Chunk counts and total emitted bytes alone do not establish initial-load latency.
+
+
+### Matched-route asset hints
+
+The file-router build emits `.vite/route-assets.json` with each route's static JavaScript dependency closure and its CSS in `styles`. `routePreloads` from `@kasperrt/smolter/utils/assets` produces modulepreload hints for JavaScript and `preload; as=style` hints for CSS, respecting your CDN/base URL. Set these hints on the document response or send Early Hints from your host. Stylesheet preloads fetch files; they do not apply styles. Keep the application stylesheet links and Vite's CSS handling in place. Optional dynamic imports are excluded, and unrelated routes stay lazy.

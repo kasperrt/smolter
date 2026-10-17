@@ -5,9 +5,9 @@
   "kind": "Guides",
   "sections": [
     {
-      "title": "Streaming is not early interactivity",
-      "body": "The Preact shell can be visible while deferred data is pending, but mountApplication hydrates only after the document stream completes. An event-handler button cannot respond before then. TTFB and DOMContentLoaded are not measures of hydration completion. Test a successful interaction with deliberately delayed data; do not claim progressive hydration or lower LCP from smaller bundles alone.",
-      "code": ""
+      "title": "Interactive shells with deferred data",
+      "body": "Preact renderApplication accepts earlyHydration: true. The browser hydrates the shell while optional nested promises remain pending. Each promise settles independently through the document stream; Await updates its Suspense boundary without rerunning the initial loader. The default still hydrates after document completion. This option requires streaming production hosting: Vite development HTML transformation buffers the document. Measure a successful interaction, not just TTFB or DOMContentLoaded.",
+      "code": "return renderApplication(request, routes, root, entry, {\n  earlyHydration: true,\n  nonce,\n});"
     },
     {
       "title": "Load on the server",
@@ -31,7 +31,7 @@
     },
     {
       "title": "Deferred Preact documents",
-      "body": "renderApplication starts root and route loaders concurrently and streams the shell with Suspense fallbacks. Keep optional work as nested promises and consume it with Await. The final snapshot is installed before hydration begins. Top-level loader failures render their route or root boundary; root failures retain root-boundary ownership during hydration.",
+      "body": "renderApplication starts root and route loaders concurrently. Top-level loader promises determine the initial data and HTTP status; nested promises can remain pending. Consume them with Suspense and Await. With earlyHydration enabled, pending references arrive with the shell and deferred successes or failures settle in the browser independently. A request that closes before settlement rejects unfinished values. Root-loader failures retain root-boundary ownership during hydration. Errors after headers are sent cannot change the HTTP status.",
       "code": ""
     },
     {

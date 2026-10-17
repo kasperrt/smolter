@@ -1,13 +1,17 @@
 /** @jsxImportSource preact */
-import { Outlet, useLoaderData } from "@smolter/preact";
+import { Link, Outlet, useFetcher, useLoaderData } from "@smolter/preact";
 import { Suspense, useState } from "preact/compat";
 import { Await } from "../../packages/preact/src/await.tsx";
 import { Document, Scripts } from "../../packages/preact/src/document.tsx";
 import type { RootModule } from "../../packages/preact/src/route-types.ts";
 
 export function StreamingPage() {
-  const data = useLoaderData<{ detail: string | Promise<string> }>();
+  const data = useLoaderData<{
+    detail: string | Promise<string>;
+    later?: Promise<string>;
+  }>();
   const [count, setCount] = useState(0);
+  const fetcher = useFetcher<number>();
 
   return (
     <main>
@@ -17,6 +21,17 @@ export function StreamingPage() {
           {(detail) => <p>{detail}</p>}
         </Await>
       </Suspense>
+      {data?.later && (
+        <Suspense fallback={<p>Pending later</p>}>
+          <Await resolve={data.later}>{(value) => <p>{value}</p>}</Await>
+        </Suspense>
+      )}
+      <Link to="/other">Other route</Link>
+      <fetcher.Form method="post" action="/">
+        <button>Save</button>
+        <output aria-label="Saved">{fetcher.data ?? 0}</output>
+      </fetcher.Form>
+      <input aria-label="Draft" defaultValue="" />
       <button onClick={() => setCount(count + 1)}>Count {count}</button>
     </main>
   );
@@ -31,6 +46,7 @@ export const streamingRoot: RootModule = {
         <style id="app-style">{"main { color: rgb(20, 30, 40); }"}</style>
         <script
           id="app-script"
+          nonce="stream-test"
           dangerouslySetInnerHTML={{
             __html: "window.appRuns = (window.appRuns || 0) + 1",
           }}
@@ -38,7 +54,7 @@ export const streamingRoot: RootModule = {
       </head>
       <body>
         {children}
-        <Scripts />
+        <Scripts nonce="stream-test" />
       </body>
     </Document>
   ),

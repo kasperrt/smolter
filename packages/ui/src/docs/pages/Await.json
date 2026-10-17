@@ -21,7 +21,7 @@
     },
     {
       "title": "Server rendering",
-      "body": "Await does not start requests. With renderApplication, nested loader promises remain pending during SSR: wrap Await in Suspense to stream a fallback. Hydration begins after the stream and its JSON snapshot complete. Route-data HTTP transport still resolves deferred fields before JSON serialization.",
+      "body": "Await does not start requests. With renderApplication, nested loader promises remain pending during SSR: wrap Await in Suspense to stream a fallback. By default, hydration begins after the document completes. Set renderApplication options.earlyHydration to true to hydrate the shell before optional promises settle. Route-data HTTP transport still resolves deferred fields before JSON serialization.",
       "code": ""
     }
   ]

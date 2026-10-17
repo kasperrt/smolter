@@ -999,3 +999,25 @@ test("page actions can return a non-JSON HTTP response directly", async () => {
   assert.equal(response.headers.get("Content-Type"), "text/plain");
   assert.equal(await response.text(), "Exported");
 });
+
+test("early hydration includes pending references and an async entry in the initial shell", async () => {
+  const response = await renderApplication(
+    new Request("http://local/"),
+    [
+      {
+        path: "/",
+        default: () => null,
+        loader: () => ({ detail: Promise.resolve("ready") }),
+      },
+    ],
+    root,
+    "/entry.js",
+    { earlyHydration: true, nonce: "test-nonce" },
+  );
+  const html = await response.text();
+
+  assert.match(html, /__smolterPending/);
+  assert.match(html, /type="module" async/);
+  assert.match(html, /\[0,"ready",null\]/);
+  assert.match(html, /nonce="test-nonce"/);
+});
