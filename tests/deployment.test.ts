@@ -614,3 +614,58 @@ it("restores methods before watcher reinstallation and ignores the disposed prob
   );
   expect(fetcher).toHaveBeenCalledTimes(2);
 });
+
+it("replaces a watcher without stacking methods or letting old cleanup restore stale wrappers", async () => {
+  const { router, options, fetcher, reload, storage } = setup();
+  const stopOld = cleanups.pop()!;
+  const stopNew = watchDeployment(router, options);
+  cleanups.push(stopNew);
+  const current = router.navigate;
+  stopOld();
+  expect(router.navigate).toBe(current);
+  await router.navigate("/next?current=1#scope");
+  expect(router.getSnapshot().url).toBe(
+    "https://app.test/next?current=1#scope",
+  );
+  expect(fetcher).toHaveBeenCalledOnce();
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+  stopNew();
+  await router.navigate("/?restored=1");
+  expect(router.getSnapshot().url).toBe("https://app.test/?restored=1");
+  expect(fetcher).toHaveBeenCalledOnce();
+});
+
+it("preserves pending mutation protection and navigation ownership across watcher replacement", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { options, reload, storage } = setup("new");
+  let finish!: () => void;
+  const action = vi.fn(
+    () =>
+      new Promise<void>((done) => {
+        finish = done;
+      }),
+  );
+  const router = createDataRouter([{ path: "/", action }, { path: "/next" }], {
+    url: "https://app.test/",
+  });
+  const old = watchDeployment(router, options);
+  const fetcher = router.createFetcher();
+  const pending = fetcher.submit("/", new FormData());
+  const current = watchDeployment(router, options);
+  cleanups.push(current);
+  const navigation = router.navigate("/next?protected=1#scope");
+  old();
+  await navigation;
+  expect(router.getSnapshot().url).toBe(
+    "https://app.test/next?protected=1#scope",
+  );
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+  finish();
+  await pending;
+  expect(action).toHaveBeenCalledOnce();
+  await router.navigate("/next?eligible=1#scope");
+  expect(reload).toHaveBeenCalledOnce();
+  expect(storage.size).toBe(1);
+});

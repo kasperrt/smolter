@@ -22,7 +22,7 @@ export { configureApplication } from "@smolter/core/environment";
 export interface MountApplicationOptions {
   hash?: boolean;
   deployment?: DeploymentOptions | null;
-  /** Maximum wait for initial deferred data, in milliseconds. Defaults to 30,000. */
+  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000. */
   deferredTimeout?: number;
 }
 

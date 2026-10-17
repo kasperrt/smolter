@@ -12,8 +12,10 @@ export interface DeferredWindow extends Window {
 
 /** Restore promise identity before hydrating Suspense boundaries. */
 export function readHydration(json: string, timeout = 30_000) {
-  if (!(timeout >= 1 && timeout <= 2_147_483_647))
-    throw new RangeError("deferredTimeout must be between 1 and 2147483647 ms");
+  if (!Number.isInteger(timeout) || timeout < 1 || timeout > 2_147_483_647)
+    throw new RangeError(
+      "deferredTimeout must be an integer between 1 and 2147483647 ms",
+    );
 
   const pending = new Map<number, PendingValue>();
   const queue = ((window as DeferredWindow).__smolterDeferred ??= []);

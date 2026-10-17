@@ -23,17 +23,22 @@ for (const mode of [
   "opposite",
   "nested",
   "root",
+  "root-first",
+  "repeat",
+  "reject-after",
   "revalidate",
   "history",
   "disconnect",
+  "disconnect-real",
   "preact-only",
 ]) {
   const pure = mode === "preact-only";
+  const disconnect = mode.startsWith("disconnect");
   test(`retains only owned streaming content: ${mode}`, async ({ page }) => {
     const output = await mkdtemp(join(tmpdir(), "smolter-ownership-"));
     const result = await build({
       configFile: false,
-      define: { DEFERRED_TIMEOUT: mode === "disconnect" ? "2000" : "30000" },
+      define: { DEFERRED_TIMEOUT: disconnect ? "2000" : "30000" },
       logLevel: "silent",
       build: {
         outDir: output,
@@ -70,7 +75,7 @@ for (const mode of [
     let documentResponse: ServerResponse | undefined;
     let aborted = 0;
     let rootLoads = 0;
-    const hasRoot = ["root", "revalidate"].includes(mode);
+    const hasRoot = ["root", "root-first", "revalidate"].includes(mode);
     const rootLoader = () => {
       rootLoads++;
       return { optional: hasRoot ? rootPending : undefined };
@@ -85,7 +90,7 @@ for (const mode of [
           return {
             optional:
               loads === 1
-                ? mode === "nested"
+                ? ["nested", "reject-after"].includes(mode)
                   ? Promise.resolve({ nested })
                   : optional
                 : "Current route content",
@@ -182,7 +187,9 @@ for (const mode of [
         );
         await expect(
           page.getByText(
-            mode === "nested" ? "Nested data pending" : "Optional data pending",
+            ["nested", "reject-after"].includes(mode)
+              ? "Nested data pending"
+              : "Optional data pending",
             { exact: true },
           ),
         ).toBeVisible();
@@ -213,11 +220,11 @@ for (const mode of [
             page.getByText("Current root content", { exact: true }),
           ).toBeVisible();
         }
-        if (mode === "disconnect") {
+        if (disconnect) {
           documentResponse!.destroy();
           await expect.poll(() => aborted).toBe(1);
           await expect.poll(() => failedRequests.length).toBeGreaterThan(0);
-          await page.clock.runFor(2001);
+          if (mode === "disconnect") await page.clock.runFor(2001);
           await test.info().attach("interrupted-document", {
             body: JSON.stringify({
               failedRequests,
@@ -258,6 +265,40 @@ for (const mode of [
             page.getByRole("heading", { name: "Destination ready" }),
           ).toBeVisible();
         }
+        if (mode === "repeat") {
+          for (let index = 0; index < 3; index++) {
+            await page
+              .getByRole("button", { name: "Return", exact: true })
+              .click();
+            await expect(
+              page.getByText("Current route content", { exact: true }),
+            ).toBeVisible();
+            await page
+              .getByRole("button", { name: "Navigate", exact: true })
+              .click();
+            await expect(
+              page.getByRole("heading", { name: "Destination ready" }),
+            ).toBeVisible();
+          }
+        }
+        if (mode === "reject-after") fail(new Error("Abandoned rejection"));
+        if (mode === "root-first") {
+          rootSettle("Original root content");
+          await expect(
+            page
+              .getByRole("main")
+              .getByText("Original root content", { exact: true }),
+          ).toBeVisible();
+          await expect(
+            page.getByRole("heading", { name: "Destination ready" }),
+          ).toBeVisible();
+          await expect(
+            page.getByText("Optional data pending", { exact: true }),
+          ).toHaveCount(0);
+          await expect(
+            page.getByText("Old resolved content", { exact: true }),
+          ).toHaveCount(0);
+        }
         if (!pure) await page.getByLabel("Persistent draft").focus();
         if (pure)
           await page.evaluate(() =>
@@ -265,12 +306,22 @@ for (const mode of [
           );
         settle("Old resolved content");
         secondSettle("Second resolved content");
-        if (mode === "root")
+        if (mode === "root") {
+          await expect(
+            page.getByRole("heading", { name: "Destination ready" }),
+          ).toBeVisible();
+          await expect(
+            page.getByText("Optional data pending", { exact: true }),
+          ).toHaveCount(0);
+          await expect(
+            page.getByText("Old resolved content", { exact: true }),
+          ).toHaveCount(0);
           await expect(
             page.getByText("Root data pending", { exact: true }),
           ).toBeVisible();
+        }
         rootSettle("Original root content");
-        if (mode !== "disconnect") await page.waitForLoadState("load");
+        if (!disconnect) await page.waitForLoadState("load");
         if (mode !== "return")
           await expect(
             page.getByRole("heading", { name: "Destination ready" }),
@@ -308,6 +359,9 @@ for (const mode of [
             .toHaveCount(0);
           expect(rootLoads).toBe(2);
         }
+        await expect(
+          page.getByText("Nested failed", { exact: true }),
+        ).toHaveCount(0);
         expect(errors).toEqual([]);
         if (!pure) {
           await expect(page.getByLabel("Persistent draft")).toHaveValue(
@@ -322,7 +376,13 @@ for (const mode of [
                 new URL(page.url()).search +
                 new URL(page.url()).hash,
             ).toBe("/destination?pending=1#scope");
-          expect(loads).toBe(["return", "history"].includes(mode) ? 2 : 1);
+          expect(loads).toBe(
+            mode === "repeat"
+              ? 4
+              : ["return", "history"].includes(mode)
+                ? 2
+                : 1,
+          );
           await expect(page.getByLabel("Persistent draft")).toBeFocused();
         }
       })

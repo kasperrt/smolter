@@ -64,9 +64,9 @@
         "brotli": 3792
       },
       "candidate": {
-        "raw": 10598,
-        "gzip": 4199,
-        "brotli": 3807
+        "raw": 10818,
+        "gzip": 4281,
+        "brotli": 3889
       }
     },
     {
@@ -77,9 +77,9 @@
         "brotli": 5509
       },
       "candidate": {
-        "raw": 15883,
-        "gzip": 6045,
-        "brotli": 5512
+        "raw": 16106,
+        "gzip": 6110,
+        "brotli": 5581
       }
     },
     {
@@ -90,9 +90,9 @@
         "brotli": 8230
       },
       "candidate": {
-        "raw": 25046,
-        "gzip": 9158,
-        "brotli": 8348
+        "raw": 25297,
+        "gzip": 9237,
+        "brotli": 8421
       }
     },
     {
@@ -103,9 +103,9 @@
         "brotli": 8486
       },
       "candidate": {
-        "raw": 25934,
-        "gzip": 9437,
-        "brotli": 8602
+        "raw": 26185,
+        "gzip": 9522,
+        "brotli": 8676
       }
     },
     {
@@ -129,9 +129,9 @@
         "brotli": 5426
       },
       "candidate": {
-        "raw": 15777,
-        "gzip": 6086,
-        "brotli": 5526
+        "raw": 16025,
+        "gzip": 6153,
+        "brotli": 5586
       }
     },
     {
@@ -175,6 +175,26 @@
         "gzip": 2211,
         "brotli": 1989
       }
+    },
+    {
+      "name": "Preact application including runtime",
+      "baseline": {
+        "raw": 42548,
+        "gzip": 16046,
+        "brotli": 14602
+      },
+      "candidate": {
+        "raw": 43078,
+        "gzip": 16253,
+        "brotli": 14741
+      }
     }
-  ]
+  ],
+  "dependencyStatus": {
+    "preact": "11.0.1",
+    "preact-render-to-string": "6.8.1",
+    "ownership": "known failing; upstream fix unpublished",
+    "baseline": "registry 0.4.1; framework-external values match previously rebuilt baseline",
+    "completeApplication": "all application exports bundled including published Preact runtime; not an initial-route transfer measurement"
+  }
 }
