@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.3.0
+
+### Migration from 0.2.0
+
+- **Breaking:** use `createDataRouter` for loaders, actions, fetchers and revalidation. `createRouter` now creates a navigation-only router. Framework imports remain `@kasperrt/smolter/react` and `@kasperrt/smolter/preact`.
+- **Breaking:** the Preact adapter requires Preact 11.0.1 or newer.
+- Optional Preact application helpers use explicit `/preact/client`, `/preact/document`, `/preact/lazy-route` and `/preact/server` entry points. Server code and Vite tooling remain outside browser bundles.
+
+### Added
+
+- Navigation-only engines that tree-shake out data handling: 1,245 B React and 1,405 B Preact gzip with the documented routing subset.
+- Preact application SSR and hydration, lazy flat routes, retained route content while loading, prefetching, and controlled view transitions.
+- Express-compatible request/response helpers and documented Vite virtual-module and entry-file contracts.
+- Route-targeted revalidation, including explicitly configured root data, and independent fetcher reads.
+- Optional React resource hooks through `/react/data`.
+- Detailed guides for routing, handlers, forms, fetchers, SSR, Express, bundle sizes and every public export.
+
+### Fixed and improved
+
+- Serialize Preact fetcher GET submissions into the destination query without navigating or invoking an action.
+- Share form submission and navigation interception logic between adapters.
+- Preserve cancellation, error hydration and stable data during navigation and revalidation.
+- Separate example handler and boundary files; use route-appropriate loading placeholders.
+- Build the publishable package and site through Vite with preserved module boundaries, production smoke tests and 100% implementation line coverage.
+- Generate honest size comparisons for routing-only, data, transport and application entry points.
+
 ## 0.2.0
 
 - Breaking: choose `@kasperrt/smolter/react` or `@kasperrt/smolter/preact` for routing APIs and types.

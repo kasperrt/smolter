@@ -1,0 +1,18 @@
+{
+  "slug": "RouteData",
+  "title": "RouteData",
+  "summary": "Derive data from a Preact loader or action type.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "For a function type, takes its awaited return type, excludes Response and Error, and unwraps DataResponse<T> to T. For a non-function type, uses that type unchanged.",
+      "code": "import type { RouteData } from \"@kasperrt/smolter/preact\";\n\nimport type { loader } from \"../routes/tasks/loader\";\n\nexport type TasksData = RouteData<typeof loader>;"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Use type-only handler imports in browser modules. A raw Response does not carry an inferable JSON payload type; return plain data or data(...) when inferred hook types are needed. This helper does not recursively Await nested fields.",
+      "code": ""
+    }
+  ]
+}

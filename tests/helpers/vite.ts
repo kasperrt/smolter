@@ -2,13 +2,16 @@ import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { type FileRouterOptions, fileRouter } from "@smolter/vite";
-import { createServer } from "vite";
+import { createServer, type Plugin } from "vite";
 import type { TestContext } from "vitest";
+
+type RouterPluginFactory = (options: FileRouterOptions) => Plugin;
 
 export async function viteFixture(
   context: TestContext,
   source: string,
   options: FileRouterOptions = {},
+  createPlugin: RouterPluginFactory = fileRouter,
 ) {
   const root = await realpath(await mkdtemp(join(tmpdir(), "smolter-vite-")));
   const directory = join(root, "src/routes");
@@ -27,7 +30,7 @@ export async function viteFixture(
     root,
     configFile: false,
     logLevel: "silent",
-    plugins: [fileRouter(options)],
+    plugins: [createPlugin(options)],
     resolve: {
       alias: {
         "@kasperrt/smolter/react/client": resolve(

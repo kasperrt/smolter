@@ -1,0 +1,28 @@
+{
+  "slug": "preactConfig",
+  "title": "preactConfig",
+  "summary": "Shared Vite resolution settings for Preact application builds.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "A UserConfig object; merge it with your configuration if not using applicationPlugins.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Aliases React-compatible library imports to Preact and deduplicates Preact. It also supplies SSR and dependency optimization settings.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Shared Vite resolution settings for Preact application builds.",
+      "code": "export default mergeConfig(preactConfig, { build: { manifest: true } });"
+    },
+    {
+      "title": "Behavior and limits",
+      "body": "applicationPlugins applies these settings automatically. The configuration belongs in Vite, not a browser entry.",
+      "code": ""
+    }
+  ]
+}

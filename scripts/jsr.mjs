@@ -12,10 +12,16 @@ if (publish && process.env.GITHUB_ACTIONS !== "true") {
 
 execFileSync("pnpm", ["build"], { stdio: "inherit" });
 
-const source = new URL("../packages/smolter/", import.meta.url);
+const source = new URL("../", import.meta.url);
 const directory = mkdtempSync(join(tmpdir(), "smolter-jsr-"));
 
-for (const file of ["src", "jsr.json", "README.md", "LICENSE"]) {
+for (const file of [
+  ".generated",
+  "jsr.json",
+  "README.md",
+  "CHANGELOG.md",
+  "LICENSE",
+]) {
   cpSync(new URL(file, source), join(directory, file), { recursive: true });
 }
 

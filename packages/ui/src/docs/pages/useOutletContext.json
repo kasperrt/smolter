@@ -1,0 +1,28 @@
+{
+  "slug": "useOutletContext",
+  "title": "useOutletContext",
+  "summary": "Read a typed value supplied by an ancestor Outlet.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Takes no runtime arguments. Specify the context shape as its type argument; TypeScript cannot infer a provider\u2019s type across the component tree.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns the nearest Outlet context cast to T. There is no runtime validation. Without a provider the value is undefined, so include undefined in T when a missing provider is an expected state.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Define the context contract once and import it in the layout and its children.",
+      "code": "import { Outlet, useOutletContext } from \"@kasperrt/smolter/preact\";\n\ninterface PageContext {\n  canEdit: boolean;\n}\n\nexport function Layout() {\n  return <Outlet context={{ canEdit: true }} />;\n}\n\nexport function EditStatus() {\n  const context = useOutletContext<PageContext>();\n\n  return <span>{context.canEdit ? \"Editable\" : \"Read only\"}</span>;\n}"
+    },
+    {
+      "title": "Inheritance",
+      "body": "Outlet inherits its ancestor context when its context prop is null or undefined. This is component context, not a second loader store. Keep server data in loaders and pass only the view contract needed by descendants.",
+      "code": ""
+    }
+  ]
+}

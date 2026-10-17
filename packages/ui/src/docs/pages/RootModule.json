@@ -1,0 +1,18 @@
+{
+  "slug": "RootModule",
+  "title": "RootModule",
+  "summary": "The application\u2019s shared root components, data, and metadata.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Provides default and Layout components, with optional loader, ErrorBoundary, links, meta, shouldRevalidate, id, and loaderPath. id defaults to root for registered root revalidation. loaderPath is an optional application-chosen URL for fetching root data again.",
+      "code": "import type { RootModule } from \"@kasperrt/smolter/preact\";\n\nimport Root from \"./root/route\";\nimport { Layout } from \"./root/layout\";\nimport { loader } from \"./root/loader\";\n\nexport const root: RootModule = {\n  default: Root,\n  Layout,\n  loader,\n};"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "The example defines a server root module. Do not import server-only loader dependencies into a browser entry; use the file-router integration or provide a browser-safe module separately. Root data is distinct from the active route\u2019s loader data.",
+      "code": ""
+    }
+  ]
+}

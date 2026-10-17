@@ -837,3 +837,33 @@ nav a.active {
 .docs-article h1:focus {
   outline: none;
 }
+
+.landing-workspace {
+  max-width: 680px;
+  padding: 24px 0 72px;
+}
+.landing h2 {
+  margin: 0 0 20px;
+  font-size: clamp(28px, 4vw, 42px);
+  letter-spacing: -1px;
+  line-height: 1.15;
+}
+.landing p {
+  max-width: 58ch;
+  margin-bottom: 16px;
+  font-size: 17px;
+}
+.landing-link {
+  display: inline-flex;
+  margin-top: 12px;
+  padding: 12px 20px;
+  border: 1px solid #a8126c;
+  border-radius: 6px;
+  background: var(--pink);
+  color: white;
+  font-weight: 600;
+}
+.landing-link:hover {
+  background: #bd1676;
+  color: white;
+}

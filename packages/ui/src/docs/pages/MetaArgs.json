@@ -1,0 +1,18 @@
+{
+  "slug": "MetaArgs",
+  "title": "MetaArgs",
+  "summary": "Data and URL information passed to a metadata function.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Provides data and loaderData aliases for the active route loader result, plus error, params, and location: URL. The generic uses RouteData<T>. Both data fields may be undefined.",
+      "code": "import type { MetaArgs } from \"@kasperrt/smolter/preact\";\n\ninterface Task {\n  title: string;\n}\n\nexport function titleFrom({ data }: MetaArgs<Task>): string {\n  return data?.title ?? \"Tasks\";\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Handle missing data and route errors. Root metadata used as a fallback receives the active snapshot arguments, not a separate root loader result.",
+      "code": ""
+    }
+  ]
+}

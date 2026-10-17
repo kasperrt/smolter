@@ -1,0 +1,28 @@
+{
+  "slug": "useRouteError",
+  "title": "useRouteError",
+  "summary": "Read the current page request error inside a route boundary.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Takes no arguments and requires RouterProvider. Route ErrorBoundary components are rendered inside that provider.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns the current snapshot\u2019s Error or undefined. HTTP errors normalized by the application may also have status, statusText, and data; narrow them with isRouteErrorResponse before reading those fields. It subscribes to the error value: changes to loader data or pending state alone do not trigger a render through this hook.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Keep the boundary in its own route component file and re-export it from route.tsx. The route loader owns requests; the boundary only renders the reported failure.",
+      "code": "import { isRouteErrorResponse, useRouteError } from \"@kasperrt/smolter/preact\";\n\nexport function ErrorBoundary() {\n  const error = useRouteError();\n  const title = isRouteErrorResponse(error)\n    ? `${error.status} ${error.statusText}`\n    : \"Unable to load this page\";\n\n  return (\n    <section role=\"alert\">\n      <h1>{title}</h1>\n      <p>{error?.message}</p>\n    </section>\n  );\n}"
+    },
+    {
+      "title": "Scope",
+      "body": "Independent fetcher failures are exposed on fetcher.error and do not replace the page error. This hook is not a general Preact render-error catcher. Await uses its errorElement or an enclosing Preact boundary for rejected promises.",
+      "code": ""
+    }
+  ]
+}

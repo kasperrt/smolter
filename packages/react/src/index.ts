@@ -1,6 +1,10 @@
 /** Framework components and typed data hooks. @module */
 export type * from "@smolter/core";
-export { createRouter, defineRoute } from "@smolter/core";
+export {
+  createDataRouter,
+  createRouter,
+  defineRoute,
+} from "@smolter/core";
 export {
   RouterProvider,
   type RouterProviderProps,

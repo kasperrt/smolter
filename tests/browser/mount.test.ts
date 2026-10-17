@@ -1,0 +1,126 @@
+import { useLoaderData } from "@smolter/preact";
+import { mountApplication } from "@smolter/preact/client";
+import { createElement, render } from "preact";
+import { expect, it } from "vitest";
+
+for (const hash of [false, true]) {
+  it(`mounts and navigates a Preact application (${hash ? "hash" : "browser"} history)`, async (context) => {
+    const original = location.href;
+    const container = document.createElement("div");
+    const calls: string[] = [];
+
+    expect(document.getElementById("root")).toBeNull();
+    container.id = "root";
+    document.body.append(container);
+    history.replaceState(
+      null,
+      "",
+      hash ? "/mount-shell#/mount-first" : "/mount-first",
+    );
+
+    function Page() {
+      return createElement("output", null, useLoaderData<string>());
+    }
+
+    const router = await mountApplication(
+      [
+        {
+          path: "/mount-first",
+          preload: async () => {
+            calls.push("preload");
+          },
+          loader: () => {
+            calls.push("loader");
+
+            return "First";
+          },
+          default: Page,
+        },
+        { path: "/mount-second", loader: () => "Second", default: Page },
+      ],
+      undefined,
+      hash,
+    );
+
+    context.onTestFinished(() => {
+      render(null, container);
+      router.dispose();
+      container.remove();
+      history.replaceState(null, "", original);
+    });
+
+    await expect.poll(() => container.textContent).toBe("First");
+    expect(calls).toEqual(["preload", "loader"]);
+
+    await router.navigate("/mount-second");
+    await expect.poll(() => container.textContent).toBe("Second");
+    expect(hash ? location.hash : location.pathname).toBe(
+      hash ? "#/mount-second" : "/mount-second",
+    );
+
+    if (hash) {
+      history.replaceState(null, "", "/mount-shell#/mount-first");
+      dispatchEvent(new HashChangeEvent("hashchange"));
+      await expect.poll(() => container.textContent).toBe("First");
+    }
+  });
+}
+
+interface HydratedError {
+  instance: boolean;
+  message: string;
+  status: number;
+}
+
+interface HydrationResult {
+  type: string;
+  reused: boolean;
+  reads: number;
+  text: string | null;
+  error?: HydratedError;
+}
+
+for (const scenario of [
+  { file: "hydration", text: "Server data" },
+  {
+    file: "hydration-error",
+    text: "Server error",
+    error: { instance: true, message: "Server error", status: 503 },
+  },
+]) {
+  it(`hydrates ${scenario.file} without replacing markup or rerunning the loader`, async (context) => {
+    const frame = document.createElement("iframe");
+    const messages: HydrationResult[] = [];
+    const receive = (event: MessageEvent<HydrationResult>) => {
+      if (event.source === frame.contentWindow) messages.push(event.data);
+    };
+
+    addEventListener("message", receive);
+    context.onTestFinished(() => {
+      removeEventListener("message", receive);
+      frame.remove();
+    });
+    frame.src = new URL(
+      `../fixtures/${scenario.file}.html`,
+      import.meta.url,
+    ).href;
+    document.body.append(frame);
+
+    await expect
+      .poll(() => messages.find((message) => message.type === "hydrated"))
+      .toEqual({
+        type: "hydrated",
+        reused: true,
+        reads: 0,
+        text: scenario.text,
+        ...(scenario.error && { error: scenario.error }),
+      });
+
+    frame.contentWindow!.postMessage("navigate", location.origin);
+    await expect
+      .poll(
+        () => messages.find((message) => message.type === "navigated")?.text,
+      )
+      .toBe("Next page");
+  });
+}

@@ -1,0 +1,18 @@
+{
+  "slug": "LinksFunction",
+  "title": "LinksFunction",
+  "summary": "Describe static document links on the root module.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "A zero-argument function returning arrays of string-valued link attributes. Links renders those descriptors as link elements in the document.",
+      "code": "import type { LinksFunction } from \"@kasperrt/smolter/preact\";\n\nexport const links: LinksFunction = () => [\n  { rel: \"icon\", href: \"/favicon.svg\", type: \"image/svg+xml\" },\n];"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Place it on the root module and render Links in the root Layout head. This is separate from route metadata\u2019s tagName: \"link\" descriptors. Asset URLs may be Vite imports or deployment URLs owned by the application.",
+      "code": ""
+    }
+  ]
+}

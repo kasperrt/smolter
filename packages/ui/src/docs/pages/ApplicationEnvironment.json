@@ -1,0 +1,23 @@
+{
+  "slug": "ApplicationEnvironment",
+  "title": "ApplicationEnvironment",
+  "summary": "Deployment callbacks for URL resolution, document handoffs, and the initial document script.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "resolveURL receives a URL and returns its deployed destination. isDocumentHandoff receives the current and destination URLs and decides whether a document link uses the configured handoff. leaveDocument performs that handoff; without it, navigation uses location.assign. entryScript supplies the inline bootstrap source rendered by Scripts. Every field is optional.",
+      "code": ""
+    },
+    {
+      "title": "Configuration",
+      "body": "Import the type from the Preact entry and configure the environment through the optional client entry before mounting. Configuration is shared by application instances in the same module environment. It is not a route-specific setting.",
+      "code": "import type { ApplicationEnvironment } from \"@kasperrt/smolter/preact\";\nimport { configureApplication } from \"@kasperrt/smolter/preact/client\";\n\nconst environment: ApplicationEnvironment = {\n  resolveURL(url) {\n    if (url.origin === \"https://legacy.example\") {\n      return new URL(url.pathname + url.search + url.hash, location.origin);\n    }\n\n    return url;\n  },\n};\n\nconfigureApplication(environment);"
+    },
+    {
+      "title": "Default behavior",
+      "body": "With no configuration, URLs are unchanged. Ordinary external links keep browser handling. A configured document handoff prevents the anchor default and calls leaveDocument. These callbacks do not declare routes or install a server endpoint.",
+      "code": ""
+    }
+  ]
+}

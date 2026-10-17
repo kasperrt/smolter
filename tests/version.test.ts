@@ -28,7 +28,7 @@ for (const [current, command, expected] of [
 ] as const) {
   it(`handles ${command} for ${current} without corrupting either manifest`, (context) => {
     const cwd = mkdtempSync(join(tmpdir(), "smolter-version-"));
-    const directory = join(cwd, "packages/smolter");
+    const directory = cwd;
     const files = ["package.json", "jsr.json"];
 
     context.onTestFinished(() => rmSync(cwd, { recursive: true, force: true }));

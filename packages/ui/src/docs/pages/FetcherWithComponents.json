@@ -1,0 +1,18 @@
+{
+  "slug": "FetcherWithComponents",
+  "title": "FetcherWithComponents",
+  "summary": "The result type of a Preact fetcher, including its bound Form.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Aliases TypedFetcher<RouteData<T>>. Includes optional data and error, idle/loading/submitting state, load, submit, and Form. T can be a handler function type or a result type.",
+      "code": "import type { FetcherWithComponents } from \"@kasperrt/smolter/preact\";\n\ninterface Preview {\n  title: string;\n}\n\nexport function previewTitle(fetcher: FetcherWithComponents<Preview>): string {\n  return fetcher.data?.title ?? \"No preview loaded\";\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Create the value with useFetcher. Do not construct it by hand or assume data is present before a successful load. Its independent state does not represent page navigation.",
+      "code": ""
+    }
+  ]
+}

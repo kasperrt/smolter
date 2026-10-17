@@ -2,10 +2,13 @@ import { gzipSync } from "node:zlib";
 import { build } from "esbuild";
 import { minify } from "terser";
 
-export async function measure(entry) {
+export async function measure(entry, names) {
+  const exports = names ? `{ ${names.join(", ")} }` : "*";
   const contents = Array.isArray(entry)
-    ? entry.map((path) => `export * from ${JSON.stringify(path)};`).join("\n")
-    : `export * from ${JSON.stringify(entry)};`;
+    ? entry
+        .map((path) => `export ${exports} from ${JSON.stringify(path)};`)
+        .join("\n")
+    : `export ${exports} from ${JSON.stringify(entry)};`;
   const result = await build({
     stdin: { contents, resolveDir: new URL("..", import.meta.url).pathname },
     bundle: true,
@@ -24,13 +27,94 @@ export async function measure(entry) {
   return gzipSync(output.code, { level: 9 }).byteLength;
 }
 
+export const routingExports = [
+  "createRouter",
+  "defineRoute",
+  "RouterProvider",
+  "Routes",
+  "Link",
+  "useParams",
+  "useLocation",
+];
+
+export const commonExports = [
+  "createDataRouter",
+  "defineRoute",
+  "RouterProvider",
+  "Routes",
+  "Link",
+  "Form",
+  "useRouter",
+  "useLoaderData",
+  "useActionData",
+  "useParams",
+  "useLocation",
+  "useRevalidator",
+  "useFetcher",
+];
+
+export const wouterRoutingExports = [
+  "Router",
+  "Route",
+  "Switch",
+  "Link",
+  "useParams",
+  "useLocation",
+];
+
 export async function measureAdapters() {
-  const [react, preact, reactServer, preactServer] = await Promise.all([
-    measure("@smolter/react"),
-    measure("@smolter/preact"),
-    measure(["@smolter/react", "@smolter/client"]),
-    measure(["@smolter/preact", "@smolter/client"]),
+  const [
+    react,
+    preact,
+    reactServer,
+    preactServer,
+    preactApplication,
+    preactLazyApplication,
+    reactData,
+    reactRouting,
+    preactRouting,
+    reactCommon,
+    preactCommon,
+    wouterRouting,
+    wouterPreactRouting,
+  ] = await Promise.all([
+    measure("./dist/react/index.js"),
+    measure("./dist/preact/index.js"),
+    measure(["./dist/react/index.js", "./dist/client/index.js"]),
+    measure(["./dist/preact/index.js", "./dist/client/index.js"]),
+    measure([
+      "./dist/preact/index.js",
+      "./dist/preact/client.js",
+      "./dist/preact/document.js",
+    ]),
+    measure([
+      "./dist/preact/index.js",
+      "./dist/preact/client.js",
+      "./dist/preact/document.js",
+      "./dist/preact/lazy-route.js",
+    ]),
+    measure("./dist/react/data.js"),
+    measure("./dist/react/index.js", routingExports),
+    measure("./dist/preact/index.js", routingExports),
+    measure("./dist/react/index.js", commonExports),
+    measure("./dist/preact/index.js", commonExports),
+    measure("wouter", wouterRoutingExports),
+    measure("wouter-preact", wouterRoutingExports),
   ]);
 
-  return { react, preact, reactServer, preactServer };
+  return {
+    react,
+    preact,
+    reactServer,
+    preactServer,
+    preactApplication,
+    preactLazyApplication,
+    reactData,
+    reactRouting,
+    preactRouting,
+    reactCommon,
+    preactCommon,
+    wouterRouting,
+    wouterPreactRouting,
+  };
 }

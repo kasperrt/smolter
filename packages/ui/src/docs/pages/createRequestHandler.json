@@ -1,0 +1,28 @@
+{
+  "slug": "createRequestHandler",
+  "title": "createRequestHandler",
+  "summary": "Create Node/Express middleware for SSR documents and loader/action HTTP requests.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Options",
+      "body": "build exports default(request, entry) and handleDataRequest(request), each returning a Response or Promise<Response>. entry is the deployed browser entry URL from the Vite manifest. See the Express and Node hosting guide for a complete server.",
+      "code": "import { createRequestHandler } from \"@kasperrt/smolter/utils/http\";\n\napp.use(createRequestHandler({ build, entry: \"/assets/client.js\" }));"
+    },
+    {
+      "title": "Middleware order",
+      "body": "Mount Prometheus, tracing, authentication, body size limits and static serving first. Do not consume the request stream with a body parser before this middleware. Errors are passed to next(error). Express trust proxy remains your application\u2019s responsibility. The adapter does not start a server, install Prometheus, or depend on Express.",
+      "code": ""
+    },
+    {
+      "title": "Transport",
+      "body": "Document requests call build.default. Requests to /_smolter with a local url query parameter call build.handleDataRequest with the original method, headers and body. Invalid targets return 400. Client disconnection aborts the Request signal. Response bodies are currently buffered; streaming SSR is not supported by this helper.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "A middleware function accepting incoming, outgoing and next. It returns Promise<void> and forwards request/response failures to next.",
+      "code": ""
+    }
+  ]
+}

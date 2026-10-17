@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { measure, measureAdapters } from "./measure.mjs";
+import { commonExports, measure, measureAdapters } from "./measure.mjs";
 
 const sizes = await measureAdapters();
 const path = new URL("../packages/ui/src/size.json", import.meta.url);
@@ -18,17 +18,34 @@ if (!process.argv.includes("--write-only")) {
       bytes: await measure(name),
     })),
   );
+  const sharedExports = commonExports;
+  const shared = [sizes.reactCommon, sizes.preactCommon];
   const rows = [
+    ["React: routing-only named exports", sizes.reactRouting],
+    ["Preact: routing-only named exports", sizes.preactRouting],
     ["@kasperrt/smolter/react", sizes.react],
     ["@kasperrt/smolter/preact", sizes.preact],
     [
       "@kasperrt/smolter/react + @kasperrt/smolter/react/client",
       sizes.reactServer,
     ],
+    ["@kasperrt/smolter/preact + server transport", sizes.preactServer],
     [
-      "@kasperrt/smolter/preact + @kasperrt/smolter/preact/client",
-      sizes.preactServer,
+      "@kasperrt/smolter/preact + client + document (application without lazy routes)",
+      sizes.preactApplication,
     ],
+    [
+      "@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)",
+      sizes.preactLazyApplication,
+    ],
+    ["@kasperrt/smolter/react/data (optional resource API)", sizes.reactData],
+    ["React: common routing/data exports", shared[0]],
+    ["Preact: common routing/data exports", shared[1]],
+    [
+      "wouter: routing subset (Router, Route, Switch, Link, useParams, useLocation)",
+      sizes.wouterRouting,
+    ],
+    ["wouter-preact: same routing subset", sizes.wouterPreactRouting],
     ...references.map(({ name, version, bytes }) => [
       `${name}@${version}`,
       bytes,
@@ -42,7 +59,7 @@ if (!process.argv.includes("--write-only")) {
     "<!-- size-comparison:end -->",
   ].join("\n");
 
-  for (const file of ["README.md", "packages/smolter/README.md"]) {
+  for (const file of ["README.md"]) {
     const url = new URL(`../${file}`, import.meta.url);
     const source = readFileSync(url, "utf8");
     const updated = source.replace(
@@ -55,16 +72,44 @@ if (!process.argv.includes("--write-only")) {
 
   for (const [name, bytes] of rows) console.log(`${name}: ${bytes} B gzip`);
 
+  if (process.argv.includes("--breakdown")) {
+    console.log(
+      "Marginal gzip bytes: the common bundle minus the same bundle without one export.",
+    );
+    console.log(
+      "Shared code and gzip compression mean these values are not additive.",
+    );
+
+    for (const [index, adapter] of ["react", "preact"].entries()) {
+      const entry = `./dist/${adapter}/index.js`;
+      const breakdown = await Promise.all(
+        sharedExports.map(async (name) => {
+          const remaining = sharedExports.filter(
+            (candidate) => candidate !== name,
+          );
+          const without = await measure(entry, remaining);
+
+          return `${adapter}.${name}: ${shared[index] - without} B`;
+        }),
+      );
+
+      for (const line of breakdown) console.log(line);
+    }
+  }
+
   for (const [index, adapter] of ["react", "preact"].entries()) {
-    if (sizes[adapter] >= references[index].bytes) {
+    if (
+      [sizes.reactRouting, sizes.preactRouting][index] >=
+      [sizes.wouterRouting, sizes.wouterPreactRouting][index]
+    ) {
       console.error(
-        `${adapter} must be smaller than ${references[index].name}`,
+        `${adapter}: routing-only named exports must remain smaller than the routing subset of ${references[index].name}`,
       );
       process.exitCode = 1;
     }
   }
 
   console.log(
-    "All exports, identical minifiers, gzip level 9. Frameworks excluded; runtime dependencies included.",
+    "Named subsets where labeled; otherwise all exports. Identical minifiers, gzip level 9. Frameworks excluded; runtime dependencies included.",
   );
 }

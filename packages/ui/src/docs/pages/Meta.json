@@ -1,0 +1,28 @@
+{
+  "slug": "Meta",
+  "title": "Meta",
+  "summary": "Render metadata selected from the active route or root module.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Takes no props and requires application context. Place it in the root Layout head.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Renders title, meta, link, and JSON-LD elements from metadata descriptors. The active route\u2019s meta function receives the current loader data, params, error, and URL. If it is absent, the root meta function is used.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Define metadata in a separate meta.ts file, re-export it from the route module, and render Meta in the shared document layout.",
+      "code": "import { Meta } from \"@kasperrt/smolter/preact/document\";\n\nexport function DocumentHead() {\n  return (\n    <head>\n      <meta charSet=\"utf-8\" />\n      <Meta />\n    </head>\n  );\n}"
+    },
+    {
+      "title": "Selection and updates",
+      "body": "Route and root descriptors are not merged: an active route returning [] suppresses root fallback metadata. The browser title is synchronized when a title descriptor is present. JSON-LD is serialized with serializeData so embedded less-than characters cannot close the script element.",
+      "code": ""
+    }
+  ]
+}

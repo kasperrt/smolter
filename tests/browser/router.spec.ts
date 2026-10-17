@@ -2,6 +2,9 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 
 const sizes = JSON.parse(readFileSync("packages/ui/src/size.json", "utf8"));
+const reference = JSON.parse(
+  readFileSync("packages/ui/src/docs/reference.json", "utf8"),
+);
 const basePort = Number(process.env.SMOLTER_TEST_PORT ?? 4173);
 const examples = [
   { name: "React", port: basePort + 0, ssr: false, bytes: sizes.react },
@@ -51,7 +54,7 @@ for (const example of examples) {
       page
         .getByRole("navigation", { name: "Documentation", exact: true })
         .getByRole("link"),
-    ).toHaveCount(70);
+    ).toHaveCount(reference.length + 13);
     await expect(page.getByTestId("source-panel")).toHaveCount(0);
     expect(
       await page.evaluate(() => document.documentElement.dataset.docs),
@@ -67,6 +70,7 @@ for (const example of examples) {
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
+
     for (const title of ["Actions", "Forms", "Loaders"]) {
       await page
         .getByRole("navigation", { name: "Documentation", exact: true })
@@ -83,7 +87,13 @@ for (const example of examples) {
       ).toBe(true);
     }
 
-    await page.getByRole("link", { name: "Search", exact: true }).click();
+    await page.getByRole("link", { name: "Docs", exact: true }).click();
+    await page
+      .getByRole("link", {
+        name: "Search: GET forms and URL parameters →",
+        exact: true,
+      })
+      .click();
     await expect(page).toHaveTitle(originalTitle);
   });
 
@@ -94,7 +104,13 @@ for (const example of examples) {
     await page.evaluate(() => {
       document.documentElement.dataset.mounted = "once";
     });
-    await page.getByRole("link", { name: "Search", exact: true }).click();
+    await page.getByRole("link", { name: "Docs", exact: true }).click();
+    await page
+      .getByRole("link", {
+        name: "Search: GET forms and URL parameters →",
+        exact: true,
+      })
+      .click();
     await page.getByLabel("Search query").fill("Edit");
     await page
       .getByRole("button", { name: "Search tasks", exact: true })
@@ -128,7 +144,7 @@ for (const example of examples) {
 
     page.on("pageerror", (error) => errors.push(error.message));
 
-    await page.goto(origin);
+    await page.goto(`${origin}/examples/counter`);
 
     await expect(page.getByTestId("count")).toHaveText("0");
 
@@ -257,7 +273,7 @@ for (const example of examples) {
           dataRequests.push(request.url());
       });
 
-      const response = await page.goto(origin);
+      const response = await page.goto(`${origin}/examples/counter`);
 
       expect(await response!.text()).toContain('data-testid="count">0');
 
@@ -283,7 +299,7 @@ test("all examples use the same branding and responsive geometry", async ({
     let expected: unknown;
 
     for (const example of examples) {
-      await page.goto(`http://127.0.0.1:${example.port}/`);
+      await page.goto(`http://127.0.0.1:${example.port}/examples/counter`);
 
       await page.evaluate(() => document.fonts.ready);
 
@@ -319,7 +335,7 @@ test("all examples use the same branding and responsive geometry", async ({
 test("tabs switch between standalone apps and examples hide internal UI plumbing", async ({
   page,
 }) => {
-  await page.goto(`http://127.0.0.1:${basePort}/`);
+  await page.goto(`http://127.0.0.1:${basePort}/examples/counter`);
 
   for (const example of [...examples.slice(1), examples[0]]) {
     await page
@@ -327,7 +343,9 @@ test("tabs switch between standalone apps and examples hide internal UI plumbing
       .getByRole("link", { name: example.name, exact: true })
       .click();
 
-    await expect(page).toHaveURL(`http://127.0.0.1:${example.port}/`);
+    await expect(page).toHaveURL(
+      `http://127.0.0.1:${example.port}/examples/counter`,
+    );
 
     await expect(
       page.getByRole("button", { name: "Add one +", exact: true }),

@@ -11,7 +11,7 @@ export default defineConfig({
 // src/routes/tasks._index/route.ts → /tasks
 // src/routes/tasks.search/route.ts → /tasks/search?q=edit
 // src/routes/tasks.$id/route.ts    → /tasks/:id
-// src/routes/about/route.ts        → /about
+// src/routes/examples.counter/route.ts → /examples/counter
 
 // main.ts
 import routes from "virtual:smolter/routes";

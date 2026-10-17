@@ -1,0 +1,28 @@
+{
+  "slug": "applicationPlugins",
+  "title": "applicationPlugins",
+  "summary": "Install the optional Preact application Vite integration.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "directory defaults to src/routes; ssr defaults to true; splitRoutes defaults to true. resourceRequest identifies resource URLs that need server handling without an HTML Accept header.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns a Plugin array including flat route discovery, server export filtering, Preact aliases, lazy routes and development HTTP handling.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Install the optional Preact application Vite integration.",
+      "code": "export default defineConfig({\n  plugins: applicationPlugins({ directory: \"src/routes\" }),\n});"
+    },
+    {
+      "title": "Behavior and limits",
+      "body": "The default SSR integration loads src/entry.server.tsx and starts src/entry.client.tsx. ssr: false supports browser-only apps. See the virtual routes guide; these plugins do not create a production Express server.",
+      "code": ""
+    }
+  ]
+}

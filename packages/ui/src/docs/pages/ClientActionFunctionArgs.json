@@ -1,0 +1,18 @@
+{
+  "slug": "ClientActionFunctionArgs",
+  "title": "ClientActionFunctionArgs",
+  "summary": "Client action arguments with access to the server action.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Extends LoaderFunctionArgs with serverAction<T>(): Promise<T>. The installed application transport forwards the request to the registered server action when this callback is invoked.",
+      "code": "import type { ClientActionFunctionArgs } from \"@kasperrt/smolter/preact\";\n\ninterface SavedTask {\n  id: string;\n}\n\nexport async function clientAction({ serverAction }: ClientActionFunctionArgs) {\n  const task = await serverAction<SavedTask>();\n\n  return { ...task, saved: true };\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Keep mutations in actions rather than components. Calling serverAction is optional; a client-only action may perform client-side work instead. The callback requires transport wiring and the generic is a type assertion, not runtime response validation.",
+      "code": ""
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "slug": "renderApplication",
+  "title": "renderApplication",
+  "summary": "Render the optional Preact application document and hydration snapshot.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Pass request, the server routes, the root module and the deployed browser entry URL.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns a Promise<Response> containing the complete HTML document or a redirect/resource response.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Render the optional Preact application document and hydration snapshot.",
+      "code": "import { renderApplication } from \"@kasperrt/smolter/preact/server\";\n\nconst response = await renderApplication(\n  request,\n  routes,\n  root,\n  \"/assets/client.js\",\n);"
+    },
+    {
+      "title": "Page actions and hydration",
+      "body": "For a page POST, PUT, PATCH, or DELETE, the server runs the action once before loading the page data. JSON action results become snapshot.actionData, so useActionData reads the same result during server rendering and after hydration. A data(value, { status, headers }) result preserves its status and response headers in the HTML response, including validation statuses and cookies. Returned action errors populate snapshot.error for the route boundary. Redirects and non-JSON HTTP responses are returned directly without rendering a document.",
+      "code": ""
+    },
+    {
+      "title": "Behavior and limits",
+      "body": "Requires preact-render-to-string. Each request creates and disposes its own router. Use the Express guide for HTTP hosting; this API buffers the document.",
+      "code": ""
+    }
+  ]
+}

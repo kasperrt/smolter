@@ -1,5 +1,5 @@
 import { Form, Link, useLoaderData } from "@kasperrt/smolter/react";
-import type { clientLoader } from "./loader";
+import type { clientLoader } from "./clientLoader";
 
 export default function SearchTasks() {
   const data = useLoaderData<typeof clientLoader>();

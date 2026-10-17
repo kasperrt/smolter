@@ -27,7 +27,7 @@
     {
       "title": "Register the actual URL",
       "body": "The form targets /settings because that path is registered here. A fetcher is a route client: an arbitrary API URL without a matching route is not a substitute for registration. For Preact, change the framework imports in these examples to @kasperrt/smolter/preact.",
-      "code": "// router.ts\nimport { createRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as settings from \"./routes/settings/route\";\n\nexport const settingsRoute = defineRoute(\"/settings\", settings);\nexport const router = createRouter([settingsRoute], { browser: true });\n\n// app.tsx\nimport { RouterProvider, Routes } from \"@kasperrt/smolter/react\";\nimport { router } from \"./router\";\n\nexport function App() {\n  return (\n    <RouterProvider router={router}>\n      <Routes />\n    </RouterProvider>\n  );\n}"
+      "code": "// router.ts\nimport { createDataRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as settings from \"./routes/settings/route\";\n\nexport const settingsRoute = defineRoute(\"/settings\", settings);\nexport const router = createDataRouter([settingsRoute], { browser: true });\n\n// app.tsx\nimport { RouterProvider, Routes } from \"@kasperrt/smolter/react\";\nimport { router } from \"./router\";\n\nexport function App() {\n  return (\n    <RouterProvider router={router}>\n      <Routes />\n    </RouterProvider>\n  );\n}"
     },
     {
       "title": "Submit and display the result",
@@ -57,7 +57,7 @@
     {
       "title": "Server action and client action together",
       "body": "With the Vite plugin, re-export action from its server implementation file and clientAction from a browser-safe file. The client wrapper may inspect the form and then call serverAction. The transport preserves a copy of the request body for that call. Import the server handler only as a type in browser code; never import your database implementation there.",
-      "code": "// routes/settings/client-action.ts\nimport type { ClientActionArgs } from \"@kasperrt/smolter/react\";\nimport type { action } from \"./action\";\n\nexport async function clientAction({\n  serverAction,\n}: ClientActionArgs<typeof action>) {\n  const result = await serverAction();\n\n  if (result.ok) sessionStorage.removeItem(\"settings-draft\");\n\n  return result;\n}\n\n// routes/settings/route.ts\nexport { action } from \"./action\";\nexport { clientAction } from \"./client-action\";\nexport { loader } from \"./loader\";\nexport { default } from \"./view\";"
+      "code": "// routes/settings/clientAction.ts\nimport type { ClientActionArgs } from \"@kasperrt/smolter/react\";\nimport type { action } from \"./action\";\n\nexport async function clientAction({\n  serverAction,\n}: ClientActionArgs<typeof action>) {\n  const result = await serverAction();\n\n  if (result.ok) sessionStorage.removeItem(\"settings-draft\");\n\n  return result;\n}\n\n// routes/settings/route.ts\nexport { action } from \"./action\";\nexport { clientAction } from \"./clientAction\";\nexport { loader } from \"./loader\";\nexport { default } from \"./view\";"
     },
     {
       "title": "Redirect after a mutation",
@@ -72,7 +72,7 @@
     {
       "title": "Skip reads after validation failures",
       "body": "Put shouldRevalidate beside the route and re-export it from the route module. The action result is unknown because the active page may be refreshed by a different route\u2019s action. Narrow it before inspecting fields. Returning false retains the currently loaded page data; it does not cancel the action, suppress errors, or reload independent fetchers.",
-      "code": "// routes/settings/should-revalidate.ts\nimport type { RevalidationArgs } from \"@kasperrt/smolter/react\";\n\nexport function shouldRevalidate({\n  reason,\n  actionResult,\n  defaultShouldRevalidate,\n}: RevalidationArgs) {\n  if (\n    reason === \"action\" &&\n    actionResult !== null &&\n    typeof actionResult === \"object\" &&\n    \"ok\" in actionResult &&\n    actionResult.ok === false\n  ) {\n    return false;\n  }\n\n  return defaultShouldRevalidate;\n}\n\n// Add to routes/settings/route.ts:\nexport { shouldRevalidate } from \"./should-revalidate\";"
+      "code": "// routes/settings/shouldRevalidate.ts\nimport type { RevalidationArgs } from \"@kasperrt/smolter/react\";\n\nexport function shouldRevalidate({\n  reason,\n  actionResult,\n  defaultShouldRevalidate,\n}: RevalidationArgs) {\n  if (\n    reason === \"action\" &&\n    actionResult !== null &&\n    typeof actionResult === \"object\" &&\n    \"ok\" in actionResult &&\n    actionResult.ok === false\n  ) {\n    return false;\n  }\n\n  return defaultShouldRevalidate;\n}\n\n// Add to routes/settings/route.ts:\nexport { shouldRevalidate } from \"./shouldRevalidate\";"
     }
   ]
 }

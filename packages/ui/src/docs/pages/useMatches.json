@@ -1,0 +1,28 @@
+{
+  "slug": "useMatches",
+  "title": "useMatches",
+  "summary": "Read the active flat route\u2019s identifier, data, and parameters.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Takes no arguments. Requires the application context provided by RouterApplication or mountApplication, in addition to a router.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns a one-element array containing { id, data, params } for the current snapshot. The ID is the manifest route ID, or an empty string when the route has none. The root module is not an additional match, and this API does not produce a nested layout ancestry.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Use a route ID to identify the active page. Use useLoaderData for inferred data from the current loader, or useRouteLoaderData for a specific active ID.",
+      "code": "import { useMatches } from \"@kasperrt/smolter/preact\";\n\nexport function CurrentPage() {\n  const [match] = useMatches();\n\n  return <span>{match.id || \"Unidentified route\"}</span>;\n}"
+    },
+    {
+      "title": "Flat routes and missing matches",
+      "body": "File names may encode URL segments, but the matcher remains flat. Even when no route matches, the result contains the current snapshot with an empty ID. Do not treat array length as proof that a page matched.",
+      "code": ""
+    }
+  ]
+}

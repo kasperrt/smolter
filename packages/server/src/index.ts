@@ -4,7 +4,7 @@
  */
 
 import {
-  createRouter,
+  createDataRouter,
   type DataFunction,
   matchRoutes,
   type Route,
@@ -38,7 +38,7 @@ export async function loadRouter(
     loader: wrap(route.loader),
     action: wrap(route.action),
   }));
-  const router = createRouter(serverRoutes, { url });
+  const router = createDataRouter(serverRoutes, { url });
 
   await router.navigate(url);
 
@@ -52,7 +52,7 @@ export async function loadRouter(
         route.path === snapshot.path && route.clientLoader && !route.loader,
     )
   ) {
-    return createRouter(serverRoutes, {
+    return createDataRouter(serverRoutes, {
       url,
       hydrationData: { ...snapshot, loaded: false, state: "loading" },
     });

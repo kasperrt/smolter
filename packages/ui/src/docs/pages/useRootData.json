@@ -1,0 +1,28 @@
+{
+  "slug": "useRootData",
+  "title": "useRootData",
+  "summary": "Read the application root loader\u2019s data.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Takes no runtime arguments. Pass the root loader function type to derive its return data, or an explicit data type. Requires RouterApplication or the application mounting helpers; RouterProvider alone does not create root data.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns the current application root value as RouteData<T>. The hook does not fetch or invoke the loader. It updates when the root data store publishes a new value.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Use a type-only import so the server loader implementation stays out of the browser module.",
+      "code": "import { useRootData } from \"@kasperrt/smolter/preact\";\nimport type { loader } from \"../root/loader\";\n\nexport function AccountName() {\n  const root = useRootData<typeof loader>();\n\n  return <span>{root.user.name}</span>;\n}"
+    },
+    {
+      "title": "Targeted revalidation",
+      "body": "useRouteLoaderData(\"root\") reads the same root value. To refresh it, call the function returned by useRevalidator with { route: \"root\" }. The application must have registered a root loader callback; naming a target does not create a loader or transport endpoint.",
+      "code": ""
+    }
+  ]
+}

@@ -18,27 +18,42 @@
       "@smolter/files": ["./packages/files/src/index.ts"],
       "@smolter/vite": ["./packages/vite/src/index.ts"],
       "@kasperrt/smolter/react": ["./packages/react/src/index.ts"],
-      "@kasperrt/smolter/react/server": [
-        "./packages/smolter/src/react-server.ts"
-      ],
-      "@kasperrt/smolter/react/vite": ["./packages/smolter/src/react-vite.ts"],
+      "@kasperrt/smolter/react/server": ["./packages/server/src/index.ts"],
+      "@kasperrt/smolter/react/vite": ["./packages/vite/src/react.ts"],
       "@kasperrt/smolter/preact": ["./packages/preact/src/index.ts"],
-      "@kasperrt/smolter/preact/server": [
-        "./packages/smolter/src/preact-server.ts"
+      "@kasperrt/smolter/preact/server": ["./packages/server/src/preact.ts"],
+      "@kasperrt/smolter/preact/vite": ["./packages/vite/src/preact.ts"],
+      "@kasperrt/smolter/react/client": ["./packages/client/src/index.ts"],
+      "@kasperrt/smolter/preact/client": ["./packages/preact/src/client.tsx"],
+      "@kasperrt/smolter/utils": ["./packages/core/src/utils.ts"],
+      "@kasperrt/smolter/preact/lazy-route": [
+        "./packages/preact/src/lazy-route.ts"
       ],
-      "@kasperrt/smolter/preact/vite": [
-        "./packages/smolter/src/preact-vite.ts"
+      "@kasperrt/smolter/utils/http": ["./packages/server/src/node.ts"],
+      "@kasperrt/smolter/utils/assets": ["./packages/server/src/assets.ts"],
+      "@kasperrt/smolter/utils/responses": ["./packages/core/src/responses.ts"],
+      "@smolter/core/responses": ["./packages/core/src/responses.ts"],
+      "@smolter/preact/router": ["./packages/preact/src/router.tsx"],
+      "@smolter/preact/route-types": ["./packages/preact/src/route-types.ts"],
+      "@smolter/core/environment": ["./packages/core/src/environment.ts"],
+      "@smolter/server/http": ["./packages/server/src/http.ts"],
+      "@smolter/core/resource-types": ["./packages/core/src/resource-types.ts"],
+      "@smolter/core/resources": ["./packages/core/src/resources.ts"],
+      "@kasperrt/smolter/react/data": ["./packages/react/src/data.ts"],
+      "@smolter/core/submission": ["./packages/core/src/submission.ts"],
+      "@smolter/core/navigation": ["./packages/core/src/navigation.ts"],
+      "@smolter/core/presentation": ["./packages/core/src/presentation.ts"],
+      "@smolter/core/store": ["./packages/core/src/store.ts"],
+      "@kasperrt/smolter/preact/document": [
+        "./packages/preact/src/document.tsx"
       ],
-      "@kasperrt/smolter/react/client": [
-        "./packages/smolter/src/react-client.ts"
-      ],
-      "@kasperrt/smolter/preact/client": [
-        "./packages/smolter/src/preact-client.ts"
-      ],
-      "@kasperrt/smolter/utils": ["./packages/smolter/src/utils.ts"]
+      "@smolter/core/url": ["./packages/core/src/url.ts"],
+      "@smolter/core/serialize": ["./packages/core/src/serialize.ts"],
+      "@smolter/preact/document": ["./packages/preact/src/document.tsx"],
+      "@smolter/preact/client": ["./packages/preact/src/client.tsx"]
     },
     "types": ["node", "vite/client"]
   },
-  "include": ["packages", "apps", "tests", "*.ts", "packages/smolter/src/*.ts"],
-  "exclude": ["packages/smolter/src/internal", "packages/smolter/dist"]
+  "include": ["packages", "apps", "tests", "tooling", "*.ts"],
+  "exclude": [".generated", "dist"]
 }

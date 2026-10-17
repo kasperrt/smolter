@@ -1,0 +1,18 @@
+{
+  "slug": "HandleDataRequestFunction",
+  "title": "HandleDataRequestFunction",
+  "summary": "A type for an application-owned response transformation.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Accepts a Response and LoaderFunctionArgs, and returns a Response or Promise<Response>. It describes a response transformation rather than the request dispatcher signature.",
+      "code": "import type { HandleDataRequestFunction } from \"@kasperrt/smolter/preact\";\n\nexport const addHeader: HandleDataRequestFunction = (response) => {\n  const headers = new Headers(response.headers);\n  headers.set(\"X-Application\", \"tasks\");\n\n  return new Response(response.body, {\n    status: response.status,\n    statusText: response.statusText,\n    headers,\n  });\n};"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "This type does not register a hook by itself. Call your transformation from the application\u2019s server integration. It is not the same as the generated server entry\u2019s handleDataRequest(request) function.",
+      "code": ""
+    }
+  ]
+}

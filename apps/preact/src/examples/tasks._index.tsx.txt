@@ -1,7 +1,7 @@
 import { Link, useFetcher, useLoaderData } from "@kasperrt/smolter/preact";
-import type { clientLoader } from "./loader";
-import type { clientLoader as taskLoader } from "../tasks.$id/loader";
-import type { clientAction } from "./action";
+import type { clientLoader } from "./clientLoader";
+import type { clientLoader as taskLoader } from "../tasks.$id/clientLoader";
+import type { clientAction } from "./clientAction";
 
 export default function Tasks() {
   const data = useLoaderData<typeof clientLoader>();

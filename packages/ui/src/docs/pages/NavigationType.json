@@ -1,0 +1,18 @@
+{
+  "slug": "NavigationType",
+  "title": "NavigationType",
+  "summary": "The three browser history operation names.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "The union is \"POP\" | \"PUSH\" | \"REPLACE\". POP includes the initial entry and history traversal; PUSH adds an entry; REPLACE updates the current entry.",
+      "code": "import type { NavigationType } from \"@kasperrt/smolter/preact\";\n\nexport function replacedEntry(type: NavigationType): boolean {\n  return type === \"REPLACE\";\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Read this through useNavigationType after the application navigation integration is installed. It is not the same as loading/submitting/idle request state.",
+      "code": ""
+    }
+  ]
+}

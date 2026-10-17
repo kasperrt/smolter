@@ -1,0 +1,18 @@
+{
+  "slug": "MetaFunction",
+  "title": "MetaFunction",
+  "summary": "Compute metadata from the active loader snapshot.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "A function from MetaArgs<T> to MetaDescriptor[]. Meta calls the active route function when present and otherwise falls back to root metadata.",
+      "code": "import type { MetaFunction } from \"@kasperrt/smolter/preact\";\n\ninterface Task {\n  title: string;\n}\n\nexport const meta: MetaFunction<Task> = ({ data }) => [\n  { title: data?.title ?? \"Tasks\" },\n];"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "An empty array intentionally suppresses fallback root metadata. Metadata functions should derive values from their arguments and must not start network requests.",
+      "code": ""
+    }
+  ]
+}

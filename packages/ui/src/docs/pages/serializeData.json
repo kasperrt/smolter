@@ -1,0 +1,28 @@
+{
+  "slug": "serializeData",
+  "title": "serializeData",
+  "summary": "Serialize JSON safely for embedding in an HTML script element.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Accepts a JSON-serializable value. It does not await promises, detect data routes, or normalize errors; resolve application data before calling it.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns JSON text with less-than characters and Unicode line/paragraph separators escaped. JSON.parse restores the original values, while the escaped text cannot inject a closing script tag through a string value.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Use the serialized string as script text, not as an HTML attribute value. The application document helpers already use this for hydration payloads and JSON-LD.",
+      "code": "import { serializeData } from \"@kasperrt/smolter/utils\";\n\nconst payload = serializeData({ title: \"<Task list>\" });\nconst script = `<script type=\"application/json\" id=\"page-data\">${payload}</script>`;"
+    },
+    {
+      "title": "JSON limits",
+      "body": "The input must produce JSON text: top-level undefined, functions, and symbols are unsupported, as are cyclic objects and BigInt without custom serialization. Native JSON rules apply to object fields and custom toJSON methods. This helper is not a sanitizer for arbitrary HTML or executable JavaScript.",
+      "code": ""
+    }
+  ]
+}

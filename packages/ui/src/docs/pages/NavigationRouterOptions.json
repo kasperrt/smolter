@@ -1,0 +1,13 @@
+{
+  "slug": "NavigationRouterOptions",
+  "title": "NavigationRouterOptions",
+  "summary": "Initial URL and browser-history options for navigation-only routing.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "url resolves relative to http://localhost outside a browser. browser defaults to false; when true in a browser, the default URL comes from location.href. Data hydration is not supported; use createDataRouter for it.",
+      "code": "createRouter(routes, { browser: true });"
+    }
+  ]
+}

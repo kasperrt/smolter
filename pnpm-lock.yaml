@@ -109,7 +109,7 @@ importers:
     dependencies:
       '@kasperrt/smolter':
         specifier: workspace:*
-        version: link:../../packages/smolter
+        version: link:../..
       '@smolter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -121,7 +121,7 @@ importers:
     dependencies:
       '@kasperrt/smolter':
         specifier: workspace:*
-        version: link:../../packages/smolter
+        version: link:../..
       '@smolter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -136,7 +136,7 @@ importers:
     dependencies:
       '@kasperrt/smolter':
         specifier: workspace:*
-        version: link:../../packages/smolter
+        version: link:../..
       '@smolter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -151,7 +151,7 @@ importers:
     dependencies:
       '@kasperrt/smolter':
         specifier: workspace:*
-        version: link:../../packages/smolter
+        version: link:../..
       '@smolter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -178,6 +178,9 @@ importers:
 
   packages/preact:
     dependencies:
+      '@smolter/client':
+        specifier: workspace:*
+        version: link:../client
       '@smolter/core':
         specifier: workspace:*
         version: link:../core
@@ -199,33 +202,31 @@ importers:
       '@smolter/core':
         specifier: workspace:*
         version: link:../core
-
-  packages/smolter:
-    dependencies:
-      preact:
-        specifier: '>=10.25.0'
-        version: 11.0.1(preact-render-to-string@6.8.1)
-      react:
-        specifier: '>=18'
-        version: 19.3.1
-      vite:
-        specifier: '>=8'
-        version: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)
+      '@smolter/preact':
+        specifier: workspace:*
+        version: link:../preact
 
   packages/ui:
     dependencies:
       preact:
-        specifier: '>=10'
+        specifier: '>=11.0.1'
         version: 11.0.1(preact-render-to-string@6.8.1)
       react:
         specifier: '>=18'
         version: 19.3.1
+    devDependencies:
+      '@smolter/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/vite:
     dependencies:
       '@smolter/files':
         specifier: workspace:*
         version: link:../files
+      '@smolter/server':
+        specifier: workspace:*
+        version: link:../server
       vite:
         specifier: 8.3.4
         version: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)

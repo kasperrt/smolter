@@ -1,0 +1,18 @@
+{
+  "slug": "NavigateFunction",
+  "title": "NavigateFunction",
+  "summary": "The callback returned by useNavigate.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Accepts a string URL, a numeric history delta, or a partial URL containing pathname, search, and hash. A second NavigateOptions argument controls URL navigation. Returns void.",
+      "code": "import type { NavigateFunction } from \"@kasperrt/smolter/preact\";\n\nexport function clearFragment(navigate: NavigateFunction): void {\n  navigate({ hash: \"\" }, { replace: true });\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Missing fields in a partial URL retain their current values. Numeric history navigation requires a browser and ignores the options argument. Use router.navigate when an awaitable navigation promise is needed.",
+      "code": ""
+    }
+  ]
+}

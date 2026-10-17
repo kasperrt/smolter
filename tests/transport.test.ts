@@ -1,5 +1,5 @@
 import { serverRoute } from "@smolter/client";
-import { createRouter, defineRoute } from "@smolter/core";
+import { createDataRouter, defineRoute } from "@smolter/core";
 import { handleRequest } from "@smolter/server";
 import { afterEach, expect, it, vi } from "vitest";
 import { deferred } from "./helpers/deferred";
@@ -25,7 +25,7 @@ it.each([false, true])(
       });
     });
 
-    const router = createRouter([
+    const router = createDataRouter([
       serverRoute("/slow", {
         ...(callThrough && {
           clientLoader: ({ serverLoader }) => serverLoader(),
@@ -85,7 +85,7 @@ it("connects client callbacks to registered server handlers and keeps fetcher re
       return await serverAction();
     },
   });
-  const router = createRouter([
+  const router = createDataRouter([
     defineRoute("/", { loader: () => "Page data" }),
     client,
   ]);
@@ -123,7 +123,7 @@ it("connects client callbacks to registered server handlers and keeps fetcher re
 it("shouldRevalidate receives mutation context and skips no-op loader reads", async () => {
   let reads = 0;
   const decide = vi.fn(() => false);
-  const router = createRouter([
+  const router = createDataRouter([
     defineRoute("/", { loader: () => ++reads, shouldRevalidate: decide }),
     defineRoute("/tasks/:id", { action: () => ({ changed: false }) }),
   ]);
@@ -213,7 +213,7 @@ it("surfaces server failures through the client route error state", async () => 
     Response.json({ error: "Unavailable" }, { status: 503 }),
   );
 
-  const router = createRouter([serverRoute("/", {})]);
+  const router = createDataRouter([serverRoute("/", {})]);
 
   await router.navigate("/");
 
@@ -229,7 +229,7 @@ it("follows a redirect returned through the server transport", async () => {
       }),
   );
 
-  const router = createRouter([
+  const router = createDataRouter([
     serverRoute("/", {}),
     defineRoute("/done", { loader: () => "Finished" }),
   ]);

@@ -1,0 +1,18 @@
+{
+  "slug": "ShouldRevalidateFunctionArgs",
+  "title": "ShouldRevalidateFunctionArgs",
+  "summary": "URLs, reason, and mutation details used to decide whether to reload.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Aliases RevalidationArgs. Contains url, currentUrl, nextUrl, defaultShouldRevalidate, and reason (manual, action, or navigation). Action-triggered refreshes can also supply formMethod, formAction, formData, and actionResult.",
+      "code": "import type { ShouldRevalidateFunctionArgs } from \"@kasperrt/smolter/preact\";\n\nexport function shouldRevalidate(args: ShouldRevalidateFunctionArgs): boolean {\n  if (args.reason === \"navigation\") {\n    return args.currentUrl.search !== args.nextUrl.search;\n  }\n\n  return args.defaultShouldRevalidate;\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Return false to skip the selected loader. During manual or action revalidation, the current and next URLs describe the route being refreshed. Selecting route IDs limits the candidates first; shouldRevalidate then decides whether each candidate actually reloads.",
+      "code": ""
+    }
+  ]
+}

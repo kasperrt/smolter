@@ -1,0 +1,28 @@
+{
+  "slug": "bundle-size",
+  "title": "Bundle size and tree shaking",
+  "summary": "Choose basic routing or the full data flow. Measure the exports your application actually uses.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Routing only",
+      "body": "Use createRouter with named imports from @kasperrt/smolter/preact for navigation only. Its data engine is absent from the bundle. Use createDataRouter for loaders/actions, fetchers and revalidation. React offers both factories through /react.",
+      "code": "import { render } from \"preact\";\nimport {\n  createRouter,\n  defineRoute,\n  Link,\n  RouterProvider,\n  Routes,\n} from \"@kasperrt/smolter/preact\";\nimport Home from \"./routes/home\";\nimport About from \"./routes/about\";\n\nconst router = createRouter([\n  defineRoute(\"/\", { default: Home }),\n  defineRoute(\"/about\", { default: About }),\n], { browser: true });\n\nrender(\n  <RouterProvider router={router}>\n    <nav>\n      <Link href=\"/\">Home</Link>\n      <Link href=\"/about\">About</Link>\n    </nav>\n    <Routes />\n  </RouterProvider>,\n  document.getElementById(\"app\")!,\n);"
+    },
+    {
+      "title": "Measured tiers",
+      "body": "Sizes below are generated from the current build. Routing-only uses createRouter; common routing/data uses createDataRouter. Complete entries retain both factories and every other export. The comparable wouter subset retains Router, Route, Switch, Link, useParams and useLocation. Framework runtimes are excluded. Shared code makes rows non-additive.",
+      "code": ""
+    },
+    {
+      "title": "Full applications",
+      "body": "Full applications use createDataRouter. The SSR and file-router client helpers already select it. SSR applications additionally use /preact/client and /preact/document; lazy file routes use /preact/lazy-route. Server rendering and the Vite plugin stay in their dedicated subpaths.",
+      "code": ""
+    },
+    {
+      "title": "Reproduce",
+      "body": "pnpm size builds the package and measures production ESM with esbuild, Terser and gzip level 9. Runtime library dependencies are included; React, React DOM and Preact are external. Your own bundler and selected exports can produce different results.",
+      "code": "pnpm size\npnpm size -- --breakdown"
+    }
+  ]
+}

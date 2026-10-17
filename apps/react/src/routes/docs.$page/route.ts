@@ -1,4 +1,4 @@
-export { ErrorBoundary } from "../../boundaries";
-export { HydrateFallback } from "./fallback";
-export { clientLoader } from "./loader";
+export { ErrorBoundary } from "../../ErrorBoundary";
+export { clientLoader } from "./clientLoader";
+export { HydrateFallback } from "./HydrateFallback";
 export { default } from "./view";

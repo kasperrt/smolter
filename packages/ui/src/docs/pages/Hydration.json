@@ -1,0 +1,23 @@
+{
+  "slug": "Hydration",
+  "title": "Hydration",
+  "summary": "Browser-visible root data and the router snapshot used to resume an SSR document.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Shape",
+      "body": "root contains the initial shared root loader data. snapshot is a Snapshot with the current absolute URL, route path, parameters, state, and optional loader/action data or error. Scripts writes this structure into #smolter-data; mountApplication reads it.",
+      "code": "import type { Hydration } from \"@kasperrt/smolter/preact\";\n\nconst hydration: Hydration = {\n  root: { displayName: \"Ada\" },\n  snapshot: {\n    url: \"https://example.test/tasks\",\n    path: \"/tasks\",\n    params: {},\n    state: \"idle\",\n    loaded: true,\n    data: { tasks: [] },\n  },\n};"
+    },
+    {
+      "title": "Serialization and loading state",
+      "body": "Use the document Scripts component for the application bootstrap instead of manually interpolating JSON into a script element. It escapes script-breaking text and includes the initial snapshot only. An idle hydrated router does not repeat its initial load. A server snapshot that still needs a client loader retains its loading state so the browser can complete it.",
+      "code": ""
+    },
+    {
+      "title": "Errors and updates",
+      "body": "Scripts serializes an error name, message, and enumerable metadata. mountApplication restores an Error instance before constructing the router. Later navigation and revalidation update router state, not the original hydration script. Hydration contains browser-visible data, not executable handlers or components.",
+      "code": ""
+    }
+  ]
+}

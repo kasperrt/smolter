@@ -1,0 +1,28 @@
+{
+  "slug": "useNavigate",
+  "title": "useNavigate",
+  "summary": "Navigate to a URL or move through browser history.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "The hook takes no arguments. The returned NavigateFunction accepts a string URL, a number of history entries, or an object with pathname, search, and hash. Its optional second argument contains NavigateOptions.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns a stable callback for the current router. The callback returns void, including for URL navigation. If you need to await navigation, call useRouter().navigate instead.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "The object form retains omitted URL parts. Set search or hash to an empty string when you want to remove them.",
+      "code": "import { useNavigate } from \"@kasperrt/smolter/preact\";\n\nexport function SearchControls() {\n  const navigate = useNavigate();\n\n  return (\n    <button onClick={() => navigate({ search: \"\", hash: \"\" }, { replace: true })}>\n      Clear search\n    </button>\n  );\n}"
+    },
+    {
+      "title": "History and deployments",
+      "body": "A numeric target calls window.history.go and is browser-only. URL targets go through the router and its installed navigation integrations. Use mountApplication when you need browser history state, retained views, and deployment handoff behavior; a bare provider does not install all those integrations. For ordinary navigable content, prefer Link so users retain anchor interactions.",
+      "code": ""
+    }
+  ]
+}

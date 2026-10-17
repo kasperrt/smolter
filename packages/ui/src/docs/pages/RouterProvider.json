@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Parameters",
-      "body": "router is a stable Router instance. children contains the route renderer and shared layout.",
+      "body": "router is a stable instance from createRouter or createDataRouter. children contains the route renderer and shared layout. Data-specific hooks require createDataRouter.",
       "code": ""
     },
     {

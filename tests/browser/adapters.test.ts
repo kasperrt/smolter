@@ -1,3 +1,9 @@
+import { configureApplication } from "@smolter/core/environment";
+import {
+  type FormSubmissionEvent,
+  submissionBody,
+  submitForm,
+} from "@smolter/core/submission";
 import * as preact from "@smolter/preact";
 import * as react from "@smolter/react";
 import { createElement as preactElement } from "preact/compat";
@@ -29,7 +35,7 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       shouldRevalidate: ({ reason }) => reason !== "navigation",
       default: Page,
     });
-    const router = api.createRouter([route]);
+    const router = api.createDataRouter([route]);
     const container = document.createElement("div");
     const root = mount(container);
 
@@ -118,7 +124,7 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     const initial = deferred<void>();
     const refresh = deferred<void>();
     let reads = 0;
-    const router = api.createRouter(
+    const router = api.createDataRouter(
       [
         api.defineRoute("/empty", {
           loader: () => [initial.promise, refresh.promise][reads++],
@@ -182,7 +188,7 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       default: () => h("strong", null, "Task view"),
     });
     const other = api.defineRoute("/other", { loader: () => "Other" });
-    const router = api.createRouter([route, other], { url: "/tasks/42" });
+    const router = api.createDataRouter([route, other], { url: "/tasks/42" });
     const container = document.createElement("div");
     const root = mount(container);
 
@@ -229,7 +235,7 @@ for (const { name, api, element: h, root: mount } of frameworks) {
         ),
         h(
           fetcher.Form,
-          { method: "post", id: "fetcher-form" },
+          { id: "fetcher-form" },
           h("button", { name: "amount", value: "3", type: "submit" }, "Add"),
         ),
         h(
@@ -260,6 +266,9 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       .toEqual({ count: 2, method: "PATCH" });
     await expect.poll(() => container.textContent).toContain('"data":2');
 
+    expect(
+      container.querySelector<HTMLFormElement>("#fetcher-form")!.method,
+    ).toBe("post");
     container.querySelector<HTMLButtonElement>("#fetcher-form button")!.click();
 
     await expect.poll(() => fetcher.data).toEqual({ count: 5, method: "POST" });
@@ -274,6 +283,11 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     body.set("amount", "4");
     await fetcher!.submit(body, { method: "PUT" });
     await expect.poll(() => fetcher.data).toEqual({ count: 9, method: "PUT" });
+
+    body.set("amount", "0");
+    await fetcher!.submit(body);
+    await expect.poll(() => fetcher.data).toEqual({ count: 9, method: "POST" });
+
     await revalidate!();
     await expect.poll(() => container.textContent).toContain('"data":9');
 
@@ -301,11 +315,80 @@ for (const { name, api, element: h, root: mount } of frameworks) {
   });
 }
 
+for (const { name, api, element: h, root: mount } of frameworks) {
+  it(
+    name + " selects loading, boundary, error, and missing-view fallbacks",
+    async (context) => {
+      const pending = deferred<string | Error>();
+      const router = api.createDataRouter([
+        api.defineRoute("/ready", { loader: () => "Ready", default: Page }),
+        api.defineRoute("/pending", {
+          loader: () => pending.promise,
+          default: Page,
+          HydrateFallback: Loading,
+          ErrorBoundary: ErrorView,
+        }),
+        api.defineRoute("/plain", {
+          loader: () => new Error("Plain error"),
+          default: Page,
+        }),
+        api.defineRoute("/missing-view", { loader: () => "Hidden data" }),
+      ]);
+      const container = document.createElement("div");
+      const root = mount(container);
+
+      function Page() {
+        return h("p", null, String(api.useLoaderData()));
+      }
+
+      function Loading() {
+        return h("p", null, "Loading");
+      }
+
+      function ErrorView({ error }: react.ErrorProps) {
+        return h("p", null, "Boundary: " + error.message);
+      }
+
+      document.body.append(container);
+      context.onTestFinished(() => {
+        root.unmount();
+        router.dispose();
+        container.remove();
+      });
+
+      await router.navigate("/ready");
+      root.render(
+        h(
+          api.RouterProvider,
+          { router },
+          h(api.Routes, { fallback: "Missing view" }),
+        ),
+      );
+      await expect.poll(() => container.textContent).toBe("Ready");
+
+      const navigation = router.navigate("/pending");
+
+      await expect.poll(() => container.textContent).toBe("Loading");
+      pending.resolve(new Error("Route failed"));
+      await navigation;
+      await expect
+        .poll(() => container.textContent)
+        .toBe("Boundary: Route failed");
+
+      await router.navigate("/plain");
+      await expect.poll(() => container.textContent).toBe("Plain error");
+
+      await router.navigate("/missing-view");
+      await expect.poll(() => container.textContent).toBe("Missing view");
+    },
+  );
+}
+
 it("integrates browser history and cancels in-flight work on disposal", async (context) => {
   const original = window.location.href;
   let finish: (value: string) => void = () => {};
   let signal: AbortSignal | undefined;
-  const router = react.createRouter(
+  const router = react.createDataRouter(
     [
       react.defineRoute("/history-a", { loader: () => "A" }),
       react.defineRoute("/history-b", { loader: () => "B" }),
@@ -358,7 +441,7 @@ it("integrates browser history and cancels in-flight work on disposal", async (c
 it("honors navigation revalidation for back and forward without adding history entries", async (context) => {
   const original = location.href;
   let reads = 0;
-  const router = react.createRouter(
+  const router = react.createDataRouter(
     [
       react.defineRoute("/history-items", {
         loader: () => ++reads,
@@ -389,3 +472,458 @@ it("honors navigation revalidation for back and forward without adding history e
   expect(reads).toBe(1);
   expect(history.length).toBe(entries);
 });
+
+it("Preact links keep resolved hrefs, prefetches, and clicks on the same route", async (context) => {
+  let preloads = 0;
+  const intents: string[] = [];
+  const router = preact.createDataRouter(
+    [
+      preact.defineRoute("/items/one", {}),
+      preact.defineRoute("/mapped", {
+        loader: () => "Mapped",
+        preload: async () => {
+          preloads++;
+        },
+      }),
+      preact.defineRoute("/other/one", {}),
+      preact.defineRoute("/other/two", { loader: () => "Relative" }),
+    ],
+    { url: "/items/one" },
+  );
+  const container = document.createElement("div");
+  const root = preactRoot(container);
+
+  configureApplication({
+    resolveURL(url) {
+      if (url.pathname === "/items/two") url.pathname = "/mapped";
+
+      return url;
+    },
+  });
+  document.body.append(container);
+  context.onTestFinished(() => {
+    root.unmount();
+    router.dispose();
+    container.remove();
+    configureApplication({});
+  });
+
+  function LocationReader() {
+    return preactElement("output", null, preact.useURLLocation().href);
+  }
+
+  root.render(
+    preactElement(
+      preact.RouterProvider,
+      { router },
+      preactElement(LocationReader, null),
+      preactElement(
+        preact.Link,
+        {
+          to: "two",
+          onFocus: (event) => intents.push(event.type),
+          onPointerEnter: (event) => intents.push(event.type),
+          onTouchStart: (event) => intents.push(event.type),
+        },
+        "Next",
+      ),
+    ),
+  );
+
+  await expect
+    .poll(() => container.querySelector("a")?.href)
+    .toBe("http://localhost/mapped");
+
+  expect(container.querySelector("output")?.textContent).toBe(
+    "http://localhost/items/one",
+  );
+
+  const anchor = container.querySelector("a")!;
+
+  anchor.focus();
+  anchor.dispatchEvent(new PointerEvent("pointerenter"));
+  anchor.dispatchEvent(new TouchEvent("touchstart"));
+  await expect.poll(() => preloads).toBe(3);
+  expect(intents).toEqual(["focusin", "pointerenter", "touchstart"]);
+  anchor.click();
+  await expect.poll(() => router.getSnapshot().data).toBe("Mapped");
+
+  await router.navigate("/other/one");
+  await expect.poll(() => anchor.href).toBe("http://localhost/other/two");
+  anchor.click();
+  await expect.poll(() => router.getSnapshot().data).toBe("Relative");
+  await expect
+    .poll(() => container.querySelector("output")?.textContent)
+    .toBe("http://localhost/other/two");
+});
+
+it("preserves repeated HTML form fields and leaves external form actions to the browser", () => {
+  const form = document.createElement("form");
+
+  for (const value of ["first", "second"]) {
+    const input = document.createElement("input");
+    input.name = "tag";
+    input.value = value;
+    form.append(input);
+  }
+
+  expect(submissionBody(form).getAll("tag")).toEqual(["first", "second"]);
+
+  const router = react.createDataRouter([]);
+  const snapshot = router.getSnapshot();
+
+  form.addEventListener("submit", (event) => {
+    const submission: FormSubmissionEvent = {
+      currentTarget: form,
+      defaultPrevented: event.defaultPrevented,
+      preventDefault: () => event.preventDefault(),
+    };
+
+    submitForm(router, submission, event.submitter, {
+      action: "https://other.example/submit",
+    });
+  });
+  const event = new SubmitEvent("submit", { cancelable: true });
+
+  form.dispatchEvent(event);
+
+  expect(event.defaultPrevented).toBe(false);
+  expect(router.getSnapshot()).toBe(snapshot);
+  router.dispose();
+});
+
+it("Preact useSubmit preserves GET fields and defaults mutations to POST", async (context) => {
+  const router = preact.createDataRouter([
+    preact.defineRoute("/", {}),
+    preact.defineRoute("/search", {
+      loader: ({ request }) => [...new URL(request.url).searchParams],
+      action: ({ request }) => request.method,
+    }),
+  ]);
+  const container = document.createElement("div");
+  const root = preactRoot(container);
+  let submit: ReturnType<typeof preact.useSubmit> | undefined;
+
+  document.body.append(container);
+  context.onTestFinished(() => {
+    root.unmount();
+    router.dispose();
+    container.remove();
+  });
+
+  function Screen() {
+    submit = preact.useSubmit();
+
+    return null;
+  }
+
+  root.render(
+    preactElement(
+      preact.RouterProvider,
+      { router },
+      preactElement(Screen, null),
+    ),
+  );
+  await expect.poll(() => typeof submit).toBe("function");
+
+  const data = new FormData();
+
+  data.append("tag", "one & two");
+  data.append("tag", "+three");
+  data.append("file", new File(["text"], "notes.txt"));
+  await submit!(data, { method: "get", action: "/search" });
+
+  expect(router.getSnapshot().data).toEqual([
+    ["tag", "one & two"],
+    ["tag", "+three"],
+    ["file", "notes.txt"],
+  ]);
+
+  await submit!(data, { action: "/search" });
+
+  expect(router.getSnapshot().actionData).toBe("POST");
+});
+
+interface LinkInteraction {
+  name: string;
+  attributes?: Partial<react.LinkProps>;
+  mouse?: MouseEventInit;
+  navigates: boolean;
+  prevented: boolean;
+}
+
+const linkInteractions: LinkInteraction[] = [
+  { name: "plain", navigates: true, prevented: true },
+  {
+    name: "self",
+    attributes: { target: "_self" },
+    navigates: true,
+    prevented: true,
+  },
+  {
+    name: "download",
+    attributes: { download: "" },
+    navigates: false,
+    prevented: false,
+  },
+  {
+    name: "target",
+    attributes: { target: "preview" },
+    navigates: false,
+    prevented: false,
+  },
+  {
+    name: "external",
+    attributes: { href: "https://example.invalid/" },
+    navigates: false,
+    prevented: false,
+  },
+  {
+    name: "cancelled",
+    attributes: { onClick: (event) => event.preventDefault() },
+    navigates: false,
+    prevented: true,
+  },
+  ...["ctrlKey", "altKey", "shiftKey", "metaKey"].map((key) => ({
+    name: key,
+    mouse: { [key]: true },
+    navigates: false,
+    prevented: false,
+  })),
+  {
+    name: "middle",
+    mouse: { button: 1 },
+    navigates: false,
+    prevented: false,
+  },
+];
+
+for (const { name, api, element: h, root: mount } of frameworks) {
+  it(`${name} preserves browser link interactions`, async (context) => {
+    let reads = 0;
+    let prevented: boolean | undefined;
+    const router = api.createDataRouter([
+      api.defineRoute("/", {}),
+      api.defineRoute("/next", { loader: () => ++reads }),
+    ]);
+    const container = document.createElement("div");
+    const root = mount(container);
+    const preventBrowserNavigation = (event: MouseEvent) => {
+      prevented = event.defaultPrevented;
+      event.preventDefault();
+    };
+
+    document.body.append(container);
+    document.addEventListener("click", preventBrowserNavigation);
+    context.onTestFinished(() => {
+      document.removeEventListener("click", preventBrowserNavigation);
+      root.unmount();
+      router.dispose();
+      container.remove();
+    });
+
+    await router.navigate("/");
+    root.render(
+      h(
+        api.RouterProvider,
+        { router },
+        ...linkInteractions.map((interaction) =>
+          h(
+            api.Link,
+            {
+              key: interaction.name,
+              href: "/next",
+              ...interaction.attributes,
+              id: `link-case-${interaction.name}`,
+            },
+            interaction.name,
+          ),
+        ),
+      ),
+    );
+    await expect
+      .poll(() => container.querySelectorAll("a").length)
+      .toBe(linkInteractions.length);
+
+    let expectedReads = 0;
+
+    for (const interaction of linkInteractions) {
+      prevented = undefined;
+      container.querySelector(`#link-case-${interaction.name}`)!.dispatchEvent(
+        new MouseEvent("click", {
+          bubbles: true,
+          cancelable: true,
+          ...interaction.mouse,
+        }),
+      );
+
+      expect(prevented, interaction.name).toBe(interaction.prevented);
+
+      if (interaction.navigates) expectedReads++;
+
+      await new Promise(requestAnimationFrame);
+      expect(reads, interaction.name).toBe(expectedReads);
+    }
+  });
+}
+
+it("Preact prefetch opt-outs retain caller intent handlers", async (context) => {
+  let preloads = 0;
+  const callbacks: number[] = [];
+  const router = preact.createDataRouter([
+    preact.defineRoute("/", {}),
+    preact.defineRoute("/next", {
+      default: () => null,
+      preload: async () => {
+        preloads++;
+      },
+    }),
+  ]);
+  const modes: preact.LinkProps[] = [
+    { href: "/next" },
+    { href: "/next", prefetch: "none" },
+    { href: "/next", reloadDocument: true },
+    { href: "https://example.invalid/next" },
+  ];
+  const container = document.createElement("div");
+  const root = preactRoot(container);
+
+  document.body.append(container);
+  context.onTestFinished(() => {
+    root.unmount();
+    router.dispose();
+    container.remove();
+  });
+
+  await router.navigate("/");
+  root.render(
+    preactElement(
+      preact.RouterProvider,
+      { router },
+      ...modes.map((props, index) =>
+        preactElement(
+          preact.Link,
+          {
+            ...props,
+            key: index,
+            onFocus: () => callbacks.push(index),
+            onPointerEnter: () => callbacks.push(index),
+            onTouchStart: () => callbacks.push(index),
+          },
+          String(index),
+        ),
+      ),
+    ),
+  );
+  await expect.poll(() => container.querySelectorAll("a").length).toBe(4);
+
+  for (const anchor of container.querySelectorAll("a")) {
+    anchor.focus();
+    anchor.dispatchEvent(new PointerEvent("pointerenter"));
+    anchor.dispatchEvent(new TouchEvent("touchstart"));
+  }
+
+  await expect.poll(() => preloads).toBe(3);
+  expect(callbacks).toEqual([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]);
+});
+
+it("Preact fetchers submit structured data to their selected route", async (context) => {
+  const route = preact.defineRoute("/save", {
+    action: async ({ request }) => ({
+      method: request.method,
+      fields: [...(await request.formData())],
+    }),
+  });
+  const router = preact.createDataRouter([preact.defineRoute("/", {}), route]);
+  const container = document.createElement("div");
+  const root = preactRoot(container);
+  let fetcher: ReturnType<typeof preact.useFetcher> | undefined;
+
+  document.body.append(container);
+  context.onTestFinished(() => {
+    root.unmount();
+    router.dispose();
+    container.remove();
+  });
+
+  function Screen() {
+    fetcher = preact.useFetcher(route);
+
+    return null;
+  }
+
+  root.render(
+    preactElement(
+      preact.RouterProvider,
+      { router },
+      preactElement(Screen, null),
+    ),
+  );
+  await expect.poll(() => fetcher).toBeDefined();
+
+  await fetcher!.submit({ count: 3 });
+  await expect
+    .poll(() => fetcher!.data)
+    .toEqual({
+      method: "POST",
+      fields: [["count", "3"]],
+    });
+
+  await fetcher!.submit(
+    { nested: { count: 4 } },
+    {
+      method: "patch",
+      encType: "application/json",
+    },
+  );
+  await expect
+    .poll(() => fetcher!.data)
+    .toEqual({
+      method: "PATCH",
+      fields: [["_payload", '{"nested":{"count":4}}']],
+    });
+
+  expect(router.getSnapshot().url).toBe("http://localhost/");
+  expect(router.getSnapshot().actionData).toBeUndefined();
+});
+
+for (const { name, api, element: h, root: mount } of frameworks) {
+  it(`${name} renders and navigates without the data engine`, async (context) => {
+    function Page() {
+      const params = api.useParams();
+      const [location] = api.useLocation();
+
+      return h("output", null, `${params.id ?? "home"}: ${location}`);
+    }
+
+    const router = api.createRouter([
+      api.defineRoute("/", { default: Page }),
+      api.defineRoute("/tasks/:id", { default: Page }),
+    ]);
+    const container = document.createElement("div");
+    const root = mount(container);
+    document.body.append(container);
+    context.onTestFinished(() => {
+      root.unmount();
+      router.dispose();
+      container.remove();
+    });
+    root.render(
+      h(
+        api.RouterProvider,
+        { router },
+        h(api.Link, { href: "/tasks/42" }, "Open task"),
+        h(api.Routes, { fallback: "Not found" }),
+      ),
+    );
+    await expect
+      .poll(() => container.querySelector("output")?.textContent)
+      .toBe("home: /");
+    container.querySelector("a")!.click();
+    await expect
+      .poll(() => container.querySelector("output")?.textContent)
+      .toBe("42: /tasks/42");
+    await router.navigate("/missing");
+    await expect.poll(() => container.textContent).toContain("Not found");
+  });
+}

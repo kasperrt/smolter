@@ -1,0 +1,28 @@
+{
+  "slug": "Links",
+  "title": "Links",
+  "summary": "Render the root module\u2019s document link descriptors.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Takes no props and requires application context. Reads the links function from the root module.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Renders one link element per descriptor returned by rootModule.links. With no links function, renders no link elements.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Use this for stylesheets, icons, and resource hints declared by the application root. Keep deployment-specific asset URLs in the application.",
+      "code": "import { Links, Meta } from \"@kasperrt/smolter/preact/document\";\n\nexport function DocumentHead() {\n  return (\n    <head>\n      <meta charSet=\"utf-8\" />\n      <Meta />\n      <Links />\n    </head>\n  );\n}"
+    },
+    {
+      "title": "Scope",
+      "body": "Links does not discover fonts, generate CDN URLs, or load root data. Root links and route metadata are separate: route-level link descriptors can be returned by meta using tagName: \"link\".",
+      "code": ""
+    }
+  ]
+}

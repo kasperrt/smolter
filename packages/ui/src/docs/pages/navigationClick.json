@@ -1,0 +1,28 @@
+{
+  "slug": "navigationClick",
+  "title": "navigationClick",
+  "summary": "Check whether an anchor click is eligible for client-side routing.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Pass the native MouseEvent and the anchor element. For React events, pass event.nativeEvent and event.currentTarget.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns false for an already prevented event, a non-primary button, any modifier key, a download attribute, or a target other than an empty target or _self. Otherwise returns true.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "The helper only checks browser interaction semantics. Resolve and check the destination before preventing the default behavior.",
+      "code": "import { internalURL, navigationClick } from \"@kasperrt/smolter/utils\";\nimport type { Router } from \"@kasperrt/smolter/preact\";\n\nexport function handleLink(event: MouseEvent, anchor: HTMLAnchorElement, router: Router) {\n  if (!navigationClick(event, anchor)) return;\n\n  const target = internalURL(router.getSnapshot().url, anchor.href);\n  if (!target) return;\n\n  event.preventDefault();\n  void router.navigate(target.href);\n}"
+    },
+    {
+      "title": "Scope",
+      "body": "Does not prevent default, stop propagation, inspect route existence, check same-origin URLs, or perform navigation. Link already combines these responsibilities; use this helper only when implementing an application-owned anchor integration.",
+      "code": ""
+    }
+  ]
+}

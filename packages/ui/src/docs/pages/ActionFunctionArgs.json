@@ -1,0 +1,18 @@
+{
+  "slug": "ActionFunctionArgs",
+  "title": "ActionFunctionArgs",
+  "summary": "Request arguments supplied to a server action.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Aliases LoaderFunctionArgs. request carries the mutation method and body; params identifies the matched route; signal cancels work when the request is superseded or disconnected.",
+      "code": "import type { ActionFunctionArgs } from \"@kasperrt/smolter/preact\";\n\nexport async function action({ request, params }: ActionFunctionArgs) {\n  const body = await request.formData();\n\n  return { id: params.id, name: String(body.get(\"name\") ?? \"\") };\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Read the request body once. Validate user input before mutating application state. Return plain data or data(...) for results and redirect(...) for navigation; a fetcher action result is exposed on that fetcher.",
+      "code": ""
+    }
+  ]
+}

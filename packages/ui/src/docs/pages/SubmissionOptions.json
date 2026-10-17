@@ -1,0 +1,23 @@
+{
+  "slug": "SubmissionOptions",
+  "title": "SubmissionOptions",
+  "summary": "Route target, method, encoding, and navigation options for Preact submissions.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "action is an optional route URL, defaulting to the current route URL. method defaults to POST. encType: \"application/json\" enables the structured _payload encoding read by readSubmission. replace and preventScrollReset apply to GET navigation through useSubmit; they do not change the HTTP body.",
+      "code": "import type { SubmissionOptions } from \"@kasperrt/smolter/preact\";\n\nconst options: SubmissionOptions = {\n  action: \"/tasks/7\",\n  method: \"PATCH\",\n  encType: \"application/json\",\n};"
+    },
+    {
+      "title": "Reads and mutations",
+      "body": "useSubmit handles GET by putting successful form controls into the destination query string and navigating there. For an independent loader request, use fetcher.load(url). Use fetcher.submit for POST, PUT, PATCH, or DELETE mutations; its state and action result belong to that fetcher.",
+      "code": ""
+    },
+    {
+      "title": "JSON handler",
+      "body": "Structured submissions use a FormData field containing JSON. Parse them in the route handler, then validate the resulting unknown value before using it. readSubmission also accepts an actual JSON Request when a server client sends one.",
+      "code": "import { readSubmission } from \"@kasperrt/smolter/preact\";\nimport type { ActionFunctionArgs } from \"@kasperrt/smolter/preact\";\n\nexport async function action({ request }: ActionFunctionArgs) {\n  const input = await readSubmission(request);\n\n  return { received: input };\n}"
+    }
+  ]
+}

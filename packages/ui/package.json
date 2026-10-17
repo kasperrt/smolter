@@ -8,11 +8,12 @@
     "./react": "./src/react.ts",
     "./preact": "./src/preact.ts",
     "./style.css": "./src/style.css",
-    "./docs": "./src/docs/index.ts"
+    "./docs": "./src/docs/index.ts",
+    "./hosting": "./src/hosting.ts"
   },
   "peerDependencies": {
     "react": ">=18",
-    "preact": ">=10"
+    "preact": ">=11.0.1"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -21,5 +22,8 @@
     "preact": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "@smolter/core": "workspace:*"
   }
 }

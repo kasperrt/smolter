@@ -1,0 +1,28 @@
+{
+  "slug": "useRouteLoaderData",
+  "title": "useRouteLoaderData",
+  "summary": "Read root data or the active route\u2019s loader data by manifest ID.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Pass the route\u2019s manifest id, not its URL or file path. The reserved ID root selects root data. The optional generic accepts a loader function type or a result type. Requires RouterApplication or mountApplication.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns RouteData<T> or undefined. An ordinary route must exist in the application manifest and be the active snapshot path. The hook does not load inactive routes or retain a cache of previously visited pages.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "The manifest assigns id: \"tasks\" to the task route. Its loader type can be imported without importing the server implementation into the browser.",
+      "code": "import { useRouteLoaderData } from \"@kasperrt/smolter/preact\";\nimport type { loader } from \"../routes/tasks/loader\";\n\nexport function TaskCount() {\n  const data = useRouteLoaderData<typeof loader>(\"tasks\");\n\n  return <span>{data?.tasks.length ?? 0} tasks</span>;\n}"
+    },
+    {
+      "title": "Independent reads",
+      "body": "Use fetcher.load with a concrete route URL when you need data from an inactive route. That result belongs to fetcher.data. This hook reads the active loader snapshot and does not read fetcher results or actionData.",
+      "code": ""
+    }
+  ]
+}

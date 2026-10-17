@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 
-const files = ["packages/smolter/package.json", "packages/smolter/jsr.json"];
+const files = ["package.json", "jsr.json"];
 const manifests = await Promise.all(
   files.map(async (file) => JSON.parse(await readFile(file, "utf8"))),
 );

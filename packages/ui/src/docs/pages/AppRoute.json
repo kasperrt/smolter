@@ -1,0 +1,18 @@
+{
+  "slug": "AppRoute",
+  "title": "AppRoute",
+  "summary": "A flat application route with optional metadata and lazy-module integration.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Extends Route with id, routePath, meta, preload, and resolveComponent. path is the pattern matched by the router. routePath can supply a normalized runtime URL pattern for a generated route.",
+      "code": "import type { AppRoute } from \"@kasperrt/smolter/preact\";\n\nexport const route: AppRoute = {\n  id: \"task\",\n  path: \"/tasks/:id\",\n  loader: ({ params }) => ({ id: params.id }),\n};"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "File-router helpers populate lazy-module hooks. Do not hand-code preload or resolveComponent unless providing your own lazy integration. A route without a default component can act as a resource route on the server.",
+      "code": ""
+    }
+  ]
+}

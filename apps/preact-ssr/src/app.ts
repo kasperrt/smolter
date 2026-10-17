@@ -24,6 +24,6 @@ function Example() {
     mode: "Preact SSR",
     basePort: Number(import.meta.env.VITE_EXAMPLE_BASE_PORT ?? 5173),
     link: (href, children, className) => h(Link, { href, className }, children),
-    content: h(Routes, { fallback: ui.CounterFallback() }),
+    content: h(Routes, { fallback: ui.LoadingPanel("Loading…") }),
   });
 }

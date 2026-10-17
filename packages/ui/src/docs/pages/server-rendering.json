@@ -12,7 +12,7 @@
     {
       "title": "Hydrate",
       "body": "deserialize restores Error objects. A successful hydration snapshot avoids a duplicate initial loader request. Client-only routes render their fallback on the server and load in the browser.",
-      "code": "import { deserialize } from \"@kasperrt/smolter/react/client\";\n\nconst hydrationData = deserialize(\n  document.querySelector(\"#smolter-data\")!.textContent!,\n);\nconst router = createRouter(browserRoutes, { browser: true, hydrationData });\n\nhydrateRoot(document.querySelector(\"#app\")!,\n  <RouterProvider router={router}><Routes /></RouterProvider>,\n);"
+      "code": "import { deserialize } from \"@kasperrt/smolter/react/client\";\n\nconst hydrationData = deserialize(\n  document.querySelector(\"#smolter-data\")!.textContent!,\n);\nconst router = createDataRouter(browserRoutes, { browser: true, hydrationData });\n\nhydrateRoot(document.querySelector(\"#app\")!,\n  <RouterProvider router={router}><Routes /></RouterProvider>,\n);"
     },
     {
       "title": "Production transport",

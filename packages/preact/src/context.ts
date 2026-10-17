@@ -3,21 +3,22 @@
  * @module
  */
 
-import type { Router, Snapshot } from "@smolter/core";
-import type { ReactNode } from "./runtime.ts";
+import type { NavigationRouter, Snapshot } from "@smolter/core";
+
 import {
   createContext,
   createElement,
+  type ReactNode,
   useContext,
   useEffect,
   useSyncExternalStore,
 } from "./runtime.ts";
 
-const RouterContext = createContext<Router | undefined>(undefined);
+const RouterContext = createContext<NavigationRouter | undefined>(undefined);
 
 /** Router instance and children rendered within its context. */
 export interface RouterProviderProps {
-  router: Router;
+  router: NavigationRouter;
   children?: ReactNode;
 }
 
@@ -28,19 +29,31 @@ export function RouterProvider({
 }: RouterProviderProps): ReactNode {
   useEffect(router.start, [router]);
 
-  return createElement(RouterContext.Provider, { value: router }, children);
+  return createElement(RouterContext, { value: router }, children);
 }
 /** Hooks require a RouterProvider. */
-export function useRouter(): Router {
-  return useContext(RouterContext) as Router;
+export function useRouter<T extends NavigationRouter = NavigationRouter>(): T {
+  return useContext(RouterContext) as T;
 }
 
-type SnapshotSelector<T> = (snapshot: Snapshot) => T;
+export function useSnapshot(): Snapshot;
 
-export function useSnapshot<T>(select: SnapshotSelector<T>): T {
+export function useSnapshot<K extends keyof Snapshot>(key: K): Snapshot[K];
+
+export function useSnapshot<K extends keyof Snapshot>(
+  key: K,
+  path: string | undefined,
+): Snapshot[K] | undefined;
+
+export function useSnapshot(key?: keyof Snapshot, path?: string) {
   const router = useRouter();
+  const getSnapshot = () => {
+    const snapshot = router.getSnapshot();
 
-  const getSnapshot = () => select(router.getSnapshot());
+    if (path !== undefined && path !== snapshot.path) return undefined;
 
-  return useSyncExternalStore(router.subscribe, getSnapshot, getSnapshot);
+    return key ? snapshot[key] : snapshot;
+  };
+
+  return useSyncExternalStore(router.subscribe, getSnapshot);
 }

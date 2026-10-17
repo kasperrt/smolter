@@ -1,0 +1,24 @@
+import { useFetcher, useLoaderData, useRevalidator } from "@kasperrt/smolter/preact";
+import type { clientLoader } from "./clientLoader";
+import type { clientAction } from "./clientAction";
+
+export default function Counter() {
+  const data = useLoaderData<typeof clientLoader>();
+  const fetcher = useFetcher<typeof clientAction>();
+  const revalidate = useRevalidator();
+  const busy = fetcher.state !== "idle";
+
+  return <>
+    <output>{data?.count}</output>
+
+    <fetcher.Form action="/examples/counter" method="post">
+      <button disabled={busy} name="intent" value="increment">Add one +</button>
+      <button disabled={busy} name="intent" value="reset">Reset</button>
+    </fetcher.Form>
+
+    <p>{fetcher.error?.message ?? fetcher.data?.message}</p>
+    <p>Loader runs: {data?.reads}</p>
+
+    <button onClick={() => revalidate()}>Revalidate ↻</button>
+  </>;
+}

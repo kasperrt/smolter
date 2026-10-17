@@ -1,0 +1,28 @@
+{
+  "slug": "send",
+  "title": "send",
+  "summary": "Write a web Response to a Node ServerResponse.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Pass response and the outgoing Node response.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns Promise<void> after buffering and sending the response body.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Write a web Response to a Node ServerResponse.",
+      "code": "await send(response, res);"
+    },
+    {
+      "title": "Behavior and limits",
+      "body": "Preserves status, headers and multiple Set-Cookie headers. Secure cookies are relaxed for local non-production HTTP. This helper does not stream; errors propagate to the caller.",
+      "code": ""
+    }
+  ]
+}

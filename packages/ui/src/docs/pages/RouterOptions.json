@@ -7,7 +7,7 @@
     {
       "title": "Usage",
       "body": "Initial router configuration. browser opts into browser history and defaults to false. url supplies an initial location for memory routing. hydrationData supplies a server snapshot and avoids a duplicate successful initial load.",
-      "code": "const router = createRouter(routes, {\n  browser: true,\n  hydrationData: deserialize(json),\n});"
+      "code": "const router = createDataRouter(routes, {\n  browser: true,\n  hydrationData: deserialize(json),\n});"
     }
   ]
 }

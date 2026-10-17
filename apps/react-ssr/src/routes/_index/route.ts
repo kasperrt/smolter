@@ -1,5 +1,10 @@
-export { ErrorBoundary, HydrateFallback } from "../../boundaries";
-export { action } from "./action";
-export { loader } from "./loader";
-export { shouldRevalidate } from "./should-revalidate";
-export { default } from "./view";
+import { Link } from "@kasperrt/smolter/react";
+import { siteHref } from "@smolter/ui/hosting";
+import { ui } from "@smolter/ui/react";
+import { createElement as h } from "react";
+
+export default function Home() {
+  return ui.Landing((href, children, className) =>
+    h(Link, { href: siteHref(href), className }, children),
+  );
+}

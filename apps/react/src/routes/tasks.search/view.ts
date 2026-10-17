@@ -1,8 +1,8 @@
 import { Form, Link, useLoaderData } from "@kasperrt/smolter/react";
+import { siteHref } from "@smolter/ui/hosting";
 import { ui } from "@smolter/ui/react";
 import { createElement as h } from "react";
-import { siteHref } from "../../../../../scripts/site-history";
-import type { clientLoader } from "./loader";
+import type { clientLoader } from "./clientLoader";
 
 export default function SearchTasks() {
   const data = useLoaderData<typeof clientLoader>();

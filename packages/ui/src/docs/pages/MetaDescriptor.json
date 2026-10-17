@@ -1,0 +1,18 @@
+{
+  "slug": "MetaDescriptor",
+  "title": "MetaDescriptor",
+  "summary": "One metadata record rendered by Meta.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "A record of metadata properties. A string title renders a title element. A script:ld+json field renders safely serialized JSON-LD. tagName: \"link\" renders a link; other records render a meta element.",
+      "code": "import type { MetaDescriptor } from \"@kasperrt/smolter/preact\";\n\nexport const description: MetaDescriptor = {\n  name: \"description\",\n  content: \"A shared task list.\",\n};"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "MetaDescriptor is a broad record type rather than a strict HTML schema. Supply valid element attributes. JSON-LD is serialized as JSON data; do not provide an already stringified script body.",
+      "code": ""
+    }
+  ]
+}

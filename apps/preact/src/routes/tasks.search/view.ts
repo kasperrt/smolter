@@ -1,8 +1,8 @@
 import { Form, Link, useLoaderData } from "@kasperrt/smolter/preact";
+import { siteHref } from "@smolter/ui/hosting";
 import { ui } from "@smolter/ui/preact";
 import { h } from "preact";
-import { siteHref } from "../../../../../scripts/site-history";
-import type { clientLoader } from "./loader";
+import type { clientLoader } from "./clientLoader";
 
 export default function SearchTasks() {
   const data = useLoaderData<typeof clientLoader>();

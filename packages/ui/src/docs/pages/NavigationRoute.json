@@ -1,0 +1,13 @@
+{
+  "slug": "NavigationRoute",
+  "title": "NavigationRoute",
+  "summary": "A route without loader/action handlers.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Contains a path and optional component/error/fallback metadata. loader, action, clientLoader, clientAction and shouldRevalidate are forbidden. Use a normal Route with createDataRouter when data handling is needed.",
+      "code": "const route = defineRoute(\"/about\", { default: About });"
+    }
+  ]
+}

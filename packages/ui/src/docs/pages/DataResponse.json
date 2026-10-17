@@ -1,0 +1,18 @@
+{
+  "slug": "DataResponse",
+  "title": "DataResponse",
+  "summary": "Typed data accompanied by HTTP status and headers.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Contains value: T, init: ResponseInit, and the __routeData discriminator. Construct it with data(value, init), rather than constructing the marker object yourself.",
+      "code": "import type { DataResponse } from \"@kasperrt/smolter/preact\";\n\nimport { data } from \"@kasperrt/smolter/preact\";\n\ninterface Validation {\n  name: string;\n}\n\nexport function invalidName(): DataResponse<Validation> {\n  return data({ name: \"Name is required\" }, { status: 422 });\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "RouteData unwraps the value type. Application transport serializes the value; direct resource responses and page action HTML preserve the provided status and headers. Use redirect(...) for navigation, not a DataResponse with a Location header.",
+      "code": ""
+    }
+  ]
+}

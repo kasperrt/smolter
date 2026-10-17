@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Parameters",
-      "body": "The hook takes no arguments. The returned function optionally accepts a reason and mutation context.",
+      "body": "The hook takes no arguments. The returned function accepts RevalidateOptions: route (one route ID/path pattern or an array), reason (manual by default), and optional mutation context. The legacy reason/context arguments remain supported.",
       "code": ""
     },
     {
@@ -17,11 +17,11 @@
     {
       "title": "Usage",
       "body": "Import this API from one of the entry points listed above. Keep server and build helpers in their dedicated subpaths.",
-      "code": "const revalidate = useRevalidator();\n\n<button onClick={() => void revalidate()}>Refresh</button>"
+      "code": "const revalidate = useRevalidator();\n\nawait revalidate({ route: \"/tasks/:id\" });\nawait revalidate({ route: \"root\" });\nawait revalidate({ route: [\"root\", \"/tasks/:id\"] });"
     },
     {
       "title": "Behavior and edge cases",
-      "body": "Calling without arguments uses reason manual. shouldRevalidate can return false even for manual refresh. It refreshes the active page loader, not every fetcher. This API returns a function, unlike React Router’s object-shaped revalidator.",
+      "body": "Without targets, refreshes the active page, loaded fetchers, and registered root/layout data. Targets restrict that set; inactive or unknown routes do not load. shouldRevalidate can skip manual refreshes too. Resolves after selected work finishes. This API returns a function.",
       "code": ""
     }
   ]

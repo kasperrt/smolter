@@ -1,0 +1,18 @@
+{
+  "slug": "LoaderFunctionArgs",
+  "title": "LoaderFunctionArgs",
+  "summary": "Request arguments supplied to a server loader.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Provides request, decoded params, and signal, plus optional context: unknown. Pass signal to cancellable work. Read query parameters from request.url.",
+      "code": "import type { LoaderFunctionArgs } from \"@kasperrt/smolter/preact\";\n\nexport function loader({ request, params }: LoaderFunctionArgs) {\n  const url = new URL(request.url);\n\n  return { id: params.id, query: url.searchParams.get(\"q\") ?? \"\" };\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "The core does not inject an application context value. Supply context through an integration if needed and narrow it before use. Browser-only APIs must not be used by a server loader.",
+      "code": ""
+    }
+  ]
+}

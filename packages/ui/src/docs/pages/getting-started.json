@@ -12,7 +12,7 @@
     {
       "title": "Register a route",
       "body": "Keep the data handler beside the page. defineRoute retains its handler types. Manual routes use the first matching pattern, so put static paths before dynamic paths.",
-      "code": "import { createRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as tasks from \"./routes/tasks/route\";\nimport * as task from \"./routes/task/route\";\n\nexport const router = createRouter([\n  defineRoute(\"/tasks\", tasks),\n  defineRoute(\"/tasks/:id\", task),\n], { browser: true });"
+      "code": "import { createDataRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as tasks from \"./routes/tasks/route\";\nimport * as task from \"./routes/task/route\";\n\nexport const router = createDataRouter([\n  defineRoute(\"/tasks\", tasks),\n  defineRoute(\"/tasks/:id\", task),\n], { browser: true });"
     },
     {
       "title": "Render",
@@ -20,9 +20,23 @@
       "code": "import { RouterProvider, Routes } from \"@kasperrt/smolter/react\";\nimport { router } from \"./router\";\n\nexport function App() {\n  return <RouterProvider router={router}>\n    <Routes fallback={<p>Page not found.</p>} />\n  </RouterProvider>;\n}"
     },
     {
-      "title": "Try the demo",
-      "body": "Counter shows actions and revalidation. Tasks shows POST creation and independent fetcher reads. A task detail route uses :id with PATCH and DELETE. Search uses a GET form and shareable query parameters. The URL bar is driven by useLocation.",
-      "code": ""
+      "title": "Working examples",
+      "body": "Use these examples alongside the guides. Each pairs a working UI with route registration and its loader/action source.",
+      "code": "",
+      "links": [
+        {
+          "href": "/examples/counter",
+          "label": "Counter: actions and revalidation \u2192"
+        },
+        {
+          "href": "/tasks",
+          "label": "Tasks: creation, updates, and fetcher reads \u2192"
+        },
+        {
+          "href": "/tasks/search",
+          "label": "Search: GET forms and URL parameters \u2192"
+        }
+      ]
     }
   ]
 }

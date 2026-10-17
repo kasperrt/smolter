@@ -8,6 +8,6 @@ export function safeWrapAsync<T>(
     .then(work)
     .then(
       (data) => (data instanceof Error ? { error: data } : { data }),
-      (cause: unknown) => ({ error: new Error(String(cause), { cause }) }),
+      (cause: unknown) => ({ error: Error(String(cause), { cause }) }),
     );
 }

@@ -15,11 +15,11 @@ all four standalone examples.
 | `packages/files` | `@smolter/files` | Flat route discovery |
 | `packages/vite` | `@smolter/vite` | Route module generation and development transport |
 | `packages/ui` | `@smolter/ui` | Shared example UI |
-| `packages/smolter` | `@kasperrt/smolter/react`, `@kasperrt/smolter/preact`, etc. | Published package and public entry points |
+| Repository root | `@kasperrt/smolter/react`, `@kasperrt/smolter/preact`, etc. | Publishing manifest; exports map directly to owning packages |
 
 Implementation packages are private workspace packages. Keep changes in their
 `src` directories. The publish build assembles portable source modules under
-`packages/smolter/src/internal` and emits JavaScript and declarations into `dist`.
+the ignored `.generated/` directory and emits JavaScript and declarations into `dist`.
 Both directories are generated. The published package has no workspace or runtime
 dependencies, and consumers continue to choose `@kasperrt/smolter/react` or `@kasperrt/smolter/preact`.
 
@@ -51,7 +51,10 @@ changing subscriptions, including unmounts and server hydration.
 - `pnpm pack:smoke` installs the tarball into isolated React and Preact projects.
 - `pnpm jsr:check` checks the portable source package and public API types.
 - `pnpm size` measures all browser exports and updates the website's size data.
+- `pnpm size --breakdown` also measures the marginal gzip cost of each common export. These values include tree shaking and compression effects, so they do not add up to the bundle total. Both commands enforce the same size limits.
 
-The browser bundle must remain below 2,100 bytes gzip. Moving code between files
-or packages does not exempt it from measurement. Preserve tree shaking and avoid
+The routing-only subset must remain smaller than the corresponding wouter
+routing subset under the same measurement settings. Full data and application
+entries are measured and reported separately. Moving code between files or
+packages does not exempt it from measurement. Preserve tree shaking and avoid
 adding runtime abstractions just to share source code between frameworks.

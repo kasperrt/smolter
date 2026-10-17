@@ -1,0 +1,18 @@
+{
+  "slug": "ScriptProps",
+  "title": "ScriptProps",
+  "summary": "An optional content-security-policy nonce for document scripts.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Contains nonce?: string. Scripts applies it to the inline bootstrap, JSON hydration payload, and browser module entry script.",
+      "code": "import type { ScriptProps } from \"@kasperrt/smolter/preact/document\";\n\nexport function scriptsForRequest(nonce: string): ScriptProps {\n  return { nonce };\n}"
+    },
+    {
+      "title": "Usage and limits",
+      "body": "Generate and manage CSP nonces in the application\u2019s server integration. ScrollRestoration accepts this shape for compatibility but emits no script and currently does not use nonce.",
+      "code": ""
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "slug": "useNavigationType",
+  "title": "useNavigationType",
+  "summary": "Read whether the current application history entry came from POP, PUSH, or REPLACE.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Takes no arguments and requires RouterProvider. The browser navigation integration installed by mountApplication maintains the value.",
+      "code": ""
+    },
+    {
+      "title": "Returns",
+      "body": "Returns the NavigationType string POP, PUSH, or REPLACE. The initial value is POP. This describes history behavior, not whether a loader or action is currently pending.",
+      "code": ""
+    },
+    {
+      "title": "Example",
+      "body": "Read the navigation type where the UI needs to distinguish a replacement from a new history entry.",
+      "code": "import { useNavigationType } from \"@kasperrt/smolter/preact\";\n\nexport function HistoryStatus() {\n  const type = useNavigationType();\n\n  return <span>History action: {type}</span>;\n}"
+    },
+    {
+      "title": "Commit timing",
+      "body": "History state is published when the navigation integration sees an idle snapshot. With a retained view this can follow the underlying request completion. A standalone RouterProvider without that integration keeps the store\u2019s initial value.",
+      "code": ""
+    }
+  ]
+}

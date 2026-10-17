@@ -1,0 +1,33 @@
+{
+  "slug": "express",
+  "title": "Express and Node hosting",
+  "summary": "Keep your Express server, Prometheus metrics, tracing, authentication, and deployment policies.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "Middleware ownership",
+      "body": "Smolter does not start a listening server or depend on Express. createRequestHandler is a Node-compatible middleware function. Mount metrics, tracing, authentication, request limits, and static assets in your existing Express app before it. Mount error-handling middleware afterward. Do not put express.json() or express.urlencoded() before Smolter routes: the adapter reads the original request body for route actions.",
+      "code": "import express from \"express\";\nimport { createRequestHandler } from \"@kasperrt/smolter/utils/http\";\nimport * as build from \"./dist/server/index.js\";\nimport manifest from \"./dist/client/.vite/manifest.json\" with { type: \"json\" };\n\nconst app = express();\nconst client = manifest[\"index.html\"];\n\n// Mount your Prometheus and tracing middleware here, before Smolter.\napp.use(\"/assets\", express.static(\"dist/client/assets\", {\n  immutable: true,\n  maxAge: \"1y\",\n}));\n\napp.use(createRequestHandler({\n  build,\n  entry: `/assets/${client.file.replace(/^assets\\//, \"\")}`,\n}));\n\napp.listen(3000);"
+    },
+    {
+      "title": "Build contract",
+      "body": "Pass the server entry module as build. It exports default(request, entry) for documents and handleDataRequest(request) for loaders/actions. entry is the browser entry URL from the Vite manifest, including your deployment base. For the application integration, enable build.manifest in your browser Vite config, then build the server entry separately.",
+      "code": "vite build --outDir dist/client --manifest\nvite build --ssr src/entry.server.tsx --outDir dist/server"
+    },
+    {
+      "title": "Requests, cookies and failures",
+      "body": "The adapter forwards methods, headers, bodies and abort signals; dispatches /_smolter?url=/path to the data handler; and sends the Response status, headers and body. Invalid data targets return 400. Rejected handlers reach Express next(error). Express req.protocol is respected, so configure trust proxy according to your own ingress policy rather than blindly trusting forwarded headers. Multiple Set-Cookie headers are preserved. In development, the existing adapter removes Secure from outgoing cookies for local HTTP.",
+      "code": ""
+    },
+    {
+      "title": "Metrics and streaming",
+      "body": "Your Prometheus request middleware wraps the full SSR/action handler. Keep /metrics or a separate metrics listener under your application\u2019s access policy. The current send helper buffers Response bodies; it does not provide streaming SSR. Renderers and Node helpers live in server-only subpaths and are not imported by the browser router.",
+      "code": ""
+    },
+    {
+      "title": "Entry files",
+      "body": "See the Virtual routes and entry files guide for complete browser and server entry modules. The virtual route module comes from Vite; it is compiled away during the build. Express imports the built server module, never a virtual: specifier directly.",
+      "code": ""
+    }
+  ]
+}

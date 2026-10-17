@@ -1,0 +1,28 @@
+{
+  "slug": "configureApplication",
+  "title": "configureApplication",
+  "summary": "Configure deployment-specific URL and document navigation behavior before mounting a Preact application.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Parameters",
+      "body": "Accepts one ApplicationEnvironment object. Fields may be omitted. resolveURL maps a destination before application navigation; isDocumentHandoff selects document links for a custom handoff; leaveDocument performs external navigation; entryScript supplies the source rendered by Scripts.",
+      "code": ""
+    },
+    {
+      "title": "Returns and lifetime",
+      "body": "Returns void. Each call replaces the entire configuration rather than merging fields. Call configureApplication({}) to restore defaults. The configuration is module-scoped, so do not set request-specific server data here.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Configure only the deployment behavior your application needs, then mount it. The route list remains the source of route matching and loader/action registration.",
+      "code": "import { defineRoute } from \"@kasperrt/smolter/preact\";\nimport { configureApplication, mountApplication } from \"@kasperrt/smolter/preact/client\";\nimport * as home from \"./routes/_index/route\";\n\nconfigureApplication({\n  isDocumentHandoff: (from, to) =>\n    from.origin !== to.origin && to.origin === \"https://account.example\",\n});\n\nconst routes = [defineRoute(\"/\", home)];\n\nawait mountApplication(routes);"
+    },
+    {
+      "title": "Navigation and scripts",
+      "body": "Without leaveDocument, a selected handoff uses location.assign. A custom leaveDocument callback must carry out navigation itself. Modified clicks, download links, and non-self targets retain browser behavior. entryScript is trusted executable source rendered by Scripts; it is not escaped as text or loaded as a URL.",
+      "code": ""
+    }
+  ]
+}

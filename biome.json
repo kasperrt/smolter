@@ -10,7 +10,7 @@
       "!**/coverage",
       "!**/pnpm-lock.yaml",
       "!site",
-      "!packages/smolter/src/internal"
+      "!.generated"
     ]
   },
   "formatter": {
@@ -25,7 +25,16 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "none"
+      "preset": "none",
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noDuplicateParameters": "error",
+        "noDoubleEquals": "error"
+      },
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnreachable": "error"
+      }
     }
   }
 }

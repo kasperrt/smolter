@@ -1,0 +1,21 @@
+import type { Router } from "@smolter/core";
+import type { AppRoute, Hydration, RootModule } from "./route-types.ts";
+import { createContext, useContext } from "./runtime.ts";
+
+export interface ApplicationContext {
+  router: Router;
+  routes: AppRoute[];
+  root: unknown;
+  rootModule?: RootModule;
+  hydration?: Hydration;
+  entry?: string;
+}
+
+export const Application = createContext<ApplicationContext | null>(null);
+export const OutletContext = createContext<unknown>(undefined);
+
+export function useApplication() {
+  const app = useContext(Application);
+
+  return app!;
+}

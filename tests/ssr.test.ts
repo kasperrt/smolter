@@ -68,6 +68,7 @@ it("server renders React data without browser globals", async () => {
     loader: () => ({ title: "Hello React" }),
     default: Page,
   });
+
   function Page() {
     return createElement("h1", null, react.useLoaderData(route)?.title);
   }
@@ -90,6 +91,7 @@ it("server renders Preact data through its own adapter", async () => {
     loader: () => ({ title: "Hello Preact" }),
     default: Page,
   });
+
   function Page() {
     return h("h1", null, preact.useLoaderData(route)?.title);
   }
@@ -140,7 +142,7 @@ it("preserves server errors through hydration without retrying or exposing their
   });
   const server = await loadRouter([route], "https://test.dev/");
   const json = serialize(server.getSnapshot());
-  const client = react.createRouter([route], {
+  const client = react.createDataRouter([route], {
     hydrationData: deserialize(json),
   });
   const stop = client.start();

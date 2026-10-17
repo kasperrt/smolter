@@ -41,22 +41,36 @@ page.on("pageerror", (error) => errors.push(error.message));
 
 const result = await (async () => {
   await page.goto(`${origin}/smolter/react/`);
+  await page
+    .getByRole("heading", { name: "Data flow you can follow.", exact: true })
+    .waitFor();
+  await page.getByRole("link", { name: "Get started →", exact: true }).click();
   assert.equal(
     await page
-      .getByRole("link", { name: "Tasks", exact: true })
+      .getByRole("link", {
+        name: "Tasks: creation, updates, and fetcher reads →",
+        exact: true,
+      })
       .getAttribute("href"),
     "/smolter/react/tasks",
   );
 
-  const native = await browser.newPage();
+  const documentPage = await browser.newPage();
 
-  await native.goto(
-    `${origin}${await page.getByRole("link", { name: "Tasks", exact: true }).getAttribute("href")}`,
+  await documentPage.goto(
+    `${origin}${await page.getByRole("link", { name: "Tasks: creation, updates, and fetcher reads →", exact: true }).getAttribute("href")}`,
   );
-  await native.getByRole("heading", { name: "Tasks", exact: true }).waitFor();
-  await native.close();
-  await page.getByRole("button", { name: "Add one +", exact: true }).click();
-  await page.getByRole("link", { name: "Tasks", exact: true }).click();
+  await documentPage
+    .getByRole("heading", { name: "Tasks", exact: true })
+    .waitFor();
+  await documentPage.close();
+
+  await page
+    .getByRole("link", {
+      name: "Tasks: creation, updates, and fetcher reads →",
+      exact: true,
+    })
+    .click();
   await page.getByRole("button", { name: "Fetch task 1" }).click();
   await page
     .locator(".panel-tabs")
@@ -65,11 +79,14 @@ const result = await (async () => {
   await page.getByRole("heading", { name: "Tasks", exact: true }).waitFor();
 
   assert.equal(page.url(), `${origin}/smolter/preact/tasks`);
+  const routeHref = await page
+    .getByRole("link", { name: "Read the route", exact: true })
+    .getAttribute("href");
+
+  assert.ok(routeHref);
   assert.equal(
-    await page
-      .getByRole("link", { name: "Read the route", exact: true })
-      .getAttribute("href"),
-    "/smolter/preact/tasks/1",
+    new URL(routeHref, page.url()).href,
+    `${origin}/smolter/preact/tasks/1`,
   );
 
   await page.getByLabel("New task").fill("Check a deep link");
@@ -86,7 +103,13 @@ const result = await (async () => {
   assert.equal(page.url(), detail);
   await page.getByRole("link", { name: "← All tasks", exact: true }).click();
   assert.equal(page.url(), `${origin}/smolter/preact/tasks`);
-  await page.getByRole("link", { name: "Search", exact: true }).click();
+  await page.getByRole("link", { name: "Docs", exact: true }).click();
+  await page
+    .getByRole("link", {
+      name: "Search: GET forms and URL parameters →",
+      exact: true,
+    })
+    .click();
   await page.getByLabel("Search query").fill("route");
   await page.getByRole("button", { name: "Search tasks", exact: true }).click();
   await page.waitForURL(`${origin}/smolter/preact/tasks/search?q=route`);
@@ -106,6 +129,32 @@ const result = await (async () => {
     await page.waitForURL(`${origin}/smolter/${framework}/docs/routing`);
     await page.reload();
     await page.getByRole("heading", { name: "Routing", exact: true }).waitFor();
+
+    await page.goto(`${origin}/smolter/${framework}/docs/bundle-size`);
+    await page
+      .getByRole("heading", {
+        name: "Bundle size and tree shaking",
+        exact: true,
+      })
+      .waitFor();
+    await page
+      .getByRole("heading", { name: "Routing only", exact: true })
+      .waitFor();
+    assert.match(
+      await page.locator(".docs-article").innerText(),
+      /Preact routing only: \d+ B gzip/,
+    );
+
+    for (const [slug, section] of [
+      ["Await", "Pending and resolved values"],
+      ["useNavigation", "Retained views"],
+      ["RootModule", "Contract"],
+      ["ScrollRestoration", "Restoration order"],
+    ]) {
+      await page.goto(`${origin}/smolter/${framework}/docs/${slug}`);
+      await page.getByRole("heading", { name: slug, exact: true }).waitFor();
+      await page.getByRole("heading", { name: section, exact: true }).waitFor();
+    }
   }
 
   assert.deepEqual(errors, []);
@@ -123,5 +172,5 @@ if (result.error) {
 }
 
 console.log(
-  "Pages: counter, framework switching, fetcher reads, and deep-link refresh passed",
+  "Pages: framework switching, fetcher reads, documentation, and deep-link refresh passed",
 );
