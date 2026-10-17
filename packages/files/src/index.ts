@@ -47,10 +47,12 @@ export async function flatRoutes(
         name = name.replace(flatFile, "");
       }
 
-      if (/[()[\]:*?]/.test(name))
+      const escaped = name.replaceAll("[.]", "\0");
+
+      if (/[()[\]:*?]/.test(escaped))
         return new Error(`Unsupported flat route name: ${name}`);
 
-      const segments = name.split(".");
+      const segments = escaped.split(".");
       const parts: string[] = [];
 
       for (const [index, segment] of segments.entries()) {
@@ -64,7 +66,7 @@ export async function flatRoutes(
 
         if (segment.startsWith("_")) continue;
 
-        const part = segment.replace(/_$/, "");
+        const part = segment.replace(/_$/, "").replaceAll("\0", ".");
         parts.push(part === "$" ? "*" : part.replace(/^\$/, ":"));
       }
 

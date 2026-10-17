@@ -1,3 +1,11 @@
+# 0.4.2 supported boundary contract
+
+The release uses the existing `Await` export with an explicit `fallback` prop. All thirteen Smolter ownership scenarios remain blocking production-browser assertions in `tests/browser/owned-deferred.spec.ts`, using the unchanged shared assertion harness. The native Preact variant is preserved, not repaired: run `pnpm exec playwright test --config tests/reproductions/playwright.config.ts` to reproduce it. That diagnostic is not a release claim about Smolter's component-owned path.
+
+Early-hydration consumers must replace `<Suspense fallback={pending}><Await resolve={value}>…</Await></Suspense>` with `<Await resolve={value} fallback={pending}>…</Await>`, including persistent root sections. This is an additive API with a required markup migration for the corrected early-hydration contract. No changes to Preact, renderer hooks, dependency patches, application wrappers, extra DOM containers, polling, or external PRs are part of the release.
+
+A route DOM containment experiment was discarded: it removed route residue but did not fix native root revalidation, and would have changed document structure. Native Suspense diagnostics remain useful upstream evidence, not a dependency for this release. Earlier sections below record investigation history; statements that the native matrix blocked release describe the earlier plan superseded by the integrated ownership solution.
+
 > Latest alternative: the integrated `Await fallback` path now passes on published Preact without upstream changes. The native Suspense reproduction remains failing. See the final section; previous upstream-PR plans below are historical and are not the implementation plan.
 
 > Current status: no 0.4.2 release. The follow-up section below supersedes the initial interruption/candidate findings. Upstream fix: https://github.com/preactjs/preact/pull/5314. Earlier measurements and failures below are retained as historical evidence; current sizes are in streaming-sizes.json.

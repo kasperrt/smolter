@@ -123,7 +123,11 @@ route folders are ignored. `.ts`, `.tsx`, `.js`, and `.jsx` are supported.
 **Only flat matching:** there are no nested outlets, inherited loaders, or layout
 chains. A pathless group module itself is not rendered or executed. Group names
 do not provide authentication. Static paths are ordered before parameters, then
-splats. Conflicting patterns and unsupported optional/escaped syntax are rejected.
+splats. Escape a literal dot with `[.]`: `robots[.]txt.ts` and
+`robots[.]txt/route.ts` both map to `/robots.txt`. File routes derive their
+identity and URL from their filename; do not export `id` or `routePath`.
+Target revalidation with the generated path (or `root` for root data).
+Conflicting patterns and unsupported optional/bracket syntax are rejected.
 
 For the virtual module, add this declaration to your app:
 
@@ -604,11 +608,11 @@ a claim of identical features.
 | `React: routing-only named exports` | 1245 |
 | `Preact: routing-only named exports` | 1405 |
 | `@kasperrt/smolter/react` | 2948 |
-| `@kasperrt/smolter/preact` | 5044 |
+| `@kasperrt/smolter/preact` | 5024 |
 | `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4281 |
-| `@kasperrt/smolter/preact + server transport` | 6316 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9429 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9716 |
+| `@kasperrt/smolter/preact + server transport` | 6300 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9405 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9692 |
 | `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
 | `React: common routing/data exports` | 2761 |
 | `Preact: common routing/data exports` | 3046 |

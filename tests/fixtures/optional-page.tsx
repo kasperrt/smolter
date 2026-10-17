@@ -8,7 +8,6 @@ import {
 } from "@kasperrt/smolter/preact";
 import { Document, Scripts } from "@kasperrt/smolter/preact/document";
 import type { ComponentChildren } from "preact";
-import { Suspense } from "preact/compat";
 import { useEffect, useState } from "preact/hooks";
 
 interface HomeData {
@@ -70,14 +69,13 @@ export function OptionalHome() {
       <a href="/destination">Featured room</a>
       <section aria-label="Statistics" style={{ minHeight: "4rem" }}>
         {data.strategy === "stream" ? (
-          <Suspense fallback={<p>Statistics pending</p>}>
-            <Await
-              resolve={data.stats!}
-              errorElement={<p>Statistics unavailable</p>}
-            >
-              {(value) => <p>Total {value}</p>}
-            </Await>
-          </Suspense>
+          <Await
+            fallback={<p>Statistics pending</p>}
+            resolve={data.stats!}
+            errorElement={<p>Statistics unavailable</p>}
+          >
+            {(value) => <p>Total {value}</p>}
+          </Await>
         ) : (
           <RequestedStats key={data.mode} mode={data.mode} />
         )}

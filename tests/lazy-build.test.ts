@@ -5,6 +5,7 @@ import { build } from "vite";
 import { expect, it } from "vitest";
 import { lazyFiles } from "../packages/vite/src/application/lazy-files.ts";
 import { fileRouter } from "../packages/vite/src/index.ts";
+import { viteFixture } from "./helpers/vite.ts";
 
 interface RouteAssets {
   path: string;
@@ -34,13 +35,11 @@ it("splits route views and records their shared assets without bundling server h
     "src/routes/_index.ts": `
       import { label } from "../../shared.ts";
       export { loader } from "../../server.ts";
-      export const id = "home";
       export function clientLoader() { return { label, optional: () => import("../../optional.ts") }; }
       export default function Home() { return label; }
     `,
-    "src/routes/other.ts": `
+    "src/routes/robots[.]txt.ts": `
       import { label } from "../../shared.ts";
-      export const routePath = "/renamed";
       export const handle = { title: "Other" };
       export default function Other() { return label; }
     `,
@@ -83,7 +82,7 @@ it("splits route views and records their shared assets without bundling server h
 
   const routes: RouteAssets[] = JSON.parse(String(manifest.source));
 
-  expect(routes.map((route) => route.path)).toEqual(["/", "/renamed"]);
+  expect(routes.map((route) => route.path)).toEqual(["/", "/robots.txt"]);
 
   for (const route of routes) {
     expect(route.files.length).toBeGreaterThan(1);
@@ -122,8 +121,26 @@ it("splits route views and records their shared assets without bundling server h
 
   expect(shared).toHaveLength(1);
   expect(entry?.dynamicImports).toHaveLength(3);
-  expect(entry?.code).toMatch(/id:[`"]home[`"]/);
   expect(chunks.map((chunk) => chunk.code).join("\n")).not.toMatch(
     /SERVER_ONLY|node:fs/,
   );
 });
+
+it.for([
+  'export const id = "custom";',
+  'export const routePath = "/custom";',
+  'const custom = "/custom"; export { custom as id };',
+])(
+  "rejects lazy file-route identity overrides: %s",
+  async (source, context) => {
+    const { server } = await viteFixture(context, source, {}, () => ({
+      ...lazyFiles("src/routes"),
+      resolveId(id) {
+        if (id === "virtual:smolter/routes") return "\0virtual:smolter/routes";
+      },
+    }));
+    await expect(
+      server.transformRequest("virtual:smolter/routes"),
+    ).rejects.toThrow("remove id/routePath");
+  },
+);

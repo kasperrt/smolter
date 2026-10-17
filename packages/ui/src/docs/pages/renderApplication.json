@@ -26,7 +26,7 @@
     },
     {
       "title": "Behavior and limits",
-      "body": "Requires preact-render-to-string >=6.8.1. Wrap deferred fields in Suspense and Await to stream fallbacks before values settle. By default, hydration starts after the document completes. Set earlyHydration: true to send an initial snapshot with promise references and hydrate the shell while deferred values stream independently. Rejected deferred fields retain Await errorElement behavior. Errors after headers have been sent cannot change the HTTP status. Vite development HTML transformation buffers; production Node/Express hosting streams. Each request router is disposed when its stream completes or is cancelled.",
+      "body": "Requires preact-render-to-string >=6.8.1. Render deferred fields with Await and its fallback prop. By default, hydration starts after the document completes. Set earlyHydration: true to send an initial snapshot with promise references and hydrate the shell while deferred values stream independently. Rejected deferred fields retain Await errorElement behavior. Errors after headers have been sent cannot change the HTTP status. Vite development HTML transformation buffers; production Node/Express hosting streams. Each request router is disposed when its stream completes or is cancelled.",
       "code": ""
     }
   ]

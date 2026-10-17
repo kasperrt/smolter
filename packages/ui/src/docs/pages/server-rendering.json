@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Interactive shells with deferred data",
-      "body": "Preact renderApplication accepts earlyHydration: true. The browser hydrates the shell while optional nested promises remain pending. Each promise settles independently through the document stream; Await updates its Suspense boundary without rerunning the initial loader. The default still hydrates after document completion. This option requires streaming production hosting: Vite development HTML transformation buffers the document. Measure a successful interaction, not just TTFB or DOMContentLoaded.",
+      "body": "Preact renderApplication accepts earlyHydration: true. The browser hydrates the shell while optional nested promises remain pending. Each promise settles independently through the document stream; Await with an explicit fallback updates its mounted content without rerunning the initial loader. The default still hydrates after document completion. This option requires streaming production hosting: Vite development HTML transformation buffers the document. Measure a successful interaction, not just TTFB or DOMContentLoaded.",
       "code": "return renderApplication(request, routes, root, entry, {\n  earlyHydration: true,\n  nonce,\n});"
     },
     {

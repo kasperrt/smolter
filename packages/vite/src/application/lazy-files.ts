@@ -120,21 +120,13 @@ export function lazyFiles(
           for (const declaration of statement.declaration.declarations) {
             if (declaration.id.type === "Identifier")
               fields[declaration.id.name] = true;
-
-            if (
-              declaration.id.type !== "Identifier" ||
-              declaration.init?.type !== "Literal" ||
-              typeof declaration.init.value !== "string"
-            )
-              continue;
-
-            const name = declaration.id.name;
-
-            if (name === "id") fields.id = declaration.init.value;
-
-            if (name === "routePath") fields.path = declaration.init.value;
           }
         }
+
+        if (fields.id || fields.routePath)
+          return this.error(
+            `File routes derive identity and paths from filenames: remove id/routePath exports from ${route.file}. Use [.] for a literal dot.`,
+          );
 
         const file = `${route.file.replaceAll("\\", "/")}?smolter-client`;
 

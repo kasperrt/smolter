@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.2
+
+- Add integrated `Await fallback` for early hydration: pending and resolved content belongs to the mounted component, so navigation, root revalidation and late settlement cannot leave abandoned content behind. Migrate early-hydrated deferred sections from outer Preact `Suspense` to this prop, including root sections. Native Preact streamed Suspense remains unsupported for this ownership contract; it is not patched. Ordinary non-early SSR still streams resolved HTML.
+- Preserve deployment recovery ownership across overlapping page/fetcher submissions and watcher replacement, including old cleanup calls. Mutations are not replayed and pending submissions continue to prevent recovery reloads.
+- Bound initial deferred-data hydration with one total deadline (30 seconds by default); validate integer millisecond budgets, reject outstanding promises on expiry and clear lifecycle state on disposal. This is not an inactivity timer or an immediate network-disconnect detector.
+- Support literal dots in flat route filenames and folders: `robots[.]txt` maps to `/robots.txt`. Generated file routes reject `id` and `routePath` overrides; derive identity from their filename and use their path for targeted revalidation. Manually defined route arrays retain explicit identities.
+- Keep the thirteen-case ownership matrix, streaming/CSP/head-preservation checks, scoped transports, deployment recovery and route HMR as production regression gates. Preserve the native Preact diagnostic separately; passing Smolter tests do not claim native Preact or Vibes/device parity.
+
 ## 0.4.1
 
 - Invalidate pending deployment recovery when an independent fetcher submits. Prevent recovery reloads while any tracked fetcher submission is pending, without blocking ordinary client navigation. Install the watcher before creating fetchers; mountApplication already does this.

@@ -152,6 +152,20 @@ export function routerPlugin({
         for (const statement of ast.body) {
           if (statement.type !== "ExportNamedDeclaration") continue;
 
+          const declared = statement.declaration;
+          const names = statement.specifiers.map((specifier) =>
+            specifier.exported.type === "Identifier"
+              ? specifier.exported.name
+              : specifier.exported.value,
+          );
+          if (declared?.type === "VariableDeclaration")
+            for (const item of declared.declarations)
+              if (item.id.type === "Identifier") names.push(item.id.name);
+          if (names.some((name) => name === "id" || name === "routePath"))
+            return this.error(
+              `File routes derive identity and paths from filenames: remove id/routePath exports from ${file}. Use [.] for a literal dot.`,
+            );
+
           for (const specifier of statement.specifiers) {
             const name =
               specifier.exported.type === "Identifier"
