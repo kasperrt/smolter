@@ -17,13 +17,21 @@ it("tracks history, hash changes and concurrent provider lifecycles", async (con
   });
   const stop = router.start();
   const stopSecond = router.start();
-  const length = history.length;
+  const pushState = vi.spyOn(history, "pushState");
+  const replaceState = vi.spyOn(history, "replaceState");
+  context.onTestFinished(() => {
+    pushState.mockRestore();
+    replaceState.mockRestore();
+  });
 
   await router.navigate("/tasks/1", { state: { from: "home" } });
-  expect(history.length).toBe(length + 1);
+  expect(pushState).toHaveBeenCalledOnce();
+  expect(location.pathname).toBe("/tasks/1");
   expect(history.state).toEqual({ from: "home" });
   await router.navigate("/tasks/2", { replace: true });
-  expect(history.length).toBe(length + 1);
+  expect(pushState).toHaveBeenCalledOnce();
+  expect(replaceState).toHaveBeenCalledOnce();
+  expect(location.pathname).toBe("/tasks/2");
   expect(router.getSnapshot().params.id).toBe("2");
   stop();
 
