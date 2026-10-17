@@ -1,4 +1,5 @@
 import type { DocPage } from "./docs";
+import { documentationGroups } from "./docs/navigation";
 import type { ElementFactory, LinkFactory } from "./types";
 
 export interface DocumentationProps<N> {
@@ -39,20 +40,19 @@ export function createDocumentation<N>(
       h(
         "nav",
         { className: "docs-sidebar", "aria-label": "Documentation" },
-        ...["Guides", "API", "Types"].map((group) =>
+        ...documentationGroups(pages).map((group) =>
           h(
             "section",
-            { key: group },
-            h("h2", null, group),
-            ...pages
-              .filter((item) => item.kind === group)
-              .map((item) =>
-                renderLink(
-                  `/docs/${item.slug}`,
-                  item.title,
-                  item.slug === page.slug ? "active" : undefined,
-                ),
+            { key: group.title },
+            h("h2", null, group.title),
+            h("p", { className: "docs-group-description" }, group.description),
+            ...group.pages.map((item) =>
+              renderLink(
+                `/docs/${item.slug}`,
+                item.title,
+                item.slug === page.slug ? "active" : undefined,
               ),
+            ),
           ),
         ),
       ),
@@ -107,7 +107,7 @@ export function createDocumentation<N>(
                 ...page.fields.map((field) =>
                   h(
                     "section",
-                    { key: field.name },
+                    { key: field.name, id: `field-${sectionId(field.name)}` },
                     h("h3", null, field.name),
                     CodeBlock(field.signature, `${field.name} field`),
                     ...(field.summary ? [h("p", null, field.summary)] : []),
@@ -142,10 +142,28 @@ export function createDocumentation<N>(
         { className: "docs-outline", "aria-label": "On this page" },
         h("h2", null, "On this page"),
         ...(page.signature ? [link("#signature", "Signature")] : []),
-        ...page.sections.map((section) =>
-          link(`#${sectionId(section.title)}`, section.title),
-        ),
-        ...(page.fields?.length ? [link("#fields", "Fields")] : []),
+        ...page.sections.flatMap((section, index) => [
+          ...(section.group && section.group !== page.sections[index - 1]?.group
+            ? [h("h3", { className: "docs-outline-group" }, section.group)]
+            : []),
+          link(
+            `#${sectionId(section.title)}`,
+            section.title,
+            section.group ? "docs-outline-child" : undefined,
+          ),
+        ]),
+        ...(page.fields?.length
+          ? [
+              link("#fields", "Fields"),
+              h(
+                "div",
+                { className: "docs-outline-children" },
+                ...page.fields.map((field) =>
+                  link(`#field-${sectionId(field.name)}`, field.name),
+                ),
+              ),
+            ]
+          : []),
       ),
     );
   }

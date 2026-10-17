@@ -2,6 +2,7 @@ import sizes from "../size.json";
 import reference from "./reference.json";
 
 export interface DocSection {
+  group?: string;
   title: string;
   body: string;
   code: string;
@@ -35,6 +36,9 @@ sizeGuide.sections[1].code = [
   `Preact common routing/data: ${sizes.preactCommon} B gzip`,
   `wouter routing subset: ${sizes.wouterRouting} B gzip`,
   `wouter-preact routing subset: ${sizes.wouterPreactRouting} B gzip`,
+  `React Router declarative routing: ${sizes.reactRouterRouting} B gzip`,
+  `React Router data routing: ${sizes.reactRouterData} B gzip`,
+  `React Router complete entry: ${sizes.reactRouter} B gzip`,
   `React complete entry: ${sizes.react} B gzip`,
   `Preact complete entry: ${sizes.preact} B gzip`,
   `React + server transport: ${sizes.reactServer} B gzip`,

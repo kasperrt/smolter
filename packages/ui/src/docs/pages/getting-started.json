@@ -10,13 +10,23 @@
       "code": "pnpm add @kasperrt/smolter react react-dom\n# Or: pnpm add @kasperrt/smolter preact"
     },
     {
+      "title": "Define the data",
+      "body": "Put browser reads in clientLoader.ts. Replace this array with a request to your API when needed.",
+      "code": "// routes/tasks/clientLoader.ts\nexport function clientLoader() {\n  return { tasks: [{ id: \"1\", title: \"Try smolter\" }] };\n}"
+    },
+    {
+      "title": "Render the result",
+      "body": "Re-export the loader from the route module. The type-only import connects useLoaderData to its return type.",
+      "code": "// routes/tasks/route.tsx\nimport { useLoaderData } from \"@kasperrt/smolter/react\";\nimport type { clientLoader } from \"./clientLoader\";\n\nexport { clientLoader } from \"./clientLoader\";\n\nexport default function Tasks() {\n  const data = useLoaderData<typeof clientLoader>();\n\n  return <ul>{data?.tasks.map((task) => (\n    <li key={task.id}>{task.title}</li>\n  ))}</ul>;\n}"
+    },
+    {
       "title": "Register a route",
       "body": "Keep the data handler beside the page. defineRoute retains its handler types. Manual routes use the first matching pattern, so put static paths before dynamic paths.",
-      "code": "import { createDataRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as tasks from \"./routes/tasks/route\";\nimport * as task from \"./routes/task/route\";\n\nexport const router = createDataRouter([\n  defineRoute(\"/tasks\", tasks),\n  defineRoute(\"/tasks/:id\", task),\n], { browser: true });"
+      "code": "import { createDataRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as tasks from \"./routes/tasks/route\";\n\nexport const router = createDataRouter([\n  defineRoute(\"/tasks\", tasks),\n], { browser: true });"
     },
     {
       "title": "Render",
-      "body": "Create the router outside render. The provider starts its initial load and attaches history listeners. Routes renders the matching module.",
+      "body": "Create the router outside render. RouterProvider loads the current route; Routes renders its view. Mount App with React’s createRoot or Preact’s render, then open /tasks.",
       "code": "import { RouterProvider, Routes } from \"@kasperrt/smolter/react\";\nimport { router } from \"./router\";\n\nexport function App() {\n  return <RouterProvider router={router}>\n    <Routes fallback={<p>Page not found.</p>} />\n  </RouterProvider>;\n}"
     },
     {
@@ -26,15 +36,15 @@
       "links": [
         {
           "href": "/examples/counter",
-          "label": "Counter: actions and revalidation \u2192"
+          "label": "Counter: actions and revalidation →"
         },
         {
           "href": "/tasks",
-          "label": "Tasks: creation, updates, and fetcher reads \u2192"
+          "label": "Tasks: creation, updates, and fetcher reads →"
         },
         {
           "href": "/tasks/search",
-          "label": "Search: GET forms and URL parameters \u2192"
+          "label": "Search: GET forms and URL parameters →"
         }
       ]
     }

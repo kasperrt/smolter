@@ -1,8 +1,12 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { commonExports, measure, measureAdapters } from "./measure.mjs";
 
-const sizes = await measureAdapters();
 const path = new URL("../packages/ui/src/size.json", import.meta.url);
+const previous = JSON.parse(readFileSync(path, "utf8"));
+// Dependency comparisons are refreshed by pnpm size, not every example build.
+const sizes = await measureAdapters(
+  process.argv.includes("--write-only") ? previous : {},
+);
 const json = `${JSON.stringify(sizes, null, 2)}\n`;
 
 if (readFileSync(path, "utf8") !== json) writeFileSync(path, json);
@@ -21,6 +25,8 @@ if (!process.argv.includes("--write-only")) {
   const sharedExports = commonExports;
   const shared = [sizes.reactCommon, sizes.preactCommon];
   const rows = [
+    ["React Router: declarative routing subset", sizes.reactRouterRouting],
+    ["React Router: data routing subset", sizes.reactRouterData],
     ["React: routing-only named exports", sizes.reactRouting],
     ["Preact: routing-only named exports", sizes.preactRouting],
     ["@kasperrt/smolter/react", sizes.react],

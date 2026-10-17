@@ -16,9 +16,10 @@ export function siteRoute(base: string): string {
     return restored;
   }
 
-  return (
-    location.pathname.slice(base.length - 1) + location.search + location.hash
-  );
+  const path =
+    location.pathname.slice(base.length - 1).replace(/\/$/, "") || "/";
+
+  return path + location.search + location.hash;
 }
 
 /** Map a standalone example's route URLs into its static hosting directory. */
