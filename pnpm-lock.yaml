@@ -44,6 +44,9 @@ importers:
       '@smolter/server':
         specifier: workspace:*
         version: link:packages/server
+      '@smolter/ui':
+        specifier: workspace:*
+        version: link:packages/ui
       '@smolter/vite':
         specifier: workspace:*
         version: link:packages/vite

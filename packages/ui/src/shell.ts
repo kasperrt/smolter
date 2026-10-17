@@ -168,7 +168,10 @@ export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
             { className: "demo-column" },
             h(
               "div",
-              { className: "panel-tabs", hidden: documentation || landing },
+              {
+                className: "panel-tabs",
+                hidden: hosted || documentation || landing,
+              },
               ...(
                 [
                   ["React", `http://127.0.0.1:${basePort}/`],

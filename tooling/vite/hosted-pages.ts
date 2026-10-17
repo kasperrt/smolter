@@ -17,10 +17,13 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
     apply: (_config, environment) => environment.mode === "hosted",
     config() {
       return {
-        base: `/smolter/${framework}/`,
+        base: framework === "preact" ? "/smolter/" : "/smolter/react/",
         define: { "import.meta.env.VITE_HOSTED": JSON.stringify("true") },
         build: {
-          outDir: resolve(import.meta.dirname, `../../site/${framework}`),
+          outDir: resolve(
+            import.meta.dirname,
+            framework === "preact" ? "../../site" : "../../site/react",
+          ),
           emptyOutDir: true,
         },
       };
@@ -51,6 +54,25 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
           prerender: (path: string) => Promise<RenderedPage>;
           paths: string[];
         };
+
+        if (framework === "preact") {
+          for (const legacy of ["react", "preact"]) {
+            for (const route of [
+              ...paths,
+              "tasks",
+              "tasks/1",
+              "tasks/search",
+              "examples/counter",
+            ]) {
+              const target = `/smolter/${route}`;
+              this.emitFile({
+                type: "asset",
+                fileName: `${legacy}/${route ? `${route}/` : ""}index.html`,
+                source: `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>smolter</title><link rel="canonical" href="${target}"><script>location.replace(${JSON.stringify(target)} + location.search + location.hash)</script><noscript><meta http-equiv="refresh" content="0;url=${target}"></noscript></head><body><a href="${target}">Continue to smolter</a></body></html>`,
+              });
+            }
+          }
+        }
 
         for (const route of paths) {
           const { html, data, title } = await prerender(`/${route}`);

@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>smolter _</title>
     <script>
-      const match = location.pathname.match(/^\/smolter\/(react|preact)(\/.*)$/);
+      const match = location.pathname.match(/^\/smolter(?:\/(?:react|preact))?(\/.*)$/);
 
       if (match) {
-        const route = match[2] + location.search + location.hash;
-        const target = `/smolter/${match[1]}/?__route=${encodeURIComponent(route)}`;
+        const route = match[1] + location.search + location.hash;
+        const target = `/smolter/?__route=${encodeURIComponent(route)}`;
 
         location.replace(target);
       }

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join } from "node:path";
+import { gzipSync } from "node:zlib";
 import { chromium } from "@playwright/test";
 
 const server = createServer((request, response) => {
@@ -40,8 +41,69 @@ const errors = [];
 page.on("pageerror", (error) => errors.push(error.message));
 
 const result = await (async () => {
-  for (const framework of ["react", "preact"]) {
+  const landingHtml = readFileSync("site/index.html", "utf8");
+  assert(
+    landingHtml.includes("Data flow you can follow."),
+    "Root document must contain prerendered content",
+  );
+  const entry = landingHtml.match(/<script[^>]+src="([^"]+\.js)"/)[1];
+  const entryBytes = readFileSync(
+    join("site", entry.replace(/^\/smolter\//, "")),
+  );
+  assert(
+    gzipSync(entryBytes, { level: 9 }).length < 25_000,
+    "Site initial JavaScript exceeded its 25 kB gzip budget",
+  );
+  assert(
+    !existsSync("site/react/assets"),
+    "Do not publish a second React runtime for the site",
+  );
+
+  for (const framework of ["preact"]) {
+    const landing = await browser.newPage();
+    let releaseEntry;
+    const entryReady = new Promise((resolve) => {
+      releaseEntry = resolve;
+    });
+    const landingScripts = [];
+    landing.on("request", (request) => {
+      if (request.resourceType() === "script")
+        landingScripts.push(request.url());
+    });
+    await landing.route("**/assets/*.js", async (route) => {
+      await entryReady;
+      await route.continue();
+    });
+    await landing.route("**/*.ttf", (route) => route.abort());
+    await landing.goto(`${origin}/smolter/`, {
+      waitUntil: "commit",
+    });
+    await landing
+      .getByRole("heading", { name: "Data flow you can follow.", exact: true })
+      .waitFor();
+    await landing.evaluate(() => {
+      window.initialLanding = document.querySelector(".landing");
+    });
+    releaseEntry();
+    await landing.waitForLoadState("networkidle");
+    assert(
+      await landing.evaluate(
+        () => window.initialLanding === document.querySelector(".landing"),
+      ),
+      `${framework}: landing was replaced during hydration`,
+    );
+    assert(
+      !landingScripts.some((url) => /_smolter-doc_|\/source-/.test(url)),
+      `${framework}: unrelated content loaded on landing`,
+    );
+    await landing.close();
+
+    const articleScripts = [];
     const hydrated = await browser.newPage();
+    hydrated.on("request", (request) => {
+      if (request.resourceType() === "script")
+        articleScripts.push(request.url());
+    });
     hydrated.setDefaultTimeout(10_000);
     console.log(`${framework}: checking pre-rendered documentation`);
     let allowScripts;
@@ -58,7 +120,7 @@ const result = await (async () => {
       if (message.type() === "error")
         errors.push(`${message.text()} ${message.location().url}`);
     });
-    await hydrated.goto(`${origin}/smolter/${framework}/docs/fetchers/`, {
+    await hydrated.goto(`${origin}/smolter/docs/fetchers/`, {
       waitUntil: "commit",
     });
     await hydrated
@@ -78,6 +140,10 @@ const result = await (async () => {
       ),
       `${framework}: ${errors.join("\n")}`,
     );
+    assert(
+      !articleScripts.some((url) => /_smolter-doc_|\/source-/.test(url)),
+      `${framework}: SSR article was downloaded twice`,
+    );
     console.log(`${framework}: hydration retained the article`);
     await hydrated
       .getByRole("navigation", { name: "Documentation", exact: true })
@@ -86,10 +152,28 @@ const result = await (async () => {
     await hydrated
       .getByRole("heading", { name: "Actions", exact: true })
       .waitFor();
+    assert.equal(
+      articleScripts.filter((url) => url.includes("_smolter-doc_")).length,
+      1,
+      `${framework}: navigation should load only its article`,
+    );
+    assert(articleScripts.some((url) => url.includes("_smolter-doc_actions-")));
     await hydrated.close();
   }
 
-  await page.goto(`${origin}/smolter/react/`);
+  for (const legacy of ["react", "preact"]) {
+    await page.goto(
+      `${origin}/smolter/${legacy}/docs/fetchers/?from=old#reads`,
+    );
+    await page.waitForURL(`${origin}/smolter/docs/fetchers?from=old#reads`);
+    await page
+      .getByRole("heading", {
+        name: "Independent reads and writes",
+        exact: true,
+      })
+      .waitFor();
+  }
+  await page.goto(`${origin}/smolter/`);
   const sizes = JSON.parse(readFileSync("packages/ui/src/size.json", "utf8"));
   const entries = page.getByRole("table", {
     name: "Complete entries & optional features · gzip bytes",
@@ -119,21 +203,15 @@ const result = await (async () => {
     .getByRole("heading", { name: "Data flow you can follow.", exact: true })
     .waitFor();
   await page.getByRole("link", { name: "Get started →", exact: true }).click();
-  assert.equal(
-    await page
-      .getByRole("link", {
-        name: "Tasks: creation, updates, and fetcher reads →",
-        exact: true,
-      })
-      .getAttribute("href"),
-    "/smolter/react/tasks",
-  );
-
+  const tasksHref = await page
+    .getByRole("link", {
+      name: "Tasks: creation, updates, and fetcher reads →",
+      exact: true,
+    })
+    .getAttribute("href");
+  assert.equal(new URL(tasksHref, page.url()).href, `${origin}/smolter/tasks`);
   const documentPage = await browser.newPage();
-
-  await documentPage.goto(
-    `${origin}${await page.getByRole("link", { name: "Tasks: creation, updates, and fetcher reads →", exact: true }).getAttribute("href")}`,
-  );
+  await documentPage.goto(new URL(tasksHref, page.url()).href);
   await documentPage
     .getByRole("heading", { name: "Tasks", exact: true })
     .waitFor();
@@ -146,13 +224,9 @@ const result = await (async () => {
     })
     .click();
   await page.getByRole("button", { name: "Fetch task 1" }).click();
-  await page
-    .locator(".panel-tabs")
-    .getByRole("link", { name: "Preact", exact: true })
-    .click();
   await page.getByRole("heading", { name: "Tasks", exact: true }).waitFor();
 
-  assert.equal(page.url(), `${origin}/smolter/preact/tasks`);
+  assert.equal(page.url(), `${origin}/smolter/tasks`);
   const routeHref = await page
     .getByRole("link", { name: "Read the route", exact: true })
     .getAttribute("href");
@@ -160,7 +234,7 @@ const result = await (async () => {
   assert.ok(routeHref);
   assert.equal(
     new URL(routeHref, page.url()).href,
-    `${origin}/smolter/preact/tasks/1`,
+    `${origin}/smolter/tasks/1`,
   );
 
   await page.getByLabel("New task").fill("Check a deep link");
@@ -176,7 +250,7 @@ const result = await (async () => {
 
   assert.equal(page.url(), detail);
   await page.getByRole("link", { name: "← All tasks", exact: true }).click();
-  assert.equal(page.url(), `${origin}/smolter/preact/tasks`);
+  assert.equal(page.url(), `${origin}/smolter/tasks`);
   await page.getByRole("link", { name: "Docs", exact: true }).click();
   await page
     .getByRole("link", {
@@ -186,13 +260,13 @@ const result = await (async () => {
     .click();
   await page.getByLabel("Search query").fill("route");
   await page.getByRole("button", { name: "Search tasks", exact: true }).click();
-  await page.waitForURL(`${origin}/smolter/preact/tasks/search?q=route`);
+  await page.waitForURL(`${origin}/smolter/tasks/search?q=route`);
   await page
     .getByRole("link", { name: "Read the route", exact: true })
     .waitFor();
 
-  for (const framework of ["react", "preact"]) {
-    await page.goto(`${origin}/smolter/${framework}/docs/useFetcher`);
+  for (const framework of ["preact"]) {
+    await page.goto(`${origin}/smolter/docs/useFetcher`);
     await page
       .getByRole("heading", { name: "useFetcher", exact: true })
       .waitFor();
@@ -200,11 +274,11 @@ const result = await (async () => {
       .getByRole("navigation", { name: "Documentation", exact: true })
       .getByRole("link", { name: "Routing", exact: true })
       .click();
-    await page.waitForURL(`${origin}/smolter/${framework}/docs/routing`);
+    await page.waitForURL(`${origin}/smolter/docs/routing`);
     await page.reload();
     await page.getByRole("heading", { name: "Routing", exact: true }).waitFor();
 
-    await page.goto(`${origin}/smolter/${framework}/docs/bundle-size`);
+    await page.goto(`${origin}/smolter/docs/bundle-size`);
     await page
       .getByRole("heading", {
         name: "Bundle size and tree shaking",
@@ -225,7 +299,7 @@ const result = await (async () => {
       ["RootModule", "Contract"],
       ["ScrollRestoration", "Restoration order"],
     ]) {
-      await page.goto(`${origin}/smolter/${framework}/docs/${slug}`);
+      await page.goto(`${origin}/smolter/docs/${slug}`);
       await page.getByRole("heading", { name: slug, exact: true }).waitFor();
       await page.getByRole("heading", { name: section, exact: true }).waitFor();
     }
@@ -246,5 +320,5 @@ if (result.error) {
 }
 
 console.log(
-  "Pages: framework switching, fetcher reads, documentation, and deep-link refresh passed",
+  "Pages: Preact SSR, split articles, legacy redirects, fetcher reads, and deep-link refresh passed",
 );

@@ -8,7 +8,9 @@ import {
 import { siteHref } from "@smolter/ui/hosting";
 import { ui } from "@smolter/ui/preact";
 import { h } from "preact";
-import { Source } from "./source";
+import { lazy, Suspense } from "preact/compat";
+
+const Source = lazy(() => import("./source"));
 
 export function app(router: Router) {
   return h(RouterProvider, { router }, h(Example, {}));
@@ -18,7 +20,7 @@ function Example() {
   const [routePath] = useLocation();
 
   return ui.Shell({
-    source: h(Source, {}),
+    source: h(Suspense, { fallback: null }, h(Source, {})),
     routePath,
     hosted: Boolean(import.meta.env.VITE_HOSTED),
     mode: "Preact",
