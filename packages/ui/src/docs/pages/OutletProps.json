@@ -1,0 +1,13 @@
+{
+  "slug": "OutletProps",
+  "title": "OutletProps",
+  "summary": "Context and optional children for a React or Preact Outlet.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "context supplies a value to descendant useOutletContext calls. Null or undefined inherits the ancestor context. children overrides rendering the current route when provided.",
+      "code": "<Outlet context={{ canEdit: true }} />"
+    }
+  ]
+}

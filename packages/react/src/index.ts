@@ -1,4 +1,8 @@
-/** Framework components and typed data hooks. @module */
+/**
+ * React routing components, typed data hooks and forms.
+ *
+ * @module
+ */
 export type * from "@smolter/core";
 export {
   createDataRouter,
@@ -14,4 +18,10 @@ export * from "./fetcher.ts";
 export * from "./form.ts";
 export * from "./hooks.ts";
 export * from "./link.ts";
+export {
+  Outlet,
+  type OutletProps,
+  useMatches,
+  useOutletContext,
+} from "./outlet.ts";
 export * from "./routes.ts";

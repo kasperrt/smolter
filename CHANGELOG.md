@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.3
+
+- Prefetch individual guide articles on pointer, keyboard and touch intent. Keep the shared header, sidebar and current article visible during cold guide navigation; show a quiet pending status without replacing the layout. Link the header directly to the canonical Getting started guide.
+- Publish compact React/Preact and SSR compatibility indicators in guide navigation and detailed support information on each page.
+- Document every public JSR entrypoint and exported symbol. Validate the generated documentation before publishing, preserving JSR-before-npm release ordering.
+
+- Add React `Outlet`, `useMatches` and `useOutletContext`; allow Preact matches under a plain RouterProvider. Show renderer and SSR compatibility in documentation navigation and on each page. Integrated document/early-hydration APIs remain Preact-only.
+
+- Remove the public `safeWrapAsync` utility; retain it internally for router and server error handling. Existing consumers of this export must provide their own error handling. `useMatches` and `useOutletContext` remain public Preact APIs.
+
 ## 0.4.2
 
 - Add integrated `Await fallback` for early hydration: pending and resolved content belongs to the mounted component, so navigation, root revalidation and late settlement cannot leave abandoned content behind. Migrate early-hydrated deferred sections from outer Preact `Suspense` to this prop, including root sections. Native Preact streamed Suspense remains unsupported for this ownership contract; it is not patched. Ordinary non-early SSR still streams resolved HTML.

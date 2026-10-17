@@ -1,4 +1,8 @@
-/** Resource subscriptions independent of URL navigation. @module */
+/**
+ * Independent React resource data, forms and subscriptions.
+ *
+ * @module
+ */
 export type {
   ActionFunctionArgs as ResourceActionArgs,
   DataResult as ResourceResult,

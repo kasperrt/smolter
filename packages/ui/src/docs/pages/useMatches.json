@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Parameters",
-      "body": "Takes no arguments. Requires the application context provided by RouterApplication or mountApplication, in addition to a router.",
+      "body": "Takes no arguments. Requires RouterProvider in either React or Preact. Preact mountApplication installs this provider automatically.",
       "code": ""
     },
     {

@@ -3,6 +3,7 @@ import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { ServerIncomingMessage } from "./handler.ts";
 
+/** Convert a Node request to a Web Request with cancellation and an optional normalized route target. */
 export async function webRequest(
   incoming: ServerIncomingMessage,
   outgoing: ServerResponse,
@@ -40,6 +41,7 @@ interface StreamingResponse extends ServerResponse {
   flush?: () => void;
 }
 
+/** Write a Web Response to Node with streaming backpressure and disconnect cancellation. */
 export async function send(response: Response, outgoing: StreamingResponse) {
   outgoing.statusCode = response.status;
   response.headers.forEach((value, name) => {

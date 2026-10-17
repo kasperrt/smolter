@@ -39,7 +39,7 @@ export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
         "nav",
         { "aria-label": "Main navigation" },
         renderLink(
-          "/docs",
+          "/docs/getting-started",
           "Docs",
           routePath.startsWith("/docs") ? "active" : undefined,
         ),

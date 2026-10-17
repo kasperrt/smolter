@@ -88,7 +88,7 @@ async function verify() {
       .filter({ hasText: "Task not found" })
       .waitFor();
     await page.getByRole("link", { name: "Docs", exact: true }).click();
-    await page.waitForURL("**/docs");
+    await page.waitForURL("**/docs/getting-started");
 
     assert.equal(
       hydrationRequests.filter((url) => url.includes("missing")).length,

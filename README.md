@@ -445,14 +445,14 @@ Choose one renderer for your application. Both expose the same routing API:
 | SSR and HTTP data dispatch | `@kasperrt/smolter/react/server` | `@kasperrt/smolter/preact/server` |
 | Vite plugin and flat-file discovery | `@kasperrt/smolter/react/vite` | `@kasperrt/smolter/preact/vite` |
 
-`@kasperrt/smolter/utils` contains browser-safe matching and error helpers.
+`@kasperrt/smolter/utils` contains browser-safe matching and URL helpers.
 The main renderer entries never import server or build modules. Named imports
 are tree-shaken; optional transport is included only when you import `/client`.
 Server entries do not import either UI renderer. Vite entries are build-time only.
 
 **Migrating renderer subpaths:** replace `/core` imports for types, router factories, and
 `defineRoute` with your renderer entry. Use `/utils` for `matchRoutes`,
-`internalURL` and `safeWrapAsync`. Move `/client`, `/server`,
+and `internalURL`. Move `/client`, `/server`,
 `/files`, and `/vite` imports to the corresponding renderer-prefixed path above.
 The bare package root and old top-level subpaths are no longer exported.
 
@@ -607,12 +607,12 @@ a claim of identical features.
 | `React Router: data routing subset` | 29780 |
 | `React: routing-only named exports` | 1245 |
 | `Preact: routing-only named exports` | 1405 |
-| `@kasperrt/smolter/react` | 2948 |
-| `@kasperrt/smolter/preact` | 5024 |
-| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4281 |
-| `@kasperrt/smolter/preact + server transport` | 6300 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9405 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9692 |
+| `@kasperrt/smolter/react` | 3082 |
+| `@kasperrt/smolter/preact` | 5016 |
+| `@kasperrt/smolter/react + @kasperrt/smolter/react/client` | 4419 |
+| `@kasperrt/smolter/preact + server transport` | 6291 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9398 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9685 |
 | `@kasperrt/smolter/react/data (optional resource API)` | 2962 |
 | `React: common routing/data exports` | 2761 |
 | `Preact: common routing/data exports` | 3046 |

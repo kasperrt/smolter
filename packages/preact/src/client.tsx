@@ -1,4 +1,8 @@
-/** Browser mounting and hydration for Preact applications. @module */
+/**
+ * Preact document hydration, browser history and deployment recovery.
+ *
+ * @module
+ */
 /** @jsxImportSource preact */
 
 import {
@@ -19,6 +23,7 @@ import { prepareRoutes, RouterApplication } from "./router.tsx";
 export * from "@smolter/client";
 export { configureApplication } from "@smolter/core/environment";
 
+/** Browser hydration settings for hash history, deployment recovery and deferred-data timeout. */
 export interface MountApplicationOptions {
   hash?: boolean;
   deployment?: DeploymentOptions | null;
@@ -26,6 +31,7 @@ export interface MountApplicationOptions {
   deferredTimeout?: number;
 }
 
+/** Create the browser application router and hydrate the document, installing recovery before initial lazy loading. */
 export async function mountApplication(
   routes: AppRoute[],
   rootModule?: RootModule,

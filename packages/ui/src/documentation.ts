@@ -1,9 +1,11 @@
 import type { DocPage } from "./docs";
 import { documentationGroups } from "./docs/navigation";
+import { pageSupport } from "./docs/support";
 import type { ElementFactory, LinkFactory } from "./types";
 
 export interface DocumentationProps<N> {
   page: DocPage;
+  pending?: boolean;
   pages: DocPage[];
   link: LinkFactory<N>;
 }
@@ -17,6 +19,7 @@ export function createDocumentation<N>(
 ) {
   function Documentation({
     page,
+    pending = false,
     pages,
     link: renderLink,
   }: DocumentationProps<N>) {
@@ -40,6 +43,16 @@ export function createDocumentation<N>(
       h(
         "nav",
         { className: "docs-sidebar", "aria-label": "Documentation" },
+        h(
+          "p",
+          { className: "docs-support-key" },
+          "R React · P Preact · S SSR; dotted = partial, struck = unavailable",
+        ),
+        h(
+          "span",
+          { className: "docs-loading", role: "status" },
+          pending ? "Loading guide…" : "",
+        ),
         ...documentationGroups(pages).map((group) =>
           h(
             "section",
@@ -49,7 +62,26 @@ export function createDocumentation<N>(
             ...group.pages.map((item) =>
               renderLink(
                 `/docs/${item.slug}`,
-                item.title,
+                h(
+                  "span",
+                  { className: "docs-nav-label" },
+                  h("span", null, item.title),
+                  h(
+                    "span",
+                    { className: "docs-support-mini", "aria-hidden": true },
+                    ...pageSupport(item).map((support) =>
+                      h(
+                        "abbr",
+                        {
+                          key: support.short,
+                          className: `support-${support.level}`,
+                          title: `${support.label}: ${support.detail}`,
+                        },
+                        support.short,
+                      ),
+                    ),
+                  ),
+                ),
                 item.slug === page.slug ? "active" : undefined,
               ),
             ),
@@ -58,10 +90,27 @@ export function createDocumentation<N>(
       ),
       h(
         "article",
-        { className: "docs-article" },
+        { className: "docs-article", "aria-busy": pending },
         h("span", { className: "docs-kind" }, page.kind),
         h("h1", { tabIndex: -1 }, page.title),
         h("p", { className: "docs-summary" }, page.summary),
+        h(
+          "section",
+          { className: "docs-support", "aria-label": "Compatibility" },
+          h("h2", null, "Compatibility"),
+          ...pageSupport(page).map((support) =>
+            h(
+              "div",
+              { key: support.short },
+              h(
+                "strong",
+                { className: `support-${support.level}` },
+                support.label,
+              ),
+              h("span", null, support.detail),
+            ),
+          ),
+        ),
         ...(page.entries
           ? [
               h(

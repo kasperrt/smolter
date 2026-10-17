@@ -1,11 +1,18 @@
+/**
+ * Production route asset discovery for SSR preload hints.
+ *
+ * @module
+ */
 import { matchRoutes } from "@smolter/core";
 
+/** Emitted JavaScript and stylesheet URLs associated with a route. */
 export interface RouteAssets {
   path: string;
   files: string[];
   styles?: string[];
 }
 
+/** Collect matched-route JavaScript and stylesheet assets from the production route manifest. */
 export function routePreloads(
   routes: RouteAssets[],
   pathname: string,

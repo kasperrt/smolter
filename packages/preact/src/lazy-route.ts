@@ -1,3 +1,8 @@
+/**
+ * On-demand Preact route modules with shared intent prefetching.
+ *
+ * @module
+ */
 import { serverRoute } from "@smolter/client";
 import type { DataArgs, RouteModule, Router } from "@smolter/core";
 import { type ComponentType, createElement } from "preact";
@@ -6,6 +11,7 @@ import type { AppRoute } from "./route-types.ts";
 import type { ErrorProps } from "./routes.ts";
 import { useSyncExternalStore } from "./runtime.ts";
 
+/** Lazy route path, server transport endpoint and available handler capabilities. */
 export interface LazyRouteOptions {
   path: string;
   dataEndpoint?: string;
@@ -36,6 +42,7 @@ function LazyView() {
   return Component && createElement(Component, {});
 }
 
+/** Create a route that imports its module on demand and shares the import with intent prefetching. */
 export function lazyRoute(
   options: LazyRouteOptions,
   importer: () => Promise<LoadedRoute>,

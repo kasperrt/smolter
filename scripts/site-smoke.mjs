@@ -198,10 +198,23 @@ const result = await (async () => {
       `${framework}: SSR article was downloaded twice`,
     );
     console.log(`${framework}: hydration retained the article`);
-    await hydrated
+    assert.equal(await hydrated.locator(".docs-support > div").count(), 4);
+    const documentSupport = hydrated.locator(
+      '.docs-sidebar a[href$="/docs/Document"] .docs-support-mini',
+    );
+    assert.equal(await documentSupport.locator(".support-no").count(), 2);
+    assert.equal(await documentSupport.locator(".support-yes").count(), 2);
+    const actionsLink = hydrated
       .getByRole("navigation", { name: "Documentation", exact: true })
-      .getByRole("link", { name: "Actions", exact: true })
-      .click();
+      .getByRole("link", { name: "Actions", exact: true });
+    const prefetched = hydrated.waitForResponse((response) =>
+      response.url().includes("_smolter-doc_actions-"),
+    );
+    await actionsLink.hover();
+    await prefetched;
+    assert.equal(hydrated.url(), `${origin}/smolter/docs/fetchers/`);
+    await actionsLink.focus();
+    await actionsLink.click();
     await hydrated
       .getByRole("heading", { name: "Actions", exact: true })
       .waitFor();
@@ -220,6 +233,52 @@ const result = await (async () => {
         .locator('meta[property="og:title"]')
         .getAttribute("content"),
       "Actions · smolter docs",
+    );
+    // A cold article must not replace the shared shell with a loading panel.
+    let releaseArticle;
+    const articleReady = new Promise((resolve) => {
+      releaseArticle = resolve;
+    });
+    let articleRequested;
+    const requested = new Promise((resolve) => {
+      articleRequested = resolve;
+    });
+    await hydrated.route("**/*_smolter-doc_loaders-*.js", async (route) => {
+      articleRequested();
+      await articleReady;
+      await route.continue();
+    });
+    await hydrated.evaluate(() => {
+      window.docsHeader = document.querySelector("header");
+      window.docsSidebar = document.querySelector(".docs-sidebar");
+      window.docsArticle = document.querySelector(".docs-article");
+      window.docsDocument = document.documentElement;
+      document.querySelector('.docs-sidebar a[href$="/docs/loaders"]').click();
+    });
+    await requested;
+    assert(
+      await hydrated.evaluate(
+        () =>
+          window.docsHeader === document.querySelector("header") &&
+          window.docsSidebar === document.querySelector(".docs-sidebar") &&
+          window.docsArticle === document.querySelector(".docs-article") &&
+          document.querySelector(".docs-article h1").textContent === "Actions",
+      ),
+      "Pending article replaced the guide shell",
+    );
+    releaseArticle();
+    await hydrated
+      .getByRole("heading", { name: "Loaders", exact: true })
+      .waitFor();
+    assert(
+      await hydrated.evaluate(
+        () =>
+          window.docsDocument === document.documentElement &&
+          window.docsHeader === document.querySelector("header") &&
+          window.docsSidebar === document.querySelector(".docs-sidebar") &&
+          window.docsArticle === document.querySelector(".docs-article"),
+      ),
+      "Article navigation remounted the shared layout",
     );
     await hydrated.locator(".wordmark").click();
     await hydrated

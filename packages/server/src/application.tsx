@@ -17,11 +17,13 @@ import { privateResponse } from "./private-response.ts";
 import { progressiveDocument } from "./progressive-document.ts";
 import { resolveHydration, streamDocument } from "./stream-document.ts";
 
+/** SSR settings for CSP nonce and early deferred-data hydration. */
 export interface RenderApplicationOptions {
   nonce?: string;
   earlyHydration?: boolean;
 }
 
+/** Render a Preact application response with root and route data, streaming deferred content when enabled. */
 export async function renderApplication(
   request: Request,
   routes: AppRoute[],
@@ -260,6 +262,7 @@ async function dispatch(
   return Response.json((await normalizeResult(value)) ?? null);
 }
 
+/** Dispatch a normalized application URL to its route loader or action and return an HTTP response. */
 export async function dispatchRoute(
   request: Request,
   routes: AppRoute[],

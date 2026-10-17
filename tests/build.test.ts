@@ -289,3 +289,25 @@ it("keeps workspace source imports behind package exports", () => {
     }
   }
 });
+
+it("keeps error wrapping internal and application context hooks public", async () => {
+  for (const entry of ["core/utils", "preact/index", "react/index"]) {
+    const result = await bundleBrowser({
+      entryPoints: [`dist/${entry}.js`],
+      bundle: true,
+      format: "esm",
+      platform: "browser",
+      packages: "external",
+      metafile: true,
+      write: false,
+    });
+    const exports = Object.values(result.metafile.outputs).flatMap(
+      (output) => output.exports,
+    );
+    expect(exports).not.toContain("safeWrapAsync");
+    if (entry !== "core/utils") {
+      expect(exports).toContain("useMatches");
+      expect(exports).toContain("useOutletContext");
+    }
+  }
+});

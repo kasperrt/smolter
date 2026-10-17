@@ -7,6 +7,7 @@ import { createStore } from "./store.ts";
 import type { NavigateOptions, Router } from "./types.ts";
 import { navigationClick } from "./url.ts";
 
+/** Browser history operation: POP, PUSH or REPLACE. */
 export type NavigationType = "POP" | "PUSH" | "REPLACE";
 
 export interface NavigationSnapshot {

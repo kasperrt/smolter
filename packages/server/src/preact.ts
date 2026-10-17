@@ -1,5 +1,8 @@
-/** Preact server rendering and HTTP data dispatch. @module */
-
+/**
+ * Preact SSR rendering and route data dispatch.
+ *
+ * @module
+ */
 export {
   dispatchRoute,
   type RenderApplicationOptions,

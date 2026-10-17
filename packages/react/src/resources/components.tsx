@@ -23,6 +23,7 @@ import {
   useSyncExternalStore,
 } from "react";
 
+/** Resource handlers with optional React content, pending UI and retry boundary. */
 export interface ResourceRouteModule extends ResourceModule {
   default?: ComponentType;
   ErrorBoundary?: ComponentType<{ retry: () => void }>;
@@ -42,6 +43,7 @@ interface RouterProviderProps extends PropsWithChildren {
   router: ResourceRouter;
 }
 
+/** Provide a resource router and load initial matches; dispose it when unmounted. */
 export function RouterProvider({
   children,
   initialMatches = EMPTY_MATCHES,
@@ -66,6 +68,7 @@ interface RouteProps extends PropsWithChildren {
   routeId: string;
 }
 
+/** Provide a resource route and render its content, loading state or retry boundary. */
 export function Route({
   children,
   params = {},
@@ -121,12 +124,14 @@ export function Route({
   );
 }
 
+/** Read the current resource route loader result. */
 export function useLoaderData<Data>(): Data | null {
   const route = useCurrentRoute();
 
   return useRouteLoaderData<Data>(route.routeId, route.params);
 }
 
+/** Read loader data for a registered resource route. */
 export function useRouteLoaderData<Data>(
   routeId: string,
   params: Params = {},
@@ -136,6 +141,7 @@ export function useRouteLoaderData<Data>(
   return state.loaderData as Data | null;
 }
 
+/** Read the current resource route action result. */
 export function useActionData<Data>(): Data | null {
   const route = useCurrentRoute();
   const state = useRouteState(route.routeId, route.params, false);
@@ -143,6 +149,7 @@ export function useActionData<Data>(): Data | null {
   return state.actionData as Data | null;
 }
 
+/** Read the current page navigation or submission state. */
 export function useNavigation(): { state: NavigationState } {
   const route = useCurrentRoute();
   const state = useRouteState(route.routeId, route.params, false);
@@ -150,6 +157,7 @@ export function useNavigation(): { state: NavigationState } {
   return { state: state.navigationState };
 }
 
+/** Return the resource route revalidation function. */
 export function useRevalidator(): {
   revalidate: () => Promise<DataResult<unknown>>;
   state: string;
@@ -183,6 +191,7 @@ interface FormProps extends PropsWithChildren {
   params?: Params;
 }
 
+/** Submit a resource action from a form without document navigation. */
 export function Form({
   action,
   children,
@@ -208,6 +217,7 @@ export function Form({
   return <FormContext.Provider value={submit}>{children}</FormContext.Provider>;
 }
 
+/** Return a function that submits form data through the current router. */
 export function useSubmit(): (input?: unknown) => Promise<DataResult<unknown>> {
   const submit = useContext(FormContext);
 
@@ -216,6 +226,7 @@ export function useSubmit(): (input?: unknown) => Promise<DataResult<unknown>> {
   return submit;
 }
 
+/** Read or mutate a resource independently of the rendered route. */
 export function useFetcher<Data = unknown>(
   options: FetcherOptions = {},
 ): readonly [
@@ -312,6 +323,7 @@ export function useFetcher<Data = unknown>(
   return [fetcherState, fetcherOperations] as const;
 }
 
+/** Read the resource router supplied by its provider. */
 export function useRouter(): ResourceRouter {
   const router = useContext(RouterContext);
 

@@ -18,6 +18,7 @@ const IDLE_ROUTE_STATE: RouteState = {
   unexpectedError: false,
 };
 
+/** Manage keyed resource reads, submissions, subscriptions and cancellation independently of navigation. */
 export class ResourceRouter {
   readonly #cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>();
   readonly #controllers = new Map<string, AbortController>();
@@ -427,6 +428,7 @@ export class ResourceRouter {
   }
 }
 
+/** Create an independent resource-data router from registered modules; this does not manage URL history. */
 export function createResourceRouter(
   routes: ReadonlyMap<string, ResourceModule>,
 ): ResourceRouter {

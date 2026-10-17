@@ -14,11 +14,13 @@ import type { AppRoute } from "./route-types.ts";
 import { Routes } from "./routes.ts";
 import { useContext, useMemo, useSyncExternalStore } from "./runtime.ts";
 
+/** Optional children and context shared with descendants through useOutletContext. */
 export interface OutletProps {
   context?: unknown;
   children?: ReactNode;
 }
 
+/** Render supplied children or the active route, and provide outlet context to descendants. */
 export function Outlet({
   context,
   children,
@@ -37,6 +39,7 @@ export interface ApplicationProps extends ApplicationContext {
   rootStore?: ReturnType<typeof createRootStore>;
 }
 
+/** Render a Preact root document and active route with shared root data and application context. */
 export function RouterApplication(
   props: ApplicationProps,
 ): import("preact").JSX.Element {

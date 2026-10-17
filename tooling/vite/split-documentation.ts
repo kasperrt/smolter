@@ -37,10 +37,11 @@ export function splitDocumentation(): Plugin {
     },
     transform(_code, id, options) {
       if (id !== entry || options?.ssr) return;
-      const catalogue = pages.map(({ slug, title, kind }) => ({
+      const catalogue = pages.map(({ slug, title, kind, entries }) => ({
         slug,
         title,
         kind,
+        entries,
       }));
       const imports = pages.map(
         (page) =>

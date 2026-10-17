@@ -1,16 +1,19 @@
 export type Params = Readonly<Record<string, string>>;
 
+/** Resource parameters and cancellation signal supplied to a loader. */
 export interface LoaderFunctionArgs {
   params: Params;
   signal: AbortSignal;
 }
 
+/** Submitted input, resource parameters and cancellation signal supplied to an action. */
 export interface ActionFunctionArgs<Input = unknown> {
   input: Input;
   params: Params;
   signal: AbortSignal;
 }
 
+/** Successful resource data or a normalized resource failure. */
 export interface DataResult<Data> {
   data: Data | null;
   error: string;
@@ -23,6 +26,7 @@ export interface ResourceModule {
   shouldRevalidate?: (args: ShouldRevalidateFunctionArgs) => boolean;
 }
 
+/** Navigation or mutation context used to decide whether loader data should refresh. */
 export interface ShouldRevalidateFunctionArgs {
   actionResult: DataResult<unknown>;
   defaultShouldRevalidate: boolean;
