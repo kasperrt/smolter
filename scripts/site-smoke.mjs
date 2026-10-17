@@ -23,6 +23,9 @@ const server = createServer((request, response) => {
     ".js": "text/javascript",
     ".css": "text/css",
     ".ttf": "font/ttf",
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
+    ".xml": "application/xml",
   };
 
   response.writeHead(missing ? 404 : 200, {
@@ -41,6 +44,13 @@ const errors = [];
 page.on("pageerror", (error) => errors.push(error.message));
 
 const result = await (async () => {
+  const sitemap = readFileSync("site/sitemap.xml", "utf8");
+  assert(sitemap.includes("https://kasperrt.github.io/smolter/docs/fetchers/"));
+  assert(
+    !sitemap.includes("/react/") &&
+      !sitemap.includes("/preact/") &&
+      !sitemap.includes("/tasks"),
+  );
   const landingHtml = readFileSync("site/index.html", "utf8");
   assert(
     landingHtml.includes("Data flow you can follow."),
@@ -129,6 +139,49 @@ const result = await (async () => {
         exact: true,
       })
       .waitFor();
+    assert.equal(
+      await hydrated.title(),
+      "Independent reads and writes · smolter docs",
+    );
+    assert.equal(
+      await hydrated.locator('link[rel="canonical"]').getAttribute("href"),
+      "https://kasperrt.github.io/smolter/docs/fetchers/",
+    );
+    assert(
+      await hydrated
+        .locator('meta[name="description"]')
+        .getAttribute("content"),
+    );
+    assert.equal(
+      await hydrated
+        .locator('meta[property="og:title"]')
+        .getAttribute("content"),
+      await hydrated.title(),
+    );
+    assert.equal(
+      await hydrated
+        .locator('meta[name="twitter:card"]')
+        .getAttribute("content"),
+      "summary_large_image",
+    );
+    const schema = JSON.parse(
+      await hydrated
+        .locator('script[type="application/ld+json"]')
+        .textContent(),
+    );
+    assert.equal(schema.codeRepository, "https://github.com/kasperrt/smolter");
+    const icon = await hydrated
+      .locator('link[rel="icon"]')
+      .getAttribute("href");
+    const iconResponse = await hydrated.request.get(
+      new URL(icon, hydrated.url()).href,
+    );
+    assert(iconResponse.ok());
+    assert((await iconResponse.text()).includes('<path fill="#572849"'));
+    const image = await hydrated
+      .locator('meta[property="og:image"]')
+      .getAttribute("content");
+    assert((await hydrated.request.get(origin + new URL(image).pathname)).ok());
     await hydrated.evaluate(() => {
       window.initialArticle = document.querySelector(".docs-article");
     });
@@ -158,6 +211,32 @@ const result = await (async () => {
       `${framework}: navigation should load only its article`,
     );
     assert(articleScripts.some((url) => url.includes("_smolter-doc_actions-")));
+    assert.equal(
+      await hydrated.locator('link[rel="canonical"]').getAttribute("href"),
+      "https://kasperrt.github.io/smolter/docs/actions/",
+    );
+    assert.equal(
+      await hydrated
+        .locator('meta[property="og:title"]')
+        .getAttribute("content"),
+      "Actions · smolter docs",
+    );
+    await hydrated.locator(".wordmark").click();
+    await hydrated
+      .getByRole("heading", { name: "Data flow you can follow.", exact: true })
+      .waitFor();
+    assert.equal(
+      await hydrated.title(),
+      "smolter · Typed routing for React and Preact",
+    );
+    assert.equal(
+      await hydrated.locator('link[rel="canonical"]').getAttribute("href"),
+      "https://kasperrt.github.io/smolter/",
+    );
+    assert.equal(
+      await hydrated.locator('meta[name="robots"]').getAttribute("content"),
+      "index,follow",
+    );
     await hydrated.close();
   }
 

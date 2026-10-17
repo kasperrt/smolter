@@ -9,7 +9,8 @@
     "./preact": "./src/preact.ts",
     "./style.css": "./src/style.css",
     "./docs": "./src/docs/index.ts",
-    "./hosting": "./src/hosting.ts"
+    "./hosting": "./src/hosting.ts",
+    "./metadata": "./src/metadata.ts"
   },
   "peerDependencies": {
     "react": ">=18",

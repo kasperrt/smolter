@@ -1,10 +1,12 @@
 import { resolve } from "node:path";
+import { pageMetadata } from "@smolter/ui/metadata";
 import { createServer, type Plugin, type ResolvedConfig } from "vite";
+import { metadataTags } from "./site-metadata.ts";
 
 interface RenderedPage {
   html: string;
   data: string;
-  title: string;
+  metadata: ReturnType<typeof pageMetadata>;
 }
 
 /** Emit pre-rendered landing and documentation pages for static hosting. */
@@ -74,13 +76,22 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
           }
         }
 
-        for (const route of paths) {
-          const { html, data, title } = await prerender(`/${route}`);
-          const source = template
-            .replace(
-              /<title>.*?<\/title>/,
-              `<title>${title.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}</title>`,
+        this.emitFile({
+          type: "asset",
+          fileName: "sitemap.xml",
+          source: `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${paths
+            .filter((path) => path !== "docs")
+            .map(
+              (path) =>
+                `<url><loc>https://kasperrt.github.io/smolter/${path}${path ? "/" : ""}</loc></url>`,
             )
+            .join("")}</urlset>`,
+        });
+
+        for (const route of paths) {
+          const { html, data, metadata } = await prerender(`/${route}`);
+          const source = template
+            .replace(/<title>.*?<\/title>/, metadataTags(metadata))
             .replace("<!--app-->", html)
             .replace(
               "<!--data-->",
@@ -108,7 +119,10 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
         this.emitFile({
           type: "asset",
           fileName: `${route}/index.html`,
-          source: template,
+          source: template.replace(
+            /<title>.*?<\/title>/,
+            metadataTags(pageMetadata(`/${route}`)),
+          ),
         });
       }
     },

@@ -18,20 +18,20 @@ export function demoAssets(): Plugin {
     generateBundle: {
       order: "post",
       handler(_options, bundle) {
-        const font = this.emitFile({
-          type: "asset",
-          name: "pixelify-sans-500.ttf",
-          source: readFileSync(`${directory}/fonts/pixelify-sans-500.ttf`),
-        });
-
-        for (const output of Object.values(bundle)) {
-          if (output.type !== "asset" || !output.fileName.endsWith(".html"))
-            continue;
-
-          output.source = String(output.source).replaceAll(
-            "/@smolter-ui/fonts/pixelify-sans-500.ttf",
-            `${base}${this.getFileName(font)}`,
-          );
+        for (const file of ["fonts/pixelify-sans-500.ttf", "favicon.svg"]) {
+          const asset = this.emitFile({
+            type: "asset",
+            name: basename(file),
+            source: readFileSync(`${directory}/${file}`),
+          });
+          for (const output of Object.values(bundle)) {
+            if (output.type !== "asset" || !output.fileName.endsWith(".html"))
+              continue;
+            output.source = String(output.source).replaceAll(
+              `/@smolter-ui/${file}`,
+              `${base}${this.getFileName(asset)}`,
+            );
+          }
         }
       },
     },
