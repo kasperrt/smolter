@@ -46,7 +46,7 @@ export function createDocumentation<N>(
         h(
           "p",
           { className: "docs-support-key" },
-          "R React · P Preact · S SSR; dotted = partial, struck = unavailable",
+          "R React · P Preact · S SSR; * = framework alternative, dotted = partial, struck = unavailable",
         ),
         h(
           "span",
@@ -105,9 +105,18 @@ export function createDocumentation<N>(
               h(
                 "strong",
                 { className: `support-${support.level}` },
-                support.label,
+                support.level === "alternative"
+                  ? `${support.label} · Alternative`
+                  : support.label,
               ),
-              h("span", null, support.detail),
+              h(
+                "span",
+                null,
+                support.detail,
+                ...(support.reference
+                  ? [" ", link(support.reference.href, support.reference.label)]
+                  : []),
+              ),
             ),
           ),
         ),

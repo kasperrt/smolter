@@ -11,9 +11,13 @@ const page = {
 it("distinguishes renderer, browser, server and partial integration support", () => {
   expect(
     pageSupport({ ...page, entries: ["preact/document"] }).map((s) => s.level),
-  ).toEqual(["no", "no", "yes", "yes"]);
+  ).toEqual(["alternative", "alternative", "yes", "yes"]);
   expect(
-    pageSupport({ ...page, entries: ["preact/server"] }).map((s) => s.level),
+    pageSupport({
+      ...page,
+      slug: "renderApplication",
+      entries: ["preact/server"],
+    }).map((s) => s.level),
   ).toEqual(["no", "no", "no", "yes"]);
   expect(
     pageSupport({ ...page, entries: ["react", "preact"] }).every(
@@ -27,5 +31,41 @@ it("distinguishes renderer, browser, server and partial integration support", ()
   ).toEqual(["yes", "partial", "yes", "partial"]);
   expect(pageSupport({ ...page, slug: "server-rendering" })[1].level).toBe(
     "partial",
+  );
+});
+
+it("explains framework alternatives without claiming router APIs are built into React", () => {
+  const awaitSupport = pageSupport({
+    ...page,
+    slug: "Await",
+    entries: ["preact"],
+  });
+  expect(awaitSupport[0].short).toBe("R*");
+  expect(awaitSupport[1].short).toBe("RS*");
+  expect(awaitSupport[0].detail).toContain("React 19+");
+  expect(awaitSupport[0].detail).toContain(
+    "not Smolter's Preact deferred-data transport",
+  );
+  expect(awaitSupport[0].reference?.href).toBe(
+    "https://react.dev/reference/react/use",
+  );
+  const navigation = pageSupport({
+    ...page,
+    slug: "useNavigation",
+    entries: ["preact"],
+  });
+  expect(navigation[0].level).toBe("no");
+  expect(navigation[0].detail).toContain(
+    "React does not provide router pending state",
+  );
+  expect(navigation[0].reference).toBeUndefined();
+  const mount = pageSupport({
+    ...page,
+    slug: "mountApplication",
+    entries: ["preact/client"],
+  });
+  expect(mount[0].level).toBe("no");
+  expect(mount[0].detail).toContain(
+    "does not install Smolter transport or recovery",
   );
 });

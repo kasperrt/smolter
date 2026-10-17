@@ -51,7 +51,6 @@ sizeGuide.sections[1].code = [
 export const docs: DocPage[] = [
   ...[
     "getting-started",
-    "migration-0.3",
     "routing",
     "bundle-size",
     "data-flow",

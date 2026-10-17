@@ -456,7 +456,7 @@ and `internalURL`. Move `/client`, `/server`,
 `/files`, and `/vite` imports to the corresponding renderer-prefixed path above.
 The bare package root and old top-level subpaths are no longer exported.
 
-See the [0.3 migration guide](https://kasperrt.github.io/smolter/docs/migration-0.3/) and [changelog](./CHANGELOG.md).
+See the [changelog](./CHANGELOG.md) for release history.
 
 **Router factory migration:** code that previously used `createRouter` with
 loaders, actions, fetchers or revalidation must now use `createDataRouter`.
