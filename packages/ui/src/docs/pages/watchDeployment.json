@@ -21,7 +21,7 @@
     },
     {
       "title": "Failures and cache policy",
-      "body": "Network errors, bad JSON and timeouts fall back to normal navigation. A session marker limits recovery to one reload per old build/manifest URL. Blocked storage disables automatic reload. Serve the manifest with no-store and HTML with no-cache. A custom reload callback owns confirmation/navigation and receives the destination URL.",
+      "body": "Network errors, bad JSON and timeouts fall back to normal navigation. A session marker limits recovery to one reload per old build/manifest URL. Blocked storage disables automatic reload. Serve the manifest with no-store and HTML with no-cache. A custom reload callback owns confirmation/navigation and receives the destination URL. Idle intent-prefetch failures do not reload the current page or consume the recovery marker. Recovery waits for navigation to record a destination; overlapping checks honor the newest navigation.",
       "code": "watchDeployment(router, deployment && { ...deployment, timeout: 1500 });"
     }
   ]

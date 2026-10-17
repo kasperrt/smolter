@@ -12,8 +12,9 @@ test.afterEach(async () => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
 });
 
-for (const race of [false, true]) {
-  test(`recovers a production tab after deleted chunks (${race ? "deploy during import" : "deploy before navigation"})`, async ({
+for (const mode of ["before", "during", "prefetch"]) {
+  const race = mode === "during";
+  test(`recovers a production tab after deleted chunks (${mode})`, async ({
     page,
   }) => {
     const root = await mkdtemp(join(tmpdir(), "smolter-deployment-"));
@@ -81,6 +82,7 @@ for (const race of [false, true]) {
         watchDeployment(router, deployment);
         router.subscribe(() => { document.querySelector("output").textContent = router.getSnapshot().data || ""; });
         router.start();
+        ${mode === "prefetch" ? 'document.querySelector("button").onpointerenter = () => import("./page").catch(() => {});' : ""}
         document.querySelector("button").onclick = () => router.navigate("/next?tab=2#details");
       `,
       );
@@ -108,6 +110,17 @@ for (const race of [false, true]) {
       );
     }
     active = join(root, "b");
+    if (mode === "prefetch") {
+      const failedChunk = page.waitForResponse(
+        (response) =>
+          response.url().includes("/assets/page-") && response.status() === 404,
+      );
+      await page.getByRole("button", { name: "Next" }).hover();
+      await failedChunk;
+      await page.waitForTimeout(100);
+      await expect(page.locator("h1")).toHaveText("a document");
+      await expect(page).toHaveURL(origin + "/");
+    }
     await page.getByRole("button", { name: "Next" }).click();
     await expect(page.locator("h1")).toHaveText("b document");
     await expect(page.locator("output")).toHaveText("b route");
