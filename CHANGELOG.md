@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.4
+
+- Cancel stale deployment checks when newer Back/Forward operations return to the current route, including hash changes.
+- Recover missing action-redirect chunks at the committed destination, preserving query/hash and avoiding mutation replay.
+- Invalidate pending chunk recovery when a mutation starts; validate recovery ownership before claiming the reload marker.
+- Expand production-browser coverage for scoped application paths, separate CDN asset/manifest origins, overlapping navigation, Chromium offline/online recovery and history races. Manual and file-route HMR remain covered.
+
 ## 0.3.3
 
 - Ignore idle intent-prefetch chunk failures in deployment recovery so the next click retains its destination and reload marker.

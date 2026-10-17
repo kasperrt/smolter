@@ -36,27 +36,24 @@ export function deploymentCheck(options: DeploymentOptions) {
     return pending;
   }
 
-  async function reload(target: URL) {
-    // If storage is unavailable, do not risk reloading the same cached document forever.
-    const allowed = await Promise.resolve()
+  function reload(target: URL, current: () => boolean = () => true) {
+    // Validate and claim recovery in the same task: stale checks must not consume
+    // the marker or reload after a newer navigation or mutation has started.
+    return Promise.resolve()
       .then(() => {
-        if (sessionStorage.getItem(key)) return false;
+        if (stopped || !current() || sessionStorage.getItem(key)) return false;
 
         sessionStorage.setItem(key, "1");
+
+        if (options.reload) options.reload(target);
+        if (!options.reload) {
+          if (target.href === location.href) location.reload();
+          if (target.href !== location.href) location.assign(target.href);
+        }
 
         return true;
       })
       .catch(() => false);
-
-    if (allowed && !stopped) {
-      if (options?.reload) options.reload(target);
-      if (!options?.reload) {
-        if (target.href === location.href) location.reload();
-        if (target.href !== location.href) location.assign(target.href);
-      }
-    }
-
-    return allowed && !stopped;
   }
 
   return {

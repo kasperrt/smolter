@@ -20,18 +20,21 @@ export function watchDeployment(
 
   const check = deploymentCheck(options);
   const { changed, reload } = check;
+  const read = router.getSnapshot;
   const navigate = router.navigate;
   const dispose = router.dispose;
   let sequence = 0;
   let stopped = false;
   let replay = false;
-  let destination = new URL(location.href);
+  const valid = (current: number) => current === sequence && !stopped;
+  const unsubscribe = router.subscribe(() => {
+    if (read().state === "submitting") sequence++;
+  });
 
   const guarded: NavigationRouter["navigate"] = async (href, operation) => {
     const target = new URL(href, router.getSnapshot().url);
     const currentURL = new URL(router.getSnapshot().url);
     const current = ++sequence;
-    destination = target;
 
     if (
       target.origin === location.origin &&
@@ -39,7 +42,8 @@ export function watchDeployment(
         target.search !== currentURL.search) &&
       (await changed())
     ) {
-      if (current !== sequence || stopped || (await reload(target))) return;
+      if (!valid(current) || (await reload(target, () => valid(current))))
+        return;
     }
 
     if (current === sequence && !stopped) await navigate(href, operation);
@@ -49,7 +53,8 @@ export function watchDeployment(
     if (replay) return;
 
     const target = new URL(location.href);
-    const previous = new URL(router.getSnapshot().url);
+    const previous = new URL(read().url);
+    const current = ++sequence;
 
     if (
       target.pathname === previous.pathname &&
@@ -58,11 +63,10 @@ export function watchDeployment(
       return;
 
     event.stopImmediatePropagation();
-    const current = ++sequence;
-    destination = target;
     void changed().then(async (updated) => {
-      if (stopped || current !== sequence) return;
-      if (updated && (await reload(target))) return;
+      if (!valid(current)) return;
+      if (updated && (await reload(target, () => valid(current)))) return;
+      if (!valid(current)) return;
 
       replay = true;
       window.dispatchEvent(
@@ -75,12 +79,19 @@ export function watchDeployment(
   const preloadError = () => {
     // Intent prefetch is speculative: it must not reload the current page or
     // consume the recovery marker before a click records its destination.
-    if (router.getSnapshot().state !== "loading") return;
+    if (read().state !== "loading") return;
 
     const current = sequence;
-    const target = destination;
+    const target = new URL(read().url);
     void changed().then((updated) => {
-      if (updated && current === sequence && !stopped) return reload(target);
+      if (updated)
+        return reload(
+          target,
+          () =>
+            valid(current) &&
+            read().state !== "submitting" &&
+            read().url === target.href,
+        );
     });
   };
 
@@ -88,6 +99,7 @@ export function watchDeployment(
     stopped = true;
     sequence++;
     check.dispose();
+    unsubscribe();
     window.removeEventListener("popstate", pop, true);
     window.removeEventListener("vite:preloadError", preloadError);
 

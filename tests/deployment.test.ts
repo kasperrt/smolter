@@ -272,3 +272,124 @@ it("preserves the newest click after prefetch failure and overlapping navigation
   expect(reload).toHaveBeenCalledOnce();
   expect(reload.mock.calls[0][0].pathname).toBe("/next");
 });
+
+it("cancels a pending Back check when Forward returns to the current route", async () => {
+  const { events, location, fetcher, reload, storage } = setup();
+  let resolve!: (response: Response) => void;
+  fetcher.mockReturnValue(
+    new Promise<Response>((done) => {
+      resolve = done;
+    }),
+  );
+
+  location.href = "https://app.test/previous";
+  events.dispatchEvent(new PopStateEvent("popstate", { state: "back" }));
+  location.href = "https://app.test/#returned";
+  events.dispatchEvent(new PopStateEvent("popstate", { state: "forward" }));
+  resolve(Response.json({ version: "new" }));
+  await new Promise((done) => setTimeout(done, 0));
+
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+});
+
+it("does not reload when a mutation starts while chunk recovery is checking", async () => {
+  const { router, events, fetcher, reload, storage } = setup();
+  let resolve!: (response: Response) => void;
+  fetcher.mockReturnValue(
+    new Promise<Response>((done) => {
+      resolve = done;
+    }),
+  );
+  router.getSnapshot().state = "loading";
+  events.dispatchEvent(new Event("vite:preloadError"));
+  router.getSnapshot().state = "submitting";
+  resolve(Response.json({ version: "new" }));
+  await new Promise((done) => setTimeout(done, 0));
+
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+});
+
+it("recovers the committed action redirect destination without replaying its mutation", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { events, options, reload } = setup("new");
+  const action = vi.fn(
+    () =>
+      new Response(null, {
+        status: 302,
+        headers: { Location: "/next?from=login#account" },
+      }),
+  );
+  const router = createDataRouter(
+    [
+      { path: "/", action },
+      {
+        path: "/next",
+        loader: () => {
+          events.dispatchEvent(new Event("vite:preloadError"));
+          return new Error("Missing destination chunk");
+        },
+      },
+    ],
+    { url: "https://app.test/" },
+  );
+  const rootRefresh = vi.fn(async () => undefined);
+  router.registerRevalidator("root", rootRefresh);
+  cleanups.push(watchDeployment(router, options));
+
+  await router.submit("/", new FormData());
+  await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
+
+  expect(reload.mock.calls[0][0].href).toBe(
+    "https://app.test/next?from=login#account",
+  );
+  expect(action).toHaveBeenCalledOnce();
+  expect(rootRefresh).toHaveBeenCalledOnce();
+});
+
+it("invalidates pending recovery even when a newer mutation finishes before the manifest", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { options, events, fetcher, reload, storage } = setup();
+  let resolve!: (response: Response) => void;
+  fetcher.mockReturnValue(
+    new Promise<Response>((done) => {
+      resolve = done;
+    }),
+  );
+  const action = vi.fn(() => ({ saved: true }));
+  const router = createDataRouter([{ path: "/", action }], {
+    url: "https://app.test/",
+  });
+  cleanups.push(watchDeployment(router, options));
+  router.getSnapshot().state = "loading";
+  events.dispatchEvent(new Event("vite:preloadError"));
+
+  await router.submit("/", new FormData());
+  resolve(Response.json({ version: "new" }));
+  await new Promise((done) => setTimeout(done, 0));
+
+  expect(action).toHaveBeenCalledOnce();
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+});
+
+it("uses the latest overlapping history destination including its query and hash", async () => {
+  const { events, location, fetcher, reload } = setup();
+  let resolve!: (response: Response) => void;
+  fetcher.mockReturnValue(
+    new Promise<Response>((done) => {
+      resolve = done;
+    }),
+  );
+
+  location.href = "https://app.test/previous";
+  events.dispatchEvent(new PopStateEvent("popstate", { state: 1 }));
+  location.href = "https://app.test/next?tab=2#latest";
+  events.dispatchEvent(new PopStateEvent("popstate", { state: 2 }));
+  resolve(Response.json({ version: "new" }));
+
+  await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
+  expect(reload.mock.calls[0][0].href).toBe(location.href);
+  expect(fetcher).toHaveBeenCalledOnce();
+});
