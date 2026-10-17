@@ -50,7 +50,7 @@ export function splitDocumentation(): Plugin {
         code: `export const docs = ${JSON.stringify(catalogue)};
 const articles = { ${imports.join(",")} };
 export async function readDoc(slug = "getting-started") {
-  const load = articles[slug];
+  const load = Object.hasOwn(articles, slug) && articles[slug];
   return load ? (await load()).default : new Error("Documentation page not found");
 }`,
         map: null,
