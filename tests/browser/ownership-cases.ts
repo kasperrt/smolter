@@ -226,7 +226,7 @@ export function ownershipCases(owned = false, selected?: string[]) {
         if (mode === "nested") {
           fail(new Error("Nested rejected"));
           await expect(
-            page.getByText("Nested failed", { exact: true }),
+            page.getByRole("main").getByText("Nested failed", { exact: true }),
           ).toBeVisible();
         }
         if (mode === "revalidate") {
