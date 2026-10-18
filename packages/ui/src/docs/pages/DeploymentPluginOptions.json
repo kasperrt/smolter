@@ -8,6 +8,11 @@
       "title": "manifestURL",
       "body": "Override the URL read by watchDeployment. The emitted filename stays smolter-manifest.json; your host maps it to the configured URL. Omit the override for an absolute Vite base, or set it explicitly for multiple applications, a CDN or relative bases.",
       "code": "import type { DeploymentPluginOptions } from \"@kasperrt/smolter/preact/vite\";\n\nconst options: DeploymentPluginOptions = {\n  manifestURL: \"/admin/smolter-manifest.json\",\n};"
+    },
+    {
+      "title": "Server compatibility",
+      "body": "compatibility contributes to build and shared fingerprints. Change it for incompatible independently deployed server contracts or external runtime configuration that the browser graph cannot observe. It does not substitute for retaining old assets or consistent deployment ordering.",
+      "code": "deploymentPlugin({ compatibility: \"server-contract-v2\" });"
     }
   ]
 }

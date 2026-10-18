@@ -109,7 +109,13 @@ for (const framework of ["react", "preact"] as const) {
       "second=2; Path=/",
     ]);
 
-    for (const target of ["", "https://outside.test/", "//outside.test/"]) {
+    for (const target of [
+      "",
+      "https://outside.test/",
+      "//outside.test/",
+      "/\\outside.test/",
+      "/x#fragment",
+    ]) {
       const invalid = await fetch(
         new URL(`/app/_smolter?url=${encodeURIComponent(target)}`, origin),
       );

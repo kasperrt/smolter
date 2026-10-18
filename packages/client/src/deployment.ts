@@ -12,6 +12,12 @@ const watchers = new WeakMap<NavigationRouter, WatcherState>();
 /** Build identity and the fresh, non-cacheable manifest URL emitted by deploymentPlugin. */
 export interface DeploymentOptions {
   version: string;
+  /** Generated shared application fingerprint; omitted for legacy manifests. */
+  shared?: string;
+  /** Generated route dependency fingerprints, in route matching order. */
+  routes?: { path: string; fingerprint: string }[];
+  /** Minimum interval between successful routine manifest checks (default 30 seconds). Chunk failures bypass it. */
+  checkInterval?: number;
   manifestURL: string;
   /** Maximum time to wait for the update check before continuing navigation. */
   timeout?: number;
@@ -75,7 +81,7 @@ export function watchDeployment(
       target.origin === location.origin &&
       (target.pathname !== currentURL.pathname ||
         target.search !== currentURL.search) &&
-      (await changed())
+      (await changed(target))
     ) {
       if (!valid(current) || (await reload(target, () => canReload(current))))
         return;
@@ -98,7 +104,7 @@ export function watchDeployment(
       return;
 
     event.stopImmediatePropagation();
-    void changed().then(async (updated) => {
+    void changed(target).then(async (updated) => {
       if (!valid(current)) return;
       if (updated && (await reload(target, () => canReload(current)))) return;
       if (!valid(current)) return;
@@ -118,7 +124,7 @@ export function watchDeployment(
 
     const current = state.sequence;
     const target = new URL(read().url);
-    void changed().then((updated) => {
+    void changed(target, true).then((updated) => {
       if (updated)
         return reload(
           target,
@@ -171,7 +177,7 @@ export async function recoverDeployment(
   const check = deploymentCheck(options);
 
   return check
-    .changed()
+    .changed(destination ?? new URL(location.href), true)
     .then((changed) =>
       changed ? check.reload(destination ?? new URL(location.href)) : false,
     )

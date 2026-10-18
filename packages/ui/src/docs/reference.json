@@ -1730,7 +1730,7 @@
     "entries": ["react/client", "preact/client"],
     "kind": "Types",
     "summary": "Select the server loader and action proxies available on a browser route.",
-    "signature": "interface ServerHandlers {\n  loader?: boolean;\n  action?: boolean;\n  /** Application-scoped HTTP transport path. Defaults to /_smolter. */\n  dataEndpoint?: string;\n}",
+    "signature": "interface ServerHandlers {\n  loader?: boolean;\n  action?: boolean;\n  /** Legacy application-scoped endpoint. Omit to use the route .__smolter suffix. */\n  dataEndpoint?: string;\n}",
     "fields": [
       {
         "name": "loader",
@@ -1745,7 +1745,7 @@
       {
         "name": "dataEndpoint",
         "signature": "dataEndpoint?: string;",
-        "summary": "Application-scoped HTTP transport path. Defaults to /_smolter."
+        "summary": "Legacy application-scoped endpoint. Omit to use the route .__smolter suffix."
       }
     ],
     "source": "packages/client/src/index.ts"
@@ -1756,12 +1756,27 @@
     "entries": ["react/client", "preact/client"],
     "kind": "Types",
     "summary": "Build identity and the fresh, non-cacheable manifest URL emitted by deploymentPlugin.",
-    "signature": "interface DeploymentOptions {\n  version: string;\n  manifestURL: string;\n  /** Maximum time to wait for the update check before continuing navigation. */\n  timeout?: number;\n  /** Override document navigation, for example to ask about unsaved changes. */\n  reload?: (destination: URL) => void;\n}",
+    "signature": "interface DeploymentOptions {\n  version: string;\n  /** Generated shared application fingerprint; omitted for legacy manifests. */\n  shared?: string;\n  /** Generated route dependency fingerprints, in route matching order. */\n  routes?: { path: string; fingerprint: string }[];\n  /** Minimum interval between successful routine manifest checks (default 30 seconds). Chunk failures bypass it. */\n  checkInterval?: number;\n  manifestURL: string;\n  /** Maximum time to wait for the update check before continuing navigation. */\n  timeout?: number;\n  /** Override document navigation, for example to ask about unsaved changes. */\n  reload?: (destination: URL) => void;\n}",
     "fields": [
       {
         "name": "version",
         "signature": "version: string;",
         "summary": ""
+      },
+      {
+        "name": "shared",
+        "signature": "shared?: string;",
+        "summary": "Generated shared application fingerprint; omitted for legacy manifests."
+      },
+      {
+        "name": "routes",
+        "signature": "routes?: { path: string; fingerprint: string }[];",
+        "summary": "Generated route dependency fingerprints, in route matching order."
+      },
+      {
+        "name": "checkInterval",
+        "signature": "checkInterval?: number;",
+        "summary": "Minimum interval between successful routine manifest checks (default 30 seconds). Chunk failures bypass it."
       },
       {
         "name": "manifestURL",
@@ -2067,12 +2082,17 @@
     "entries": ["react/vite", "preact/vite"],
     "kind": "Types",
     "summary": "Deployment manifest configuration. Serve the emitted file with Cache-Control: no-store.",
-    "signature": "interface DeploymentPluginOptions {\n  /** Public URL, optionally on an asset host. Defaults to Vite base + smolter-manifest.json. */\n  manifestURL?: string;\n}",
+    "signature": "interface DeploymentPluginOptions {\n  /** Public URL, optionally on an asset host. Defaults to Vite base + smolter-manifest.json. */\n  manifestURL?: string;\n  /** Change when independently deployed server contracts become incompatible. */\n  compatibility?: string;\n}",
     "fields": [
       {
         "name": "manifestURL",
         "signature": "manifestURL?: string;",
         "summary": "Public URL, optionally on an asset host. Defaults to Vite base + smolter-manifest.json."
+      },
+      {
+        "name": "compatibility",
+        "signature": "compatibility?: string;",
+        "summary": "Change when independently deployed server contracts become incompatible."
       }
     ],
     "source": "packages/vite/src/deployment.ts"
@@ -2082,7 +2102,7 @@
     "title": "deploymentPlugin",
     "entries": ["react/vite", "preact/vite"],
     "kind": "API",
-    "summary": "Emit a build manifest and expose its identity through virtual:smolter/deployment.",
+    "summary": "Emit deterministic build and route dependency identities for deployment recovery.",
     "signature": "function deploymentPlugin(\n  options: DeploymentPluginOptions = {},\n): Plugin;",
     "fields": [],
     "source": "packages/vite/src/deployment.ts"
@@ -2174,7 +2194,7 @@
     "entries": ["utils/http"],
     "kind": "API",
     "summary": "Node/Express middleware; mount after metrics, tracing and static assets.",
-    "signature": "function createRequestHandler({\n  build,\n  entry,\n  dataEndpoint = \"/_smolter\",\n}: RequestHandlerOptions): (\n  incoming: ServerIncomingMessage,\n  outgoing: ServerResponse,\n  next: NextHandler,\n) => Promise<void>;",
+    "signature": "function createRequestHandler({\n  build,\n  entry,\n  dataEndpoint,\n}: RequestHandlerOptions): (\n  incoming: ServerIncomingMessage,\n  outgoing: ServerResponse,\n  next: NextHandler,\n) => Promise<void>;",
     "fields": [],
     "source": "packages/server/src/handler.ts"
   },

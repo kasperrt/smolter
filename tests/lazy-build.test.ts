@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { build } from "vite";
 import { expect, it } from "vitest";
 import { lazyFiles } from "../packages/vite/src/application/lazy-files.ts";
+import { deploymentPlugin } from "../packages/vite/src/deployment.ts";
 import { fileRouter } from "../packages/vite/src/index.ts";
 import { viteFixture } from "./helpers/vite.ts";
 
@@ -25,7 +26,8 @@ it.for(["react", "preact"] as const)(
     await mkdir(join(root, "src/routes"), { recursive: true });
 
     const files = {
-      "entry.ts": 'export { default } from "virtual:smolter/routes";',
+      "entry.ts":
+        'import deployment from "virtual:smolter/deployment"; console.log(deployment); export { default } from "virtual:smolter/routes";',
       "shared.css": "main { color: rebeccapurple; }",
       "optional.css": "aside { color: blue; }",
       "optional.ts":
@@ -57,24 +59,27 @@ it.for(["react", "preact"] as const)(
       ),
     );
 
-    const result = await build({
-      root,
-      configFile: false,
-      logLevel: "silent",
-      plugins: [
-        lazyFiles("src/routes", "/_smolter", framework),
-        fileRouter({ framework }),
-      ],
-      build: {
-        write: false,
-        minify: true,
-        rollupOptions: {
-          input: join(root, "entry.ts"),
-          external: [`@kasperrt/smolter/${framework}/lazy-route`],
+    const compile = () =>
+      build({
+        root,
+        configFile: false,
+        logLevel: "silent",
+        plugins: [
+          lazyFiles("src/routes", "/_smolter", framework),
+          fileRouter({ framework }),
+          deploymentPlugin(),
+        ],
+        build: {
+          write: false,
+          minify: true,
+          rollupOptions: {
+            input: join(root, "entry.ts"),
+            external: [`@kasperrt/smolter/${framework}/lazy-route`],
+          },
         },
-      },
-    });
+      });
 
+    const result = await compile();
     expect(result).toHaveProperty("output");
 
     if (!("output" in result)) return;
@@ -129,6 +134,34 @@ it.for(["react", "preact"] as const)(
       }
     }
 
+    const deploymentManifest = (output: typeof result) => {
+      const file = output.output.find(
+        (item) => item.fileName === "smolter-manifest.json",
+      );
+      if (file?.type !== "asset")
+        throw new Error("Missing deployment manifest");
+      return JSON.parse(String(file.source));
+    };
+    const before = deploymentManifest(result);
+    expect(before.routes.map((route: { path: string }) => route.path)).toEqual([
+      "/",
+      "/data",
+      "/robots.txt",
+    ]);
+    await writeFile(join(root, "shared.css"), "main { color: orange; }");
+    const rebuilt = await compile();
+    if (!("output" in rebuilt)) throw new Error("Missing rebuild output");
+    const after = deploymentManifest(rebuilt);
+    expect(after.version).not.toBe(before.version);
+    expect(after.shared).toBe(before.shared);
+    expect(
+      after.routes.find((route: { path: string }) => route.path === "/")
+        .fingerprint,
+    ).not.toBe(
+      before.routes.find((route: { path: string }) => route.path === "/")
+        .fingerprint,
+    );
+
     expect(shared).toHaveLength(1);
     expect(entry?.dynamicImports).toHaveLength(3);
     expect(entry?.code).not.toContain("/not-the-filename");
@@ -155,5 +188,32 @@ it.for([
     await expect(
       server.transformRequest("virtual:smolter/routes"),
     ).rejects.toThrow("remove id/routePath");
+  },
+);
+
+it.for([false, true])(
+  "rejects reserved suffix routes (lazy: %s)",
+  async (lazy, context) => {
+    const { root, server } = await viteFixture(
+      context,
+      "export default function Home() { return null; }",
+      {},
+      lazy
+        ? () => ({
+            ...lazyFiles("src/routes"),
+            resolveId(id) {
+              if (id === "virtual:smolter/routes")
+                return "\0virtual:smolter/routes";
+            },
+          })
+        : fileRouter,
+    );
+    await writeFile(
+      join(root, "src/routes/conflict[.]__smolter.ts"),
+      "export default function Conflict() { return null; }",
+    );
+    await expect(
+      server.transformRequest("virtual:smolter/routes"),
+    ).rejects.toThrow("suffix is reserved");
   },
 );

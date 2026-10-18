@@ -11,6 +11,8 @@ import type {
   RouteModule,
 } from "@smolter/core";
 
+import { dataURL } from "@smolter/core/transport";
+
 export type { ClientActionArgs, ClientLoaderArgs } from "@smolter/core";
 export { deserialize } from "./deserialize.ts";
 
@@ -29,7 +31,7 @@ export interface ClientRouteModule {
 export interface ServerHandlers {
   loader?: boolean;
   action?: boolean;
-  /** Application-scoped HTTP transport path. Defaults to /_smolter. */
+  /** Legacy application-scoped endpoint. Omit to use the route .__smolter suffix. */
   dataEndpoint?: string;
 }
 
@@ -41,14 +43,11 @@ export function serverRoute<M extends RouteModule = RouteModule>(
 ): Route<M> {
   const remote = async ({ request, signal }: DataArgs) => {
     const url = new URL(request.url);
-    const response = await fetch(
-      `${handlers.dataEndpoint ?? "/_smolter"}?url=${encodeURIComponent(url.pathname + url.search)}`,
-      {
-        method: request.method,
-        signal,
-        ...(request.method !== "GET" && { body: await request.formData() }),
-      },
-    );
+    const response = await fetch(dataURL(url, handlers.dataEndpoint), {
+      method: request.method,
+      signal,
+      ...(request.method !== "GET" && { body: await request.formData() }),
+    });
     const location = response.headers.get("X-Smolter-Redirect");
 
     if (location)

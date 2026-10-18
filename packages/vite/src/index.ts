@@ -16,7 +16,7 @@ export interface FileRouterOptions {
 /** Build-time flat route discovery and the optional server data transport. */
 export function routerPlugin({
   directory = "src/routes",
-  dataEndpoint = "/_smolter",
+  dataEndpoint,
   clientRoutes,
   serverRoutes,
   framework = "react",
@@ -150,6 +150,10 @@ export function routerPlugin({
       const routes = await flatRoutes(root);
 
       if (routes instanceof Error) return this.error(routes.message);
+      if (routes.some((route) => route.path.endsWith(".__smolter")))
+        return this.error(
+          "The .__smolter suffix is reserved for data transport.",
+        );
 
       const imports: string[] = [];
       const definitions: string[] = [];

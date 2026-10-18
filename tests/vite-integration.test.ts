@@ -35,7 +35,7 @@ it("dispatches HTTP reads and mutations to server route exports", async (context
   );
 
   const base = server.resolvedUrls!.local[0];
-  const endpoint = `${base}_smolter?url=%2F`;
+  const endpoint = `${base}.__smolter`;
   const read = await fetch(endpoint, { headers: { cookie: "session=test" } });
 
   expect(await read.json()).toEqual({ cookie: "session=test" });
@@ -47,9 +47,7 @@ it("dispatches HTTP reads and mutations to server route exports", async (context
   const mutation = await fetch(endpoint, { method: "PATCH", body });
 
   expect(await mutation.json()).toEqual({ method: "PATCH", amount: "3" });
-  expect(
-    (await fetch(`${base}_smolter?url=https://elsewhere.test`)).status,
-  ).toBe(400);
+  expect((await fetch(`${base}/evil.__smolter`)).status).toBe(400);
   expect((await fetch(`${base}unhandled`)).status).toBe(404);
 });
 

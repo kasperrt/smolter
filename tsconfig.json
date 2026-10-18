@@ -40,6 +40,7 @@
       "@smolter/core/submission": ["./packages/core/src/submission.ts"],
       "@smolter/core/navigation": ["./packages/core/src/navigation.ts"],
       "@smolter/core/presentation": ["./packages/core/src/presentation.ts"],
+      "@smolter/core/transport": ["./packages/core/src/transport.ts"],
       "@smolter/core/intent": ["./packages/core/src/intent.ts"],
       "@smolter/core/prefetch": ["./packages/core/src/prefetch.ts"],
       "@smolter/core/link-prefetch": ["./packages/core/src/link-prefetch.ts"],

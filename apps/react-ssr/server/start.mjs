@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { extname, resolve } from "node:path";
+import { createRequestHandler } from "@kasperrt/smolter/utils/http";
 import { data, render } from "../dist/server/server.js";
 
 const root = resolve(import.meta.dirname, "../dist");
@@ -12,11 +13,18 @@ const types = {
   ".woff2": "font/woff2",
 };
 
+const application = createRequestHandler({
+  entry: "",
+  build: {
+    default: async (request) =>
+      new Response(await render(request, template), {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      }),
+    handleDataRequest: data,
+  },
+});
+
 createServer((incoming, outgoing) => {
-  const controller = new AbortController();
-
-  outgoing.once("close", () => controller.abort());
-
   const handle = async () => {
     const origin = `http://${incoming.headers.host}`;
     const url = new URL(incoming.url, origin);
@@ -47,45 +55,9 @@ createServer((incoming, outgoing) => {
       );
     }
 
-    const headers = new Headers();
-
-    for (const [key, value] of Object.entries(incoming.headers)) {
-      if (value)
-        headers.set(key, Array.isArray(value) ? value.join(", ") : value);
-    }
-
-    if (url.pathname === "/_smolter") {
-      const target = url.searchParams.get("url");
-
-      if (!target?.startsWith("/") || target.startsWith("//")) {
-        outgoing.writeHead(400).end();
-        return;
-      }
-
-      const chunks = [];
-
-      for await (const chunk of incoming) chunks.push(chunk);
-
-      const request = new Request(new URL(target, origin), {
-        signal: controller.signal,
-        method: incoming.method,
-        headers,
-        ...(incoming.method !== "GET" && {
-          body: new Uint8Array(Buffer.concat(chunks)),
-        }),
-      });
-      const result = await data(request);
-
-      outgoing.statusCode = result.status;
-      result.headers.forEach((value, key) => outgoing.setHeader(key, value));
-      outgoing.end(new Uint8Array(await result.arrayBuffer()));
-      return;
-    }
-
-    outgoing.setHeader("Content-Type", "text/html; charset=utf-8");
-    const request = new Request(url, { headers, signal: controller.signal });
-
-    outgoing.end(await render(request, template));
+    await application(incoming, outgoing, () => {
+      outgoing.writeHead(500).end("Request failed");
+    });
   };
 
   void handle().catch(() => {

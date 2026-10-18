@@ -254,9 +254,9 @@ It rejects inline server handlers and `export *` rather than risking server code
 in a client bundle. Type-only imports from server handlers are safe. Do not
 import server code directly into client views or client handlers.
 
-The Vite dev plugin mounts `/_smolter?url=...`. Production hosts dispatch that
-endpoint through `handleRequest(routes, request)` from `@kasperrt/smolter/react/server`, using
-the requested route URL. Both SSR examples include a working host. The host
+Data requests append `.__smolter` to the route pathname: `/users?page=2` becomes
+`/users.__smolter?page=2`. Queries stay intact and mutations keep their request bodies.
+The Vite and Node adapters strip the suffix before dispatching the registered handler. Both SSR examples include a working host. The host
 owns authentication, session cookies, HTTP policy, and deployment.
 
 Manual server routes use `serverRoute<typeof import("./route")>(path, clientModule)`
@@ -643,12 +643,12 @@ a claim of identical features.
 | `Preact: routing-only named exports` | 1755 |
 | `@kasperrt/smolter/react` | 5732 |
 | `@kasperrt/smolter/preact` | 5998 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 6985 |
-| `@kasperrt/smolter/preact + server transport` | 7257 |
-| `@kasperrt/smolter/react + client + document (application)` | 10053 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 10326 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 10368 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 10649 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7217 |
+| `@kasperrt/smolter/preact + server transport` | 7493 |
+| `@kasperrt/smolter/react + client + document (application)` | 10280 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 10554 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 10595 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 10878 |
 | `React: common routing/data exports` | 4022 |
 | `Preact: common routing/data exports` | 3998 |
 | `wouter: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
@@ -763,12 +763,17 @@ watchDeployment(router, deployment);
 ```
 
 Serve the emitted `smolter-manifest.json` with `Cache-Control: no-store` and HTML
-with `no-cache`. Navigation checks its build version before loading another route;
-a newer version reloads the destination, including its query and hash. Vite chunk
-failures are checked again. Hash-only links skip the check, failed checks continue
+with `no-cache`. Builds have deterministic content identities. Lazy file-route builds
+also carry shared and per-route dependency fingerprints: an unrelated route change
+does not reload a compatible destination. Shared changes, changed/missing destinations,
+and builds without route metadata retain conservative destination reloads. Successful
+routine checks are reused for 30 seconds (`checkInterval` overrides this); missing-chunk
+failures bypass that cache and can recover even when route fingerprints match. Hash-only links skip the check, failed checks continue
 normally, and a session marker prevents reload loops. Development/SSR builds
 disable the helper. This optional client module adds nothing to the routing-only
 entrypoints and never replays form submissions.
+
+Fingerprints cover the browser module graph, including route styles/assets and raw files present in that graph. Server-only dependencies outside that graph require an explicit `deploymentPlugin({ compatibility: "server-contract-v2" })` change when their contract becomes incompatible. Retain old hashed assets during deployments; missing assets can still require recovery. No route module is hot-swapped between deployments.
 
 See [deployment updates](https://kasperrt.github.io/smolter/docs/deployments/)
 for Express, CDN paths, TypeScript declarations and unsaved-state handling.
@@ -776,7 +781,7 @@ for Express, CDN paths, TypeScript declarations and unsaved-state handling.
 
 ### Shared origins and streaming SSR
 
-Set the same `dataEndpoint` in `applicationPlugins` (or `fileRouter`), browser `serverRoute` handlers and `createRequestHandler`. For example, Admin can use `/admin/_smolter` while Platform uses `/_smolter`. Transport responses, including errors and redirects, use `Cache-Control: private, no-store`.
+The default route suffix preserves application prefixes: `/admin/users.__smolter` dispatches `/admin/users`. Reserve this suffix in Express and static routing, and apply authentication to both document and data requests. File routing rejects statically declared suffix collisions; arbitrary Express routes and dynamic parameter values remain host-owned. Explicit `dataEndpoint` configuration retains the legacy query transport for migration and must agree across browser, Vite and production. Transport responses, including errors and redirects, use `Cache-Control: private, no-store`.
 
 Pass deployment metadata before mounting so recovery covers the initial route import:
 

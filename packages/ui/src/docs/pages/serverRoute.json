@@ -21,8 +21,8 @@
     },
     {
       "title": "Behavior and edge cases",
-      "body": "Requests use handlers.dataEndpoint, defaulting to /_smolter, with a url query parameter naming the target route. On shared origins use an app-scoped endpoint, such as /admin/_smolter, matching the host and Vite configuration. GET runs loaders; mutations run actions. Set loader/action flags explicitly when supplying options. JSON transport resolves data before returning; runtime validation remains application-owned.",
-      "code": "serverRoute(\"/admin/users\", browserModule, {\n  loader: true,\n  action: true,\n  dataEndpoint: \"/admin/_smolter\",\n});"
+      "body": "Requests append .__smolter to the actual route pathname, preserving queries and mutation bodies. /admin/users?page=2 becomes /admin/users.__smolter?page=2. Vite and Node adapters share normalization. Explicit handlers.dataEndpoint retains the legacy query transport and must match the host configuration. Set loader/action flags explicitly when supplying options. JSON transport resolves data before returning; runtime input validation and authorization remain application-owned.",
+      "code": "serverRoute(\"/admin/users\", browserModule, { loader: true, action: true });"
     }
   ]
 }

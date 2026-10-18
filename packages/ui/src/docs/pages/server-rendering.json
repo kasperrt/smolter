@@ -26,7 +26,7 @@
     },
     {
       "title": "Production transport",
-      "body": "The browser proxy uses the configured dataEndpoint, defaulting to /_smolter, with a local route URL parameter. Match that endpoint in Vite and createRequestHandler. Use distinct app-scoped paths when several applications share one origin.",
+      "body": "The browser proxy appends .__smolter to the route pathname and preserves its query. Vite and createRequestHandler normalize it before dispatch. Application prefixes remain in the path. Explicit dataEndpoint retains legacy query transport when configured consistently.",
       "code": ""
     },
     {

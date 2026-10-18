@@ -16,7 +16,7 @@
     },
     {
       "title": "Returns",
-      "body": "Document requests call build.default. dataEndpoint defaults to /_smolter; set it to an app-scoped path on shared origins. Matching requests with a local url parameter call build.handleDataRequest. Invalid targets return 400. Every transport response uses private, no-store. Client disconnection aborts the Request. Response bodies stream with backpressure and compression flush support.",
+      "body": "Route data uses the reserved .__smolter suffix. /users.__smolter?page=2 dispatches /users?page=2; /users/.__smolter preserves the trailing slash. Document requests call build.default. Explicit dataEndpoint retains legacy ?url= transport. Invalid targets return 400. Data responses use private, no-store. Apply authorization to both representations; reserve the suffix in Express/static middleware. Client disconnection aborts the Request; responses stream with backpressure.",
       "code": ""
     },
     {

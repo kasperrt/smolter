@@ -2,6 +2,10 @@
 
 ## 0.4.5-beta.1
 
+- Use route-local `.__smolter` data URLs by default, with shared dev/production validation and explicit legacy endpoint compatibility.
+- Generate deterministic deployment identities and dependency fingerprints for lazy file routes; avoid unrelated-route reloads, cache routine checks briefly, and force fresh missing-chunk recovery. Server-only contract changes support an explicit compatibility key.
+
+
 - Infer intent, viewport and data prefetch capabilities in the Vite plugin from typed JSX and spreads. Keep the string-based Link API identical in React and Preact; omit unused implementations without capability imports. Unions and opaque inputs retain all possible capabilities. Refresh client and SSR capability selection during development. TypeScript is an optional build-only peer required by the Vite plugin.
 - Select supported browser exports in generated lazy file-route imports so unrelated exports can be removed without disabling CSS or module side effects.
 - Publish this prerelease under npm `beta`, never `latest`; JSR remains the first publication gate.

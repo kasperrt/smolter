@@ -1,24 +1,27 @@
+import { safeWrapAsync } from "@smolter/core";
+import { dataTarget } from "@smolter/core/transport";
 import type { ViteDevServer } from "vite";
 
 export function configureTransport(
   server: ViteDevServer,
   publicId: string,
   framework: "react" | "preact" = "react",
-  dataEndpoint = "/_smolter",
+  dataEndpoint: string | undefined = undefined,
 ): void {
   server.middlewares.use((incoming, outgoing, next) => {
-    if (!incoming.url?.startsWith(`${dataEndpoint}?`)) return next();
+    const target = dataTarget(
+      new URL(`http://local${incoming.url ?? "/"}`),
+      dataEndpoint,
+    );
+    if (target === undefined) return next();
 
     outgoing.setHeader("Cache-Control", "private, no-store");
 
     const dispatch = async () => {
       const origin = `http://${incoming.headers.host}`;
-      const target = new URL(incoming.url!, origin).searchParams.get("url");
-
-      if (!target?.startsWith("/") || target.startsWith("//")) {
+      if (target instanceof Error) {
         outgoing.statusCode = 400;
-        outgoing.end("Invalid route URL");
-
+        outgoing.end(target.message);
         return;
       }
 
@@ -59,6 +62,8 @@ export function configureTransport(
       outgoing.end(new Uint8Array(await response.arrayBuffer()));
     };
 
-    void dispatch().catch(next);
+    void safeWrapAsync(dispatch).then(({ error }) => {
+      if (error) next(error);
+    });
   });
 }

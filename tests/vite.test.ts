@@ -176,7 +176,7 @@ it("serves a literal-dot resource through generated transport without overrides"
     .code;
   expect(source).toContain("/robots.txt");
   const response = await fetch(
-    new URL("/_smolter?url=/robots.txt", server.resolvedUrls!.local[0]),
+    new URL("/robots.txt.__smolter", server.resolvedUrls!.local[0]),
   );
   expect(response.status).toBe(200);
   expect(await response.json()).toBe(1);

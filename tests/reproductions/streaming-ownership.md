@@ -68,7 +68,7 @@ function Root() {
 }
 ```
 
-Supply Document/Scripts in root.Layout. The initial server loader returns `{ optional: gate.promise }`; the destination returns `{}`. Render with earlyHydration true. Mount browser routes through serverRoute and mountApplication. Serve through createRequestHandler with dispatchRoute as handleDataRequest so /_smolter's url parameter is normalized.
+Supply Document/Scripts in root.Layout. The initial server loader returns `{ optional: gate.promise }`; the destination returns `{}`. Render with earlyHydration true. Mount browser routes through serverRoute and mountApplication. Serve through createRequestHandler with dispatchRoute as handleDataRequest so the .__smolter transport suffix is normalized.
 
 Open the initial document, wait for hydration while the fallback is pending, enter input, navigate, then resolve the gate. Wait for document load. Assert the destination remains, both old fallback and old resolved content are absent, and root state/input/focus/query/hash survive. The absence assertion fails on the fallback.
 
