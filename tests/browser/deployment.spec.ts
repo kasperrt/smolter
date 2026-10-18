@@ -113,7 +113,7 @@ for (const [mode, base] of [
             return new Response(null, { status: 302, headers: { Location: "${base}next?tab=2#details" } });
           } },
         ], { browser: true });
-        watchDeployment(router, deployment);
+        watchDeployment(router, ${mode === "nonblocking" ? "deployment && { ...deployment, timeout: 60_000 }" : "deployment"});
         router.subscribe(() => { document.querySelector("output").textContent = router.getSnapshot().data || ""; });
         router.start();
         ${mode === "prefetch" ? 'document.querySelector("button").onpointerenter = () => void safeWrapAsync(() => import("./page"));' : ""}
