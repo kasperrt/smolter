@@ -58,6 +58,8 @@ for (const { framework, version } of cases) {
       "--no-audit",
       "--no-fund",
       ...deps,
+      "typescript@7.0.2",
+      "vite@8.3.4",
     ],
     { cwd, stdio: "inherit" },
   );
@@ -103,6 +105,15 @@ for (const { framework, version } of cases) {
     ],
     { cwd, stdio: "inherit" },
   );
+
+  writeFileSync(
+    join(cwd, "prefetch.mjs"),
+    readFileSync("tests/fixtures/prefetch-packed.mjs", "utf8"),
+  );
+  execFileSync(process.execPath, ["prefetch.mjs", framework], {
+    cwd,
+    stdio: "inherit",
+  });
 
   rmSync(cwd, { recursive: true, force: true });
 }

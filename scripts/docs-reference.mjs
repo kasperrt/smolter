@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { relative } from "node:path";
-import ts from "typescript";
+import ts from "typescript-compiler";
 
 const config = ts.readConfigFile("tsconfig.json", ts.sys.readFile);
 const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, ".");
