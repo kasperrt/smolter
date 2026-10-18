@@ -10,6 +10,11 @@
       "code": ""
     },
     {
+      "title": "Deferred timeout compatibility in 0.4.5",
+      "body": "In 0.4.5, the default initial deferred-data budget changes from 30 seconds to 8 seconds for both React and Preact. It starts when the hydration payload is revived; individual settlements do not restart it. For intentionally slower initial data, set deferredTimeout explicitly. This bounds silent document interruptions, not immediate disconnect detection, and does not retry loaders or mutations.",
+      "code": "// Use the matching react/client or preact/client entry.\nawait mountApplication(routes, root, {\n  deferredTimeout: 30_000,\n});"
+    },
+    {
       "title": "Returns",
       "body": "Returns a Promise<Router>. Mounting waits for the initially matched route module to preload. The returned router exposes navigation, revalidation, fetchers, and disposal. Client-only mounting starts loaders through RouterProvider; the returned promise does not mean every loader has completed.",
       "code": ""

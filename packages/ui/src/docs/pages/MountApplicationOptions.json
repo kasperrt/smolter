@@ -10,6 +10,11 @@
       "code": "await mountApplication(routes, root, { hash: false, deployment });"
     },
     {
+      "title": "Deferred timeout compatibility in 0.4.5",
+      "body": "In 0.4.5, the default initial deferred-data budget changes from 30 seconds to 8 seconds for both React and Preact. It starts when the hydration payload is revived; individual settlements do not restart it. For intentionally slower initial data, set deferredTimeout explicitly. This bounds silent document interruptions, not immediate disconnect detection, and does not retry loaders or mutations.",
+      "code": "// Use the matching react/client or preact/client entry.\nawait mountApplication(routes, root, {\n  deferredTimeout: 30_000,\n});"
+    },
+    {
       "title": "Deferred data deadline",
       "body": "Initial deferred data has an 8,000 ms deadline after its hydration payload is read. A document connection can stop without firing a browser completion event; unfinished values then reject with Hydration stream timed out and reach their Await errorElement or error boundary. This is a total budget from payload revival: settlements do not restart it. It is not an inactivity timeout or a reliable disconnect detector. Set deferredTimeout to a larger millisecond budget for intentionally slow initial data (integer milliseconds from 1 through 2147483647; fractions, NaN, infinities and out-of-range values throw RangeError). There is one timer only when the initial payload contains pending values, cleared on completion or router disposal. No request or mutation is retried, and deployment recovery is not triggered. Ordinary resolved hydration creates no deadline timer.",
       "code": "await mountApplication(routes, root, {\n  deployment,\n  deferredTimeout: 60_000,\n});"

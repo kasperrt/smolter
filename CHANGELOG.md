@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.5
+
+**Compatibility: initial deferred data now has an 8-second total budget, reduced from 30 seconds.** This applies to React and Preact hydration. If initial data intentionally takes longer, pass `mountApplication(routes, root, { deferredTimeout: 30_000 })` (or another explicit budget). Settlements do not restart the deadline. This bounds silent stream interruptions; it is not immediate disconnect detection or a performance improvement.
+
+This release promotes the tested 0.4.5-beta.7 implementation without runtime or dependency changes.
+
+- Add viewport and loader-data prefetching to both adapters through `prefetch="viewport"` and `prefetchData`. Smolter’s Vite plugin omits unused intent, viewport and data capabilities, retaining possible capabilities for dynamic spreads. Bounded speculative reads are invalidated by mutations, revalidation and disposal.
+- Use route-local `.__smolter` data URLs by default while retaining explicitly configured scoped endpoints. Generate granular route/dependency fingerprints and support an explicit compatibility key for independently changed server contracts.
+- Keep routine deployment checks off the navigation and history critical path. Recover missing action-redirect chunks after protected work finishes, without mutation replay or duplicate root refresh. Retain the usable view during successful built-in recovery and show genuine failures when recovery is unavailable.
+- Support TypeScript 7 consumers with Smolter-owned stable compiler-API tooling that stays out of browser bundles. Improve lazy-import retry, submission cleanup and bounded route-pattern reuse.
+- Prevent abandoned Preact streamed content and nested errors from appearing after navigation. Preserve boundary structure, shared components, root controls and Await identity during revalidation.
+- Update guides, API reference and matched bundle measurements. Consumer validation reported both streaming reproductions fixed and recovery intact; this is not blanket browser/device, offline or CDN sign-off. See the [streaming report](https://github.com/kasperrt/smolter/blob/main/reports/0.4.5-beta.7.md) for reproduction details and raw/gzip/Brotli sizes.
+
 ## 0.4.5-beta.7
 
 - Prevent late Preact Suspense islands from restoring abandoned route content. Claim stream targets within inert outlet anchors during hydration while retaining Preact’s boundary structure, then remove abandoned markers on component changes, including later nested markers. Preserve shared components and persistent root boundaries.
