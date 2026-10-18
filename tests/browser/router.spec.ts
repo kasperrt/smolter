@@ -201,8 +201,11 @@ for (const example of examples) {
     const requests: string[] = [];
 
     page.on("request", (request) => {
-      if (request.url().includes("/_smolter?"))
-        requests.push(new URL(request.url()).searchParams.get("url")!);
+      if (new URL(request.url()).pathname.endsWith(".__smolter"))
+        requests.push(
+          new URL(request.url()).pathname.slice(0, -".__smolter".length) +
+            new URL(request.url()).search,
+        );
     });
 
     await page.getByRole("button", { name: "Fetch task 1" }).click();
@@ -246,7 +249,8 @@ for (const example of examples) {
     const requests: string[] = [];
 
     page.on("request", (request) => {
-      if (request.url().includes("/_smolter?")) requests.push(request.method());
+      if (new URL(request.url()).pathname.endsWith(".__smolter"))
+        requests.push(request.method());
     });
 
     await page.getByRole("button", { name: "Save task" }).click();
@@ -275,7 +279,7 @@ for (const example of examples) {
       const dataRequests: string[] = [];
 
       page.on("request", (request) => {
-        if (request.url().includes("/_smolter?"))
+        if (new URL(request.url()).pathname.endsWith(".__smolter"))
           dataRequests.push(request.url());
       });
 

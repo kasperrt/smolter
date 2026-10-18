@@ -254,9 +254,9 @@ It rejects inline server handlers and `export *` rather than risking server code
 in a client bundle. Type-only imports from server handlers are safe. Do not
 import server code directly into client views or client handlers.
 
-The Vite dev plugin mounts `/_smolter?url=...`. Production hosts dispatch that
-endpoint through `handleRequest(routes, request)` from `@kasperrt/smolter/react/server`, using
-the requested route URL. Both SSR examples include a working host. The host
+Data requests append `.__smolter` to the route pathname: `/users?page=2` becomes
+`/users.__smolter?page=2`. Queries stay intact and mutations keep their request bodies.
+The Vite and Node adapters strip the suffix before dispatching the registered handler. Both SSR examples include a working host. The host
 owns authentication, session cookies, HTTP policy, and deployment.
 
 Manual server routes use `serverRoute<typeof import("./route")>(path, clientModule)`
@@ -546,6 +546,41 @@ The adapter has no Express dependency and forwards failures to `next(error)`.
 See the [Express guide](https://kasperrt.github.io/smolter/docs/express)
 for a complete server example and streaming and hydration behavior.
 
+## Viewport prefetching
+
+Both adapters support code prefetching on intent (the default) or viewport entry.
+Data prefetching is opt-in and uses the existing route loader and transport:
+
+```tsx
+<Link to="/tasks" prefetch="viewport" prefetchData>Tasks</Link>
+<Link to="/settings" prefetch="intent">Settings</Link>
+<Link to="/private" prefetch="none">Private</Link>
+```
+
+Smolter's Vite `fileRouter()` and `applicationPlugins()` infer capabilities from
+application TypeScript/JSX and imported source. Install TypeScript as a development
+dependency for this build analysis. No capability imports or router setup are needed.
+
+A plain Link uses intent. Viewport-only usage omits intent handlers; intent-only
+usage omits viewport observation. `prefetch="none"` uses neither. Typed unions and
+spreads retain every possible mode, and data caching is included when prefetchData
+can be true or a programmatic router.prefetch call is present. Later JSX attributes
+override earlier spreads. Broad/opaque values and Link passed as a component value
+retain all capabilities. This analysis is conservative, not a promise that arbitrary
+runtime code can be inferred. Other bundlers retain all implementations for correctness.
+
+Use `prefetch="none"` to disable speculative work. `prefetchData` requires
+`createDataRouter`; a navigation-only router can preload code but has no loaders.
+Loaders receive `reason: "prefetch"`. Only opt in for safe reads, and treat this
+reason like initial navigation when choosing initial pagination. Actions and root
+loaders are never prefetched.
+
+The router keeps at most 16 URL-specific reads for 30 seconds, with no polling or
+background refresh. Navigation consumes fresh data once, including an in-flight
+request. Mutations and explicit revalidation invalidate the cache. Errors and
+redirects are retried on navigation and cannot trigger speculative recovery.
+Viewport observation ends on entry or unmount; unsupported browsers skip it.
+
 ## Independent data requests
 
 Both adapters include `useFetcher`, `useSubmit`, `Form` and the loader/action hooks
@@ -604,18 +639,18 @@ a claim of identical features.
 | --- | ---: |
 | `React Router: declarative routing subset` | 12882 |
 | `React Router: data routing subset` | 29780 |
-| `React: routing-only named exports` | 1419 |
-| `Preact: routing-only named exports` | 1405 |
-| `@kasperrt/smolter/react` | 4801 |
-| `@kasperrt/smolter/preact` | 5076 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 6060 |
-| `@kasperrt/smolter/preact + server transport` | 6345 |
-| `@kasperrt/smolter/react + client + document (application)` | 9124 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 9401 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9435 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9721 |
-| `React: common routing/data exports` | 3071 |
-| `Preact: common routing/data exports` | 3046 |
+| `React: routing-only named exports` | 1771 |
+| `Preact: routing-only named exports` | 1755 |
+| `@kasperrt/smolter/react` | 5732 |
+| `@kasperrt/smolter/preact` | 5998 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7217 |
+| `@kasperrt/smolter/preact + server transport` | 7493 |
+| `@kasperrt/smolter/react + client + document (application)` | 10280 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 10554 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 10595 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 10878 |
+| `React: common routing/data exports` | 4022 |
+| `Preact: common routing/data exports` | 3998 |
 | `wouter: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |
@@ -728,12 +763,17 @@ watchDeployment(router, deployment);
 ```
 
 Serve the emitted `smolter-manifest.json` with `Cache-Control: no-store` and HTML
-with `no-cache`. Navigation checks its build version before loading another route;
-a newer version reloads the destination, including its query and hash. Vite chunk
-failures are checked again. Hash-only links skip the check, failed checks continue
+with `no-cache`. Builds have deterministic content identities. Lazy file-route builds
+also carry shared and per-route dependency fingerprints: an unrelated route change
+does not reload a compatible destination. Shared changes, changed/missing destinations,
+and builds without route metadata retain conservative destination reloads. Successful
+routine checks are reused for 30 seconds (`checkInterval` overrides this); missing-chunk
+failures bypass that cache and can recover even when route fingerprints match. Hash-only links skip the check, failed checks continue
 normally, and a session marker prevents reload loops. Development/SSR builds
 disable the helper. This optional client module adds nothing to the routing-only
 entrypoints and never replays form submissions.
+
+Fingerprints cover the browser module graph, including route styles/assets and raw files present in that graph. Server-only dependencies outside that graph require an explicit `deploymentPlugin({ compatibility: "server-contract-v2" })` change when their contract becomes incompatible. The key is optional and stable across ordinary data updates. Changing it requires rebuilding and deploying the frontend and manifest; the new frontend must already support the changed contract. It cannot detect backend deployments automatically or repair incompatible code. Retain old hashed assets during deployments; missing assets can still require recovery. No route module is hot-swapped between deployments.
 
 See [deployment updates](https://kasperrt.github.io/smolter/docs/deployments/)
 for Express, CDN paths, TypeScript declarations and unsaved-state handling.
@@ -741,7 +781,7 @@ for Express, CDN paths, TypeScript declarations and unsaved-state handling.
 
 ### Shared origins and streaming SSR
 
-Set the same `dataEndpoint` in `applicationPlugins` (or `fileRouter`), browser `serverRoute` handlers and `createRequestHandler`. For example, Admin can use `/admin/_smolter` while Platform uses `/_smolter`. Transport responses, including errors and redirects, use `Cache-Control: private, no-store`.
+The default route suffix preserves application prefixes: `/admin/users.__smolter` dispatches `/admin/users`. Reserve this suffix in Express and static routing, and apply authentication to both document and data requests. File routing rejects statically declared suffix collisions; arbitrary Express routes and dynamic parameter values remain host-owned. Explicit `dataEndpoint` configuration retains the legacy query transport for migration and must agree across browser, Vite and production. Transport responses, including errors and redirects, use `Cache-Control: private, no-store`.
 
 Pass deployment metadata before mounting so recovery covers the initial route import:
 

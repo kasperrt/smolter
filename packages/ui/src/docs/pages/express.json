@@ -16,7 +16,7 @@
     },
     {
       "title": "Requests, cookies and failures",
-      "body": "The adapter forwards methods, headers, bodies and abort signals; dispatches /_smolter?url=/path to the data handler; and sends the Response status, headers and body. Invalid data targets return 400. Rejected handlers reach Express next(error). Express req.protocol is respected, so configure trust proxy according to your own ingress policy rather than blindly trusting forwarded headers. Multiple Set-Cookie headers are preserved. In development, the existing adapter removes Secure from outgoing cookies for local HTTP.",
+      "body": "The adapter forwards methods, headers, bodies and abort signals; dispatches /path.__smolter to the data handler; and sends the Response status, headers and body. Invalid data targets return 400. Rejected handlers reach Express next(error). Express req.protocol is respected, so configure trust proxy according to your own ingress policy rather than blindly trusting forwarded headers. Multiple Set-Cookie headers are preserved. In development, the existing adapter removes Secure from outgoing cookies for local HTTP.",
       "code": ""
     },
     {
@@ -26,8 +26,8 @@
     },
     {
       "title": "Multiple applications on one origin",
-      "body": "Configure the same dataEndpoint in the browser route manifest and the HTTP adapter. Do not derive it from Vite base when base points at a CDN. Route /admin/_smolter to Admin, /remotes/_smolter to Remote, and so on in your host or reverse proxy.",
-      "code": "applicationPlugins({ dataEndpoint: \"/admin/_smolter\" });\n\napp.use(createRequestHandler({\n  build,\n  entry: \"/admin/assets/client.js\",\n  dataEndpoint: \"/admin/_smolter\",\n}));"
+      "body": "Route-local transport preserves application prefixes: /admin/users.__smolter dispatches /admin/users. Mount the correct application and authentication middleware for both document and data paths. Reserve the suffix before static fallbacks. Existing Express endpoints at /admin/users remain separate. Explicit dataEndpoint retains the legacy query transport for migration.",
+      "code": "app.use(\"/admin\", adminAuthentication, createRequestHandler({ build, entry: \"/admin/assets/client.js\" }));"
     }
   ]
 }

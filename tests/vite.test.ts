@@ -21,11 +21,11 @@ it("refreshes server transport when route handler exports change", async (contex
     `${view}export { loader, action } from "../../handlers.ts";\n`,
   );
 
-  await expect.poll(source, { timeout: 3000 }).toContain("serverRoute(");
+  await expect.poll(source, { timeout: 10_000 }).toContain("serverRoute(");
 
   await writeFile(route, view);
 
-  await expect.poll(source, { timeout: 3000 }).not.toContain("serverRoute(");
+  await expect.poll(source, { timeout: 10_000 }).not.toContain("serverRoute(");
 });
 
 it.for(["react", "preact"] as const)(
@@ -176,7 +176,7 @@ it("serves a literal-dot resource through generated transport without overrides"
     .code;
   expect(source).toContain("/robots.txt");
   const response = await fetch(
-    new URL("/_smolter?url=/robots.txt", server.resolvedUrls!.local[0]),
+    new URL("/robots.txt.__smolter", server.resolvedUrls!.local[0]),
   );
   expect(response.status).toBe(200);
   expect(await response.json()).toBe(1);

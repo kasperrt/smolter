@@ -1,5 +1,6 @@
 import { safeWrapAsync } from "./errors.ts";
 import { matchRoutes } from "./match.ts";
+import { dataPrefetch } from "./prefetch.ts";
 import type {
   DataFunction,
   NavigateOptions,
@@ -43,6 +44,7 @@ export function createDataRouter(
       state: "idle",
     }),
   };
+  const prefetched = dataPrefetch?.(routes, () => main.getSnapshot().url);
   const revalidators = new Set<RevalidationTask>();
   const channel = <S extends ChannelSnapshot>(initial: S, local?: boolean) => {
     let snapshot = initial;
@@ -123,30 +125,35 @@ export function createDataRouter(
         )
           return previous.data;
 
-        const fn =
-          match.route[body ? "clientAction" : "clientLoader"] ||
-          match.route[body ? "action" : "loader"];
+        const load = () => {
+          const fn =
+            match.route[body ? "clientAction" : "clientLoader"] ||
+            match.route[body ? "action" : "loader"];
 
-        if (!fn) return body && Error("No action");
+          if (!fn) return body && Error("No action");
 
-        return (fn as DataFunction)({
-          reason: body
-            ? "action"
-            : navigation !== undefined
-              ? "navigation"
-              : local
-                ? "fetcher"
-                : previous.loaded
-                  ? "revalidation"
-                  : "initial",
-          request: new Request(url, {
+          return (fn as DataFunction)({
+            reason: body
+              ? "action"
+              : navigation !== undefined
+                ? "navigation"
+                : local
+                  ? "fetcher"
+                  : previous.loaded
+                    ? "revalidation"
+                    : "initial",
+            request: new Request(url, {
+              signal,
+              method: body && method,
+              body,
+            }),
+            params: match.params,
             signal,
-            method: body && method,
-            body,
-          }),
-          params: match.params,
-          signal,
-        });
+          });
+        };
+        if (prefetched && !body && navigation !== undefined)
+          return prefetched.navigate(url, signal, load);
+        return load();
       });
 
       if (signal.aborted) return result;
@@ -268,7 +275,11 @@ export function createDataRouter(
         };
       },
       load: run,
-      submit: run,
+      submit(href: string, body: FormData, options?: SubmitOptions) {
+        return prefetched
+          ? prefetched.submit(() => run(href, body, options))
+          : run(href, body, options);
+      },
       dispose() {
         controller?.abort();
         listeners.clear();
@@ -300,6 +311,7 @@ export function createDataRouter(
       await main.load(url, undefined, operation, true);
     },
     async revalidate(options = {}, context) {
+      prefetched?.clear();
       const {
         route,
         reason = "manual",
@@ -339,11 +351,23 @@ export function createDataRouter(
       };
     },
 
+    prefetch(href) {
+      return (
+        prefetched?.load(href) ??
+        Promise.resolve({
+          error: new Error(
+            "Data prefetching was excluded from this build. Use router.prefetch or prefetchData in analyzed application source.",
+          ),
+        })
+      );
+    },
+
     createFetcher() {
       return channel({ state: "idle" }, true);
     },
 
     dispose() {
+      prefetched?.clear();
       for (const refresh of revalidators) refresh.dispose?.();
 
       revalidators.clear();

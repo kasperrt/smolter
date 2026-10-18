@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Parameters",
-      "body": "href is required. replace chooses history replacement. Standard anchor attributes and onClick are forwarded.",
+      "body": "Use to or href for the destination. replace chooses history replacement. Standard anchor attributes and onClick are forwarded.",
       "code": ""
     },
     {
@@ -23,6 +23,21 @@
       "title": "Behavior and edge cases",
       "body": "Modified clicks, downloads, external URLs, and non-_self targets retain native browser behavior. onClick runs first and can preventDefault. URL resolution follows normal URL rules relative to the current URL; this is not route-hierarchy-relative resolution.",
       "code": ""
+    },
+    {
+      "title": "Prefetching",
+      "body": "prefetch accepts intent (the default), viewport, or none. Intent loads code on hover, focus or touch. Viewport uses IntersectionObserver once per mounted link; unsupported browsers skip it. Add prefetchData for safe speculative loader reads through createDataRouter. Actions and root loaders are never prefetched. No capability function imports or router configuration are needed.",
+      "code": "<Link to=\"/tasks\" prefetch=\"viewport\" prefetchData>Tasks</Link>\n<Link to=\"/settings\" prefetch=\"intent\">Settings</Link>\n<Link to=\"/private\" prefetch=\"none\">Private</Link>"
+    },
+    {
+      "title": "Data reuse and invalidation",
+      "body": "Prefetch reads use reason: \"prefetch\" and the normal clientLoader/server loader transport. The cache is private to one data router, holds at most 16 URLs, and expires after 30 seconds from request start. Path and query identify an entry; hashes share data. A navigation consumes the pending or completed result once. Mutations, explicit revalidation and router disposal invalidate and abort all cached reads. Reads are not cached during tracked mutations. Errors and Response values (including redirects) are retried on navigation; speculative failures never navigate, reload or consume recovery markers. Leaving the viewport does not cancel a shared read; unmounting disconnects observation, and router disposal cancels pending reads.",
+      "code": "await router.prefetch(\"/tasks?sort=title\");\n// Later navigation reuses fresh data without a duplicate loader.\nawait router.navigate(\"/tasks?sort=title#results\");"
+    },
+    {
+      "title": "Vite selection and typed spreads",
+      "body": "Smolter’s Vite plugin uses TypeScript types to select intent handlers, viewport observation and data caching independently. A plain Link counts as intent usage. A union or typed spread that permits intent and viewport includes both. Later attributes override earlier spreads. Unknown types, broad strings and component-value escapes retain capabilities conservatively. Source is analyzed before JSX compilation, using the project tsconfig. TypeScript is a build-only peer dependency; it does not enter browser output. Without Smolter’s Vite plugin, all capabilities remain available. Changing the selected set in development reloads the page to update existing router instances.",
+      "code": "const props = { prefetch: \"viewport\" } as const;\n<Link {...props} /> // viewport only\n\ndeclare const dynamic: { prefetch: \"intent\" | \"viewport\" };\n<Link {...dynamic} /> // both\n<Link {...dynamic} prefetch=\"none\" /> // neither for this link"
     }
   ]
 }

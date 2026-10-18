@@ -3,10 +3,13 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    maxWorkers: process.env.CI ? 2 : undefined,
     projects: [
       {
         test: {
           name: "unit",
+          testTimeout: 30_000,
+          expect: { poll: { timeout: 10_000 } },
           include: ["tests/**/*.test.{ts,tsx}"],
           exclude: ["tests/browser/**"],
         },

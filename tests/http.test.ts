@@ -20,6 +20,10 @@ test("hosts documents and route data under existing Node middleware", async () =
   });
   const server = createServer((request, response) => {
     requests++;
+    if (request.url === "/tasks/1") {
+      response.end("Existing endpoint");
+      return;
+    }
     response.setHeader("X-Metrics-Middleware", "present");
     void handler(request, response, () => {
       response.statusCode = 500;
@@ -41,7 +45,10 @@ test("hosts documents and route data under existing Node middleware", async () =
       expect(await document.text()).toBe("/tasks:/assets/client.js");
       expect(document.headers.get("X-Metrics-Middleware")).toBe("present");
 
-      const action = await fetch(`${base}/_smolter?url=/tasks/1`, {
+      expect(await (await fetch(`${base}/tasks/1`)).text()).toBe(
+        "Existing endpoint",
+      );
+      const action = await fetch(`${base}/tasks/1.__smolter`, {
         method: "PATCH",
         body: "title=Updated",
       });
@@ -49,9 +56,9 @@ test("hosts documents and route data under existing Node middleware", async () =
       expect(action.headers.get("X-Action")).toBe("saved");
       expect(await action.text()).toBe("PATCH:/tasks/1:title=Updated");
 
-      const invalid = await fetch(`${base}/_smolter?url=https://example.com`);
+      const invalid = await fetch(`${base}//evil.__smolter`);
       expect(invalid.status).toBe(400);
-      expect(requests).toBe(3);
+      expect(requests).toBe(4);
     })
     .finally(() => server.close());
 });

@@ -11,7 +11,7 @@
     },
     {
       "title": "Build outputs",
-      "body": "Emits smolter-manifest.json containing a unique version for the browser build. virtual:smolter/deployment exports that version and the public manifest URL. Development and SSR export null and emit no deployment file.",
+      "body": "Emits a deterministic browser build identity, shared dependency fingerprint and lazy file-route fingerprints. Identical inputs keep their identity; styles/assets in the graph participate. virtual:smolter/deployment embeds the same metadata and manifest URL. Development and SSR export null. Manual/eager routes without route metadata retain conservative whole-build recovery.",
       "code": "import deployment from \"virtual:smolter/deployment\";"
     },
     {
@@ -23,6 +23,16 @@
       "title": "Connect the client",
       "body": "The plugin only produces metadata. Connect watchDeployment to the browser router to check updates during navigation. Static offline packages can omit both helpers.",
       "code": "import { watchDeployment } from \"@kasperrt/smolter/react/client\";\n\nwatchDeployment(router, deployment);"
+    },
+    {
+      "title": "Server contracts and asset retention",
+      "body": "Browser graph fingerprints cannot infer changes in independently deployed server code. Change compatibility when server-only contracts become incompatible. Retain old hashed assets during deployment; a missing chunk forces recovery even when semantic route fingerprints match. Runtime configuration, environment changes and external assets are not automatically fingerprinted. No new route code is loaded into an old runtime based only on matching hashes.",
+      "code": "deploymentPlugin({ compatibility: \"server-contract-v2\" });"
+    },
+    {
+      "title": "When to change the compatibility key",
+      "body": "Usually no key is needed: changes visible to the browser build already change its fingerprints. Use a stable contract identifier only for incompatible changes outside that graph, then rebuild and deploy the frontend and its manifest with the new key. For example, an independently deployed API changing { name } to { displayName } is invisible to an unchanged browser build. A new key makes old tabs eligible for recovery; the newly deployed frontend must already understand the new response. It does not repair incompatible code, detect backend deployments automatically, or replace coordinated rollout and backward compatibility. Do not change the key for ordinary data updates.",
+      "code": "deploymentPlugin({ compatibility: \"profile-contract-v2\" });"
     }
   ]
 }

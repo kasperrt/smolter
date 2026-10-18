@@ -1,3 +1,5 @@
+import { safeWrapAsync } from "@smolter/core";
+import { dataTarget } from "@smolter/core/transport";
 import { send, webRequest } from "@smolter/server/http";
 import { routerPlugin } from "@smolter/vite";
 import type { Plugin, UserConfig } from "vite";
@@ -31,21 +33,14 @@ export const preactConfig: UserConfig = {
     noExternal: ["@kasperrt/smolter"],
   },
   optimizeDeps: {
-    include: [
-      "preact",
-      "preact/hooks",
-      "preact/compat",
-      "preact/jsx-runtime",
-      "@kasperrt/smolter/preact",
-      "@kasperrt/smolter/preact/lazy-route",
-    ],
+    include: ["preact", "preact/hooks", "preact/compat", "preact/jsx-runtime"],
   },
 };
 
 export function applicationPlugins({
   directory = "src/routes",
   framework = "preact",
-  dataEndpoint = "/_smolter",
+  dataEndpoint,
   ssr = true,
   splitRoutes = true,
   resourceRequest,
@@ -82,19 +77,18 @@ export function applicationPlugins({
     configureServer(server) {
       // Own the HTTP adapter so redirects retain authentication cookies.
       server.middlewares.use((incoming, outgoing, next) => {
-        if (!incoming.url?.startsWith(`${dataEndpoint}?`)) return next();
+        const target = dataTarget(
+          new URL(`http://local${incoming.url ?? "/"}`),
+          dataEndpoint,
+        );
+        if (target === undefined) return next();
 
         outgoing.setHeader("Cache-Control", "private, no-store");
 
         const run = async () => {
-          const target = new URL(
-            incoming.url!,
-            "http://local",
-          ).searchParams.get("url");
-
-          if (!target?.startsWith("/") || target.startsWith("//"))
+          if (target instanceof Error)
             return send(
-              new Response("Invalid route URL", { status: 400 }),
+              new Response(target.message, { status: 400 }),
               outgoing,
             );
 
@@ -105,7 +99,9 @@ export function applicationPlugins({
           ]);
           await send(await dispatchRoute(request, routes), outgoing);
         };
-        void run().catch(next);
+        void safeWrapAsync(run).then(({ error }) => {
+          if (error) next(error);
+        });
       });
 
       if (!ssr) return;
@@ -143,7 +139,9 @@ export function applicationPlugins({
               outgoing,
             );
           };
-          void run().catch(next);
+          void safeWrapAsync(run).then(({ error }) => {
+            if (error) next(error);
+          });
         });
       };
     },

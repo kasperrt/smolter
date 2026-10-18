@@ -11,7 +11,7 @@ interface ChunkMetadata {
 // route manifest changes: matched routes load before their data is committed.
 export function lazyFiles(
   directory: string,
-  dataEndpoint = "/_smolter",
+  dataEndpoint: string | undefined = undefined,
   framework: "react" | "preact" = "preact",
 ): Plugin {
   let root: string;
@@ -77,6 +77,10 @@ export function lazyFiles(
       const routes = await flatRoutes(root);
 
       if (routes instanceof Error) return this.error(routes.message);
+      if (routes.some((route) => route.path.endsWith(".__smolter")))
+        return this.error(
+          "The .__smolter suffix is reserved for data transport.",
+        );
 
       modules.clear();
 
@@ -128,21 +132,60 @@ export function lazyFiles(
 
         // Export discovery records capabilities, never routing configuration.
         fields.path = route.path;
-        fields.dataEndpoint = dataEndpoint;
+        if (dataEndpoint) fields.dataEndpoint = dataEndpoint;
 
         const file = `${route.file.replaceAll("\\", "/")}?smolter-client`;
 
         if (fields.default) modules.set(file, String(fields.path));
 
+        // A namespace escaping into lazyRoute retains every route export.
+        // Select supported browser exports statically so the bundler can remove
+        // unrelated helpers while preserving module and stylesheet side effects.
+        const selected = [
+          "default",
+          "clientLoader",
+          "clientAction",
+          "meta",
+          "links",
+          "handle",
+          "HydrateFallback",
+          "ErrorBoundary",
+          "shouldRevalidate",
+        ].filter((name) => fields[name]);
+        const members = selected
+          .map((name) => `${name}: route.${name}`)
+          .join(", ");
+        const capabilities = Object.fromEntries(
+          [
+            "path",
+            "dataEndpoint",
+            "loader",
+            "action",
+            "clientAction",
+            "meta",
+            "shouldRevalidate",
+            "ErrorBoundary",
+          ]
+            .filter((name) => name in fields)
+            .map((name) => [name, fields[name]]),
+        );
         definitions.push(
-          `lazyRoute(${JSON.stringify(fields)}, () => import(${JSON.stringify(file)}))`,
+          `lazyRoute(${JSON.stringify(capabilities)}, () => import(${JSON.stringify(file)}).then(route => ({${members}})))`,
         );
       }
 
-      return [
-        `import { lazyRoute } from "@kasperrt/smolter/${framework}/lazy-route";`,
-        `export default [${definitions.join(",\n")}];`,
-      ].join("\n");
+      return {
+        meta: {
+          smolterRoutes: routes.map((route) => ({
+            path: route.path,
+            id: `${route.file.replaceAll("\\", "/")}?smolter-client`,
+          })),
+        },
+        code: [
+          `import { lazyRoute } from "@kasperrt/smolter/${framework}/lazy-route";`,
+          `export default [${definitions.join(",\n")}];`,
+        ].join("\n"),
+      };
     },
   };
 }

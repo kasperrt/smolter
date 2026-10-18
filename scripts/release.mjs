@@ -121,7 +121,11 @@ if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
         "public",
         "--provenance",
         "--tag",
-        prerelease ? "next" : "latest",
+        prerelease
+          ? manifest.version.includes("-beta.")
+            ? "beta"
+            : "next"
+          : "latest",
       ],
       {
         cwd: directory,

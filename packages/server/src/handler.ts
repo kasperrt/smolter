@@ -1,4 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { safeWrapAsync } from "@smolter/core";
+import { dataTarget } from "@smolter/core/transport";
 import { send, webRequest } from "./http.ts";
 import { privateResponse } from "./private-response.ts";
 
@@ -31,7 +33,7 @@ export type NextHandler = (error?: unknown) => void;
 export function createRequestHandler({
   build,
   entry,
-  dataEndpoint = "/_smolter",
+  dataEndpoint,
 }: RequestHandlerOptions): (
   incoming: ServerIncomingMessage,
   outgoing: ServerResponse,
@@ -44,24 +46,13 @@ export function createRequestHandler({
   ): Promise<void> => {
     const handle = async () => {
       const url = new URL(
-        incoming.originalUrl ?? incoming.url ?? "/",
-        "http://local",
+        `http://local${incoming.originalUrl ?? incoming.url ?? "/"}`,
       );
-      const dataRequest = url.pathname === dataEndpoint;
+      const target = dataTarget(url, dataEndpoint);
+      const dataRequest = target !== undefined;
       if (dataRequest) outgoing.setHeader("Cache-Control", "private, no-store");
-
-      const target = dataRequest ? url.searchParams.get("url") : undefined;
-
-      if (
-        dataRequest &&
-        (!target?.startsWith("/") ||
-          new URL(target, "http://local").origin !== "http://local")
-      ) {
-        await send(
-          new Response("Invalid route URL", { status: 400 }),
-          outgoing,
-        );
-
+      if (target instanceof Error) {
+        await send(new Response(target.message, { status: 400 }), outgoing);
         return;
       }
 
@@ -73,6 +64,8 @@ export function createRequestHandler({
       await send(dataRequest ? privateResponse(response) : response, outgoing);
     };
 
-    return handle().catch(next);
+    return safeWrapAsync(handle).then(({ error }) => {
+      if (error) next(error);
+    });
   };
 }

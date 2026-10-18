@@ -11,9 +11,14 @@
     "./submission": "./src/submission.ts",
     "./navigation": "./src/navigation.ts",
     "./presentation": "./src/presentation.ts",
+    "./viewport": "./src/viewport.ts",
     "./store": "./src/store.ts",
     "./url": "./src/url.ts",
     "./serialize": "./src/serialize.ts",
-    "./prepare-routes": "./src/prepare-routes.ts"
+    "./prepare-routes": "./src/prepare-routes.ts",
+    "./prefetch": "./src/prefetch.ts",
+    "./link-prefetch": "./src/link-prefetch.ts",
+    "./intent": "./src/intent.ts",
+    "./transport": "./src/transport.ts"
   }
 }

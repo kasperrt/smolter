@@ -9,7 +9,13 @@ export type Params = Record<string, string>;
 /** Request, path parameters, and cancellation signal passed to a data handler. */
 export interface DataArgs {
   /** Why this handler ran; independent of when browser history is committed. */
-  reason?: "initial" | "navigation" | "revalidation" | "fetcher" | "action";
+  reason?:
+    | "initial"
+    | "navigation"
+    | "revalidation"
+    | "fetcher"
+    | "action"
+    | "prefetch";
   request: Request;
   params: Params;
   signal: AbortSignal;
@@ -166,5 +172,7 @@ export interface Router {
   ) => Promise<Result>;
   /** Create an independent fetcher. Framework useFetcher hooks manage disposal automatically. */
   createFetcher: () => Fetcher;
+  /** Speculatively read route data without navigation; cached for one navigation, at most 30 seconds. */
+  prefetch: (url: string) => Promise<Result>;
   dispose: () => void;
 }

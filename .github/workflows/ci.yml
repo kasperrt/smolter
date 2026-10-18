@@ -76,7 +76,8 @@ jobs:
         with:
           node-version: 24
       - run: pnpm install --frozen-lockfile
-      - run: pnpm jsr:check
+      - name: Validate JSR package (dry run, no publication)
+        run: pnpm jsr:check
 
   site:
     runs-on: ubuntu-latest
@@ -88,6 +89,8 @@ jobs:
           node-version: 24
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm build:site
+      - name: Build docs for validation (no deployment)
+        run: pnpm build:site
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm smoke:site
+      - name: Validate docs hydration, navigation and size budget
+        run: pnpm smoke:site

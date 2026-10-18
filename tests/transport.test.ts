@@ -1,5 +1,6 @@
 import { serverRoute } from "@smolter/client";
 import { createDataRouter, defineRoute } from "@smolter/core";
+import { dataTarget } from "@smolter/core/transport";
 import { handleRequest } from "@smolter/server";
 import { afterEach, expect, it, vi } from "vitest";
 import { deferred } from "./helpers/deferred";
@@ -67,9 +68,7 @@ it("connects client callbacks to registered server handlers and keeps fetcher re
   });
 
   vi.stubGlobal("fetch", async (url: string, options: RequestInit) => {
-    const target = new URL(url, "https://example.test").searchParams.get(
-      "url",
-    )!;
+    const target = dataTarget(new URL(url, "https://example.test")) as string;
 
     return handleRequest(
       [server],

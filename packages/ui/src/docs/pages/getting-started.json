@@ -6,8 +6,8 @@
   "sections": [
     {
       "title": "Install",
-      "body": "Install the router and the framework you use. Framework peers are optional; choosing React does not install Preact.",
-      "code": "pnpm add @kasperrt/smolter react react-dom\n# Or: pnpm add @kasperrt/smolter preact"
+      "body": "Install the router and the framework you use. Framework peers are optional; choosing React does not install Preact. When using Smolter’s Vite plugin, install TypeScript as a development dependency for typed prefetch selection; it is not a browser dependency.",
+      "code": "pnpm add @kasperrt/smolter react react-dom\n# Or: pnpm add @kasperrt/smolter preact\n# With Smolter’s Vite plugin:\npnpm add -D vite typescript"
     },
     {
       "title": "Define the data",

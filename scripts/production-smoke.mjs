@@ -74,7 +74,7 @@ async function verify() {
     const hydrationRequests = [];
 
     page.on("request", (request) => {
-      if (new URL(request.url()).pathname === "/_smolter")
+      if (new URL(request.url()).pathname.endsWith(".__smolter"))
         hydrationRequests.push(request.url());
     });
 

@@ -16,7 +16,7 @@
     },
     {
       "title": "Navigation behavior",
-      "body": "Pathname and query navigation checks the no-store manifest, including Back/Forward. Confirmed build changes reload the destination with its query and hash; hash-only or external links do not check. Concurrent requests share a probe and only the latest navigation may reload. Mutations are never replayed.",
+      "body": "Pathname/query navigation and Back/Forward compare destination dependencies and shared application fingerprints. Unrelated route changes keep client navigation. Changed shared code, changed/missing destinations, or missing compatibility metadata require document recovery. Successful routine checks are reused for 30 seconds (checkInterval); chunk failures bypass this cache. Hash-only/external links skip checks. Concurrent checks share a request; only the latest intent may reload. Mutations are never replayed.",
       "code": ""
     },
     {

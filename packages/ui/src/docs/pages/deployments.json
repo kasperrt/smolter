@@ -6,12 +6,12 @@
   "sections": [
     {
       "title": "Production build checks",
-      "body": "Use deploymentPlugin with watchDeployment to recover long-lived browser tabs after a deployment. The plugin emits smolter-manifest.json with a unique build version and provides virtual:smolter/deployment. Development and server builds export null, so no update requests run in development or SSR. This is separate from Vite\u2019s asset manifest: it detects replacement builds, including changed routes and hashed bundles.",
+      "body": "Use deploymentPlugin with watchDeployment for long-lived production tabs. The manifest contains a deterministic content version, a shared application fingerprint and dependency fingerprints for lazy file routes. Identical builds keep their identity. Development and server builds export null. Manual/eager route tables without granular metadata use conservative whole-build recovery.",
       "code": "import { defineConfig } from \"vite\";\nimport { deploymentPlugin, fileRouter } from \"@kasperrt/smolter/react/vite\";\n\nexport default defineConfig({\n  plugins: [fileRouter(), deploymentPlugin()],\n});\n\n// Preact uses the same exports from /preact/vite.\n// With applicationPlugins(), add deploymentPlugin() beside it."
     },
     {
       "title": "Connect the browser router",
-      "body": "Connect once before starting a manually created router, or pass deployment metadata directly to mountApplication so recovery also covers the initial route import. Import from /react/client or /preact/client. The helper wraps navigation and Back/Forward, checks a fresh manifest before changing pathname or search, and reloads the intended destination when its version differs. Hash-only changes and external navigations do not check. router.dispose() removes the listeners; the returned cleanup function can disconnect them earlier. No polling runs in the background.",
+      "body": "Install before creating fetchers, or pass deployment to mountApplication for bootstrap coverage. Navigation and Back/Forward compare shared code and destination dependencies. Unrelated route changes preserve client navigation; incompatible or unknown destinations recover through document navigation. Successful checks are reused for 30 seconds (checkInterval), while missing-chunk failures force fresh checks. Concurrent callers share a request. Hash-only/external links skip checks. Cleanup removes listeners. No polling runs.",
       "code": "import deployment from \"virtual:smolter/deployment\";\nimport { createDataRouter } from \"@kasperrt/smolter/react\";\nimport { watchDeployment } from \"@kasperrt/smolter/react/client\";\n\nconst router = createDataRouter(routes, { browser: true });\nwatchDeployment(router, deployment);\n\n// Preact application integration:\nconst router = await mountApplication(routes, root, { deployment });"
     },
     {
@@ -38,6 +38,16 @@
       "title": "Fetcher mutation ownership",
       "body": "Install watchDeployment before creating fetchers; mountApplication does this automatically. Independent fetcher submissions invalidate older recovery checks. While any tracked fetcher submission is pending, document recovery is suppressed and its marker remains unused. Ordinary client navigation can continue. A later eligible navigation can recover after submissions settle. Fetchers created before watcher installation are not tracked.",
       "code": ""
+    },
+    {
+      "title": "Compatibility boundaries",
+      "body": "Only dependencies visible to the browser build graph can be fingerprinted. Route CSS/assets and raw route files participate; independently deployed server dependencies, runtime configuration and external assets need a compatibility key change when incompatible. Preserve old hashed assets during rollouts. Missing chunks can require recovery even when route fingerprints match. New route code is never injected into an old runtime based only on a fingerprint.",
+      "code": "deploymentPlugin({ compatibility: \"server-contract-v2\" });\nwatchDeployment(router, deployment && { ...deployment, checkInterval: 30_000 });"
+    },
+    {
+      "title": "When to change the compatibility key",
+      "body": "Usually no key is needed: changes visible to the browser build already change its fingerprints. Use a stable contract identifier only for incompatible changes outside that graph, then rebuild and deploy the frontend and its manifest with the new key. For example, an independently deployed API changing { name } to { displayName } is invisible to an unchanged browser build. A new key makes old tabs eligible for recovery; the newly deployed frontend must already understand the new response. It does not repair incompatible code, detect backend deployments automatically, or replace coordinated rollout and backward compatibility. Do not change the key for ordinary data updates.",
+      "code": "deploymentPlugin({ compatibility: \"profile-contract-v2\" });"
     }
   ]
 }

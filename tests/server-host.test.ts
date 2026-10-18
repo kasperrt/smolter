@@ -3,6 +3,7 @@ import { once } from "node:events";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { safeWrapAsync } from "@smolter/core";
 import { afterEach, expect, it } from "vitest";
 
 const children: ChildProcess[] = [];
@@ -45,7 +46,7 @@ it.each(["react", "preact"])(
       writeFile(join(root, "dist/index.html"), "Host fixture"),
       writeFile(
         entry,
-        `${source.replace("createServer((incoming", "const server = createServer((incoming")}\nserver.on("listening", () => process.send(server.address().port));\n`,
+        `${source.replace("@kasperrt/smolter/utils/http", new URL("../dist/server/node.js", import.meta.url).href).replace("createServer((incoming", "const server = createServer((incoming")}\nserver.on("listening", () => process.send(server.address().port));\n`,
       ),
       writeFile(
         join(root, "dist/server/server.js"),
@@ -84,8 +85,8 @@ export async function render(request) {
     const [port] = await once(child, "message");
     const origin = `http://127.0.0.1:${port}`;
     const controller = new AbortController();
-    const pending = fetch(origin, { signal: controller.signal }).catch(
-      (error: Error) => error,
+    const pending = safeWrapAsync(() =>
+      fetch(origin, { signal: controller.signal }),
     );
     const status = async () => (await fetch(`${origin}/status`)).json();
 
@@ -93,7 +94,7 @@ export async function render(request) {
 
     controller.abort();
 
-    expect(await pending).toBeInstanceOf(Error);
+    expect((await pending).error).toBeInstanceOf(Error);
     await expect.poll(async () => (await status()).aborted).toBe(true);
   },
 );

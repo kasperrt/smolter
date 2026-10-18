@@ -70,10 +70,10 @@ for (const navigate of [false, true]) {
           outgoing.end("main {color: rgb(20, 30, 40)}");
           return;
         }
-        const target =
-          path === "/_smolter"
-            ? new URL(incoming.url!, "http://local").searchParams.get("url")!
-            : undefined;
+        const target = path.endsWith(".__smolter")
+          ? path.slice(0, -".__smolter".length) +
+            new URL(incoming.url!, "http://local").search
+          : undefined;
         const request = await webRequest(incoming, outgoing, target);
         let response = target
           ? await dispatchRoute(request, routes)

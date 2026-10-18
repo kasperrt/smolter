@@ -669,3 +669,35 @@ it("preserves pending mutation protection and navigation ownership across watche
   expect(reload).toHaveBeenCalledOnce();
   expect(storage.size).toBe(1);
 });
+
+it("keeps unchanged destination dependencies and caches routine checks without hiding chunk failure", async () => {
+  const { router, options, fetcher, reload, storage } = setup();
+  cleanups.push(
+    watchDeployment(router, {
+      ...options,
+      shared: "shell",
+      routes: [
+        { path: "/", fingerprint: "home" },
+        { path: "/next", fingerprint: "next" },
+      ],
+    }),
+  );
+  fetcher.mockResolvedValue(
+    Response.json({
+      version: "new",
+      shared: "shell",
+      routes: [
+        { path: "/", fingerprint: "changed" },
+        { path: "/next", fingerprint: "next" },
+      ],
+    }),
+  );
+  await router.navigate("/next?q=1#scope");
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+  await router.navigate("/next?q=2");
+  expect(fetcher).toHaveBeenCalledTimes(1);
+  await router.navigate("/");
+  expect(reload).toHaveBeenCalledTimes(1);
+  expect(reload.mock.calls[0][0].pathname).toBe("/");
+});

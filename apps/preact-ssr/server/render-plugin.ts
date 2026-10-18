@@ -9,7 +9,12 @@ export function serverRendering(): Plugin {
     configureServer(server) {
       return () => {
         server.middlewares.use((request, response, next) => {
-          if (request.method !== "GET" || request.url?.startsWith("/_smolter"))
+          if (
+            request.method !== "GET" ||
+            new URL(request.url ?? "/", "http://local").pathname.endsWith(
+              ".__smolter",
+            )
+          )
             return next();
 
           const controller = new AbortController();
