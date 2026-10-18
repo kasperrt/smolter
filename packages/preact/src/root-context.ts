@@ -23,6 +23,5 @@ export const OutletContext = createContext<unknown>(undefined);
 
 export function useApplication() {
   const app = useContext(Application);
-
   return app!;
 }

@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { expect, test } from "@playwright/test";
+import { safeWrapAsync } from "@smolter/core";
 import { routePreloads } from "../../packages/server/src/assets.ts";
 
 test("reuses cross-origin stylesheet hints when Vite applies the matched route CSS", async ({
@@ -18,7 +19,6 @@ test("reuses cross-origin stylesheet hints when Vite applies the matched route C
       response.end("body { color: rgb(20, 30, 40); }");
       return;
     }
-
     response.writeHead(200, {
       "Content-Type": "text/html",
       Link: routePreloads(
@@ -45,18 +45,15 @@ test("reuses cross-origin stylesheet hints when Vite applies the matched route C
   if (!address || typeof address === "string") throw new Error("Missing port");
   assets = `http://127.0.0.1:${address.port}`;
   const origin = `http://localhost:${address.port}`;
-
-  await Promise.resolve()
-    .then(async () => {
-      await page.goto(origin);
-      await expect.poll(() => requests.length).toBe(1);
-      expect(requests).toEqual([origin]);
-      await page.getByRole("button", { name: "Apply route styles" }).click();
-      await expect(page.locator("body")).toHaveCSS("color", "rgb(20, 30, 40)");
-      expect(requests).toEqual([origin]);
-    })
-    .finally(async () => {
-      server.closeAllConnections();
-      await new Promise<void>((done) => server.close(() => done()));
-    });
+  const { error: testError } = await safeWrapAsync(async () => {
+    await page.goto(origin);
+    await expect.poll(() => requests.length).toBe(1);
+    expect(requests).toEqual([origin]);
+    await page.getByRole("button", { name: "Apply route styles" }).click();
+    await expect(page.locator("body")).toHaveCSS("color", "rgb(20, 30, 40)");
+    expect(requests).toEqual([origin]);
+  });
+  server.closeAllConnections();
+  await new Promise<void>((done) => server.close(() => done()));
+  if (testError) throw testError.cause ?? testError;
 });

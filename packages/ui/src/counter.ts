@@ -18,7 +18,6 @@ export function createCounter<N>(
     revalidate,
   }: CounterProps<N>) {
     const busy = state !== "idle";
-
     return Panel(
       "counter.demo",
       h(
@@ -84,13 +83,11 @@ export function createCounter<N>(
       ),
     );
   }
-
   function CounterFallback() {
     return CounterPanel({
       state: "loading",
       form: (children) => h("form", null, ...children),
     });
   }
-
   return { CounterPanel, CounterFallback };
 }

@@ -20,9 +20,7 @@ export function routePreloads(
 ): string {
   const match = matchRoutes(routes, pathname);
   const route = match?.route as RouteAssets | undefined;
-
   const prefix = base.replace(/\/$/, "");
-
   return [
     ...(route?.styles ?? []).map(
       (file) => `<${prefix}/${file}>; rel=preload; as=style; crossorigin`,

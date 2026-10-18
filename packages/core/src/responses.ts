@@ -30,7 +30,6 @@ export function redirect(
   const options = typeof init === "number" ? { status: init } : init;
   const headers = new Headers(options.headers);
   headers.set("Location", location);
-
   return new Response(null, {
     ...options,
     status: options.status ?? 302,
@@ -54,27 +53,19 @@ export async function normalizeResult(
       status?: number;
       statusText?: string;
     };
-
     return Object.assign(Error(error.message), error);
   }
-
   if (value instanceof Response) {
     if (value.headers.has("Location")) return value;
-
     if (!value.ok)
       return Object.assign(Error(await value.text()), {
         status: value.status,
         statusText: value.statusText,
       });
-
     return value.json();
   }
-
   if (value && typeof value === "object" && "__routeData" in value)
-    return resolveDeferred
-      ? resolveData((value as DataResponse<unknown>).value)
-      : (value as DataResponse<unknown>).value;
-
+    value = (value as DataResponse<unknown>).value;
   return resolveDeferred ? resolveData(value) : value;
 }
 
@@ -82,9 +73,7 @@ export async function normalizeResult(
 /** Recursively resolve promises in arrays and plain objects before JSON serialization. */
 export async function resolveData(value: unknown): Promise<unknown> {
   const resolved = await value;
-
   if (Array.isArray(resolved)) return Promise.all(resolved.map(resolveData));
-
   if (
     resolved &&
     typeof resolved === "object" &&
@@ -95,9 +84,7 @@ export async function resolveData(value: unknown): Promise<unknown> {
         async ([key, field]) => [key, await resolveData(field)] as const,
       ),
     );
-
     return Object.fromEntries(entries);
   }
-
   return resolved;
 }

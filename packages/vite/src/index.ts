@@ -27,11 +27,9 @@ export function routerPlugin({
   const publicId = "virtual:smolter/routes";
   const virtualId = `\0${publicId}`;
   const suffix = "?smolter-client";
-
   return {
     name: "smolter-flat-routes",
     enforce: "pre",
-
     config() {
       return {
         // Keep capability implementations visible to this plugin instead of hiding it
@@ -40,21 +38,17 @@ export function routerPlugin({
         ssr: { noExternal: ["@kasperrt/smolter"] },
       };
     },
-
     transform(code, id) {
       return prefetch.transform(code, id);
     },
-
     configResolved(config) {
       prefetch.configure(config.root);
       projectRoot = config.root;
       root = resolve(config.root, directory);
     },
-
     resolveId(id) {
       if (id === publicId) return virtualId;
     },
-
     async load(id, options) {
       if (id.endsWith(suffix)) {
         const file = id.slice(0, -suffix.length);
@@ -64,25 +58,20 @@ export function routerPlugin({
         );
         const ast = this.parse(transformed.code);
         const edits: [number, number][] = [];
-
         for (const statement of ast.body) {
           if (statement.type === "ExportAllDeclaration") {
             return this.error(
               `Use explicit named exports in ${file}; export * cannot be safely split between server and browser.`,
             );
           }
-
           if (statement.type !== "ExportNamedDeclaration") continue;
-
           const server = statement.specifiers.filter((specifier) => {
             const name =
               specifier.exported.type === "Identifier"
                 ? specifier.exported.name
                 : specifier.exported.value;
-
             return name === "loader" || name === "action";
           });
-
           if (!server.length) {
             const declaration = statement.declaration;
             const name =
@@ -93,7 +82,6 @@ export function routerPlugin({
               declaration?.type === "VariableDeclaration"
                 ? declaration.declarations
                 : [];
-
             if (
               name === "loader" ||
               name === "action" ||
@@ -107,10 +95,8 @@ export function routerPlugin({
                 `Re-export loader/action from separate files in ${file}; inline server handlers cannot enter a browser module.`,
               );
             }
-
             continue;
           }
-
           if (
             !statement.source ||
             server.length !== statement.specifiers.length
@@ -119,48 +105,35 @@ export function routerPlugin({
               `Use separate export { loader } / export { action } statements in ${file}.`,
             );
           }
-
           edits.push([statement.start, statement.end]);
         }
-
         let code = transformed.code;
-
         for (const [start, end] of edits.reverse())
           code = code.slice(0, start) + code.slice(end);
-
         return { code, map: null };
       }
-
       if (id !== virtualId) return;
-
       if (clientRoutes || serverRoutes) {
         if (!clientRoutes || !serverRoutes)
           return this.error(
             "Specify both clientRoutes and serverRoutes for manual routing.",
           );
-
         const entry = resolve(
           projectRoot,
           options?.ssr ? serverRoutes : clientRoutes,
         ).replaceAll("\\", "/");
-
         return `export { routes as default } from ${JSON.stringify(entry)};`;
       }
-
       const routes = await flatRoutes(root);
-
       if (routes instanceof Error) return this.error(routes.message);
       if (routes.some((route) => route.path.endsWith(".__smolter")))
         return this.error(
           "The .__smolter suffix is reserved for data transport.",
         );
-
       const imports: string[] = [];
       const definitions: string[] = [];
-
       for (const [index, route] of routes.entries()) {
         this.addWatchFile(route.file);
-
         const file = route.file.replaceAll("\\", "/");
         const transformed = await transformWithOxc(
           await readFile(file, "utf8"),
@@ -168,10 +141,8 @@ export function routerPlugin({
         );
         const ast = this.parse(transformed.code);
         const handlers: Record<string, boolean> = {};
-
         for (const statement of ast.body) {
           if (statement.type !== "ExportNamedDeclaration") continue;
-
           const declared = statement.declaration;
           const names = statement.specifiers.map((specifier) =>
             specifier.exported.type === "Identifier"
@@ -185,17 +156,14 @@ export function routerPlugin({
             return this.error(
               `File routes derive identity and paths from filenames: remove id/routePath exports from ${file}. Use [.] for a literal dot.`,
             );
-
           for (const specifier of statement.specifiers) {
             const name =
               specifier.exported.type === "Identifier"
                 ? specifier.exported.name
                 : specifier.exported.value;
-
             if (name === "loader" || name === "action") handlers[name] = true;
           }
         }
-
         imports.push(
           `import * as route${index} from ${JSON.stringify(file + (options?.ssr ? "" : suffix))};`,
         );
@@ -205,7 +173,6 @@ export function routerPlugin({
             : `serverRoute(${JSON.stringify(route.path)}, route${index}, ${JSON.stringify({ ...handlers, dataEndpoint })})`,
         );
       }
-
       if (
         !options?.ssr &&
         definitions.some((definition) => definition.startsWith("serverRoute("))
@@ -213,31 +180,22 @@ export function routerPlugin({
         imports.unshift(
           `import { serverRoute } from "@kasperrt/smolter/${framework}/client";`,
         );
-
       return `${imports.join("\n")}\nexport default [${definitions.join(",\n")}];\n`;
     },
-
     configureServer(server) {
       prefetch.watch(server);
       server.watcher.add(root);
-
       const refresh = (file: string) => {
         if (clientRoutes || serverRoutes) return;
-
         const path = relative(root, file).replaceAll("\\", "/");
-
         if (!/^(?:[^/]+\.[jt]sx?|[^/]+\/route\.[jt]sx?)$/.test(path)) return;
         if (path.endsWith(".d.ts")) return;
-
         for (const environment of Object.values(server.environments)) {
           const module = environment.moduleGraph.getModuleById(virtualId);
-
           if (module) environment.moduleGraph.invalidateModule(module);
         }
-
         server.ws.send({ type: "full-reload" });
       };
-
       server.watcher.on("add", refresh);
       server.watcher.on("change", refresh);
       server.watcher.on("unlink", refresh);
@@ -246,7 +204,6 @@ export function routerPlugin({
         server.watcher.off("change", refresh);
         server.watcher.off("unlink", refresh);
       });
-
       configureTransport(server, publicId, framework, dataEndpoint);
     },
   };

@@ -1,3 +1,4 @@
+import { safeWrapAsync } from "@smolter/core";
 import { createElement, render } from "preact";
 import { useErrorBoundary } from "preact/hooks";
 import { expect, it } from "vitest";
@@ -28,7 +29,7 @@ it("keeps current values when an abandoned promise settles", async (context) => 
 it("renders local errors and forwards unhandled deferred errors to the boundary", async (context) => {
   const container = document.createElement("div");
   const rejected = Promise.reject(new Error("owned failure"));
-  void rejected.catch(() => {});
+  void safeWrapAsync(() => rejected);
   context.onTestFinished(() => render(null, container));
   render(
     createElement(Await<string>, {

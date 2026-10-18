@@ -8,7 +8,6 @@ import type { clientLoader } from "./clientLoader";
 export default function Task() {
   const data = useLoaderData<typeof clientLoader>();
   const fetcher = useFetcher<typeof clientAction>();
-
   return ui.TaskDetail({
     task: data,
     link: (href, children) => h(Link, { href: siteHref(href) }, children),

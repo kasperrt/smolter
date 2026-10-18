@@ -20,11 +20,8 @@ it.for(["react", "preact"] as const)(
     const root = await realpath(
       await mkdtemp(join(tmpdir(), "smolter-lazy-build-")),
     );
-
     context.onTestFinished(() => rm(root, { recursive: true, force: true }));
-
     await mkdir(join(root, "src/routes"), { recursive: true });
-
     const files = {
       "entry.ts":
         'import deployment from "virtual:smolter/deployment"; console.log(deployment); export { default } from "virtual:smolter/routes";',
@@ -52,13 +49,11 @@ it.for(["react", "preact"] as const)(
     `,
       "src/routes/data.ts": 'export { loader } from "../../server.ts";',
     };
-
     await Promise.all(
       Object.entries(files).map(([name, source]) =>
         writeFile(join(root, name), source),
       ),
     );
-
     const compile = () =>
       build({
         root,
@@ -78,25 +73,17 @@ it.for(["react", "preact"] as const)(
           },
         },
       });
-
     const result = await compile();
     expect(result).toHaveProperty("output");
-
     if (!("output" in result)) return;
-
     const chunks = result.output.filter((item) => item.type === "chunk");
     const manifest = result.output.find(
       (item) => item.fileName === ".vite/route-assets.json",
     );
-
     expect(manifest?.type).toBe("asset");
-
     if (manifest?.type !== "asset") return;
-
     const routes: RouteAssets[] = JSON.parse(String(manifest.source));
-
     expect(routes.map((route) => route.path)).toEqual(["/", "/robots.txt"]);
-
     for (const route of routes) {
       expect(route.files.length).toBeGreaterThan(1);
       expect(route.styles).toHaveLength(1);
@@ -112,7 +99,6 @@ it.for(["react", "preact"] as const)(
         ),
       ).toBe(true);
     }
-
     const shared = routes[0].files.filter((file) =>
       routes[1].files.includes(file),
     );
@@ -120,7 +106,6 @@ it.for(["react", "preact"] as const)(
     const optional = chunks.find((chunk) =>
       chunk.code.includes("Optional interaction content"),
     );
-
     expect(optional).toBeDefined();
     for (const route of routes) {
       expect(route.files).not.toContain(optional!.fileName);
@@ -133,7 +118,6 @@ it.for(["react", "preact"] as const)(
             expect(route.files).toContain(dependency);
       }
     }
-
     const deploymentManifest = (output: typeof result) => {
       const file = output.output.find(
         (item) => item.fileName === "smolter-manifest.json",
@@ -161,7 +145,6 @@ it.for(["react", "preact"] as const)(
       before.routes.find((route: { path: string }) => route.path === "/")
         .fingerprint,
     );
-
     expect(shared).toHaveLength(1);
     expect(entry?.dynamicImports).toHaveLength(3);
     expect(entry?.code).not.toContain("/not-the-filename");

@@ -1,13 +1,18 @@
 import type { Result } from "./types.ts";
 
 /** Resolve returned or rejected errors into Error values without losing their cause. */
-export function safeWrapAsync<T>(
+export async function safeWrapAsync<T>(
   work: () => T | Promise<T>,
 ): Promise<Result<T>> {
-  return Promise.resolve()
-    .then(work)
-    .then(
-      (data) => (data instanceof Error ? { error: data } : { data }),
-      (cause: unknown) => ({ error: Error(String(cause), { cause }) }),
-    );
+  const [result] = await Promise.allSettled([
+    (async () => {
+      await undefined;
+      return work();
+    })(),
+  ]);
+  if (result.status === "rejected")
+    return { error: Error(String(result.reason), { cause: result.reason }) };
+  return result.value instanceof Error
+    ? { error: result.value }
+    : { data: result.value };
 }

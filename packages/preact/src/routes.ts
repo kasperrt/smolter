@@ -44,7 +44,6 @@ export function Routes({ fallback }: RoutesProps): ReactNode {
           ? "HydrateFallback"
           : "default"
     ];
-
   const element = useMemo(
     () =>
       component &&
@@ -53,6 +52,5 @@ export function Routes({ fallback }: RoutesProps): ReactNode {
       }),
     [component, state.error],
   );
-
   return element ?? state.error?.message ?? fallback;
 }

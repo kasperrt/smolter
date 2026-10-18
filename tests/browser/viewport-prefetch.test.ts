@@ -100,7 +100,6 @@ for (const { name, api, h, mount } of [
       .toBe("http://localhost/item?q=3");
     expect(requests).toHaveLength(2);
   });
-
   it(`${name} skips disabled, document-reload and external viewport links`, async (context) => {
     const loader = vi.fn();
     const preload = vi.fn(async () => {});
@@ -153,7 +152,6 @@ for (const { name, api, h, mount } of [
     expect(loader).not.toHaveBeenCalled();
     expect(preload).not.toHaveBeenCalled();
   });
-
   it(`${name} leaves speculative failures out of recovery and retries at the committed destination`, async (context) => {
     const loader = vi
       .fn()

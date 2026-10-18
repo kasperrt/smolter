@@ -187,3 +187,21 @@ it("does not invoke work cancelled before its scheduled loader starts", async ()
   await pending;
   expect(loader).not.toHaveBeenCalled();
 });
+
+it("releases speculative-read protection after a synchronous submission failure", async () => {
+  const { dataPrefetch } = await import("@smolter/core/prefetch");
+  const loader = vi.fn(() => "fresh");
+  const cache = dataPrefetch(
+    [{ path: "/item", loader }],
+    () => "http://localhost/",
+  );
+  const failure = new Error("submission failed");
+  await expect(
+    cache.submit(() => {
+      throw failure;
+    }),
+  ).rejects.toBe(failure);
+  await expect(cache.load("/item")).resolves.toEqual({ data: "fresh" });
+  expect(loader).toHaveBeenCalledOnce();
+  cache.clear();
+});

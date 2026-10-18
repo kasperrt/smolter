@@ -10,7 +10,6 @@ export default function Tasks() {
   const data = useLoaderData<typeof clientLoader>();
   const fetcher = useFetcher<typeof clientAction>();
   const preview = useFetcher<typeof taskLoader>();
-
   return ui.TaskList({
     preview: ui.TaskPreview({
       task: preview.data,

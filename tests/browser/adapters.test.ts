@@ -38,17 +38,14 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     const router = api.createDataRouter([route]);
     const container = document.createElement("div");
     const root = mount(container);
-
     document.body.append(container);
     context.onTestFinished(() => {
       root.unmount();
       router.dispose();
       container.remove();
     });
-
     function Page() {
       pageRenders++;
-
       return h(
         "section",
         null,
@@ -57,57 +54,42 @@ for (const { name, api, element: h, root: mount } of frameworks) {
         h(ParamsReader),
       );
     }
-
     function DataReader() {
       const data = api.useLoaderData(route);
-
       dataRenders++;
-
       return h("output", { id: "selected-data" }, data);
     }
-
     function LocationReader() {
       const [location] = api.useLocation();
-
       locationRenders++;
-
       return h("output", { id: "selected-location" }, location);
     }
-
     function ParamsReader() {
       const params = api.useParams();
-
       paramsRenders++;
-
       return h("output", { id: "selected-params" }, params.id);
     }
-
     await router.navigate("/items/1");
     root.render(h(api.RouterProvider, { router }, h(api.Routes)));
     await expect
       .poll(() => container.querySelector("#selected-data")?.textContent)
       .toBe("1");
-
     const initialPageRenders = pageRenders;
     const initialDataRenders = dataRenders;
     const initialLocationRenders = locationRenders;
     const initialParamsRenders = paramsRenders;
-
     await router.revalidate();
     await new Promise(requestAnimationFrame);
     await new Promise(requestAnimationFrame);
-
     expect(pageRenders).toBe(initialPageRenders);
     expect(dataRenders).toBe(initialDataRenders);
     expect(locationRenders).toBe(initialLocationRenders);
     expect(paramsRenders).toBe(initialParamsRenders);
-
     value = 2;
     await router.revalidate();
     await expect
       .poll(() => container.querySelector("#selected-data")?.textContent)
       .toBe("2");
-
     expect(pageRenders).toBe(initialPageRenders);
     expect(dataRenders).toBe(initialDataRenders + 1);
     expect(locationRenders).toBe(initialLocationRenders);
@@ -119,7 +101,6 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     expect(pageRenders).toBe(initialPageRenders);
     expect(paramsRenders).toBe(initialParamsRenders + 1);
   });
-
   it(`${name} preserves a loaded page whose loader returns undefined`, async (context) => {
     const initial = deferred<void>();
     const refresh = deferred<void>();
@@ -137,41 +118,31 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     );
     const container = document.createElement("div");
     const root = mount(container);
-
     document.body.append(container);
     context.onTestFinished(() => {
       root.unmount();
       router.dispose();
       container.remove();
     });
-
     root.render(h(api.RouterProvider, { router }, h(api.Routes)));
     await expect.poll(() => container.textContent).toBe("Loading empty page");
     initial.resolve();
     await expect.poll(() => container.querySelector("input")).not.toBeNull();
-
     const input = container.querySelector("input")!;
-
     input.value = "Keep this value";
-
     const pending = router.revalidate();
-
     await expect.poll(() => reads).toBe(2);
     await new Promise(requestAnimationFrame);
-
     expect(container.querySelector("input")).toBe(input);
     expect(container.textContent).not.toContain("Loading empty page");
-
     refresh.resolve();
     await pending;
     await router.navigate("/empty?view=compact");
     await new Promise(requestAnimationFrame);
-
     expect(reads).toBe(2);
     expect(container.querySelector("input")).toBe(input);
     expect(input.value).toBe("Keep this value");
   });
-
   it(`${name} connects data hooks, forms, links, and independent fetchers`, async (context) => {
     let count = 0;
     let fetcher: ReturnType<typeof api.useFetcher>;
@@ -180,9 +151,7 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       loader: () => count,
       action: async ({ request }) => {
         const body = await request.formData();
-
         count += Number(body.get("amount"));
-
         return { count, method: request.method };
       },
       default: () => h("strong", null, "Task view"),
@@ -191,24 +160,20 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     const router = api.createDataRouter([route, other], { url: "/tasks/42" });
     const container = document.createElement("div");
     const root = mount(container);
-
     document.body.append(container);
     context.onTestFinished(() => {
       root.unmount();
       router.dispose();
       container.remove();
     });
-
     function Screen() {
       const data = api.useLoaderData(route);
       const action = api.useActionData(route);
       const params = api.useParams();
       const [location] = api.useLocation();
       const foreign = api.useLoaderData(other);
-
       fetcher = api.useFetcher(route);
       revalidate = api.useRevalidator();
-
       return h(
         "section",
         null,
@@ -248,51 +213,35 @@ for (const { name, api, element: h, root: mount } of frameworks) {
         ),
       );
     }
-
     root.render(h(api.RouterProvider, { router }, h(Screen)));
-
     await expect.poll(() => container.textContent).toContain('"data":0');
     expect(container.textContent).toContain('"id":"42"');
     expect(container.textContent).not.toContain('"foreign"');
-
     container.querySelector<HTMLAnchorElement>("#cancelled")!.click();
-
     expect(router.getSnapshot().url).toBe("http://localhost/tasks/42");
-
     container.querySelector<HTMLButtonElement>("#page-form button")!.click();
-
     await expect
       .poll(() => router.getSnapshot().actionData)
       .toEqual({ count: 2, method: "PATCH" });
     await expect.poll(() => container.textContent).toContain('"data":2');
-
     expect(
       container.querySelector<HTMLFormElement>("#fetcher-form")!.method,
     ).toBe("post");
     container.querySelector<HTMLButtonElement>("#fetcher-form button")!.click();
-
     await expect.poll(() => fetcher.data).toEqual({ count: 5, method: "POST" });
     await expect.poll(() => container.textContent).toContain('"data":5');
-
     await fetcher!.load();
-
     await expect.poll(() => fetcher.data).toBe(5);
-
     const body = new FormData();
-
     body.set("amount", "4");
     await fetcher!.submit(body, { method: "PUT" });
     await expect.poll(() => fetcher.data).toEqual({ count: 9, method: "PUT" });
-
     body.set("amount", "0");
     await fetcher!.submit(body);
     await expect.poll(() => fetcher.data).toEqual({ count: 9, method: "POST" });
-
     await revalidate!();
     await expect.poll(() => container.textContent).toContain('"data":9');
-
     const upload = new DataTransfer();
-
     upload.items.add(
       new File(["example"], "notes.txt", { type: "text/plain" }),
     );
@@ -300,16 +249,11 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       "#search-form input[type=file]",
     )!.files = upload.files;
     container.querySelector<HTMLButtonElement>("#search-form button")!.click();
-
     await expect.poll(() => router.getSnapshot().url).toContain("?q=hello");
-
     const search = new URL(router.getSnapshot().url).searchParams;
-
     expect(search.getAll("q")).toEqual(["hello", "again"]);
     expect(search.get("attachment")).toBe("notes.txt");
-
     container.querySelector<HTMLAnchorElement>("#next")!.click();
-
     await expect.poll(() => container.textContent).toContain("No component");
     expect(router.getSnapshot().data).toBe("Other");
   });
@@ -336,26 +280,21 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       ]);
       const container = document.createElement("div");
       const root = mount(container);
-
       function Page() {
         return h("p", null, String(api.useLoaderData()));
       }
-
       function Loading() {
         return h("p", null, "Loading");
       }
-
       function ErrorView({ error }: react.ErrorProps) {
         return h("p", null, "Boundary: " + error.message);
       }
-
       document.body.append(container);
       context.onTestFinished(() => {
         root.unmount();
         router.dispose();
         container.remove();
       });
-
       await router.navigate("/ready");
       root.render(
         h(
@@ -365,19 +304,15 @@ for (const { name, api, element: h, root: mount } of frameworks) {
         ),
       );
       await expect.poll(() => container.textContent).toBe("Ready");
-
       const navigation = router.navigate("/pending");
-
       await expect.poll(() => container.textContent).toBe("Loading");
       pending.resolve(new Error("Route failed"));
       await navigation;
       await expect
         .poll(() => container.textContent)
         .toBe("Boundary: Route failed");
-
       await router.navigate("/plain");
       await expect.poll(() => container.textContent).toBe("Plain error");
-
       await router.navigate("/missing-view");
       await expect.poll(() => container.textContent).toBe("Missing view");
     },
@@ -395,7 +330,6 @@ it("integrates browser history and cancels in-flight work on disposal", async (c
       react.defineRoute("/history-slow", {
         loader: (args) => {
           signal = args.signal;
-
           return new Promise<string>((resolve) => {
             finish = resolve;
           });
@@ -405,36 +339,24 @@ it("integrates browser history and cancels in-flight work on disposal", async (c
     { browser: true, url: new URL("/history-a", original).href },
   );
   const stop = router.start();
-
   context.onTestFinished(() => {
     stop();
     router.dispose();
     window.history.replaceState(null, "", original);
   });
-
   await router.navigate("/history-b");
-
   expect(window.location.pathname).toBe("/history-b");
-
   await router.navigate("/history-a", { replace: true });
-
   expect(window.location.pathname).toBe("/history-a");
-
   window.history.replaceState(null, "", "/history-b");
   window.dispatchEvent(new PopStateEvent("popstate"));
-
   await expect.poll(() => router.getSnapshot().data).toBe("B");
-
   const pending = router.navigate("/history-slow");
-
   await expect.poll(() => signal).toBeDefined();
   router.dispose();
-
   expect(signal?.aborted).toBe(true);
-
   finish("Stale");
   await pending;
-
   expect(router.getSnapshot().data).not.toBe("Stale");
 });
 
@@ -450,23 +372,17 @@ it("honors navigation revalidation for back and forward without adding history e
     ],
     { browser: true },
   );
-
   context.onTestFinished(() => {
     router.dispose();
     history.replaceState(null, "", original);
   });
-
   await router.navigate("/history-items?page=1");
-
   const stop = router.start();
   const entries = history.length;
-
   context.onTestFinished(stop);
   history.replaceState(null, "", "/history-items?page=2");
   dispatchEvent(new PopStateEvent("popstate"));
-
   await expect.poll(() => router.getSnapshot().state).toBe("idle");
-
   expect(router.getSnapshot().url).toBe(location.href);
   expect(router.getSnapshot().data).toBe(1);
   expect(reads).toBe(1);
@@ -492,11 +408,9 @@ it("Preact links keep resolved hrefs, prefetches, and clicks on the same route",
   );
   const container = document.createElement("div");
   const root = preactRoot(container);
-
   configureApplication({
     resolveURL(url) {
       if (url.pathname === "/items/two") url.pathname = "/mapped";
-
       return url;
     },
   });
@@ -507,11 +421,9 @@ it("Preact links keep resolved hrefs, prefetches, and clicks on the same route",
     container.remove();
     configureApplication({});
   });
-
   function LocationReader() {
     return preactElement("output", null, preact.useURLLocation().href);
   }
-
   root.render(
     preactElement(
       preact.RouterProvider,
@@ -529,17 +441,13 @@ it("Preact links keep resolved hrefs, prefetches, and clicks on the same route",
       ),
     ),
   );
-
   await expect
     .poll(() => container.querySelector("a")?.href)
     .toBe("http://localhost/mapped");
-
   expect(container.querySelector("output")?.textContent).toBe(
     "http://localhost/items/one",
   );
-
   const anchor = container.querySelector("a")!;
-
   anchor.focus();
   anchor.dispatchEvent(new PointerEvent("pointerenter"));
   anchor.dispatchEvent(new TouchEvent("touchstart"));
@@ -547,7 +455,6 @@ it("Preact links keep resolved hrefs, prefetches, and clicks on the same route",
   expect(intents).toEqual(["focusin", "pointerenter", "touchstart"]);
   anchor.click();
   await expect.poll(() => router.getSnapshot().data).toBe("Mapped");
-
   await router.navigate("/other/one");
   await expect.poll(() => anchor.href).toBe("http://localhost/other/two");
   anchor.click();
@@ -559,34 +466,27 @@ it("Preact links keep resolved hrefs, prefetches, and clicks on the same route",
 
 it("preserves repeated HTML form fields and leaves external form actions to the browser", () => {
   const form = document.createElement("form");
-
   for (const value of ["first", "second"]) {
     const input = document.createElement("input");
     input.name = "tag";
     input.value = value;
     form.append(input);
   }
-
   expect(submissionBody(form).getAll("tag")).toEqual(["first", "second"]);
-
   const router = react.createDataRouter([]);
   const snapshot = router.getSnapshot();
-
   form.addEventListener("submit", (event) => {
     const submission: FormSubmissionEvent = {
       currentTarget: form,
       defaultPrevented: event.defaultPrevented,
       preventDefault: () => event.preventDefault(),
     };
-
     submitForm(router, submission, event.submitter, {
       action: "https://other.example/submit",
     });
   });
   const event = new SubmitEvent("submit", { cancelable: true });
-
   form.dispatchEvent(event);
-
   expect(event.defaultPrevented).toBe(false);
   expect(router.getSnapshot()).toBe(snapshot);
   router.dispose();
@@ -603,20 +503,16 @@ it("Preact useSubmit preserves GET fields and defaults mutations to POST", async
   const container = document.createElement("div");
   const root = preactRoot(container);
   let submit: ReturnType<typeof preact.useSubmit> | undefined;
-
   document.body.append(container);
   context.onTestFinished(() => {
     root.unmount();
     router.dispose();
     container.remove();
   });
-
   function Screen() {
     submit = preact.useSubmit();
-
     return null;
   }
-
   root.render(
     preactElement(
       preact.RouterProvider,
@@ -625,22 +521,17 @@ it("Preact useSubmit preserves GET fields and defaults mutations to POST", async
     ),
   );
   await expect.poll(() => typeof submit).toBe("function");
-
   const data = new FormData();
-
   data.append("tag", "one & two");
   data.append("tag", "+three");
   data.append("file", new File(["text"], "notes.txt"));
   await submit!(data, { method: "get", action: "/search" });
-
   expect(router.getSnapshot().data).toEqual([
     ["tag", "one & two"],
     ["tag", "+three"],
     ["file", "notes.txt"],
   ]);
-
   await submit!(data, { action: "/search" });
-
   expect(router.getSnapshot().actionData).toBe("POST");
 });
 
@@ -712,7 +603,6 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       prevented = event.defaultPrevented;
       event.preventDefault();
     };
-
     document.body.append(container);
     document.addEventListener("click", preventBrowserNavigation);
     context.onTestFinished(() => {
@@ -721,7 +611,6 @@ for (const { name, api, element: h, root: mount } of frameworks) {
       router.dispose();
       container.remove();
     });
-
     await router.navigate("/");
     root.render(
       h(
@@ -744,9 +633,7 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     await expect
       .poll(() => container.querySelectorAll("a").length)
       .toBe(linkInteractions.length);
-
     let expectedReads = 0;
-
     for (const interaction of linkInteractions) {
       prevented = undefined;
       container.querySelector(`#link-case-${interaction.name}`)!.dispatchEvent(
@@ -756,11 +643,8 @@ for (const { name, api, element: h, root: mount } of frameworks) {
           ...interaction.mouse,
         }),
       );
-
       expect(prevented, interaction.name).toBe(interaction.prevented);
-
       if (interaction.navigates) expectedReads++;
-
       await new Promise(requestAnimationFrame);
       expect(reads, interaction.name).toBe(expectedReads);
     }
@@ -787,14 +671,12 @@ it("Preact prefetch opt-outs retain caller intent handlers", async (context) => 
   ];
   const container = document.createElement("div");
   const root = preactRoot(container);
-
   document.body.append(container);
   context.onTestFinished(() => {
     root.unmount();
     router.dispose();
     container.remove();
   });
-
   await router.navigate("/");
   root.render(
     preactElement(
@@ -816,13 +698,11 @@ it("Preact prefetch opt-outs retain caller intent handlers", async (context) => 
     ),
   );
   await expect.poll(() => container.querySelectorAll("a").length).toBe(4);
-
   for (const anchor of container.querySelectorAll("a")) {
     anchor.focus();
     anchor.dispatchEvent(new PointerEvent("pointerenter"));
     anchor.dispatchEvent(new TouchEvent("touchstart"));
   }
-
   await expect.poll(() => preloads).toBe(3);
   expect(callbacks).toEqual([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]);
 });
@@ -838,20 +718,16 @@ it("Preact fetchers submit structured data to their selected route", async (cont
   const container = document.createElement("div");
   const root = preactRoot(container);
   let fetcher: ReturnType<typeof preact.useFetcher> | undefined;
-
   document.body.append(container);
   context.onTestFinished(() => {
     root.unmount();
     router.dispose();
     container.remove();
   });
-
   function Screen() {
     fetcher = preact.useFetcher(route);
-
     return null;
   }
-
   root.render(
     preactElement(
       preact.RouterProvider,
@@ -860,7 +736,6 @@ it("Preact fetchers submit structured data to their selected route", async (cont
     ),
   );
   await expect.poll(() => fetcher).toBeDefined();
-
   await fetcher!.submit({ count: 3 });
   await expect
     .poll(() => fetcher!.data)
@@ -868,7 +743,6 @@ it("Preact fetchers submit structured data to their selected route", async (cont
       method: "POST",
       fields: [["count", "3"]],
     });
-
   await fetcher!.submit(
     { nested: { count: 4 } },
     {
@@ -882,7 +756,6 @@ it("Preact fetchers submit structured data to their selected route", async (cont
       method: "PATCH",
       fields: [["_payload", '{"nested":{"count":4}}']],
     });
-
   expect(router.getSnapshot().url).toBe("http://localhost/");
   expect(router.getSnapshot().actionData).toBeUndefined();
 });
@@ -892,10 +765,8 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     function Page() {
       const params = api.useParams();
       const [location] = api.useLocation();
-
       return h("output", null, `${params.id ?? "home"}: ${location}`);
     }
-
     const router = api.createRouter([
       api.defineRoute("/", { default: Page }),
       api.defineRoute("/tasks/:id", { default: Page }),

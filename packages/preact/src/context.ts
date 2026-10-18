@@ -28,7 +28,6 @@ export function RouterProvider({
   children,
 }: RouterProviderProps): ReactNode {
   useEffect(router.start, [router]);
-
   return createElement(RouterContext, { value: router }, children);
 }
 /** Hooks require a RouterProvider. */
@@ -49,11 +48,8 @@ export function useSnapshot(key?: keyof Snapshot, path?: string) {
   const router = useRouter();
   const getSnapshot = () => {
     const snapshot = router.getSnapshot();
-
     if (path !== undefined && path !== snapshot.path) return undefined;
-
     return key ? snapshot[key] : snapshot;
   };
-
   return useSyncExternalStore(router.subscribe, getSnapshot);
 }

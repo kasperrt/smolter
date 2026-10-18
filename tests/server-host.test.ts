@@ -13,9 +13,7 @@ afterEach(async () => {
   await Promise.all(
     children.splice(0).map(async (child) => {
       if (child.exitCode !== null || child.signalCode !== null) return;
-
       const exited = once(child, "exit");
-
       child.kill();
       await exited;
     }),
@@ -29,24 +27,32 @@ it.each(["react", "preact"])(
   "%s production host aborts SSR work when the HTTP client disconnects",
   async (framework) => {
     const root = await mkdtemp(join(tmpdir(), "smolter-host-"));
-
     directories.push(root);
-
     await mkdir(join(root, "server"));
     await mkdir(join(root, "dist/server"), { recursive: true });
-
     const source = await readFile(
       `apps/${framework}-ssr/server/start.mjs`,
       "utf8",
     );
     const entry = join(root, "server/start.mjs");
-
     await Promise.all([
       writeFile(join(root, "package.json"), '{"type":"module"}'),
       writeFile(join(root, "dist/index.html"), "Host fixture"),
       writeFile(
         entry,
-        `${source.replace("@kasperrt/smolter/utils/http", new URL("../dist/server/node.js", import.meta.url).href).replace("createServer((incoming", "const server = createServer((incoming")}\nserver.on("listening", () => process.send(server.address().port));\n`,
+        `${source
+          .replace(
+            "@kasperrt/smolter/utils/http",
+            new URL("../dist/server/node.js", import.meta.url).href,
+          )
+          .replace(
+            "@smolter/core",
+            new URL("../dist/core/errors.js", import.meta.url).href,
+          )
+          .replace(
+            "createServer(async (incoming",
+            "const server = createServer(async (incoming",
+          )}\nserver.on("listening", () => process.send(server.address().port));\n`,
       ),
       writeFile(
         join(root, "dist/server/server.js"),
@@ -74,14 +80,11 @@ export async function render(request) {
 `,
       ),
     ]);
-
     const child = fork(entry, {
       env: { ...process.env, PORT: "0" },
       silent: true,
     });
-
     children.push(child);
-
     const [port] = await once(child, "message");
     const origin = `http://127.0.0.1:${port}`;
     const controller = new AbortController();
@@ -89,11 +92,8 @@ export async function render(request) {
       fetch(origin, { signal: controller.signal }),
     );
     const status = async () => (await fetch(`${origin}/status`)).json();
-
     await expect.poll(async () => (await status()).started).toBe(true);
-
     controller.abort();
-
     expect((await pending).error).toBeInstanceOf(Error);
     await expect.poll(async () => (await status()).aborted).toBe(true);
   },

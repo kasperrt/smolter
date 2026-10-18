@@ -30,37 +30,32 @@ test("hosts documents and route data under existing Node middleware", async () =
       response.end();
     });
   });
-
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   const address = server.address();
-
   if (!address || typeof address === "string") return;
-
   const base = `http://127.0.0.1:${address.port}`;
-
-  await Promise.resolve()
-    .then(async () => {
-      const document = await fetch(`${base}/tasks`);
-      expect(await document.text()).toBe("/tasks:/assets/client.js");
-      expect(document.headers.get("X-Metrics-Middleware")).toBe("present");
-
-      expect(await (await fetch(`${base}/tasks/1`)).text()).toBe(
-        "Existing endpoint",
-      );
-      const action = await fetch(`${base}/tasks/1.__smolter`, {
-        method: "PATCH",
-        body: "title=Updated",
-      });
-      expect(action.status).toBe(201);
-      expect(action.headers.get("X-Action")).toBe("saved");
-      expect(await action.text()).toBe("PATCH:/tasks/1:title=Updated");
-
-      const invalid = await fetch(`${base}//evil.__smolter`);
-      expect(invalid.status).toBe(400);
-      expect(requests).toBe(4);
-    })
-    .finally(() => server.close());
+  onTestFinished(() => {
+    server.close();
+  });
+  {
+    const document = await fetch(`${base}/tasks`);
+    expect(await document.text()).toBe("/tasks:/assets/client.js");
+    expect(document.headers.get("X-Metrics-Middleware")).toBe("present");
+    expect(await (await fetch(`${base}/tasks/1`)).text()).toBe(
+      "Existing endpoint",
+    );
+    const action = await fetch(`${base}/tasks/1.__smolter`, {
+      method: "PATCH",
+      body: "title=Updated",
+    });
+    expect(action.status).toBe(201);
+    expect(action.headers.get("X-Action")).toBe("saved");
+    expect(await action.text()).toBe("PATCH:/tasks/1:title=Updated");
+    const invalid = await fetch(`${base}//evil.__smolter`);
+    expect(invalid.status).toBe(400);
+    expect(requests).toBe(4);
+  }
 });
 
 test.each(["production", "development"])(
@@ -70,7 +65,6 @@ test.each(["production", "development"])(
     onTestFinished(() => {
       vi.unstubAllEnvs();
     });
-
     const handler = createRequestHandler({
       entry: "/client.js",
       build: {
@@ -87,17 +81,14 @@ test.each(["production", "development"])(
     const server = createServer((request, response) => {
       void handler(request, response, () => response.end());
     });
-
     onTestFinished(() => {
       server.close();
     });
     server.listen(0, "127.0.0.1");
     await once(server, "listening");
-
     const address = server.address() as AddressInfo;
     const response = await fetch(`http://127.0.0.1:${address.port}/`);
     const secure = mode === "production" ? "; Secure" : "";
-
     expect(response.headers.getSetCookie()).toEqual([
       `session=one${secure}; HttpOnly; SameSite=Lax`,
       `theme=dark${secure}; Path=/`,
@@ -149,7 +140,6 @@ test("isolates application data endpoints on one origin and streams documents be
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   const origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-
   for (const { base } of handlers) {
     for (const method of ["GET", "POST"]) {
       const response = await fetch(

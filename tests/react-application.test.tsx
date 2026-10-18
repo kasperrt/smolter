@@ -7,7 +7,7 @@ import {
   useRootData,
   useRouteError,
 } from "@smolter/react";
-import { expect, it, vi } from "vitest";
+import { expect, it, onTestFinished, vi } from "vitest";
 import {
   Document,
   Links,
@@ -137,7 +137,8 @@ it("shares lazy module metadata, action execution and cancellation semantics in 
 it("requires React DOM 19 for integrated SSR without changing the legacy loadRouter entry", async () => {
   vi.resetModules();
   vi.doMock("react-dom/server", () => ({ renderToReadableStream: undefined }));
-  try {
+  onTestFinished(() => vi.doUnmock("react-dom/server"));
+  {
     const { renderApplication: legacyRender } = await import(
       "../packages/server/src/react.ts"
     );
@@ -149,8 +150,6 @@ it("requires React DOM 19 for integrated SSR without changing the legacy loadRou
         "/entry.js",
       ),
     ).rejects.toThrow("React DOM 19");
-  } finally {
-    vi.doUnmock("react-dom/server");
   }
 });
 
@@ -178,4 +177,22 @@ it("disposes the request router when a renderer rejects before producing its she
     ),
   ).rejects.toBe(failure);
   expect(disposed).toBe(true);
+});
+
+it("renders React document content without an optional root module", async () => {
+  const { RouterApplication } = await import("@smolter/react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const routes = [{ path: "/", default: () => <main>Standalone route</main> }];
+  const router = createDataRouter(routes);
+  await router.navigate("/");
+  const html = renderToStaticMarkup(
+    <RouterApplication
+      router={router}
+      routes={routes}
+      root={undefined}
+      document
+    />,
+  );
+  router.dispose();
+  expect(html).toContain("<main>Standalone route</main>");
 });

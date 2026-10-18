@@ -59,16 +59,13 @@ export function applicationPlugins({
       order: "post",
       handler(html, context) {
         if (!context.server || !ssr) return html;
-
         // Vite prepends its client ahead of the SSR head. That shifts Preact's
         // hydration order and detaches loaded stylesheets while moving nodes.
         // Keep development-only scripts after the application document instead.
         const client = html.match(
           /\s*<script\b[^>]*src="[^"]*\/@vite\/client"[^>]*><\/script>\s*/,
         )?.[0];
-
         if (!client) return html;
-
         return html
           .replace(client, "")
           .replace("</body>", `${client.trim()}</body>`);
@@ -76,22 +73,19 @@ export function applicationPlugins({
     },
     configureServer(server) {
       // Own the HTTP adapter so redirects retain authentication cookies.
-      server.middlewares.use((incoming, outgoing, next) => {
+      server.middlewares.use(async (incoming, outgoing, next) => {
         const target = dataTarget(
           new URL(`http://local${incoming.url ?? "/"}`),
           dataEndpoint,
         );
         if (target === undefined) return next();
-
         outgoing.setHeader("Cache-Control", "private, no-store");
-
         const run = async () => {
           if (target instanceof Error)
             return send(
               new Response(target.message, { status: 400 }),
               outgoing,
             );
-
           const request = await webRequest(incoming, outgoing, target);
           const [{ default: routes }, { dispatchRoute }] = await Promise.all([
             server.ssrLoadModule("virtual:smolter/routes"),
@@ -99,23 +93,18 @@ export function applicationPlugins({
           ]);
           await send(await dispatchRoute(request, routes), outgoing);
         };
-        void safeWrapAsync(run).then(({ error }) => {
-          if (error) next(error);
-        });
+        const { error } = await safeWrapAsync(run);
+        if (error) next(error);
       });
-
       if (!ssr) return;
-
       return () => {
-        server.middlewares.use((incoming, outgoing, next) => {
+        server.middlewares.use(async (incoming, outgoing, next) => {
           if (
             !incoming.headers.accept?.includes("text/html") &&
             !resourceRequest?.(incoming.originalUrl ?? incoming.url ?? "")
           )
             return next();
-
           outgoing.setHeader("Cache-Control", "private, no-store");
-
           const run = async () => {
             const request = await webRequest(incoming, outgoing);
             const entry = await server.ssrLoadModule("/src/entry.server.tsx");
@@ -123,10 +112,8 @@ export function applicationPlugins({
               request,
               "/src/entry.client.tsx",
             );
-
             if (!response.headers.get("Content-Type")?.includes("text/html"))
               return send(response, outgoing);
-
             const html = await server.transformIndexHtml(
               incoming.url!,
               await response.text(),
@@ -139,14 +126,12 @@ export function applicationPlugins({
               outgoing,
             );
           };
-          void safeWrapAsync(run).then(({ error }) => {
-            if (error) next(error);
-          });
+          const { error } = await safeWrapAsync(run);
+          if (error) next(error);
         });
       };
     },
   };
-
   return [
     application,
     browserBoundary(),

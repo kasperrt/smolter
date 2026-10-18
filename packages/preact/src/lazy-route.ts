@@ -4,7 +4,12 @@
  * @module
  */
 import { serverRoute } from "@smolter/client";
-import type { DataArgs, RouteModule, Router } from "@smolter/core";
+import {
+  type DataArgs,
+  type RouteModule,
+  type Router,
+  safeWrapAsync,
+} from "@smolter/core";
 import { type ComponentType, createElement } from "preact";
 import { useRouter } from "./context.ts";
 import type { AppRoute } from "./route-types.ts";
@@ -38,7 +43,6 @@ function LazyView() {
     | LazyAppRoute
     | undefined;
   const Component = route?.resolveComponent();
-
   return Component && createElement(Component, {});
 }
 
@@ -49,47 +53,39 @@ export function lazyRoute(
 ): LazyAppRoute {
   let module: LoadedRoute | undefined;
   let pending: Promise<void> | undefined;
-
-  function preload() {
-    pending ??= importer()
-      .then((loaded) => {
-        module = serverRoute(options.path, loaded, {
-          loader: options.loader,
-          action: options.action,
-          dataEndpoint: options.dataEndpoint,
-        });
-      })
-      .catch((error: unknown) => {
-        pending = undefined;
-        throw error;
+  async function load() {
+    const { error } = await safeWrapAsync(async () => {
+      module = serverRoute(options.path, await importer(), {
+        loader: options.loader,
+        action: options.action,
+        dataEndpoint: options.dataEndpoint,
       });
-
+    });
+    if (error) {
+      pending = undefined;
+      throw error.cause ?? error;
+    }
+  }
+  function preload() {
+    pending ??= load();
     return pending;
   }
-
   async function run(args: DataArgs, action = false) {
     await preload();
-
     if (args.signal.aborted) return new Error("Navigation cancelled");
-
     const handler = action
       ? (module!.clientAction ?? module!.action)
       : (module!.clientLoader ?? module!.loader);
-
     // serverRoute supplies serverLoader/serverAction to client handlers.
     return (handler as ((args: DataArgs) => unknown) | undefined)?.(args);
   }
-
-  function ErrorBoundary(props: ErrorProps) {
+  function ErrorBoundary({ error }: ErrorProps) {
     const Component = module?.ErrorBoundary as
       | ComponentType<ErrorProps>
       | undefined;
-
-    if (!Component) return props.error.message;
-
-    return createElement(Component, props);
+    if (!Component) return error.message;
+    return createElement(Component, { error });
   }
-
   return {
     path: options.path,
     id: options.id,

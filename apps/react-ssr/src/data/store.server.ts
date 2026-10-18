@@ -19,8 +19,6 @@ export function readStore(request: Request): Store {
       .get("cookie")
       ?.match(/(?:^|; )smolter-session=([\w-]+)/)?.[1] ?? "anonymous";
   const store = sessions.get(id) ?? initialStore();
-
   sessions.set(id, store);
-
   return store;
 }

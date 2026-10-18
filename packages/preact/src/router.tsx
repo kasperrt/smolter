@@ -1,5 +1,6 @@
 /** @jsxImportSource preact */
 
+import { createRootStore } from "@smolter/client/root-data";
 import type { ReactNode } from "preact/compat";
 import { RouterProvider } from "./context.ts";
 import {
@@ -7,7 +8,6 @@ import {
   type ApplicationContext,
   OutletContext,
 } from "./root-context.ts";
-import { createRootStore } from "./root-data.ts";
 import { Routes } from "./routes.ts";
 import { useContext, useMemo, useSyncExternalStore } from "./runtime.ts";
 
@@ -23,7 +23,6 @@ export function Outlet({
   children,
 }: OutletProps): import("preact").JSX.Element {
   const current = useContext(OutletContext);
-
   return (
     <OutletContext value={context ?? current}>
       {children ?? <Routes fallback={<p role="status">Loading…</p>} />}
@@ -38,12 +37,14 @@ export interface ApplicationProps extends ApplicationContext {
 }
 
 /** Render a Preact root document and active route with shared root data and application context. */
-export function RouterApplication(
-  props: ApplicationProps,
-): import("preact").JSX.Element {
+export function RouterApplication({
+  root: initialRoot,
+  document: documentMode,
+  ...props
+}: ApplicationProps): import("preact").JSX.Element {
   const rootStore = useMemo(
-    () => props.rootStore ?? createRootStore(props.root),
-    [props.rootStore, props.root],
+    () => props.rootStore ?? createRootStore(initialRoot),
+    [props.rootStore, initialRoot],
   );
   const root = useSyncExternalStore(rootStore.subscribe, rootStore.getSnapshot);
   const snapshot = useSyncExternalStore(
@@ -57,11 +58,10 @@ export function RouterApplication(
       : (props.rootModule?.default ?? Outlet);
   const Layout = props.rootModule?.Layout;
   const children = <Root />;
-
   return (
     <RouterProvider router={props.router}>
       <Application value={{ ...props, root }}>
-        {props.document ? Layout && <Layout>{children}</Layout> : children}
+        {documentMode && Layout ? <Layout>{children}</Layout> : children}
       </Application>
     </RouterProvider>
   );

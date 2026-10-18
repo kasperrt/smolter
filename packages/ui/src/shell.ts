@@ -11,7 +11,6 @@ import type { ElementFactory, LinkFactory, ShellProps } from "./types";
 export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
   const SizeTable = createSizeTable(h);
   const SizeCards = createSizeCards(h);
-
   function Brand(renderLink = link) {
     return renderLink(
       "/",
@@ -29,7 +28,6 @@ export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
       "wordmark",
     );
   }
-
   function Header(renderLink = link, routePath = "/") {
     return h(
       "header",
@@ -48,7 +46,6 @@ export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
       ),
     );
   }
-
   function Landing(renderLink = link) {
     return h(
       "section",
@@ -99,7 +96,6 @@ export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
       ),
     );
   }
-
   function Shell({
     mode,
     content,
@@ -118,7 +114,6 @@ export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
       : mode.includes("SSR")
         ? sizes.reactServer
         : sizes.react;
-
     return h(
       "div",
       { className: "app-shell" },
@@ -222,6 +217,5 @@ export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
       ),
     );
   }
-
   return { Brand, Header, Landing, Shell };
 }

@@ -20,18 +20,14 @@ export interface SubmissionOptions {
 
 export function formData(value: Submission): FormData {
   if (value instanceof FormData) return value;
-
   if (
     typeof HTMLFormElement !== "undefined" &&
     value instanceof HTMLFormElement
   )
     return new FormData(value);
-
   const body = new FormData();
-
   for (const [key, field] of Object.entries(value))
     body.append(key, String(field));
-
   return body;
 }
 
@@ -46,10 +42,8 @@ export function submissionBody(value: Submission, encoding?: string): FormData {
 /** Encode successful form controls for a GET route request. */
 export function submissionSearch(body: FormData): string {
   const search = new URLSearchParams();
-
   for (const [key, value] of body)
     search.append(key, typeof value === "string" ? value : value.name);
-
   return String(search);
 }
 
@@ -57,9 +51,7 @@ export function submissionSearch(body: FormData): string {
 export async function readSubmission(request: Request): Promise<unknown> {
   if (request.headers.get("Content-Type")?.includes("application/json"))
     return request.json();
-
   const body = await request.formData();
-
   return JSON.parse(String(body.get("_payload") ?? "{}"));
 }
 
@@ -85,31 +77,23 @@ export function submitForm(
   fetcher?: Fetcher,
 ): void {
   if (event.defaultPrevented || options.reloadDocument) return;
-
   const target = internalURL(
     router.getSnapshot().url,
     submitter?.getAttribute("formaction") ?? options.action,
   );
-
   if (!target) return;
-
   const data = new FormData(event.currentTarget, submitter);
   const method = (
     submitter?.getAttribute("formmethod") ?? options.method
   )?.toUpperCase();
-
   event.preventDefault();
-
   if (method === "GET") {
     target.search = submissionSearch(data);
-
     void (fetcher
       ? fetcher.load(target.href)
       : router.navigate(target.href, options));
-
     return;
   }
-
   void (fetcher ?? router).submit(target.href, data, {
     method: method as SubmitOptions["method"],
   });

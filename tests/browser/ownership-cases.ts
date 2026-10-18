@@ -10,6 +10,7 @@ import {
 } from "@kasperrt/smolter/preact/server";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
 import { expect, test } from "@playwright/test";
+import { safeWrapAsync } from "@smolter/core";
 import { createElement } from "preact";
 import { renderToReadableStream } from "preact-render-to-string/stream";
 import { build } from "vite";
@@ -72,7 +73,7 @@ export function ownershipCases(owned = false) {
       const nested = new Promise<string>((_resolve, reject) => {
         fail = reject;
       });
-      void nested.catch(() => {});
+      void safeWrapAsync(() => nested);
       const second = new Promise<string>((resolve) => {
         secondSettle = resolve;
       });
@@ -139,13 +140,12 @@ export function ownershipCases(owned = false) {
           handleDataRequest: (request) => dispatchRoute(request, routes),
         },
       });
-      const server = createServer((incoming, outgoing) => {
+      const server = createServer(async (incoming, outgoing) => {
         const path = new URL(incoming.url!, "http://local").pathname;
         if (path.startsWith("/assets/")) {
-          void readFile(join(output, path.slice(1))).then((body) => {
-            outgoing.setHeader("Content-Type", "application/javascript");
-            outgoing.end(body);
-          });
+          const body = await readFile(join(output, path.slice(1)));
+          outgoing.setHeader("Content-Type", "application/javascript");
+          outgoing.end(body);
           return;
         }
         if (pure) {
@@ -156,14 +156,15 @@ export function ownershipCases(owned = false) {
               entry: `/${entry.fileName}`,
             }),
           );
-          void pipeline(
-            Readable.fromWeb(
-              stream as import("node:stream/web").ReadableStream<Uint8Array>,
+          const { error } = await safeWrapAsync(() =>
+            pipeline(
+              Readable.fromWeb(
+                stream as import("node:stream/web").ReadableStream<Uint8Array>,
+              ),
+              outgoing,
             ),
-            outgoing,
-          ).catch((error: Error) => {
-            outgoing.destroy(error);
-          });
+          );
+          if (error) outgoing.destroy(error);
           return;
         }
         if (path === "/") documentResponse = outgoing;
@@ -175,234 +176,232 @@ export function ownershipCases(owned = false) {
       const address = server.address();
       if (!address || typeof address === "string")
         throw new Error("Missing port");
-      await Promise.resolve()
-        .then(async () => {
-          if (mode === "disconnect") await page.clock.install();
-          const errors: string[] = [];
-          const failedRequests: string[] = [];
-          page.on("requestfailed", (request) =>
-            failedRequests.push(
-              `${request.url()}: ${request.failure()?.errorText}`,
-            ),
-          );
-          page.on("pageerror", (error) => errors.push(error.message));
-          await page.goto(`http://127.0.0.1:${address.port}`, {
-            waitUntil: "commit",
-          });
-          await expect(page.locator("html")).toHaveAttribute(
-            "data-hydrated",
-            "true",
-          );
+      const { error: testError } = await safeWrapAsync(async () => {
+        if (mode === "disconnect") await page.clock.install();
+        const errors: string[] = [];
+        const failedRequests: string[] = [];
+        page.on("requestfailed", (request) =>
+          failedRequests.push(
+            `${request.url()}: ${request.failure()?.errorText}`,
+          ),
+        );
+        page.on("pageerror", (error) => errors.push(error.message));
+        await page.goto(`http://127.0.0.1:${address.port}`, {
+          waitUntil: "commit",
+        });
+        await expect(page.locator("html")).toHaveAttribute(
+          "data-hydrated",
+          "true",
+        );
+        await expect(
+          page.getByText(
+            ["nested", "reject-after"].includes(mode)
+              ? "Nested data pending"
+              : "Optional data pending",
+            { exact: true },
+          ),
+        ).toBeVisible();
+        if (!pure) {
+          await page.getByLabel("Persistent draft").fill("Retain this");
+          await page.getByRole("button", { name: "Count 0" }).click();
+        }
+        if (mode === "opposite") {
+          secondSettle("Second resolved content");
           await expect(
-            page.getByText(
-              ["nested", "reject-after"].includes(mode)
-                ? "Nested data pending"
-                : "Optional data pending",
-              { exact: true },
-            ),
+            page.getByText("Second resolved content", { exact: true }),
           ).toBeVisible();
-          if (!pure) {
-            await page.getByLabel("Persistent draft").fill("Retain this");
-            await page.getByRole("button", { name: "Count 0" }).click();
-          }
-          if (mode === "opposite") {
-            secondSettle("Second resolved content");
-            await expect(
-              page.getByText("Second resolved content", { exact: true }),
-            ).toBeVisible();
-            await expect(
-              page.getByText("Optional data pending", { exact: true }),
-            ).toBeVisible();
-          }
-          if (mode === "nested") {
-            fail(new Error("Nested rejected"));
-            await expect(
-              page.getByText("Nested failed", { exact: true }),
-            ).toBeVisible();
-          }
-          if (mode === "revalidate") {
-            await page
-              .getByRole("button", { name: "Refresh root", exact: true })
-              .click();
-            await expect(
-              page.getByText("Current root content", { exact: true }),
-            ).toBeVisible();
-          }
-          if (disconnect) {
-            documentResponse!.destroy();
-            await expect.poll(() => aborted).toBe(1);
-            await expect.poll(() => failedRequests.length).toBeGreaterThan(0);
-            if (mode === "disconnect") await page.clock.runFor(2001);
-            await test.info().attach("interrupted-document", {
-              body: JSON.stringify({
-                failedRequests,
-                browser: await page.evaluate(() => ({
-                  readyState: document.readyState,
-                  main: document.querySelector("main")?.outerHTML,
-                })),
-              }),
-              contentType: "application/json",
-            });
-            await expect(
-              page.getByText("Optional failed", { exact: true }),
-            ).toBeVisible();
-            await expect.poll(() => aborted).toBe(1);
-          }
-          if (mode === "race") settle("Old resolved content");
+          await expect(
+            page.getByText("Optional data pending", { exact: true }),
+          ).toBeVisible();
+        }
+        if (mode === "nested") {
+          fail(new Error("Nested rejected"));
+          await expect(
+            page.getByText("Nested failed", { exact: true }),
+          ).toBeVisible();
+        }
+        if (mode === "revalidate") {
           await page
-            .getByRole("button", { name: "Navigate", exact: true })
+            .getByRole("button", { name: "Refresh root", exact: true })
             .click();
+          await expect(
+            page.getByText("Current root content", { exact: true }),
+          ).toBeVisible();
+        }
+        if (disconnect) {
+          documentResponse!.destroy();
+          await expect.poll(() => aborted).toBe(1);
+          await expect.poll(() => failedRequests.length).toBeGreaterThan(0);
+          if (mode === "disconnect") await page.clock.runFor(2001);
+          await test.info().attach("interrupted-document", {
+            body: JSON.stringify({
+              failedRequests,
+              browser: await page.evaluate(() => ({
+                readyState: document.readyState,
+                main: document.querySelector("main")?.outerHTML,
+              })),
+            }),
+            contentType: "application/json",
+          });
+          await expect(
+            page.getByText("Optional failed", { exact: true }),
+          ).toBeVisible();
+          await expect.poll(() => aborted).toBe(1);
+        }
+        if (mode === "race") settle("Old resolved content");
+        await page
+          .getByRole("button", { name: "Navigate", exact: true })
+          .click();
+        await expect(
+          page.getByRole("heading", { name: "Destination ready" }),
+        ).toBeVisible();
+        if (mode === "return") {
+          await page
+            .getByRole("button", { name: "Return", exact: true })
+            .click();
+          await expect(
+            page.getByText("Current route content", { exact: true }),
+          ).toBeVisible();
+        }
+        if (mode === "history") {
+          await page.evaluate(() => history.back());
+          await expect(
+            page.getByText("Current route content", { exact: true }),
+          ).toBeVisible();
+          await page.evaluate(() => history.forward());
           await expect(
             page.getByRole("heading", { name: "Destination ready" }),
           ).toBeVisible();
-          if (mode === "return") {
+        }
+        if (mode === "repeat") {
+          for (let index = 0; index < 3; index++) {
             await page
               .getByRole("button", { name: "Return", exact: true })
               .click();
             await expect(
               page.getByText("Current route content", { exact: true }),
             ).toBeVisible();
-          }
-          if (mode === "history") {
-            await page.evaluate(() => history.back());
-            await expect(
-              page.getByText("Current route content", { exact: true }),
-            ).toBeVisible();
-            await page.evaluate(() => history.forward());
+            await page
+              .getByRole("button", { name: "Navigate", exact: true })
+              .click();
             await expect(
               page.getByRole("heading", { name: "Destination ready" }),
             ).toBeVisible();
           }
-          if (mode === "repeat") {
-            for (let index = 0; index < 3; index++) {
-              await page
-                .getByRole("button", { name: "Return", exact: true })
-                .click();
-              await expect(
-                page.getByText("Current route content", { exact: true }),
-              ).toBeVisible();
-              await page
-                .getByRole("button", { name: "Navigate", exact: true })
-                .click();
-              await expect(
-                page.getByRole("heading", { name: "Destination ready" }),
-              ).toBeVisible();
-            }
-          }
-          if (mode === "reject-after") fail(new Error("Abandoned rejection"));
-          if (mode === "root-first") {
-            rootSettle("Original root content");
-            await expect(
-              page
-                .getByRole("main")
-                .getByText("Original root content", { exact: true }),
-            ).toBeVisible();
-            await expect(
-              page.getByRole("heading", { name: "Destination ready" }),
-            ).toBeVisible();
-            await expect(
-              page.getByText("Optional data pending", { exact: true }),
-            ).toHaveCount(0);
-            await expect(
-              page.getByText("Old resolved content", { exact: true }),
-            ).toHaveCount(0);
-          }
-          if (!pure) await page.getByLabel("Persistent draft").focus();
-          if (pure)
-            await page.evaluate(() =>
-              window.dispatchEvent(new Event("settle-test")),
-            );
-          settle("Old resolved content");
-          secondSettle("Second resolved content");
-          if (mode === "root") {
-            await expect(
-              page.getByRole("heading", { name: "Destination ready" }),
-            ).toBeVisible();
-            await expect(
-              page.getByText("Optional data pending", { exact: true }),
-            ).toHaveCount(0);
-            await expect(
-              page.getByText("Old resolved content", { exact: true }),
-            ).toHaveCount(0);
-            await expect(
-              page.getByText("Root data pending", { exact: true }),
-            ).toBeVisible();
-          }
+        }
+        if (mode === "reject-after") fail(new Error("Abandoned rejection"));
+        if (mode === "root-first") {
           rootSettle("Original root content");
-          if (!disconnect) await page.waitForLoadState("load");
-          if (mode !== "return")
-            await expect(
-              page.getByRole("heading", { name: "Destination ready" }),
-            ).toBeVisible();
-          await expect
-            .soft(page.getByText("Optional data pending", { exact: true }))
-            .toHaveCount(0);
-          await expect
-            .soft(page.getByText("Old resolved content", { exact: true }))
-            .toHaveCount(0);
-          await expect
-            .soft(page.getByText("Second data pending", { exact: true }))
-            .toHaveCount(0);
-          await expect
-            .soft(page.getByText("Second resolved content", { exact: true }))
-            .toHaveCount(0);
-          await expect
-            .soft(page.getByText("Nested data pending", { exact: true }))
-            .toHaveCount(0);
-          if (mode === "root")
-            await expect(
-              page
-                .getByRole("main")
-                .getByText("Original root content", { exact: true }),
-            ).toBeVisible();
-          if (mode === "revalidate") {
-            await expect(
-              page.getByText("Current root content", { exact: true }),
-            ).toBeVisible();
-            await expect
-              .soft(page.getByText("Root data pending", { exact: true }))
-              .toHaveCount(0);
-            await expect
-              .soft(page.getByText("Original root content", { exact: true }))
-              .toHaveCount(0);
-            expect(rootLoads).toBe(2);
-          }
           await expect(
-            page.getByText("Nested failed", { exact: true }),
+            page
+              .getByRole("main")
+              .getByText("Original root content", { exact: true }),
+          ).toBeVisible();
+          await expect(
+            page.getByRole("heading", { name: "Destination ready" }),
+          ).toBeVisible();
+          await expect(
+            page.getByText("Optional data pending", { exact: true }),
           ).toHaveCount(0);
-          expect(errors).toEqual([]);
-          if (!pure) {
-            await expect(page.getByLabel("Persistent draft")).toHaveValue(
-              "Retain this",
-            );
-            await expect(
-              page.getByRole("button", { name: "Count 1" }),
-            ).toBeVisible();
-            if (mode !== "return")
-              expect(
-                new URL(page.url()).pathname +
-                  new URL(page.url()).search +
-                  new URL(page.url()).hash,
-              ).toBe("/destination?pending=1#scope");
-            expect(loads).toBe(
-              mode === "repeat"
-                ? 4
-                : ["return", "history"].includes(mode)
-                  ? 2
-                  : 1,
-            );
-            await expect(page.getByLabel("Persistent draft")).toBeFocused();
-          }
-        })
-        .finally(async () => {
-          settle("Old resolved content");
-          secondSettle("Second resolved content");
-          rootSettle("Original root content");
-          fail(new Error("Test ended"));
-          server.closeAllConnections();
-          await new Promise<void>((done) => server.close(() => done()));
-          await rm(output, { recursive: true, force: true });
-        });
+          await expect(
+            page.getByText("Old resolved content", { exact: true }),
+          ).toHaveCount(0);
+        }
+        if (!pure) await page.getByLabel("Persistent draft").focus();
+        if (pure)
+          await page.evaluate(() =>
+            window.dispatchEvent(new Event("settle-test")),
+          );
+        settle("Old resolved content");
+        secondSettle("Second resolved content");
+        if (mode === "root") {
+          await expect(
+            page.getByRole("heading", { name: "Destination ready" }),
+          ).toBeVisible();
+          await expect(
+            page.getByText("Optional data pending", { exact: true }),
+          ).toHaveCount(0);
+          await expect(
+            page.getByText("Old resolved content", { exact: true }),
+          ).toHaveCount(0);
+          await expect(
+            page.getByText("Root data pending", { exact: true }),
+          ).toBeVisible();
+        }
+        rootSettle("Original root content");
+        if (!disconnect) await page.waitForLoadState("load");
+        if (mode !== "return")
+          await expect(
+            page.getByRole("heading", { name: "Destination ready" }),
+          ).toBeVisible();
+        await expect
+          .soft(page.getByText("Optional data pending", { exact: true }))
+          .toHaveCount(0);
+        await expect
+          .soft(page.getByText("Old resolved content", { exact: true }))
+          .toHaveCount(0);
+        await expect
+          .soft(page.getByText("Second data pending", { exact: true }))
+          .toHaveCount(0);
+        await expect
+          .soft(page.getByText("Second resolved content", { exact: true }))
+          .toHaveCount(0);
+        await expect
+          .soft(page.getByText("Nested data pending", { exact: true }))
+          .toHaveCount(0);
+        if (mode === "root")
+          await expect(
+            page
+              .getByRole("main")
+              .getByText("Original root content", { exact: true }),
+          ).toBeVisible();
+        if (mode === "revalidate") {
+          await expect(
+            page.getByText("Current root content", { exact: true }),
+          ).toBeVisible();
+          await expect
+            .soft(page.getByText("Root data pending", { exact: true }))
+            .toHaveCount(0);
+          await expect
+            .soft(page.getByText("Original root content", { exact: true }))
+            .toHaveCount(0);
+          expect(rootLoads).toBe(2);
+        }
+        await expect(
+          page.getByText("Nested failed", { exact: true }),
+        ).toHaveCount(0);
+        expect(errors).toEqual([]);
+        if (!pure) {
+          await expect(page.getByLabel("Persistent draft")).toHaveValue(
+            "Retain this",
+          );
+          await expect(
+            page.getByRole("button", { name: "Count 1" }),
+          ).toBeVisible();
+          if (mode !== "return")
+            expect(
+              new URL(page.url()).pathname +
+                new URL(page.url()).search +
+                new URL(page.url()).hash,
+            ).toBe("/destination?pending=1#scope");
+          expect(loads).toBe(
+            mode === "repeat"
+              ? 4
+              : ["return", "history"].includes(mode)
+                ? 2
+                : 1,
+          );
+          await expect(page.getByLabel("Persistent draft")).toBeFocused();
+        }
+      });
+      settle("Old resolved content");
+      secondSettle("Second resolved content");
+      rootSettle("Original root content");
+      fail(new Error("Test ended"));
+      server.closeAllConnections();
+      await new Promise<void>((done) => server.close(() => done()));
+      await rm(output, { recursive: true, force: true });
+      if (testError) throw testError.cause ?? testError;
     });
   }
 }

@@ -21,19 +21,14 @@ export function browserBoundary(): Plugin {
     generateBundle(_options, bundle) {
       for (const output of Object.values(bundle)) {
         if (output.type !== "chunk") continue;
-
         for (const id of [...output.imports, ...output.dynamicImports]) {
           if (!builtins.has(id)) continue;
-
           this.error(`Node builtin in browser chunk ${output.fileName}: ${id}`);
         }
-
         for (const id of Object.keys(output.modules)) {
           const normalized = id.replaceAll("\\", "/");
-
           if (!forbiddenModules.some((pattern) => pattern.test(normalized)))
             continue;
-
           this.error(`Unexpected browser module in ${output.fileName}: ${id}`);
         }
       }

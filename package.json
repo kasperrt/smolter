@@ -6,7 +6,7 @@
     "build": "vite build && tsc -p tsconfig.build.json",
     "dev": "pnpm build && pnpm --parallel --filter \"@smolter/example-*\" dev",
     "fix": "biome check --write .",
-    "lint": "biome check .",
+    "lint": "biome check . && node scripts/conventions.mjs",
     "typecheck": "pnpm build && tsc --noEmit",
     "test": "pnpm build && vitest run --project unit",
     "coverage": "pnpm build && vitest run --coverage",
@@ -57,7 +57,7 @@
     "wouter-preact": "3.13.0",
     "typescript": "7.0.2"
   },
-  "version": "0.4.5-beta.5",
+  "version": "0.4.5-beta.6",
   "description": "A tiny typed data router for React and Preact.",
   "sideEffects": false,
   "license": "MIT",

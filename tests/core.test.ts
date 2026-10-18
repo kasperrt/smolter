@@ -17,26 +17,19 @@ describe("data router", () => {
       defineRoute("/people/:name", {}),
       defineRoute("/files/*", {}),
     ];
-
     expect(matchRoutes(routes, "/people/J%C3%B8rn/")?.params).toEqual({
       name: "Jørn",
     });
-
     expect(matchRoutes(routes, "/people/a&b+c=d")?.params).toEqual({
       name: "a&b+c=d",
     });
-
     expect(matchRoutes(routes, "/people/%26%2B%3D%2F")?.params).toEqual({
       name: "&+=/",
     });
-
     expect(matchRoutes(routes, "/files/a/b")?.params).toEqual({ "*": "a/b" });
-
     expect(matchRoutes(routes, "/people")).toBeUndefined();
-
     expect(matchRoutes(routes, "/people/a/b")).toBeUndefined();
   });
-
   it.each([
     ["%", "%"],
     ["%E0%A4%A", "�%A"],
@@ -45,18 +38,15 @@ describe("data router", () => {
     "matches malformed percent escapes without throwing: %s",
     (value, decoded) => {
       const route = defineRoute("/items/:id", {});
-
       expect(matchRoutes([route], `/items/${value}`)?.params).toEqual({
         id: decoded,
       });
     },
   );
-
   it("keeps empty wildcard tails and repeated path segments distinct", () => {
     const wildcard = defineRoute("/files/*", {});
     const single = defineRoute("/items/:id", {});
     const double = defineRoute("/items//:id", {});
-
     expect(matchRoutes([wildcard], "/files")?.params).toEqual({ "*": "" });
     expect(matchRoutes([wildcard], "/files/")?.params).toEqual({ "*": "" });
     expect(matchRoutes([wildcard], "/files/a//b")?.params).toEqual({
@@ -68,7 +58,6 @@ describe("data router", () => {
       params: { id: "42" },
     });
   });
-
   it("infers route and function data without duplicated interfaces", () => {
     const loader = async () => ({ name: "Ada" });
     const action = () => ({ saved: true });
@@ -79,7 +68,6 @@ describe("data router", () => {
       saved: boolean;
     }>();
   });
-
   it("passes Request, params and abort signal to loaders", async () => {
     const router = await loadRouter(
       [
@@ -93,14 +81,12 @@ describe("data router", () => {
       ],
       "https://example.com/42?q=hello",
     );
-
     expect(router.getSnapshot().data).toEqual({
       id: "42",
       search: "?q=hello",
       aborted: false,
     });
   });
-
   it("revalidates after a fetcher action without navigating", async () => {
     let count = 0;
     const router = await loadRouter(
@@ -109,9 +95,7 @@ describe("data router", () => {
         defineRoute("/increment", {
           action: async ({ request }) => {
             expect(request.method).toBe("POST");
-
             expect((await request.formData()).get("value")).toBe("one");
-
             return ++count;
           },
         }),
@@ -121,17 +105,12 @@ describe("data router", () => {
     const fetcher = router.createFetcher();
     const data = body();
     data.set("value", "one");
-
     await fetcher.submit("/increment", data);
-
     expect(router.getSnapshot().url).toBe("https://test.dev/");
-
     expect(router.getSnapshot().data).toBe(1);
-
     expect(fetcher.getSnapshot()).toMatchObject({ data: 1, state: "idle" });
     router.dispose();
   });
-
   it("supports fetcher loads and scoped failures", async () => {
     const router = await loadRouter(
       [
@@ -141,20 +120,13 @@ describe("data router", () => {
       "https://test.dev/",
     );
     const fetcher = router.createFetcher();
-
     await fetcher.load("/resource");
-
     expect(fetcher.getSnapshot().data).toBe("resource");
-
     expect(router.getSnapshot().data).toBe("home");
-
     await fetcher.submit("/resource", body());
-
     expect(fetcher.getSnapshot().error?.message).toMatch("No action");
-
     expect(router.getSnapshot().error).toBeUndefined();
   });
-
   it("revalidates manually and honors shouldRevalidate", async () => {
     let runs = 0;
     const router = await loadRouter(
@@ -167,16 +139,11 @@ describe("data router", () => {
       ],
       "https://test.dev/",
     );
-
     await router.submit("/", body());
-
     expect(runs).toBe(1);
-
     await router.revalidate();
-
     expect(runs).toBe(2);
   });
-
   it("keeps action data during revalidation and clears it on navigation", async () => {
     const router = await loadRouter(
       [
@@ -185,16 +152,11 @@ describe("data router", () => {
       ],
       "https://test.dev/",
     );
-
     await router.submit("/", body());
-
     expect(router.getSnapshot().actionData).toEqual({ ok: true });
-
     await router.navigate("/other");
-
     expect(router.getSnapshot().actionData).toBeUndefined();
   });
-
   it("aborts stale navigation and prevents late data overwrites", async () => {
     let finish: (value: string) => void = () => {};
     let signal: AbortSignal | undefined;
@@ -202,7 +164,6 @@ describe("data router", () => {
       defineRoute("/slow", {
         loader: (args) => {
           signal = args.signal;
-
           return new Promise<string>((resolve) => {
             finish = resolve;
           });
@@ -212,16 +173,12 @@ describe("data router", () => {
     ]);
     const slow = router.navigate("/slow");
     await Promise.resolve();
-
     await router.navigate("/fast");
     finish("slow");
     await slow;
-
     expect(signal?.aborted).toBe(true);
-
     expect(router.getSnapshot().data).toBe("fast");
   });
-
   it("last fetcher request wins", async () => {
     let finish: (value: string) => void = () => {};
     const router = createDataRouter([
@@ -236,26 +193,20 @@ describe("data router", () => {
     const fetcher = router.createFetcher();
     const slow = fetcher.load("/slow");
     await Promise.resolve();
-
     await fetcher.load("/fast");
     finish("slow");
     await slow;
-
     expect(fetcher.getSnapshot().data).toBe("fast");
   });
-
   it("returns errors with causes for rejected handlers", async () => {
     const cause = new Error("network unavailable");
     const router = await loadRouter(
       [defineRoute("/", { loader: () => Promise.reject(cause) })],
       "https://test.dev/",
     );
-
     expect(router.getSnapshot().error?.cause).toBe(cause);
-
     expect(router.getSnapshot().state).toBe("idle");
   });
-
   it("handles loader and action redirects and bounds loops", async () => {
     const routes = [
       defineRoute("/", { loader: () => redirect("/next") }),
@@ -266,53 +217,37 @@ describe("data router", () => {
       defineRoute("/done", { loader: () => "done" }),
     ];
     const router = await loadRouter(routes, "https://test.dev/");
-
     expect(router.getSnapshot().data).toBe("next");
-
     await router.submit("/next", body());
-
     expect(router.getSnapshot().data).toBe("done");
-
     const loop = await loadRouter(
       [defineRoute("/", { loader: () => redirect("/") })],
       "https://test.dev/",
     );
-
     expect(loop.getSnapshot().error?.message).toMatch("Redirect loop");
   });
-
   it("resets the redirect budget for each navigation", async () => {
     const router = createDataRouter([
       defineRoute("/:remaining", {
         loader: ({ params }) => {
           const remaining = Number(params.remaining);
-
           if (remaining) return redirect(`/${remaining - 1}`);
-
           return "arrived";
         },
       }),
     ]);
-
     await router.navigate("/10");
-
     expect(router.getSnapshot().data).toBe("arrived");
     expect(router.getSnapshot().error).toBeUndefined();
-
     await router.navigate("/11");
-
     expect(router.getSnapshot().error?.message).toBe("Redirect loop");
     expect(router.getSnapshot().url).toBe("http://localhost/1");
-
     await router.navigate("/10");
-
     expect(router.getSnapshot().data).toBe("arrived");
     expect(router.getSnapshot().error).toBeUndefined();
     expect(router.getSnapshot().state).toBe("idle");
-
     router.dispose();
   });
-
   it("isolates server requests and safely serializes hydration", async () => {
     const routes = [
       defineRoute("/:id", {
@@ -323,31 +258,21 @@ describe("data router", () => {
       loadRouter(routes, "https://test.dev/one"),
       loadRouter(routes, "https://test.dev/two"),
     ]);
-
     expect(one.getSnapshot().data).not.toEqual(two.getSnapshot().data);
-
     const serialized = serialize(one.getSnapshot());
-
     expect(serialized).not.toContain("</script>");
-
     const hydrated = createDataRouter(routes, {
       hydrationData: JSON.parse(serialized),
     });
     const stop = hydrated.start();
-
     expect(hydrated.getSnapshot().data).toEqual(one.getSnapshot().data);
     stop();
   });
-
   it("reports missing routes and rejects external navigation", async () => {
     const router = await loadRouter([], "https://test.dev/missing");
-
     expect(router.getSnapshot().error?.message).toMatch("No route");
-
     await router.navigate("https://elsewhere.dev/");
-
     expect(router.getSnapshot().url).toBe("https://test.dev/missing");
-
     expect(router.getSnapshot().error?.message).toMatch("External URL");
   });
 });
@@ -363,7 +288,6 @@ it("forwards incoming SSR request headers", async () => {
       headers: { "X-Example": "request-local" },
     }),
   );
-
   expect(router.getSnapshot().data).toBe("request-local");
 });
 
@@ -379,13 +303,9 @@ it("retains action data when a Form navigates to a different route", async () =>
     ],
     "https://test.dev/",
   );
-
   await router.submit("/save", body());
-
   expect(router.getSnapshot().url).toBe("https://test.dev/save");
-
   expect(router.getSnapshot().actionData).toEqual({ saved: true });
-
   expect(runs).toBe(1);
 });
 
@@ -412,7 +332,6 @@ it("fetcher revalidation does not take a pending navigation back to the old URL"
             await new Promise<void>((resolve) => {
               finishPage = resolve;
             });
-
           return "next";
         },
       }),
@@ -421,16 +340,13 @@ it("fetcher revalidation does not take a pending navigation back to the old URL"
   );
   const action = router.createFetcher().submit("/", body());
   await Promise.resolve();
-
   const navigation = router.navigate("/next");
   await Promise.resolve();
   finishAction();
   await action;
   finishPage();
   await navigation;
-
   expect(router.getSnapshot().url).toBe("https://test.dev/next");
-
   expect(router.getSnapshot().data).toBe("next");
 });
 
@@ -442,39 +358,26 @@ it("selects client handlers locally and skips them during SSR", async () => {
     action: () => ({ source: "server-action" as const }),
     clientLoader: () => {
       clientLoads++;
-
       return { source: "client" as const };
     },
     clientAction: () => {
       clientActions++;
-
       return { source: "clientAction" as const };
     },
   });
   const server = await loadRouter([route], "https://test.dev/");
-
   expect(server.getSnapshot().data).toEqual({ source: "server" });
   await server.submit("/", body());
-
   expect(server.getSnapshot().actionData).toEqual({ source: "server-action" });
-
   expect(clientLoads).toBe(0);
-
   expect(clientActions).toBe(0);
-
   const client = createDataRouter([route]);
   await client.navigate("/");
-
   expect(client.getSnapshot().data).toEqual({ source: "client" });
-
   const fetcher = client.createFetcher();
-
   await fetcher.submit("/", body());
-
   expect(fetcher.getSnapshot().data).toEqual({ source: "clientAction" });
-
   expect(clientLoads).toBe(2);
-
   expect(clientActions).toBe(1);
   expectTypeOf<LoaderData<typeof route>>().toEqualTypeOf<
     { source: "server" } | { source: "client" }
@@ -492,17 +395,11 @@ it("loads a client-only route after its empty SSR snapshot is hydrated", async (
   });
   expectTypeOf<LoaderData<typeof route>>().toEqualTypeOf<{ count: number }>();
   expectTypeOf<ActionData<typeof route>>().toEqualTypeOf<{ saved: boolean }>();
-
   const server = await loadRouter([route], "https://test.dev/");
-
   expect(runs).toBe(0);
-
   expect(server.getSnapshot().data).toBeUndefined();
-
   const hydrationData = server.getSnapshot();
-
   expect((await server.submit("/", body())).error?.message).toBe("No action");
-
   const client = createDataRouter([route], {
     hydrationData,
   });
@@ -513,7 +410,6 @@ it("loads a client-only route after its empty SSR snapshot is hydrated", async (
   );
   const stop = client.start();
   await loaded;
-
   expect(client.getSnapshot().data).toEqual({ count: 1 });
   stop();
   client.dispose();
@@ -528,7 +424,6 @@ for (const server of [false, true]) {
         (source: string) =>
         async ({ request, params }: import("@smolter/core").DataArgs) => {
           calls.push(source);
-
           return {
             source,
             id: params.id,
@@ -549,35 +444,24 @@ for (const server of [false, true]) {
       const router = server
         ? await loadRouter(routes, url)
         : createDataRouter(routes, { url });
-
       if (!server) await router.navigate("/tasks");
-
       const fetcher = router.createFetcher();
-
       await fetcher.load("/tasks/42");
-
       expect(fetcher.getSnapshot().data).toEqual({
         source: server ? "loader" : "clientLoader",
       });
-
       const data = new FormData();
       data.set("title", "Write the docs");
-
       await fetcher.submit("/tasks/42", data, { method });
-
       expect(fetcher.getSnapshot().data).toEqual({
         source: server ? "action" : "clientAction",
         id: "42",
         method,
         title: "Write the docs",
       });
-
       expect(calls).toEqual([server ? "action" : "clientAction"]);
-
       expect(router.getSnapshot().url).toBe("https://test.dev/tasks");
-
       expect(router.getSnapshot().data).toBe(2);
-
       expect(router.getSnapshot().actionData).toBeUndefined();
       router.dispose();
     });
@@ -596,11 +480,9 @@ it("keeps fetchers independent from a hydrated page error", () => {
     },
   });
   const fetcher = router.createFetcher();
-
   expect(fetcher.getSnapshot().state).toBe("idle");
   expect(fetcher.getSnapshot().data).toBeUndefined();
   expect(fetcher.getSnapshot().error).toBeUndefined();
-
   router.dispose();
 });
 
@@ -619,11 +501,8 @@ it("preserves multipart boundaries while forwarding SSR request headers", async 
     }),
   );
   const data = new FormData();
-
   data.set("title", "Keep the boundary");
-
   const result = await router.submit("/", data);
-
   expect(result.error).toBeUndefined();
   expect(result.data).toEqual({
     cookie: "session=example",
@@ -644,12 +523,9 @@ it("does not reload a completed SSR loader just because it returned undefined", 
     hydrationData: server.getSnapshot(),
   });
   const stop = client.start();
-
   await Promise.resolve();
-
   expect(calls).toBe(1);
   expect(client.getSnapshot().state).toBe("idle");
-
   stop();
   client.dispose();
   server.dispose();
@@ -664,33 +540,24 @@ it("cancels a fetcher through action revalidation when the router is disposed", 
     defineRoute("/", {
       loader: () => {
         if (loads++ === 0) return "initial";
-
         started.resolve();
-
         return revalidation.promise;
       },
       action: ({ signal }) => {
         actionSignal = signal;
-
         return "saved";
       },
     }),
   ]);
-
   await router.navigate("/");
-
   const fetcher = router.createFetcher();
   const states: string[] = [];
   fetcher.subscribe(() => states.push(fetcher.getSnapshot().state));
-
   const submission = fetcher.submit("/", body());
-
   await started.promise;
-
   router.dispose();
   revalidation.resolve("late data");
   await submission;
-
   expect(actionSignal?.aborted).toBe(true);
   expect(states).toEqual(["submitting", "loading"]);
   expect(router.getSnapshot().data).toBe("initial");
@@ -702,19 +569,12 @@ it("settles a fetcher after an action redirects to another route", async () => {
     defineRoute("/save", { action: () => redirect("/done") }),
     defineRoute("/done", { loader: () => "saved page" }),
   ]);
-
   await router.navigate("/");
-
   const fetcher = router.createFetcher();
-
   await fetcher.load("/");
-
   const states: string[] = [];
-
   fetcher.subscribe(() => states.push(fetcher.getSnapshot().state));
-
   const result = await fetcher.submit("/save", body());
-
   expect(result.data).toBeInstanceOf(Response);
   expect(states).toEqual(["submitting", "idle"]);
   expect(fetcher.getSnapshot().data).toBe("initial");
@@ -722,7 +582,6 @@ it("settles a fetcher after an action redirects to another route", async () => {
   expect(router.getSnapshot().url).toBe("http://localhost/done");
   expect(router.getSnapshot().data).toBe("saved page");
   expect(router.getSnapshot().state).toBe("idle");
-
   router.dispose();
 });
 
@@ -734,7 +593,6 @@ it("does not notify a stale fetcher after its redirect finishes", async () => {
     defineRoute("/slow", {
       loader: () => {
         started.resolve();
-
         return destination.promise;
       },
     }),
@@ -743,18 +601,13 @@ it("does not notify a stale fetcher after its redirect finishes", async () => {
   const fetcher = router.createFetcher();
   const states: string[] = [];
   fetcher.subscribe(() => states.push(fetcher.getSnapshot().state));
-
   const first = fetcher.load("/redirect");
-
   await started.promise;
   await fetcher.load("/fast");
-
   destination.resolve("page data");
   await first;
-
   expect(states).toEqual(["loading", "loading", "idle"]);
   expect(fetcher.getSnapshot().data).toBe("current");
-
   router.dispose();
 });
 
@@ -767,38 +620,27 @@ for (const revalidate of [true, false]) {
       defineRoute("/", {
         loader: () => {
           if (reads++ === 0) return "initial";
-
           started.resolve();
-
           return loaded.promise;
         },
         action: () => "saved",
         shouldRevalidate: () => revalidate,
       }),
     ]);
-
     await router.navigate("/");
-
     const states: string[] = [];
     router.subscribe(() => states.push(router.getSnapshot().state));
-
     const submission = router.submit("/", body());
-
     if (revalidate) {
       await started.promise;
-
       expect(router.getSnapshot().state).toBe("loading");
       expect(states).not.toContain("idle");
-
       loaded.resolve("updated");
     }
-
     await submission;
-
     expect(router.getSnapshot().state).toBe("idle");
     expect(router.getSnapshot().actionData).toBe("saved");
     expect(router.getSnapshot().data).toBe(revalidate ? "updated" : "initial");
-
     router.dispose();
   });
 }
@@ -812,7 +654,6 @@ it("hydrates an undefined server result without invoking the paired client loade
     },
     clientLoader: () => {
       clientReads++;
-
       return "client data";
     },
   });
@@ -821,14 +662,11 @@ it("hydrates an undefined server result without invoking the paired client loade
     hydrationData: JSON.parse(serialize(server.getSnapshot())),
   });
   const stop = client.start();
-
   await Promise.resolve();
-
   expect(serverReads).toBe(1);
   expect(clientReads).toBe(0);
   expect(client.getSnapshot().state).toBe("idle");
   expect(client.getSnapshot().data).toBeUndefined();
-
   stop();
   client.dispose();
   server.dispose();
@@ -842,7 +680,6 @@ it("disposing one fetcher leaves another request active", async () => {
     defineRoute("/:id", {
       loader: ({ params, signal }) => {
         signals.set(params.id, signal);
-
         return params.id === "first"
           ? firstResult.promise
           : secondResult.promise;
@@ -855,28 +692,20 @@ it("disposing one fetcher leaves another request active", async () => {
   const secondStates: string[] = [];
   first.subscribe(() => firstStates.push(first.getSnapshot().state));
   second.subscribe(() => secondStates.push(second.getSnapshot().state));
-
   const firstRequest = first.load("/first");
   const secondRequest = second.load("/second");
-
   await Promise.resolve();
-
   first.dispose();
-
   expect(signals.get("first")?.aborted).toBe(true);
   expect(signals.get("second")?.aborted).toBe(false);
-
   firstResult.resolve("stale");
   secondResult.resolve("current");
   await Promise.all([firstRequest, secondRequest]);
-
   expect(first.getSnapshot().data).toBeUndefined();
   expect(second.getSnapshot().data).toBe("current");
   expect(firstStates).toEqual(["loading"]);
   expect(secondStates).toEqual(["loading", "idle"]);
-
   router.dispose();
-
   expect(signals.get("second")?.aborted).toBe(true);
 });
 
@@ -888,7 +717,6 @@ it("lets an active route retain data across navigation without skipping first vi
       loader: ({ params }) => ({ id: params.id, reads: ++reads }),
       shouldRevalidate: ({ currentUrl, nextUrl, reason }) => {
         decisions.push([currentUrl.href, nextUrl.href, reason]);
-
         return false;
       },
     }),
@@ -897,15 +725,11 @@ it("lets an active route retain data across navigation without skipping first vi
       shouldRevalidate: () => false,
     }),
   ]);
-
   await router.navigate("/items/1");
-
   expect(reads).toBe(1);
   expect(decisions).toEqual([]);
-
   await router.navigate("/items/1?sort=name");
   await router.navigate("/items/2");
-
   expect(reads).toBe(1);
   expect(router.getSnapshot()).toMatchObject({
     url: "http://localhost/items/2",
@@ -925,17 +749,11 @@ it("lets an active route retain data across navigation without skipping first vi
       "navigation",
     ],
   ]);
-
   const fetcher = router.createFetcher();
-
   await fetcher.load("/items/2");
-
   expect(fetcher.getSnapshot().data).toEqual({ id: "2", reads: 2 });
-
   await router.navigate("/other");
-
   expect(router.getSnapshot().data).toBe("Other page");
-
   router.dispose();
 });
 
@@ -949,14 +767,11 @@ it("does not skip a destination loader while an earlier navigation is pending", 
     }),
   ]);
   const first = router.navigate("/items/1");
-
   await Promise.resolve();
   await router.navigate("/items/2");
   pending.resolve("Stale item");
   await first;
-
   expect(router.getSnapshot().data).toBe("Second item");
-
   router.dispose();
 });
 
@@ -969,16 +784,11 @@ it("retries failed navigation even when a route opts out of revalidation", async
       shouldRevalidate: () => false,
     }),
   ]);
-
   await router.navigate("/");
-
   expect(router.getSnapshot().error?.message).toBe("Temporary failure");
-
   await router.navigate("/");
-
   expect(router.getSnapshot().data).toBe("Recovered");
   expect(router.getSnapshot().error).toBeUndefined();
-
   router.dispose();
 });
 
@@ -991,78 +801,60 @@ describe("targeted revalidation", () => {
       { path: "/items/:id", id: "item", loader: () => ++itemLoads },
     ]);
     const fetcher = router.createFetcher();
-
     await router.navigate("/");
     await fetcher.load("/items/42");
     await router.revalidate({ route: "item" });
-
     expect(pageLoads).toBe(1);
     expect(fetcher.getSnapshot().data).toBe(2);
     expect(router.getSnapshot().url).toBe("http://localhost/");
-
     await router.revalidate({ route: "/items/:id" });
     expect(itemLoads).toBe(3);
-
     await router.revalidate({ route: ["home", "item"] });
     expect(pageLoads).toBe(2);
     expect(itemLoads).toBe(4);
-
     fetcher.dispose();
     await router.revalidate({ route: "item" });
     expect(itemLoads).toBe(4);
     router.dispose();
   });
-
   it("targets routes without IDs by path without matching empty targets", async () => {
     let loads = 0;
     const router = createDataRouter([
       defineRoute("/", { loader: () => ++loads }),
     ]);
-
     await router.navigate("/");
     await router.revalidate({ route: ["", "unknown"] });
-
     expect(loads).toBe(1);
-
     await router.revalidate({ route: "/" });
-
     expect(loads).toBe(2);
     expect(router.getSnapshot().data).toBe(2);
     expect(router.getSnapshot().url).toBe("http://localhost/");
-
     router.dispose();
   });
-
   it("respects shouldRevalidate and ignores inactive or unknown targets", async () => {
     let loads = 0;
     const router = createDataRouter([
       { path: "/", loader: () => ++loads, shouldRevalidate: () => false },
       { path: "/inactive", loader: () => ++loads },
     ]);
-
     await router.navigate("/");
     await router.revalidate({ route: ["/", "/inactive", "missing"] });
     expect(loads).toBe(1);
     router.dispose();
   });
-
   it("starts every selected revalidator even when one fails synchronously", async () => {
     const router = createDataRouter([]);
     const calls: string[] = [];
-
     router.registerRevalidator("broken", () => JSON.parse("{"));
     router.registerRevalidator("root", () => {
       calls.push("root");
     });
-
     await expect(
       router.revalidate({ route: ["broken", "root"] }),
     ).rejects.toBeInstanceOf(SyntaxError);
-
     expect(calls).toEqual(["root"]);
     router.dispose();
   });
-
   it("keeps each refresh stable when callbacks change the registrations", async () => {
     const router = createDataRouter([]);
     const calls: string[] = [];
@@ -1070,7 +862,6 @@ describe("targeted revalidation", () => {
       calls.push("root");
       unregisterRoot();
       unregisterLayout();
-
       router.registerRevalidator("replacement", () => {
         calls.push("replacement");
       });
@@ -1078,17 +869,12 @@ describe("targeted revalidation", () => {
     const unregisterLayout = router.registerRevalidator("layout", () => {
       calls.push("layout");
     });
-
     await router.revalidate();
-
     expect(calls).toEqual(["root", "layout"]);
-
     await router.revalidate();
-
     expect(calls).toEqual(["root", "layout", "replacement"]);
     router.dispose();
   });
-
   it("registers and unregisters root or layout data independently", async () => {
     const calls: string[] = [];
     const router = createDataRouter([
@@ -1097,11 +883,9 @@ describe("targeted revalidation", () => {
     const unregister = router.registerRevalidator("root", () => {
       calls.push("root");
     });
-
     await router.navigate("/");
     await router.revalidate({ route: "root" });
     expect(calls).toEqual(["page", "root"]);
-
     unregister();
     await router.revalidate({ route: "root" });
     expect(calls).toEqual(["page", "root"]);
@@ -1123,40 +907,30 @@ it("keeps a newer fetcher action protected when an older revalidation finishes",
     defineRoute("/change", {
       action: ({ signal }) => {
         if (++actions === 1) return "first";
-
         secondSignal = signal;
         secondStarted.resolve();
-
         return secondPending.promise;
       },
     }),
   ]);
   const fetcher = router.createFetcher();
-
   router.registerRevalidator("root", () => {
     rootStarted.resolve();
-
     return rootPending.promise;
   });
-
   await fetcher.load("/item");
   const first = fetcher.submit("/change", body());
   await rootStarted.promise;
-
   const second = fetcher.submit("/change", body());
   await secondStarted.promise;
-
   rootPending.resolve();
   await first;
   await router.revalidate({ route: "/item" });
-
   expect(reads).toBe(1);
   expect(secondSignal?.aborted).toBe(false);
   expect(fetcher.getSnapshot().state).toBe("submitting");
-
   secondPending.resolve("second");
   await second;
-
   expect(fetcher.getSnapshot().data).toBe("second");
   expect(fetcher.getSnapshot().state).toBe("idle");
   router.dispose();
@@ -1174,36 +948,28 @@ it("protects an action started by a fetcher completion subscriber", async () => 
       action: ({ signal }) => {
         actionSignal = signal;
         started.resolve();
-
         return pending.promise;
       },
     }),
   ]);
   const fetcher = router.createFetcher();
   let action: Promise<unknown> | undefined;
-
   await fetcher.load("/item");
-
   const unsubscribe = fetcher.subscribe(() => {
     const snapshot = fetcher.getSnapshot();
-
     if (snapshot.state === "idle" && snapshot.data === 2) {
       unsubscribe();
       action = fetcher.submit("/change", body());
     }
   });
-
   await fetcher.load("/item");
   await started.promise;
   await router.revalidate({ route: "/item" });
-
   expect(reads).toBe(2);
   expect(actionSignal?.aborted).toBe(false);
   expect(fetcher.getSnapshot().state).toBe("submitting");
-
   pending.resolve("complete");
   await action;
-
   expect(fetcher.getSnapshot().data).toBe("complete");
   router.dispose();
 });
@@ -1218,38 +984,30 @@ it("leaves pending navigation untouched when revalidation excludes or declines i
       id: "slow",
       loader: ({ signal }) => {
         signals.push(signal);
-
         return pending.promise;
       },
       shouldRevalidate: () => {
         decisions++;
-
         return false;
       },
     }),
   ]);
-
   context.onTestFinished(() => router.dispose());
   router.subscribe(() => updates++);
   const navigation = router.navigate("/slow");
-
   await Promise.resolve();
   expect(signals).toHaveLength(1);
   const snapshot = router.getSnapshot();
   const before = updates;
-
   await router.revalidate({ route: "unrelated" });
   expect(decisions).toBe(0);
-
   await router.revalidate({ route: "slow" });
   expect(decisions).toBe(1);
   expect(signals[0].aborted).toBe(false);
   expect(router.getSnapshot()).toBe(snapshot);
   expect(updates).toBe(before);
-
   pending.resolve("finished");
   await navigation;
-
   expect(router.getSnapshot()).toMatchObject({
     data: "finished",
     state: "idle",
@@ -1267,21 +1025,17 @@ it("settles a fetcher after rejected revalidation and allows later refreshes", a
     }),
   ]);
   const fetcher = router.createFetcher();
-
   context.onTestFinished(() => router.dispose());
   await router.navigate("/");
   await fetcher.load("/");
   const unregister = router.registerRevalidator("root", () =>
     Promise.reject(failure),
   );
-
   await expect(fetcher.submit("/", body())).rejects.toBe(failure);
   expect(fetcher.getSnapshot()).toMatchObject({ state: "idle", data: "saved" });
-
   unregister();
   const before = loads;
   await router.revalidate();
-
   expect(loads).toBe(before + 2);
   expect(fetcher.getSnapshot().state).toBe("idle");
   expect(fetcher.getSnapshot().data).toBeTypeOf("number");
@@ -1293,13 +1047,11 @@ it("does not reload initialized page data when starting after revalidation", asy
     defineRoute("/", { loader: () => ++loads }),
   ]);
   context.onTestFinished(router.dispose);
-
   await router.revalidate();
   const snapshot = router.getSnapshot();
   const stop = router.start();
   context.onTestFinished(stop);
   await Promise.resolve();
-
   expect(loads).toBe(1);
   expect(router.getSnapshot()).toBe(snapshot);
 });
@@ -1313,13 +1065,11 @@ it("keeps a completed page action's route when the provider starts", async (cont
     }),
   ]);
   context.onTestFinished(router.dispose);
-
   await router.submit("/edit", body());
   const snapshot = router.getSnapshot();
   const stop = router.start();
   context.onTestFinished(stop);
   await Promise.resolve();
-
   expect(router.getSnapshot()).toBe(snapshot);
   expect(snapshot.url).toBe("http://localhost/edit");
   expect(snapshot.actionData).toBe("Saved");
@@ -1332,11 +1082,44 @@ it("still loads the page after only an independent fetcher has loaded", async (c
     defineRoute("/preview", { loader: () => "Preview" }),
   ]);
   context.onTestFinished(router.dispose);
-
   await router.createFetcher().load("/preview");
   const stop = router.start();
   context.onTestFinished(stop);
   await Promise.resolve();
-
   expect(pageLoads).toBe(1);
+});
+
+it("refreshes parsed patterns when route paths change without mutating frozen routes", () => {
+  const route = { path: "/before/:id" };
+  expect(matchRoutes([route], "/before/one")?.params).toEqual({ id: "one" });
+  route.path = "/after/:name";
+  expect(matchRoutes([route], "/before/one")).toBeUndefined();
+  expect(matchRoutes([route], "/after/two")?.params).toEqual({ name: "two" });
+  const frozen = Object.freeze({ path: "/fixed/:id" });
+  expect(matchRoutes([frozen], "/fixed/three")?.params).toEqual({
+    id: "three",
+  });
+});
+
+it("keeps modules and request parameters separate when path patterns are reused or evicted", () => {
+  const first = { path: "/shared/:id", loader: () => "first" };
+  const second = { path: "/shared/:id", loader: () => "second" };
+  expect(matchRoutes([first], "/shared/one")).toEqual({
+    route: first,
+    params: { id: "one" },
+  });
+  expect(matchRoutes([second], "/shared/two")).toEqual({
+    route: second,
+    params: { id: "two" },
+  });
+  for (let index = 0; index < 300; index++) {
+    const route = { path: `/other-${index}/:id` };
+    expect(matchRoutes([route], `/other-${index}/value`)?.params).toEqual({
+      id: "value",
+    });
+  }
+  expect(matchRoutes([first], "/shared/three")).toEqual({
+    route: first,
+    params: { id: "three" },
+  });
 });

@@ -137,7 +137,6 @@ export function analyzePrefetch(
   const all = () => {
     result.intent = result.viewport = result.data = true;
   };
-
   function props(node: ts.Node, attributes?: ts.JsxAttributes) {
     let selected = new Set(["intent"]);
     let data = false;
@@ -206,7 +205,6 @@ export function analyzePrefetch(
     result.data ||=
       data && (selected.has("intent") || selected.has("viewport"));
   }
-
   for (const source of program.getSourceFiles()) {
     if (!source.fileName.includes("/node_modules/")) watch?.(source.fileName);
     if (

@@ -15,14 +15,12 @@ for (const mode of ["document", "data"]) {
         path: "/resource",
         loader: () => {
           reads++;
-
           return new Response("Read result", {
             headers: { "X-Resource-Version": "1" },
           });
         },
         action: () => {
           writes++;
-
           return "Mutation result";
         },
       },
@@ -37,7 +35,6 @@ for (const mode of ["document", "data"]) {
             "/entry.js",
           )
         : await dispatchRoute(request, routes);
-
     expect(reads).toBe(1);
     expect(writes).toBe(0);
     expect(response.status).toBe(200);
@@ -56,7 +53,6 @@ it("preloads only the first matching route's files under the configured asset ba
     { path: "/items/:id", files: ["assets/item.js", "assets/shared.js"] },
     { path: "/empty", files: [] },
   ];
-
   expect(routePreloads(routes, "/items/new", "/app/")).toBe(
     "</app/assets/new.css>; rel=preload; as=style; crossorigin, </app/assets/new.js>; rel=modulepreload",
   );

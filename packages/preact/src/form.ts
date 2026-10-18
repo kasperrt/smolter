@@ -39,7 +39,6 @@ export function Form(options: InternalFormProps): ReactNode {
   const router = useRouter<Router>();
   const submit = (event: FormSubmitEvent) => {
     onSubmit?.(event);
-
     submitForm(
       router,
       event,
@@ -48,7 +47,6 @@ export function Form(options: InternalFormProps): ReactNode {
       fetcher,
     );
   };
-
   return createElement("form", {
     ...props,
     action,

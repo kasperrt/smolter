@@ -2,7 +2,7 @@ import { expect, it, vi } from "vitest";
 import {
   type DeferredWindow,
   readHydration,
-} from "../../packages/preact/src/deferred-hydration.ts";
+} from "../../packages/client/src/hydration.ts";
 
 const deferredWindow = window as DeferredWindow;
 
@@ -23,7 +23,6 @@ it("bounds unfinished streams without retrying or waiting for document completio
   const rejected = expect(hydration.pending).rejects.toThrow(
     "Hydration stream timed out",
   );
-
   await vi.advanceTimersByTimeAsync(100);
   await rejected;
   expect(deferredWindow.__smolterDeferred?.push([0, "late", null])).toBe(0);
@@ -116,7 +115,6 @@ it("rejects unfinished values when the document ends without a settlement", asyn
   Reflect.deleteProperty(window, "__smolterDeferred");
   const { hydration } = readHydration('{"pending":{"__smolterPending":0}}');
   window.dispatchEvent(new Event("DOMContentLoaded"));
-
   await expect(hydration.pending).rejects.toThrow("Hydration stream closed");
 });
 

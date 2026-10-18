@@ -28,7 +28,6 @@ it("updates route metadata while preserving the original hydration payload", asy
   const router = createDataRouter(routes);
   const container = document.createElement("div");
   const root = createRoot(container);
-
   function Head() {
     return createElement(
       Fragment,
@@ -38,7 +37,6 @@ it("updates route metadata while preserving the original hydration payload", asy
       createElement(Scripts, { nonce: "test-nonce" }),
     );
   }
-
   document.body.append(container);
   context.onTestFinished(() => {
     root.unmount();
@@ -46,7 +44,6 @@ it("updates route metadata while preserving the original hydration payload", asy
     container.remove();
     document.title = originalTitle;
   });
-
   await router.navigate("/tasks");
   root.render(
     createElement(RouterApplication, {
@@ -61,7 +58,6 @@ it("updates route metadata while preserving the original hydration payload", asy
       },
     }),
   );
-
   await expect.poll(() => document.title).toBe("Tasks");
   expect(
     document.querySelector('meta[name="description"]')?.getAttribute("content"),
@@ -70,13 +66,11 @@ it("updates route metadata while preserving the original hydration payload", asy
     document.querySelector('link[rel="canonical"]')?.getAttribute("href"),
   ).toBe("https://example.test/tasks");
   expect(document.querySelector('link[rel="author"]')).not.toBeNull();
-
   const structuredData = container.querySelector(
     'script[type="application/ld+json"]',
   )!.textContent!;
   const payload = container.querySelector<HTMLScriptElement>("#smolter-data")!;
   const initialJSON = payload.textContent;
-
   expect(structuredData).not.toContain("<");
   expect(JSON.parse(structuredData)).toEqual({ name: unsafeName });
   expect(payload.nonce).toBe("test-nonce");
@@ -84,9 +78,7 @@ it("updates route metadata while preserving the original hydration payload", asy
     root: { user: "Ada" },
     snapshot: { data: "Tasks", path: "/tasks" },
   });
-
   await router.navigate("/other");
-
   await expect.poll(() => document.title).toBe("Fallback title");
   expect(document.querySelector('meta[name="description"]')).toBeNull();
   expect(payload.textContent).toBe(initialJSON);

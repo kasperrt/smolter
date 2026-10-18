@@ -30,7 +30,6 @@ interface LayoutProps {
 
 export function Home() {
   const data = useLoaderData<Data>();
-
   return (
     <>
       <Suspense fallback={<p>Optional data pending</p>}>
@@ -72,7 +71,6 @@ function Root() {
   const revalidate = useRevalidator();
   const [count, setCount] = useState(0);
   const data = useRootData<RootData>();
-
   return (
     <main>
       <input aria-label="Persistent draft" />

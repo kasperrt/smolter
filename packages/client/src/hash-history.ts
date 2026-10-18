@@ -12,7 +12,6 @@ export function connectHashHistory(router: Router) {
   const unsubscribe = router.subscribe(() => {
     const target = new URL(read().url);
     const hash = `#${target.pathname}${target.search}${target.hash}`;
-
     // Redirects commit inside the router rather than through navigate().
     if (location.hash !== hash) history.replaceState(history.state, "", hash);
   });

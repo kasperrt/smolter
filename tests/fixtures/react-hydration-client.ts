@@ -98,7 +98,6 @@ const router = await mountApplication(
 
 function report(type: string) {
   const error = router.getSnapshot().error;
-
   parent.postMessage(
     {
       type,
@@ -126,7 +125,6 @@ report("hydrated");
 
 addEventListener("message", async (event) => {
   if (event.source !== parent || event.data !== "navigate") return;
-
   await router.navigate("/hydration-next");
   await new Promise(requestAnimationFrame);
   report("navigated");

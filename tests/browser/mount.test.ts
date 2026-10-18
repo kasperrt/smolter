@@ -8,7 +8,6 @@ for (const hash of [false, true]) {
     const original = location.href;
     const container = document.createElement("div");
     const calls: string[] = [];
-
     expect(document.getElementById("root")).toBeNull();
     container.id = "root";
     document.body.append(container);
@@ -17,11 +16,9 @@ for (const hash of [false, true]) {
       "",
       hash ? "/mount-shell#/mount-first" : "/mount-first",
     );
-
     function Page() {
       return createElement("output", null, useLoaderData<string>());
     }
-
     const router = await mountApplication(
       [
         {
@@ -31,7 +28,6 @@ for (const hash of [false, true]) {
           },
           loader: () => {
             calls.push("loader");
-
             return "First";
           },
           default: Page,
@@ -41,23 +37,19 @@ for (const hash of [false, true]) {
       undefined,
       hash,
     );
-
     context.onTestFinished(() => {
       render(null, container);
       router.dispose();
       container.remove();
       history.replaceState(null, "", original);
     });
-
     await expect.poll(() => container.textContent).toBe("First");
     expect(calls).toEqual(["preload", "loader"]);
-
     await router.navigate("/mount-second");
     await expect.poll(() => container.textContent).toBe("Second");
     expect(hash ? location.hash : location.pathname).toBe(
       hash ? "#/mount-second" : "/mount-second",
     );
-
     if (hash) {
       history.replaceState(null, "", "/mount-shell#/mount-first");
       dispatchEvent(new HashChangeEvent("hashchange"));
@@ -95,7 +87,6 @@ for (const scenario of [
     const receive = (event: MessageEvent<HydrationResult>) => {
       if (event.source === frame.contentWindow) messages.push(event.data);
     };
-
     addEventListener("message", receive);
     context.onTestFinished(() => {
       removeEventListener("message", receive);
@@ -106,7 +97,6 @@ for (const scenario of [
       import.meta.url,
     ).href;
     document.body.append(frame);
-
     await expect
       .poll(() => messages.find((message) => message.type === "hydrated"))
       .toEqual({
@@ -117,7 +107,6 @@ for (const scenario of [
         text: scenario.text,
         ...(scenario.error && { error: scenario.error }),
       });
-
     frame.contentWindow!.postMessage("navigate", location.origin);
     await expect
       .poll(

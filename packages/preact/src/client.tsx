@@ -11,13 +11,18 @@ import {
   watchDeployment,
 } from "@smolter/client";
 import { connectHashHistory } from "@smolter/client/hash-history";
-import { createDataRouter, matchRoutes, type Router } from "@smolter/core";
+import { readHydration } from "@smolter/client/hydration";
+import { attachRootData } from "@smolter/client/root-data";
+import {
+  createDataRouter,
+  matchRoutes,
+  type Router,
+  safeWrapAsync,
+} from "@smolter/core";
 import { connectNavigation } from "@smolter/core/navigation";
 import { retainRoute } from "@smolter/core/presentation";
 import { hydrate, render } from "preact";
 import { flushSync } from "preact/compat";
-import { readHydration } from "./deferred-hydration.ts";
-import { attachRootData } from "./root-data.ts";
 import type { AppRoute, Hydration, RootModule } from "./route-types.ts";
 import { prepareRoutes, RouterApplication } from "./router.tsx";
 
@@ -47,29 +52,27 @@ export async function mountApplication(
     hash ? location.hash.slice(1) || "/" : location.href,
     location.origin,
   );
-
   const initialRoute = matchRoutes(routes, initialURL.pathname)?.route as
     | AppRoute
     | undefined;
-
-  await initialRoute?.preload?.().catch(async (error: unknown) => {
+  const { error: preloadError } = await safeWrapAsync(() =>
+    initialRoute?.preload?.(),
+  );
+  if (preloadError) {
     await recoverDeployment(deployment, initialURL);
-    throw error;
-  });
-
+    throw preloadError.cause ?? preloadError;
+  }
   routes = prepareRoutes(routes);
   const element = document.getElementById("smolter-data");
   const initial = element?.textContent
     ? readHydration(element.textContent, deferredTimeout)
     : undefined;
   const hydration: Hydration | undefined = initial?.hydration;
-
   if (hydration?.snapshot.error)
     hydration.snapshot.error = Object.assign(
       new Error(hydration.snapshot.error.message),
       hydration.snapshot.error,
     );
-
   const router = createDataRouter(routes, {
     browser: !hash,
     url: hash
@@ -84,9 +87,7 @@ export async function mountApplication(
   };
   watchDeployment(router, deployment);
   if (hash) connectHashHistory(router);
-
   retainRoute(router, flushSync);
-
   connectNavigation(router);
   const rootStore = attachRootData(router, hydration?.root, rootModule);
   const props = {
@@ -97,7 +98,6 @@ export async function mountApplication(
     rootStore,
     rootError: hydration?.rootError,
   };
-
   if (hydration) {
     // Explicitly unmanaged head nodes must not participate in positional hydration.
     const preserved = Array.from(
@@ -107,20 +107,15 @@ export async function mountApplication(
       (node) => ({ node, next: node.nextSibling, parent: node.parentNode! }),
     );
     for (const { node } of preserved) node.remove();
-
-    await Promise.resolve()
-      .then(() => hydrate(<RouterApplication {...props} document />, document))
-      .finally(() => {
-        for (const { node, next, parent } of preserved.reverse())
-          parent.insertBefore(node, next?.parentNode === parent ? next : null);
-      });
-
+    const { error } = await safeWrapAsync(() =>
+      hydrate(<RouterApplication {...props} document />, document),
+    );
+    for (const { node, next, parent } of preserved.reverse())
+      parent.insertBefore(node, next?.parentNode === parent ? next : null);
+    if (error) throw error.cause ?? error;
     return router;
   }
-
   const target = document.getElementById("root");
-
   if (target) render(<RouterApplication {...props} />, target);
-
   return router;
 }

@@ -4,12 +4,10 @@ import type { Snapshot } from "@smolter/core";
 export function deserialize(json: string): Snapshot {
   const snapshot: Snapshot = JSON.parse(json);
   const error = snapshot.error;
-
   if (error) {
     snapshot.error = Object.assign(new Error(error.message), {
       name: error.name,
     });
   }
-
   return snapshot;
 }

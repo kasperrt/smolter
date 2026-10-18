@@ -20,15 +20,12 @@ export async function loadRouter(
   const url = typeof input === "string" ? input : input.url;
   const wrap = (handler?: DataFunction): DataFunction | undefined => {
     if (!handler || typeof input === "string") return handler;
-
     return (args) => {
       const signal = AbortSignal.any([input.signal, args.signal]);
       const request = new Request(args.request, { signal });
-
       input.headers.forEach((value, name) => {
         if (!request.headers.has(name)) request.headers.set(name, value);
       });
-
       return handler({ ...args, request, signal });
     };
   };
@@ -40,11 +37,8 @@ export async function loadRouter(
     action: wrap(route.action),
   }));
   const router = createDataRouter(serverRoutes, { url });
-
   await router.navigate(url);
-
   const snapshot = router.getSnapshot();
-
   if (
     !snapshot.error &&
     snapshot.data === undefined &&
@@ -58,7 +52,6 @@ export async function loadRouter(
       hydrationData: { ...snapshot, loaded: false, state: "loading" },
     });
   }
-
   return router;
 }
 export { serialize } from "@smolter/core";
@@ -70,41 +63,30 @@ async function dispatchRequest(
 ): Promise<Response> {
   const match = matchRoutes(routes, new URL(request.url).pathname);
   const reading = request.method === "GET";
-
   if (!match) return Response.json({ error: "No route" }, { status: 404 });
-
   if (!reading && !["POST", "PUT", "PATCH", "DELETE"].includes(request.method))
     return Response.json({ error: "Method not allowed" }, { status: 405 });
-
   const handler = reading ? match.route.loader : match.route.action;
-
   if (!handler)
     return Response.json(
       { error: `No ${reading ? "loader" : "action"}` },
       { status: 405 },
     );
-
   const result = await safeWrapAsync(() =>
     handler({ request, params: match.params, signal: request.signal }),
   );
   const error = result.error ?? (result.data instanceof Error && result.data);
-
   if (error) return Response.json({ error: error.message }, { status: 500 });
-
   if (result.data instanceof Response) {
     const location = result.data.headers.get("Location");
-
     if (location) {
       const headers = new Headers(result.data.headers);
       headers.delete("Location");
       headers.set("X-Smolter-Redirect", location);
-
       return new Response(null, { headers });
     }
-
     return result.data;
   }
-
   return Response.json(result.data ?? null, {
     headers: { "Cache-Control": "no-store" },
   });

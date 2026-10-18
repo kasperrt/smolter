@@ -1,4 +1,5 @@
 /** @jsxImportSource preact */
+import { safeWrapAsync } from "@smolter/core";
 import type { ComponentChildren } from "preact";
 import { use, useContext } from "preact/compat";
 import { AwaitFallback } from "./await-fallback.tsx";
@@ -18,18 +19,21 @@ type Resolution = { value: unknown } | { error: unknown };
 const resolutions = new WeakMap<Promise<unknown>, Promise<Resolution>>();
 
 /** Render a value or promise. An explicit fallback owns pending content during early hydration; errorElement handles rejection. */
-export function Await<T>(props: AwaitProps<T>): ComponentChildren {
+export function Await<T>({
+  resolve,
+  ...props
+}: AwaitProps<T>): ComponentChildren {
   const app = useContext(Application);
-  if (!(props.resolve instanceof Promise))
-    return props.children(props.resolve as Awaited<T>);
+  if (!(resolve instanceof Promise))
+    return props.children(resolve as Awaited<T>);
   if (!("fallback" in props))
-    return <SuspendedAwait {...props} resolve={props.resolve} />;
+    return <SuspendedAwait {...props} resolve={resolve} />;
   if (app?.deferredBoundary)
     return app.deferredBoundary(
-      <SuspendedAwait {...props} resolve={props.resolve} />,
+      <SuspendedAwait {...props} resolve={resolve} />,
       props.fallback,
     );
-  return <AwaitFallback {...props} resolve={props.resolve} />;
+  return <AwaitFallback {...props} resolve={resolve} />;
 }
 
 function SuspendedAwait<T>({
@@ -38,22 +42,20 @@ function SuspendedAwait<T>({
   errorElement,
 }: AwaitProps<T> & { resolve: Promise<T> }): ComponentChildren {
   let pending = resolutions.get(resolve);
-
   if (!pending) {
-    pending = resolve.then(
-      (value) => ({ value }),
-      (error: unknown) => ({ error }),
-    );
+    const observe = async (): Promise<Resolution> => {
+      const { data, error } = await safeWrapAsync(async () => ({
+        value: await resolve,
+      }));
+      return error ? { error: error.cause } : data!;
+    };
+    pending = observe();
     resolutions.set(resolve, pending);
   }
-
   const result = use(pending);
-
   if ("error" in result) {
     if (errorElement !== undefined) return errorElement;
-
     throw result.error;
   }
-
   return children(result.value as Awaited<T>);
 }

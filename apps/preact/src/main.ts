@@ -18,12 +18,10 @@ if (hydrationData && import.meta.env.VITE_HOSTED) {
   const renderedPath =
     new URL(hydrationData.url).pathname.replace(/\/$/, "") || "/";
   const requestedPath = new URL(url).pathname.replace(/\/$/, "") || "/";
-
   if (renderedPath !== requestedPath) {
     hydrationData = undefined;
     root?.replaceChildren();
   }
-
   if (hydrationData) hydrationData.url = url;
 }
 

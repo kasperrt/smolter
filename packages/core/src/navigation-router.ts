@@ -36,7 +36,6 @@ export function createRouter(
   let users = 0;
   const resolve = (url: URL): Snapshot => {
     const match = matchRoutes(routes, url.pathname);
-
     return {
       url: url.href,
       path: match?.route.path,
@@ -50,19 +49,15 @@ export function createRouter(
   );
   const update = (url: URL) => {
     if (url.href === snapshot.url) return;
-
     snapshot = resolve(url);
-
     for (const listener of listeners) listener();
   };
   const pop = () => update(new URL(location.href));
-
   return {
     routes,
     getSnapshot: () => snapshot,
     subscribe(listener) {
       listeners.add(listener);
-
       return () => {
         listeners.delete(listener);
       };
@@ -73,7 +68,6 @@ export function createRouter(
         addEventListener("hashchange", pop);
         pop();
       }
-
       return () => {
         if (!--users && browser) {
           removeEventListener("popstate", pop);
@@ -83,21 +77,17 @@ export function createRouter(
     },
     async navigate(href: string, operation?: NavigateOptions) {
       const url = internalURL(snapshot.url, href);
-
       if (!url) return;
-
       if (browser)
         history[operation?.replace ? "replaceState" : "pushState"](
           operation?.state ?? null,
           "",
           url,
         );
-
       update(url);
     },
     dispose() {
       listeners.clear();
-
       if (browser) {
         removeEventListener("popstate", pop);
         removeEventListener("hashchange", pop);

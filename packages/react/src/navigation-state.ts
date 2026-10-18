@@ -4,7 +4,6 @@ import { useSyncExternalStore } from "./runtime.ts";
 
 export function useNavigationSnapshot(router: Router) {
   const store = navigationStore(router);
-
   return useSyncExternalStore(
     store.subscribe,
     store.getSnapshot,

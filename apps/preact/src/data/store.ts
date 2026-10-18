@@ -15,7 +15,6 @@ const key = "smolter-preact";
 
 export function readStore(_request: Request): Store {
   const saved = localStorage.getItem(key);
-
   return saved ? (JSON.parse(saved) as Store) : initialStore();
 }
 

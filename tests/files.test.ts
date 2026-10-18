@@ -8,9 +8,7 @@ const directories: string[] = [];
 
 async function fixture(names: string[]) {
   const root = await mkdtemp(join(tmpdir(), "smolter-flat-"));
-
   directories.push(root);
-
   for (const name of names) {
     await mkdir(join(root, name), { recursive: true });
     await writeFile(
@@ -22,7 +20,6 @@ async function fixture(names: string[]) {
       "export const ignored = true;",
     );
   }
-
   return root;
 }
 
@@ -44,7 +41,6 @@ it("discovers only flat route modules with index, groups, params, and splats", a
     "files.$",
     "$",
   ]);
-
   await mkdir(join(root, "helpers"));
   await writeFile(join(root, "types.d.ts"), "export interface RouteData {}");
   await writeFile(join(root, "helpers", "view.ts"), "export default 1;");
@@ -52,15 +48,10 @@ it("discovers only flat route modules with index, groups, params, and splats", a
     join(root, "about.tsx"),
     "export default function About() {};",
   );
-
   const result = await flatRoutes(root);
-
   expect(result).not.toBeInstanceOf(Error);
-
   if (result instanceof Error) return;
-
   const paths = result.map((route) => route.path);
-
   expect([...paths].sort()).toEqual(
     [
       "/",
@@ -72,11 +63,8 @@ it("discovers only flat route modules with index, groups, params, and splats", a
       "/*",
     ].sort(),
   );
-
   expect(paths.indexOf("/tasks/new")).toBeLessThan(paths.indexOf("/tasks/:id"));
-
   expect(paths.at(-1)).toBe("/*");
-
   expect(result.every((route) => route.file.startsWith(root))).toBe(true);
 });
 
@@ -88,9 +76,7 @@ for (const name of ["tasks..detail", "tasks._index.detail", "tasks.$.detail"]) {
 
 it("rejects conflicting params instead of relying on filesystem enumeration order", async () => {
   const result = await flatRoutes(await fixture(["tasks.$id", "tasks.$slug"]));
-
   expect(result).toBeInstanceOf(Error);
-
   expect((result as Error).message).toContain("Conflicting");
 });
 
@@ -98,11 +84,8 @@ it("rejects unsupported syntax and ambiguous route files", async () => {
   expect(await flatRoutes(await fixture(["tasks.($id)"]))).toBeInstanceOf(
     Error,
   );
-
   const root = await fixture(["tasks"]);
-
   await writeFile(join(root, "tasks", "route.tsx"), "export default 1;");
-
   expect(await flatRoutes(root)).toBeInstanceOf(Error);
 });
 

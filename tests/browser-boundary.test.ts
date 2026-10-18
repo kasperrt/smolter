@@ -20,12 +20,10 @@ function buildFixture(source: string, options: FixtureOptions = {}) {
     },
     load(id) {
       if (id === entry) return source;
-
       if (id === moduleId)
         return options.moduleSource ?? "export const value = 42;";
     },
   };
-
   return build({
     configFile: false,
     logLevel: "silent",

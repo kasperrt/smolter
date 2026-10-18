@@ -59,7 +59,6 @@ export function useParams<
 export function useLocation(): readonly [string, Router["navigate"]] {
   const router = useRouter();
   const url = useSnapshot("url");
-
   return [url.replace(/^\w+:\/\/[^/]+/, ""), router.navigate];
 }
 

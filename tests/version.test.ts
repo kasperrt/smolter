@@ -30,10 +30,8 @@ for (const [current, command, expected] of [
     const cwd = mkdtempSync(join(tmpdir(), "smolter-version-"));
     const directory = cwd;
     const files = ["package.json", "jsr.json"];
-
     context.onTestFinished(() => rmSync(cwd, { recursive: true, force: true }));
     mkdirSync(directory, { recursive: true });
-
     const originals = files.map((file) => {
       const version =
         command === "mismatched" && file === "jsr.json" ? "0.0.2" : current;
@@ -42,9 +40,7 @@ for (const [current, command, expected] of [
         version,
         description: "Preserve this",
       });
-
       writeFileSync(join(directory, file), contents);
-
       return contents;
     });
     const result = spawnSync(
@@ -52,18 +48,13 @@ for (const [current, command, expected] of [
       [script, command === "mismatched" ? "release" : command],
       { cwd, encoding: "utf8" },
     );
-
     expect(result.status).toBe(expected ? 0 : 1);
-
     for (const [index, file] of files.entries()) {
       const contents = readFileSync(join(directory, file), "utf8");
-
       if (!expected) {
         expect(contents).toBe(originals[index]);
-
         continue;
       }
-
       expect(JSON.parse(contents)).toEqual({
         name: "test",
         version: expected,

@@ -7,6 +7,5 @@ export function loader({ request }: DataArgs) {
   const tasks = store.tasks.filter((task) =>
     task.title.toLowerCase().includes(query.toLowerCase()),
   );
-
   return { query, tasks };
 }

@@ -32,7 +32,6 @@ it("keeps root data and outlet context while pending route data commits and erro
   const root = createRoot(container);
   let read: () => unknown = () => undefined;
   let currentNavigation: ReturnType<typeof useNavigation> | undefined;
-
   function Probe() {
     const root = useRootData();
     const rootById = useRouteLoaderData("root");
@@ -44,7 +43,6 @@ it("keeps root data and outlet context while pending route data commits and erro
     const navigation = useNavigation();
     const navigationType = useNavigationType();
     const error = useRouteError();
-
     currentNavigation = navigation;
     read = () => ({
       root,
@@ -58,10 +56,8 @@ it("keeps root data and outlet context while pending route data commits and erro
       navigationType,
       error,
     });
-
     return null;
   }
-
   function Root() {
     return createElement(
       Outlet,
@@ -69,12 +65,10 @@ it("keeps root data and outlet context while pending route data commits and erro
       createElement(Probe, {}),
     );
   }
-
   context.onTestFinished(() => {
     root.unmount();
     router.dispose();
   });
-
   await router.navigate("/tasks");
   retainRoute(router, (commit) => commit());
   root.render(
@@ -86,7 +80,6 @@ it("keeps root data and outlet context while pending route data commits and erro
       rootModule: { default: Root, ErrorBoundary: Root, Layout: Outlet },
     }),
   );
-
   await expect
     .poll(() => read())
     .toMatchObject({
@@ -99,9 +92,7 @@ it("keeps root data and outlet context while pending route data commits and erro
       outlet: "shared layout",
       navigationType: "POP",
     });
-
   const navigation = router.navigate("/other");
-
   await expect
     .poll(() => read())
     .toMatchObject({
@@ -109,20 +100,14 @@ it("keeps root data and outlet context while pending route data commits and erro
       other: undefined,
       navigation: { state: "loading", location: { pathname: "/other" } },
     });
-
   const previousNavigation = currentNavigation;
-
   rootStore.update({ user: "Grace" });
-
   await expect
     .poll(() => read())
     .toMatchObject({ root: { user: "Grace" }, rootById: { user: "Grace" } });
-
   expect(currentNavigation).toBe(previousNavigation);
-
   pending.resolve("other data");
   await navigation;
-
   await expect
     .poll(() => read())
     .toMatchObject({
@@ -132,9 +117,7 @@ it("keeps root data and outlet context while pending route data commits and erro
       navigation: { state: "idle", location: undefined },
       outlet: "shared layout",
     });
-
   await router.navigate("/broken");
-
   await expect
     .poll(() => read())
     .toMatchObject({ error: failure, root: { user: "Grace" } });
@@ -151,44 +134,32 @@ it("only rerenders route-error readers when the error changes", async (context) 
   const container = document.createElement("div");
   const root = createRoot(container);
   let renders = 0;
-
   function ErrorReader() {
     const error = useRouteError();
-
     renders++;
-
     return createElement("output", {}, error?.message ?? "No error");
   }
-
   context.onTestFinished(() => {
     root.unmount();
     router.dispose();
   });
-
   await router.navigate("/");
   root.render(
     createElement(RouterProvider, { router }, createElement(ErrorReader, {})),
   );
   await expect.poll(() => container.textContent).toBe("No error");
-
   const initialRenders = renders;
   const navigation = router.navigate("/pending");
-
   await new Promise(requestAnimationFrame);
   await new Promise(requestAnimationFrame);
-
   expect(renders).toBe(initialRenders);
-
   pending.resolve("loaded");
   await navigation;
   await new Promise(requestAnimationFrame);
   await new Promise(requestAnimationFrame);
-
   expect(renders).toBe(initialRenders);
-
   await router.navigate("/broken");
   await expect.poll(() => container.textContent).toBe(failure.message);
-
   await router.navigate("/");
   await expect.poll(() => container.textContent).toBe("No error");
 });

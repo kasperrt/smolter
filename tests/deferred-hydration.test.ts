@@ -131,7 +131,6 @@ for (const reason of [
 it("turns non-serializable deferred values into boundary errors instead of hanging the stream", async () => {
   const payload = deferredHydration({ value: Promise.resolve(1n) });
   const result = await new Response(payload.stream).text();
-
   expect(result).toContain("BigInt");
   expect(result).toContain("[-1,null,null]");
 });
@@ -142,7 +141,6 @@ it("distinguishes undefined deferred values from null", async () => {
     Promise.resolve(null),
   ]);
   const result = await new Response(payload.stream).text();
-
   expect(result).toContain('[0,{"__smolterUndefined":true},null]');
   expect(result).toContain("[1,null,null]");
 });

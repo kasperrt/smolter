@@ -4,7 +4,6 @@ export function createPrimitives<N>(h: ElementFactory<N>) {
   function Button(props: Attributes, label: string) {
     return h("button", { type: "button", ...props }, label);
   }
-
   function WindowBar(title: string, detail: string) {
     return h(
       "div",
@@ -13,7 +12,6 @@ export function createPrimitives<N>(h: ElementFactory<N>) {
       h("span", null, detail),
     );
   }
-
   function Panel(title: string, ...children: N[]) {
     return h(
       "section",
@@ -22,7 +20,6 @@ export function createPrimitives<N>(h: ElementFactory<N>) {
       ...children,
     );
   }
-
   function Article({ title, paragraphs }: ArticleProps) {
     return Panel(
       "the-idea.txt",
@@ -34,20 +31,17 @@ export function createPrimitives<N>(h: ElementFactory<N>) {
       ),
     );
   }
-
   function LoadingPanel(label: string) {
     return Panel(
       "loading",
       h("div", { className: "about-body", role: "status" }, label),
     );
   }
-
   function ErrorPanel(error: Error) {
     return Panel(
       "error",
       h("div", { className: "about-body", role: "alert" }, error.message),
     );
   }
-
   return { Button, WindowBar, Panel, Article, LoadingPanel, ErrorPanel };
 }

@@ -7,7 +7,6 @@ import type { loader } from "./loader";
 export default function Task() {
   const data = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
-
   return ui.TaskDetail({
     task: data,
     link: (href, children) => h(Link, { href: href }, children),

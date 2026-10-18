@@ -35,7 +35,6 @@ export function deploymentPlugin(
   const hash = (value: string) =>
     createHash("sha256").update(value).digest("hex").slice(0, 24);
   const stable = (value: string) => value.replaceAll(root, "<root>");
-
   return {
     name: "smolter-deployment",
     configResolved(config) {

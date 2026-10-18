@@ -18,15 +18,12 @@ export function Page() {
   const fetcher = useFetcher(route);
   const count: number | undefined = data?.count;
   const saved: boolean | undefined = action?.saved;
-
   if (fetcher.data && "count" in fetcher.data) {
     const fetchedCount: number = fetcher.data.count;
     void fetchedCount;
   }
-
   void count;
   void saved;
-
   return null;
 }
 

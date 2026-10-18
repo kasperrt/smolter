@@ -16,16 +16,13 @@ export async function viteFixture(
   const root = await realpath(await mkdtemp(join(tmpdir(), "smolter-vite-")));
   const directory = join(root, "src/routes");
   const route = join(directory, "_index.ts");
-
   context.onTestFinished(() => rm(root, { recursive: true, force: true }));
-
   await mkdir(directory, { recursive: true });
   await writeFile(route, source);
   await writeFile(
     join(root, "handlers.ts"),
     "export const loader = () => 1; export const action = () => 2;",
   );
-
   const server = await createServer({
     root,
     configFile: false,
@@ -44,10 +41,7 @@ export async function viteFixture(
     // Keep separate edits outside the watcher's 100 ms change-event throttle.
     server: { port: 0, watch: { usePolling: true, interval: 150 } },
   });
-
   context.onTestFinished(() => server.close());
-
   await server.listen();
-
   return { root, route, server };
 }

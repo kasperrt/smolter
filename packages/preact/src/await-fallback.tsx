@@ -1,4 +1,5 @@
 /** @jsxImportSource preact */
+import { safeWrapAsync } from "@smolter/core";
 import { useEffect, useState } from "preact/hooks";
 
 import type { AwaitProps } from "./await.tsx";
@@ -14,14 +15,18 @@ export function AwaitFallback<T>({
   const [result, setResult] = useState<Result<T>>();
   useEffect(() => {
     let current = true;
-    void resolve.then(
-      (value) => {
-        if (current) setResult({ source: resolve, value });
-      },
-      (error: unknown) => {
-        if (current) setResult({ source: resolve, error });
-      },
-    );
+    const observe = async () => {
+      const { data, error } = await safeWrapAsync(async () => ({
+        value: await resolve,
+      }));
+      if (current)
+        setResult(
+          error
+            ? { source: resolve, error: error.cause }
+            : { source: resolve, value: data!.value },
+        );
+    };
+    void observe();
     return () => {
       current = false;
     };

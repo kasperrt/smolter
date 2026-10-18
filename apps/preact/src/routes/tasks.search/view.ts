@@ -6,7 +6,6 @@ import type { clientLoader } from "./clientLoader";
 
 export default function SearchTasks() {
   const data = useLoaderData<typeof clientLoader>();
-
   return ui.TaskSearch({
     query: data?.query ?? "",
     tasks: data?.tasks ?? [],

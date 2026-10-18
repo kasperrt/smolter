@@ -54,19 +54,19 @@ function prefetchCache(routes: readonly Route[], current: () => string) {
       entry.result = new Promise((resolve) => {
         const cancel = () => resolve({});
         signal.addEventListener("abort", cancel, { once: true });
-        void pending.then((result) => {
+        const finish = async () => {
+          const result = await pending;
           signal.removeEventListener("abort", cancel);
           resolve(result);
-        });
+          if (
+            (result.error || result.data instanceof Response) &&
+            entries.get(key) === entry
+          )
+            remove(key);
+        };
+        void finish();
       });
       entries.set(key, entry);
-      void entry.result.then((result) => {
-        if (
-          (result.error || result.data instanceof Response) &&
-          entries.get(key) === entry
-        )
-          remove(key);
-      });
       return entry.result;
     },
     take(
@@ -80,11 +80,13 @@ function prefetchCache(routes: readonly Route[], current: () => string) {
         remove(key);
         return;
       }
-      return entry.result.then((result) => {
+      const consume = async () => {
+        const result = await entry.result;
         if (signal.aborted || entries.get(key) !== entry) return;
         entries.delete(key);
         return result;
-      });
+      };
+      return consume();
     },
   };
 }
@@ -104,27 +106,26 @@ export function dataPrefetch(
   return {
     clear,
     load: (href) => (mutations ? Promise.resolve({}) : cache.load(href)),
-    navigate(url, signal, load) {
+    async navigate(url, signal, load) {
       if (mutations) return load();
       const version = revision;
       const pending = cache.take(url, signal);
       if (!pending) return load();
-      return pending.then((cached) => {
-        if (signal.aborted) return;
-        if (cached && !mutations && version === revision) return cached.data;
-        return load();
-      });
+      const cached = await pending;
+      if (signal.aborted) return;
+      if (cached && !mutations && version === revision) return cached.data;
+      return load();
     },
-    submit(work) {
+    async submit(work) {
       mutations++;
       clear();
-      const pending = work();
-      const release = () => {
-        mutations--;
-        clear();
-      };
-      void pending.then(release, release);
-      return pending;
+      const { data, error } = await safeWrapAsync(async () => ({
+        value: await work(),
+      }));
+      mutations--;
+      clear();
+      if (error) throw error.cause;
+      return data!.value;
     },
   };
 }

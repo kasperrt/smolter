@@ -7,6 +7,7 @@ import {
   useRouter,
 } from "@kasperrt/smolter/preact";
 import { Document, Scripts } from "@kasperrt/smolter/preact/document";
+import { safeWrapAsync } from "@smolter/core";
 import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
 
@@ -20,33 +21,31 @@ function RequestedStats({ mode }: { mode: string }) {
   const [value, setValue] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
-
   useEffect(() => {
     const controller = new AbortController();
     let current = true;
     setValue(null);
     setFailed(false);
-
-    void fetch(`/stats?mode=${encodeURIComponent(mode)}`, {
-      signal: controller.signal,
-    })
-      .then(async (response) => {
+    const load = async () => {
+      const { error } = await safeWrapAsync(async () => {
+        const response = await fetch(
+          `/stats?mode=${encodeURIComponent(mode)}`,
+          { signal: controller.signal },
+        );
         if (!response.ok) throw new Error("Statistics unavailable");
         const result: unknown = await response.json();
         if (typeof result !== "number" || !Number.isFinite(result))
           throw new Error("Invalid statistics");
         if (current) setValue(result);
-      })
-      .catch(() => {
-        if (current) setFailed(true);
       });
-
+      if (error && current) setFailed(true);
+    };
+    void load();
     return () => {
       current = false;
       controller.abort();
     };
   }, [mode, attempt]);
-
   if (failed)
     return (
       <p>
@@ -56,13 +55,11 @@ function RequestedStats({ mode }: { mode: string }) {
         </button>
       </p>
     );
-
   return <p>{value === null ? "Statistics pending" : `Total ${value}`}</p>;
 }
 
 export function OptionalHome() {
   const data = useLoaderData<HomeData>()!;
-
   return (
     <>
       <h1>Find a room</h1>
@@ -92,7 +89,6 @@ function Shell() {
   const router = useRouter();
   const [settings, setSettings] = useState(false);
   const fetcher = useFetcher<number>();
-
   return (
     <main>
       <button onClick={() => setSettings(!settings)}>Settings</button>

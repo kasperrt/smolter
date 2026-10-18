@@ -33,7 +33,6 @@ it("updates route metadata while preserving the original hydration payload", asy
   const router = createDataRouter(routes);
   const container = document.createElement("div");
   const root = createRoot(container);
-
   function Head() {
     return createElement(
       Fragment,
@@ -43,7 +42,6 @@ it("updates route metadata while preserving the original hydration payload", asy
       createElement(Scripts, { nonce: "test-nonce" }),
     );
   }
-
   document.body.append(container);
   context.onTestFinished(() => {
     root.unmount();
@@ -51,7 +49,6 @@ it("updates route metadata while preserving the original hydration payload", asy
     container.remove();
     document.title = originalTitle;
   });
-
   await router.navigate("/tasks");
   root.render(
     createElement(RouterApplication, {
@@ -66,7 +63,6 @@ it("updates route metadata while preserving the original hydration payload", asy
       },
     }),
   );
-
   await expect.poll(() => document.title).toBe("Tasks");
   expect(
     container
@@ -77,13 +73,11 @@ it("updates route metadata while preserving the original hydration payload", asy
     container.querySelector('link[rel="canonical"]')?.getAttribute("href"),
   ).toBe("https://example.test/tasks");
   expect(container.querySelector('link[rel="author"]')).not.toBeNull();
-
   const structuredData = container.querySelector(
     'script[type="application/ld+json"]',
   )!.textContent!;
   const payload = container.querySelector<HTMLScriptElement>("#smolter-data")!;
   const initialJSON = payload.textContent;
-
   expect(structuredData).not.toContain("<");
   expect(JSON.parse(structuredData)).toEqual({ name: unsafeName });
   expect(payload.nonce).toBe("test-nonce");
@@ -91,9 +85,7 @@ it("updates route metadata while preserving the original hydration payload", asy
     root: { user: "Ada" },
     snapshot: { data: "Tasks", path: "/tasks" },
   });
-
   await router.navigate("/other");
-
   await expect.poll(() => document.title).toBe("Fallback title");
   expect(container.querySelector('meta[name="description"]')).toBeNull();
   expect(payload.textContent).toBe(initialJSON);
@@ -106,11 +98,9 @@ it("preserves browser theme classes during hydration and reconciles document pro
   const originalLang = html.lang;
   const originalDebug = html.getAttribute("data-debug");
   const container = document.createElement("div");
-
   html.className = "server-layout dark";
   container.innerHTML = "<main>Server content</main>";
   document.body.append(container);
-
   const root = hydrateRoot(
     container,
     createElement(
@@ -119,27 +109,21 @@ it("preserves browser theme classes during hydration and reconciles document pro
       createElement("main", {}, "Server content"),
     ),
   );
-
   context.onTestFinished(() => {
     root.unmount();
     container.remove();
     html.className = originalClass;
     html.lang = originalLang;
-
     if (originalDebug === null) {
       html.removeAttribute("data-debug");
-
       return;
     }
-
     html.setAttribute("data-debug", originalDebug);
   });
-
   await expect.poll(() => html.lang).toBe("nb");
   expect(html.className).toBe("server-layout dark");
   expect(html.dataset.debug).toBe("true");
   expect(container.textContent).toBe("Server content");
-
   root.render(
     createElement(
       Document,
@@ -147,7 +131,6 @@ it("preserves browser theme classes during hydration and reconciles document pro
       createElement("main", {}, "Client content"),
     ),
   );
-
   await expect.poll(() => html.classList.contains("next-layout")).toBe(true);
   expect([...html.classList]).toEqual(["dark", "next-layout", "wide"]);
   expect(html.lang).toBe("en");

@@ -1,6 +1,4 @@
 // @deno-types="npm:@types/react@19.3.0"
-
-// @deno-types="npm:@types/react@19.3.0"
 export type {
   AnchorHTMLAttributes,
   ComponentType,

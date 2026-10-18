@@ -64,10 +64,8 @@ export function useFetcher(route?: RouteDefinition): TypedFetcher<unknown> {
     const store = router.createFetcher();
     const target = () => {
       const snapshot = router.getSnapshot();
-
       return path === undefined || path === snapshot.path ? snapshot.url : path;
     };
-
     return {
       ...store,
       Form: (props: FormProps) =>
@@ -77,25 +75,19 @@ export function useFetcher(route?: RouteDefinition): TypedFetcher<unknown> {
         const action = options.action ?? target();
         const data = submissionBody(body, options.encType);
         const method = options.method?.toUpperCase();
-
         if (method === "GET") {
           const url = new URL(action, router.getSnapshot().url);
           url.search = submissionSearch(data);
-
           return store.load(url.href);
         }
-
         return store.submit(action, data, {
           method: method as SubmitOptions["method"],
         });
       },
     };
   }, [router, path]);
-
   useEffect(() => fetcher.dispose, [fetcher]);
-
   const state = useSyncExternalStore(fetcher.subscribe, fetcher.getSnapshot);
-
   return { ...fetcher, ...state };
 }
 

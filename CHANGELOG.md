@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.5-beta.6
+
+- Replace promise chains with guarded async/await across runtime, tooling and fixtures while preserving rejected responses, deferred errors and cleanup. Enforce async syntax, explicit types and contiguous blocks during lint.
+- Release speculative-read mutation protection even when a submission throws synchronously.
+- Render Preact application document content when the optional root module is absent, matching React. Remove redundant internal Preact hydration/root-data forwarding modules.
+- Reuse up to 256 parsed route patterns without caching modules, params or loader results. Preserve first-match ordering and changed route paths. Repeated navigation is faster in matched local API benchmarks; first-seen pattern churn pays cache insertion overhead.
+- Consolidate speculative-read settlement bookkeeping and retain lazy-route retry cleanup across both import and module-preparation failures.
+
+- Consolidate response normalization and deferred settlement branches without changing supported results or rejection handling. See [audit and matched measurements](https://github.com/kasperrt/smolter/blob/main/reports/0.4.5-beta.6.md) for all five audit and eight optimization passes, byte deltas and timing limitations.
+
 ## 0.4.5-beta.5
 
 - Keep the previous usable React/Preact application view while a failed chunk is being checked for deployment recovery. Successful document recovery no longer briefly commits the route error boundary.

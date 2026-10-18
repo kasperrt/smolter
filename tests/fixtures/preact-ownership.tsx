@@ -24,9 +24,7 @@ function Home({ optional }: PendingProps) {
 
 export function PreactRoot({ optional, entry }: RootProps): ComponentChildren {
   const [destination, setDestination] = useState(false);
-
   const Container = typeof document === "undefined" ? "html" : Fragment;
-
   return (
     <Container>
       <head>

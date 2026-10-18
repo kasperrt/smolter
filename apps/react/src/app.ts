@@ -17,7 +17,6 @@ export function app(router: Router) {
 
 function Example() {
   const [routePath] = useLocation();
-
   return ui.Shell({
     source: h(Suspense, { fallback: null }, h(Source, {})),
     routePath,

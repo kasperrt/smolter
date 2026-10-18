@@ -64,7 +64,6 @@ it("updates inferred capabilities in client and SSR graphs without restarting Vi
   expect((await server.transformRequest(`/@fs/${viewport}`))?.code).toContain(
     "function viewportPrefetch",
   );
-
   send.mockClear();
   await writeFile(join(root, "tsconfig.json"), "{ invalid");
   server.watcher.emit("change", entry);

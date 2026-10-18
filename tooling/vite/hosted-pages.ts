@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import { safeWrapAsync } from "@smolter/core";
 import { pageMetadata } from "@smolter/ui/metadata";
 import { createServer, type Plugin, type ResolvedConfig } from "vite";
 import { metadataTags } from "./site-metadata.ts";
@@ -12,7 +13,6 @@ interface RenderedPage {
 /** Emit pre-rendered landing and documentation pages for static hosting. */
 export function hostedPages(framework: "react" | "preact"): Plugin {
   let config: ResolvedConfig;
-
   return {
     name: "smolter-hosted-pages",
     enforce: "post",
@@ -36,7 +36,6 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
     async generateBundle(_options, bundle) {
       const index = bundle["index.html"];
       if (index?.type !== "asset") this.error("Missing site entry document");
-
       const template = String(index.source);
       const server = await createServer({
         configFile: false,
@@ -48,15 +47,13 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
         optimizeDeps: { noDiscovery: true, include: [] },
         ssr: { noExternal: ["@smolter/ui"] },
       });
-
-      try {
+      const { error } = await safeWrapAsync(async () => {
         const { prerender, paths } = (await server.ssrLoadModule(
           "/src/prerender.ts",
         )) as {
           prerender: (path: string) => Promise<RenderedPage>;
           paths: string[];
         };
-
         if (framework === "preact") {
           for (const legacy of ["react", "preact"]) {
             for (const route of [
@@ -75,7 +72,6 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
             }
           }
         }
-
         this.emitFile({
           type: "asset",
           fileName: "sitemap.xml",
@@ -87,7 +83,6 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
             )
             .join("")}</urlset>`,
         });
-
         for (const route of paths) {
           const { html, data, metadata } = await prerender(`/${route}`);
           const source = template
@@ -97,7 +92,6 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
               "<!--data-->",
               `<script id="smolter-data" type="application/json">${data}</script>`,
             );
-
           if (!route) index.source = source;
           else
             this.emitFile({
@@ -106,10 +100,9 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
               source,
             });
         }
-      } finally {
-        await server.close();
-      }
-
+      });
+      await server.close();
+      if (error) throw error.cause ?? error;
       for (const route of [
         "tasks",
         "tasks/1",

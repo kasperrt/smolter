@@ -28,7 +28,6 @@ export function createCode<N>(
       ),
     );
   }
-
   function CodePanel({ files, active, select }: CodePanelProps) {
     return h(
       "aside",
@@ -65,6 +64,5 @@ export function createCode<N>(
       ),
     );
   }
-
   return { CodeBlock, CodePanel };
 }

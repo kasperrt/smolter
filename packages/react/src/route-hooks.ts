@@ -25,13 +25,9 @@ export function useRouteLoaderData<T = unknown>(
 ): RouteData<T> | undefined {
   const app = useApplication();
   const snapshot = useSnapshot();
-
   if (id === "root") return app.root as RouteData<T>;
-
   const route = app.routes.find((item) => item.id === id);
-
   if (!route || route.path !== snapshot.path) return undefined;
-
   return snapshot.data as RouteData<T>;
 }
 
@@ -50,7 +46,6 @@ export function useNavigation(): {
   const router = useRouter<Router>();
   const snapshot = useSnapshot();
   const location = pendingLocation(router);
-
   return useMemo(
     () => ({
       state: snapshot.state,
@@ -66,20 +61,16 @@ export function useSubmit(): (
   options?: SubmissionOptions,
 ) => Promise<void> | Promise<import("@smolter/core").Result<unknown>> {
   const router = useRouter<Router>();
-
   return useCallback(
     (value: Submission, options: SubmissionOptions = {}) => {
       const body = submissionBody(value, options.encType);
       const method = options.method?.toUpperCase();
       const target = options.action ?? router.getSnapshot().url;
-
       if (method === "GET") {
         const url = new URL(target, router.getSnapshot().url);
         url.search = submissionSearch(body);
-
         return router.navigate(url.href, options);
       }
-
       return router.submit(target, body, {
         method: method as SubmitOptions["method"],
       });
@@ -92,7 +83,6 @@ export function useSubmit(): (
 export function useURLLocation(): URL & { state: unknown; key: string } {
   const href = useSnapshot("url");
   const snapshot = useNavigationSnapshot(useRouter<Router>());
-
   return useMemo(
     () =>
       Object.assign(new URL(href), {
@@ -106,15 +96,12 @@ export function useURLLocation(): URL & { state: unknown; key: string } {
 /** Return the application navigation function, including history offsets and relative destinations. */
 export function useNavigate(): NavigateFunction {
   const router = useRouter<Router>();
-
   return useCallback(
     (to, options) => {
       if (typeof to === "number") {
         window.history.go(to);
-
         return;
       }
-
       const current = new URL(router.getSnapshot().url);
       const target =
         typeof to === "string"
@@ -149,7 +136,6 @@ export function useSearchParams(): [
     },
     [location.pathname, navigate],
   );
-
   return [params, set];
 }
 

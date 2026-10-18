@@ -26,7 +26,6 @@ for (const file of readdirSync(new URL(".generated/", source), {
   recursive: true,
 })) {
   if (!/\.tsx?$/.test(file)) continue;
-
   const tree = ts.createSourceFile(
     file,
     readFileSync(new URL(`.generated/${file}`, source), "utf8"),

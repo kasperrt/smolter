@@ -28,7 +28,6 @@ export function handoffDocument(event: MouseEvent, destination: URL): void {
     )
   )
     return;
-
   event.preventDefault();
   leaveDocument(destination);
 }
@@ -36,9 +35,7 @@ export function handoffDocument(event: MouseEvent, destination: URL): void {
 export function leaveDocument(destination: URL): void {
   if (applicationEnvironment?.leaveDocument) {
     applicationEnvironment.leaveDocument(destination);
-
     return;
   }
-
   location.assign(destination.href);
 }

@@ -1,3 +1,4 @@
+import { safeWrapAsync } from "@smolter/core";
 import type { DocPage } from "@smolter/ui/docs";
 import { createServer, type Plugin } from "vite";
 
@@ -7,7 +8,6 @@ export function splitDocumentation(): Plugin {
     .pathname;
   const prefix = "\0smolter-doc:";
   let pages: DocPage[] = [];
-
   return {
     name: "smolter-split-documentation",
     apply: "build",
@@ -19,12 +19,12 @@ export function splitDocumentation(): Plugin {
         appType: "custom",
         optimizeDeps: { noDiscovery: true, include: [] },
       });
-      try {
+      const { error } = await safeWrapAsync(async () => {
         const module = await server.ssrLoadModule(entry);
         pages = module.docs;
-      } finally {
-        await server.close();
-      }
+      });
+      await server.close();
+      if (error) throw error.cause ?? error;
     },
     resolveId(id) {
       if (id.startsWith(prefix)) return id;

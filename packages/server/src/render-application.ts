@@ -49,40 +49,35 @@ export async function renderDocument(
     path: route.routePath ?? route.path,
   }));
   const match = matchRoutes(routes, new URL(request.url).pathname);
-
   if (match && !match.route.default)
     return dispatchRoute(request, routes, true);
-
   let actionResponse: Response | undefined;
   let actionData: unknown;
-
   if (request.method !== "GET" && request.method !== "HEAD") {
     actionResponse = await dispatchRoute(request, routes, true);
-
     if (
       actionResponse.headers.has("Location") ||
       !actionResponse.headers.get("Content-Type")?.includes("application/json")
     )
       return actionResponse;
-
     actionData = await normalizeResult(await actionResponse.json());
   }
-
-  const rootResult = safeWrapAsync(() =>
-    Promise.resolve()
-      .then(() =>
-        rootModule.loader?.({ request, params: {}, signal: request.signal }),
-      )
-      .then(
-        (value) => normalizeResult(value, false),
-        (error: unknown) =>
-          error instanceof Response
-            ? normalizeResult(error, false)
-            : error instanceof Error
-              ? error
-              : new Error(String(error), { cause: error }),
-      ),
-  );
+  const rootResult = safeWrapAsync(async () => {
+    const { data, error } = await safeWrapAsync(async () => ({
+      value: await rootModule.loader?.({
+        request,
+        params: {},
+        signal: request.signal,
+      }),
+    }));
+    if (!error) return normalizeResult(data!.value, false);
+    const cause = error.cause;
+    return cause instanceof Response
+      ? normalizeResult(cause, false)
+      : cause instanceof Error
+        ? cause
+        : new Error(String(cause), { cause });
+  });
   let redirectResponse: Response | undefined;
   const prepared = prepareRoutes(
     routes.map((route) => ({
@@ -92,17 +87,13 @@ export async function renderDocument(
     true,
   ).map((route) => {
     if (!route.loader) return route;
-
     const loader = route.loader;
-
     return {
       ...route,
       loader: async (args: Parameters<typeof loader>[0]) => {
         const value = await loader(args);
-
         if (value instanceof Response && value.headers.has("Location"))
           redirectResponse = value;
-
         return value;
       },
     };
@@ -112,22 +103,16 @@ export async function renderDocument(
     loadRouter(prepared, request),
   ]);
   let router = loadedRouter;
-  const rootError =
-    rootState.error ??
-    (rootState.data instanceof Error ? rootState.data : undefined);
+  const rootError = rootState.error;
   const root = rootError ? undefined : rootState.data;
-
   if (root instanceof Response && root.headers.has("Location")) {
     router.dispose();
     return root;
   }
-
   if (redirectResponse) {
     router.dispose();
-
     return redirectResponse;
   }
-
   if (actionResponse || rootError) {
     const hydrationData = {
       ...router.getSnapshot(),
@@ -138,7 +123,6 @@ export async function renderDocument(
     router.dispose();
     router = createDataRouter(router.routes, { hydrationData });
   }
-
   const snapshot = router.getSnapshot();
   const hydrationData = {
     root,
@@ -155,39 +139,37 @@ export async function renderDocument(
   const deferred = options.earlyHydration
     ? deferredHydration(hydrationData, options.nonce)
     : undefined;
-  const stream = await Promise.resolve()
-    .then(() =>
-      render({
-        router,
-        routes,
-        root,
-        entry,
-        rootError: Boolean(rootError),
-        streaming: true,
-        initialData: deferred?.initial,
-        document: true,
-      }),
-    )
-    .catch(async (error: unknown) => {
-      router.dispose();
-      await deferred?.stream.cancel();
-      throw error;
-    });
+  const { data: stream, error: renderError } = await safeWrapAsync(() =>
+    render({
+      router,
+      routes,
+      root,
+      entry,
+      rootError: Boolean(rootError),
+      streaming: true,
+      initialData: deferred?.initial,
+      document: true,
+    }),
+  );
+  if (renderError) {
+    router.dispose();
+    await deferred?.stream.cancel();
+    throw renderError.cause ?? renderError;
+  }
   // The renderer reports the same rejection through its stream reader.
-  void stream.allReady.catch(() => {});
+  void safeWrapAsync(() => stream!.allReady);
   const headers = new Headers(actionResponse?.headers);
   headers.delete("Content-Length");
   headers.delete("Content-Encoding");
   headers.set("Content-Type", "text/html; charset=utf-8");
   headers.set("Cache-Control", "no-store");
-
   return new Response(
     deferred
-      ? progressiveDocument(stream, deferred.stream, {
+      ? progressiveDocument(stream!, deferred.stream, {
           signal: request.signal,
           dispose: () => router.dispose(),
         })
-      : streamDocument(stream, {
+      : streamDocument(stream!, {
           hydration: resolveHydration(hydrationData),
           signal: request.signal,
           nonce: options.nonce,

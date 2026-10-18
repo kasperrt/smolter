@@ -17,9 +17,7 @@ for (const framework of ["react", "preact"] as const) {
     const root = await realpath(
       await mkdtemp(join(tmpdir(), "smolter-app-vite-")),
     );
-
     context.onTestFinished(() => rm(root, { recursive: true, force: true }));
-
     await mkdir(join(root, "src/routes"), { recursive: true });
     await symlink(resolve("node_modules"), join(root, "node_modules"), "dir");
     await writeFile(
@@ -53,7 +51,6 @@ for (const framework of ["react", "preact"] as const) {
     }
   `,
     );
-
     const server = await createServer({
       root,
       configFile: false,
@@ -72,43 +69,32 @@ for (const framework of ["react", "preact"] as const) {
       }),
       server: { port: 0 },
     });
-
     context.onTestFinished(() => server.close());
-
     await server.listen();
-
     const origin = server.resolvedUrls!.local[0];
     const response = await fetch(origin, { headers: { Accept: "text/html" } });
     const html = await response.text();
-
     expect(response.status).toBe(202);
     expect(response.headers.get("X-Entry")).toBe("/src/entry.client.tsx");
     expect(html).toContain("<head><title>SSR</title></head>");
     expect(html).toMatch(
       /<main>Ready<\/main>\s*<script[^>]*src="\/@vite\/client"[^>]*><\/script><\/body>/,
     );
-
     const unrelated = await fetch(new URL("/unhandled", origin), {
       headers: { Accept: "application/json" },
     });
-
     expect(unrelated.status).toBe(404);
     expect(unrelated.headers.get("X-Entry")).toBeNull();
-
     const resource = await fetch(new URL("/robots.txt", origin));
-
     expect(resource.headers.get("Content-Type")).toContain("text/plain");
     expect(await resource.text()).toBe("User-agent: *");
-
     const data = await fetch(new URL("/app/_smolter?url=%2F", origin));
-
     expect(data.status).toBe(200);
     expect(await data.json()).toEqual({ path: "/" });
     expect(data.headers.getSetCookie()).toEqual([
       "first=1; Path=/",
       "second=2; Path=/",
     ]);
-
     for (const target of [
       "",
       "https://outside.test/",
@@ -119,7 +105,6 @@ for (const framework of ["react", "preact"] as const) {
       const invalid = await fetch(
         new URL(`/app/_smolter?url=${encodeURIComponent(target)}`, origin),
       );
-
       expect(invalid.status).toBe(400);
       expect(await invalid.text()).toBe("Invalid route URL");
     }

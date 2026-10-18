@@ -49,20 +49,15 @@ export function serverRoute<M extends RouteModule = RouteModule>(
       ...(request.method !== "GET" && { body: await request.formData() }),
     });
     const location = response.headers.get("X-Smolter-Redirect");
-
     if (location)
       return new Response(null, {
         status: 303,
         headers: { Location: location },
       });
-
     const data = await response.json();
-
     if (!response.ok) return new Error(data.error ?? "Route request failed");
-
     return data;
   };
-
   return {
     ...module,
     path,
@@ -75,7 +70,6 @@ export function serverRoute<M extends RouteModule = RouteModule>(
     ...(module.clientAction && {
       clientAction: (args: DataArgs) => {
         const request = args.request.clone();
-
         return module.clientAction!({
           ...args,
           serverAction: () => remote({ ...args, request: request.clone() }),

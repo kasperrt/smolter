@@ -7,6 +7,7 @@ import {
   renderApplication,
 } from "@kasperrt/smolter/react/server";
 import { expect, test } from "@playwright/test";
+import { safeWrapAsync } from "@smolter/core";
 import { build } from "vite";
 import { send, webRequest } from "../../packages/server/src/http.ts";
 import { Destination, Home, root } from "../fixtures/react-streaming-page.tsx";
@@ -57,7 +58,7 @@ for (const navigate of [false, true]) {
       },
       { path: "/session", loader: () => ({ revision: ++roots }) },
     ];
-    const server = createServer((incoming, outgoing) => {
+    const server = createServer(async (incoming, outgoing) => {
       const path = new URL(incoming.url!, "http://local").pathname;
       const run = async () => {
         if (path.startsWith("/assets/")) {
@@ -109,9 +110,8 @@ for (const navigate of [false, true]) {
         }
         await send(response, outgoing);
       };
-      void run().catch((error) => {
-        if (!outgoing.destroyed) outgoing.destroy(error);
-      });
+      const { error } = await safeWrapAsync(run);
+      if (error && !outgoing.destroyed) outgoing.destroy(error);
     });
     await new Promise<void>((done) => server.listen(0, "127.0.0.1", done));
     const address = server.address();
@@ -119,7 +119,7 @@ for (const navigate of [false, true]) {
       throw new Error("Missing port");
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    try {
+    const { error: testError } = await safeWrapAsync(async () => {
       await page.goto(`http://127.0.0.1:${address.port}/`, {
         waitUntil: "commit",
       });
@@ -165,12 +165,14 @@ for (const navigate of [false, true]) {
       expect(loads).toBe(1);
       expect(roots).toBe(1);
       expect(errors).toEqual([]);
-    } finally {
+    });
+    {
       release();
       await page.close();
       server.closeAllConnections();
       await new Promise<void>((done) => server.close(() => done()));
       await rm(output, { recursive: true, force: true });
     }
+    if (testError) throw testError.cause ?? testError;
   });
 }

@@ -25,7 +25,6 @@ export function createDocumentation<N>(
   }: DocumentationProps<N>) {
     const sectionId = (title: string) =>
       title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-
     const related = pages.filter(
       (item) =>
         item.slug !== page.slug &&
@@ -36,7 +35,6 @@ export function createDocumentation<N>(
           ].join("\n"),
         ),
     );
-
     return h(
       "div",
       { className: "documentation" },
@@ -225,6 +223,5 @@ export function createDocumentation<N>(
       ),
     );
   }
-
   return Documentation;
 }

@@ -59,7 +59,6 @@ export function createTasks<N>(
       ),
     );
   }
-
   function TaskPreview({ task, state, load }: TaskPreviewProps) {
     return h(
       "section",
@@ -73,7 +72,6 @@ export function createTasks<N>(
       ),
     );
   }
-
   function TaskDetail({
     task,
     state,
@@ -116,7 +114,6 @@ export function createTasks<N>(
       ),
     );
   }
-
   function TaskSearch({
     query,
     tasks,
@@ -164,6 +161,5 @@ export function createTasks<N>(
       ),
     );
   }
-
   return { TaskList, TaskPreview, TaskDetail, TaskSearch };
 }

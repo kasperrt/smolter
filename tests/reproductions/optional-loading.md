@@ -52,22 +52,25 @@ Use existing root stylesheet links unchanged. Keep essential SSR data resolved. 
 useEffect(() => {
   const controller = new AbortController();
   let current = true;
-
-  void fetch(statsURL, { signal: controller.signal })
-    .then(readAndValidateStatistics)
-    .then((value) => {
-      if (current) setValue(value);
-    })
-    .catch(() => {
-      if (current) setFailed(true);
-    });
-
+  async function load() {
+    const { data, error } = await safeWrapAsync(async () =>
+      readAndValidateStatistics(
+        await fetch(statsURL, { signal: controller.signal }),
+      ),
+    );
+    if (!current) return;
+    if (error) setFailed(true);
+    else setValue(data);
+  }
+  void load();
   return () => {
     current = false;
     controller.abort();
   };
 }, [statsURL, retry]);
 ```
+
+Here `safeWrapAsync` is the application’s existing guarded async helper returning `{ data, error }`, not a public Smolter export.
 
 `readAndValidateStatistics` must check HTTP status and the actual existing endpoint schema; the fixture validates a finite number only. Provide explicit manual retry after failure; no automatic retry loop. Do not begin the same optional request in the SSR loader. Unrelated profile mutation revalidation must not change this component's key or dependencies. Repeated mounts/Back fetch again; this prototype deliberately adds no cache. Data is per component instance, with no cross-user or cross-mode sharing.
 

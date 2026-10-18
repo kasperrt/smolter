@@ -1,5 +1,8 @@
 import type { Match, Params, Route, RouteModule } from "./types.ts";
 
+const patterns = new Map<string, string[]>();
+const MAX_PATTERNS = 256;
+
 /** Associate a URL pattern with a module while retaining its inferred handler types. */
 export function defineRoute<const M extends RouteModule>(
   path: string,
@@ -14,32 +17,31 @@ export function matchRoutes(
   pathname: string,
 ): Match | undefined {
   const segments = pathname.replace(/\/$/, "").split("/");
-
   for (const route of routes) {
-    const parts = route.path.replace(/\/$/, "").split("/");
+    let parts = patterns.get(route.path);
+    if (!parts) {
+      parts = route.path.replace(/\/$/, "").split("/");
+      if (patterns.size === MAX_PATTERNS)
+        patterns.delete(patterns.keys().next().value!);
+      patterns.set(route.path, parts);
+    }
     const params: Params = {};
     const matched =
       (parts.length === segments.length || parts.at(-1) === "*") &&
       parts.every((part, index) => {
         const value = segments[index];
-
         if (part === "*") {
           params["*"] = segments.slice(index).join("/");
-
           return true;
         }
-
         if (part[0] === ":" && value) {
           params[part.slice(1)] = new URLSearchParams(
             `=${value.replace(/[+&]/g, encodeURIComponent)}`,
           ).get("")!;
-
           return true;
         }
-
         return part === value;
       });
-
     if (matched) return { route, params };
   }
 }

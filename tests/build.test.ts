@@ -21,24 +21,19 @@ for (const name of ["react", "preact", "react-ssr", "preact-ssr"]) {
           )
         : [],
     );
-
     expect(modules.length).toBeGreaterThan(0);
-
     expect(modules.some((module) => /\.server\.[jt]s/.test(module))).toBe(
       false,
     );
-
     if (name.startsWith("preact")) {
       expect(
         modules.some((module) => /\/react(?:-dom)?(?:@|\/)/.test(module)),
       ).toBe(false);
     }
-
     if (name.startsWith("react")) {
       expect(
         modules.some((module) => module.includes("react-compiler-runtime")),
       ).toBe(true);
-
       expect(modules.some((module) => /\/preact(?:@|\/)/.test(module))).toBe(
         false,
       );
@@ -67,7 +62,6 @@ for (const framework of ["react", "preact"]) {
           .filter(([, input]) => input.bytesInOutput > 0)
           .map(([name]) => name),
       );
-
       expect(
         modules.some(
           (name) =>
@@ -78,10 +72,8 @@ for (const framework of ["react", "preact"]) {
       expect(result.outputFiles[0].text).not.toMatch(
         /node:|from["']vite|handleRequest|loadRouter/,
       );
-
       return result;
     };
-
     const navigation = await bundle(
       "createRouter, defineRoute, RouterProvider, Routes, Link, useParams, useLocation",
     );
@@ -91,7 +83,6 @@ for (const framework of ["react", "preact"]) {
           .filter(([, input]) => input.bytesInOutput > 0)
           .map(([name]) => name),
     );
-
     expect(retained).toContain("dist/core/navigation-router.js");
     expect(retained).not.toContain("dist/core/router.js");
     expect(retained).not.toContain("dist/core/resources.js");
@@ -99,12 +90,10 @@ for (const framework of ["react", "preact"]) {
     expect(navigation.outputFiles[0].text).not.toMatch(
       /AbortController|new Request|createFetcher|registerRevalidator/,
     );
-
     const minimal = await bundle("defineRoute");
     const complete = await bundle(
       "defineRoute, createDataRouter, RouterProvider, Link, Form, Routes, useFetcher, useLoaderData, useActionData, useRevalidator",
     );
-
     expect(minimal.outputFiles[0].text.length).toBeLessThan(300);
     expect(minimal.outputFiles[0].text.length).toBeLessThan(
       complete.outputFiles[0].text.length / 10,
@@ -140,7 +129,6 @@ for (const configured of [false, true]) {
         compress: { passes: 3 },
         mangle: true,
       });
-
       for (const callback of [
         "resolveURL",
         "isDocumentHandoff",
@@ -167,12 +155,10 @@ it("publishes only renderer entries and browser-safe utilities", () => {
     "./utils/http",
     "./utils/responses",
   ];
-
   for (const renderer of ["react", "preact"]) {
     for (const part of ["client", "server", "vite"])
       entries.push(`./${renderer}/${part}`);
   }
-
   expect(Object.keys(manifest.exports).sort()).toEqual(entries.sort());
   expect(Object.keys(jsr.exports).sort()).toEqual(
     entries.filter((entry) => !entry.endsWith("/vite")).sort(),
@@ -199,7 +185,6 @@ it("bundles hydration serialization without server dispatch or a renderer", asyn
       .filter(([, input]) => input.bytesInOutput > 0)
       .map(([name]) => name),
   );
-
   expect(modules).toEqual(["dist/core/serialize.js"]);
   expect(result.outputFiles[0].text).not.toMatch(
     /handleRequest|loadRouter|node:|react|preact/,
@@ -218,14 +203,12 @@ it("keeps both adapters isolated from server and build code", async () => {
       write: false,
     });
     const inputs = Object.keys(result.metafile.inputs);
-
     expect(
       inputs.some((name) => /(?:^|\/)dist\/(server|vite|files)\//.test(name)),
     ).toBe(false);
     expect(result.outputFiles[0].text).not.toMatch(
       /node:|preact-render-to-string/,
     );
-
     expect(
       inputs.some((name) =>
         name.includes(entry === "react" ? "/preact/" : "/react/"),
@@ -246,7 +229,6 @@ it("keeps workspace source imports behind package exports", () => {
   ]) {
     const source = resolve("packages", name, "src");
     const files = readdirSync(source, { recursive: true, encoding: "utf8" });
-
     for (const file of files.filter((file) => /\.tsx?$/.test(file))) {
       const filename = resolve(source, file);
       const content = readFileSync(filename, "utf8");
@@ -256,29 +238,23 @@ it("keeps workspace source imports behind package exports", () => {
         ts.ScriptTarget.Latest,
         true,
       );
-
       for (const statement of module.statements) {
         if (
           !ts.isImportDeclaration(statement) &&
           !ts.isExportDeclaration(statement)
         )
           continue;
-
         const specifier = statement.moduleSpecifier;
-
         if (!specifier || !ts.isStringLiteral(specifier)) continue;
-
         expect(
           specifier.text.startsWith("@kasperrt/smolter"),
           `${name}/${file}: public package import`,
         ).toBe(false);
       }
-
       for (const [, specifier] of content.matchAll(
         /(?:from\s*|import\s*\()"(\.[^"]+)"/g,
       )) {
         const target = resolve(dirname(filename), specifier);
-
         expect(
           target.startsWith(`${source}/`),
           `${name}/${file}: ${specifier}`,

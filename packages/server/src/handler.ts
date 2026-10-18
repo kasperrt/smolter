@@ -39,7 +39,7 @@ export function createRequestHandler({
   outgoing: ServerResponse,
   next: NextHandler,
 ) => Promise<void> {
-  return (
+  return async (
     incoming: ServerIncomingMessage,
     outgoing: ServerResponse,
     next: NextHandler,
@@ -55,17 +55,13 @@ export function createRequestHandler({
         await send(new Response(target.message, { status: 400 }), outgoing);
         return;
       }
-
       const request = await webRequest(incoming, outgoing, target ?? undefined);
       const response = dataRequest
         ? await build.handleDataRequest(request)
         : await build.default(request, entry);
-
       await send(dataRequest ? privateResponse(response) : response, outgoing);
     };
-
-    return safeWrapAsync(handle).then(({ error }) => {
-      if (error) next(error);
-    });
+    const { error } = await safeWrapAsync(handle);
+    if (error) next(error);
   };
 }

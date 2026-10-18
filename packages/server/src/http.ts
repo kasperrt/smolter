@@ -11,18 +11,14 @@ export async function webRequest(
 ): Promise<Request> {
   const origin = `${incoming.protocol ?? "http"}://${incoming.headers.host}`;
   const headers = new Headers();
-
   for (const [name, value] of Object.entries(incoming.headers)) {
     if (value)
       headers.set(name, Array.isArray(value) ? value.join(", ") : value);
   }
-
   const controller = new AbortController();
   outgoing.once("close", () => controller.abort());
   const chunks: Uint8Array[] = [];
-
   for await (const chunk of incoming) chunks.push(chunk);
-
   return new Request(
     new URL(target ?? incoming.originalUrl ?? incoming.url ?? "/", origin),
     {
@@ -48,7 +44,6 @@ export async function send(response: Response, outgoing: StreamingResponse) {
     if (name !== "set-cookie") outgoing.setHeader(name, value);
   });
   const cookies = response.headers.getSetCookie();
-
   if (cookies.length)
     outgoing.setHeader(
       "set-cookie",
@@ -58,12 +53,10 @@ export async function send(response: Response, outgoing: StreamingResponse) {
           : cookie.replace(/; Secure/gi, ""),
       ),
     );
-
   if (!response.body) {
     outgoing.end();
     return;
   }
-
   await pipeline(
     Readable.fromWeb(
       response.body as import("node:stream/web").ReadableStream<Uint8Array>,

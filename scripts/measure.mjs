@@ -1,8 +1,8 @@
-import { gzipSync } from "node:zlib";
+import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 import { build } from "esbuild";
 import { minify } from "terser";
 
-export async function measure(entry, names) {
+export async function measure(entry, names, detailed = false) {
   const exports = names ? `{ ${names.join(", ")} }` : "*";
   const contents = Array.isArray(entry)
     ? entry
@@ -23,8 +23,16 @@ export async function measure(entry, names) {
     compress: { passes: 3 },
     mangle: true,
   });
-
-  return gzipSync(output.code, { level: 9 }).byteLength;
+  const gzip = gzipSync(output.code, { level: 9 }).byteLength;
+  return detailed
+    ? {
+        raw: Buffer.byteLength(output.code),
+        gzip,
+        brotli: brotliCompressSync(output.code, {
+          params: { [constants.BROTLI_PARAM_QUALITY]: 11 },
+        }).byteLength,
+      }
+    : gzip;
 }
 
 export const routingExports = [
@@ -138,7 +146,6 @@ export async function measureAdapters(previous = {}) {
       ]),
     previous.reactRouter ?? measure("react-router"),
   ]);
-
   return {
     react,
     preact,

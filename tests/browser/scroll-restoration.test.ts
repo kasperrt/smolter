@@ -24,14 +24,12 @@ it("restores saved scroll, follows anchors, and honors preserved scroll", async 
   const container = document.createElement("div");
   const anchor = document.createElement("div");
   const root = createRoot(container);
-
   anchor.id = "scroll-target";
   document.body.append(container, anchor);
   history.replaceState({ key: "start" }, "", "/#scroll-target");
   await router.navigate("/#scroll-target");
   connectNavigation(router);
   scrollPositions(router).set("start", [12, 34]);
-
   context.onTestFinished(() => {
     root.unmount();
     router.dispose();
@@ -42,7 +40,6 @@ it("restores saved scroll, follows anchors, and honors preserved scroll", async 
     history.replaceState(originalState, "", originalURL);
     history.scrollRestoration = originalRestoration;
   });
-
   root.render(
     createElement(RouterApplication, {
       router,
@@ -51,31 +48,25 @@ it("restores saved scroll, follows anchors, and honors preserved scroll", async 
       rootModule: { default: ScrollView, Layout: Outlet },
     }),
   );
-
   await expect
     .poll(() => scroll.mock.calls)
     .toEqual([[{ left: 12, top: 34, behavior: "instant" }]]);
   await expect.poll(() => history.scrollRestoration).toBe("manual");
   expect(anchorScroll).not.toHaveBeenCalled();
-
   await router.navigate("/next");
   await expect
     .poll(() => scroll.mock.lastCall)
     .toEqual([{ left: 0, top: 0, behavior: "instant" }]);
   expect(scroll).toHaveBeenCalledTimes(2);
-
   await router.navigate("/next#scroll-target");
   await expect.poll(() => anchorScroll.mock.calls.length).toBe(1);
   expect(anchorScroll.mock.contexts[0]).toBe(anchor);
   expect(scroll).toHaveBeenCalledTimes(2);
-
   await router.navigate("/?preserve=1", { preventScrollReset: true });
   await nextFrame();
   await nextFrame();
-
   expect(scroll).toHaveBeenCalledTimes(2);
   expect(anchorScroll).toHaveBeenCalledTimes(1);
-
   root.unmount();
   await expect.poll(() => history.scrollRestoration).toBe(originalRestoration);
 });

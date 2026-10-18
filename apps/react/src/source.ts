@@ -32,7 +32,6 @@ export default function Source() {
     "File routes": fileRoutes,
     ...files,
   };
-
   return ui.CodePanel({
     files: displayed,
     active: selected in displayed ? selected : "Example",
@@ -42,12 +41,8 @@ export default function Source() {
 
 function routeName(path: string) {
   if (path === "/examples/counter") return "examples.counter";
-
   if (path === "/tasks") return "tasks._index";
-
   if (path === "/tasks/search") return "tasks.search";
-
   if (path.startsWith("/tasks/")) return "tasks.$id";
-
   return "_index";
 }

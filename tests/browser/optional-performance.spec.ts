@@ -9,6 +9,7 @@ import {
 } from "@kasperrt/smolter/preact/server";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
 import { expect, test } from "@playwright/test";
+import { safeWrapAsync } from "@smolter/core";
 import { build } from "vite";
 import {
   OptionalDestination,
@@ -87,22 +88,20 @@ for (const strategy of ["stream", "request"] as const) {
         handleDataRequest: (request) => dispatchRoute(request, routes),
       },
     });
-    const server = createServer((incoming, outgoing) => {
+    const server = createServer(async (incoming, outgoing) => {
       const path = new URL(incoming.url!, "http://fixture").pathname;
       if (path.startsWith("/assets/")) {
-        void readFile(join(output, path.slice(1))).then((body) => {
-          outgoing.setHeader("Content-Type", "application/javascript");
-          outgoing.setHeader("Content-Encoding", "gzip");
-          outgoing.setHeader("Cache-Control", "public, max-age=3600");
-          outgoing.end(gzipSync(body, { level: 9 }));
-        });
+        const body = await readFile(join(output, path.slice(1)));
+        outgoing.setHeader("Content-Type", "application/javascript");
+        outgoing.setHeader("Content-Encoding", "gzip");
+        outgoing.setHeader("Cache-Control", "public, max-age=3600");
+        outgoing.end(gzipSync(body, { level: 9 }));
         return;
       }
       if (path === "/stats") {
-        void statistics().then((value) => {
-          outgoing.setHeader("Content-Type", "application/json");
-          outgoing.end(String(value));
-        });
+        const value = await statistics();
+        outgoing.setHeader("Content-Type", "application/json");
+        outgoing.end(String(value));
         return;
       }
       if (path === "/manifest.json") {
@@ -119,143 +118,140 @@ for (const strategy of ["stream", "request"] as const) {
     if (!address || typeof address === "string")
       throw new Error("Missing port");
     const rows: unknown[] = [];
-
-    await Promise.resolve()
-      .then(async () => {
-        for (const throttled of [false, true]) {
-          for (const latency of process.env.SMOLTER_BENCH_DELAY
-            ? [Number(process.env.SMOLTER_BENCH_DELAY)]
-            : [0, 1500, 6000]) {
-            delay = latency;
-            for (let sample = 0; sample < 3; sample++) {
-              const context = await browser.newContext();
-              const page = await context.newPage();
-              await page.addInitScript(() => {
-                const metrics = { lcp: 0, cls: 0 };
-                Object.assign(window, { optionalMetrics: metrics });
-                new PerformanceObserver((list) => {
-                  for (const entry of list.getEntries())
-                    metrics.lcp = entry.startTime;
-                }).observe({
-                  type: "largest-contentful-paint",
-                  buffered: true,
-                });
-                new PerformanceObserver((list) => {
-                  for (const entry of list.getEntries()) {
-                    const shift = entry as PerformanceEntry & {
-                      hadRecentInput: boolean;
-                      value: number;
-                    };
-                    if (!shift.hadRecentInput) metrics.cls += shift.value;
-                  }
-                }).observe({ type: "layout-shift", buffered: true });
+    const { error: testError } = await safeWrapAsync(async () => {
+      for (const throttled of [false, true]) {
+        for (const latency of process.env.SMOLTER_BENCH_DELAY
+          ? [Number(process.env.SMOLTER_BENCH_DELAY)]
+          : [0, 1500, 6000]) {
+          delay = latency;
+          for (let sample = 0; sample < 3; sample++) {
+            const context = await browser.newContext();
+            const page = await context.newPage();
+            await page.addInitScript(() => {
+              const metrics = { lcp: 0, cls: 0 };
+              Object.assign(window, { optionalMetrics: metrics });
+              new PerformanceObserver((list) => {
+                for (const entry of list.getEntries())
+                  metrics.lcp = entry.startTime;
+              }).observe({
+                type: "largest-contentful-paint",
+                buffered: true,
               });
-              const cdp = await context.newCDPSession(page);
-              await cdp.send("Network.enable");
-              await cdp.send("Network.setCacheDisabled", {
-                cacheDisabled: true,
+              new PerformanceObserver((list) => {
+                for (const entry of list.getEntries()) {
+                  const shift = entry as PerformanceEntry & {
+                    hadRecentInput: boolean;
+                    value: number;
+                  };
+                  if (!shift.hadRecentInput) metrics.cls += shift.value;
+                }
+              }).observe({ type: "layout-shift", buffered: true });
+            });
+            const cdp = await context.newCDPSession(page);
+            await cdp.send("Network.enable");
+            await cdp.send("Network.setCacheDisabled", {
+              cacheDisabled: true,
+            });
+            if (throttled) {
+              await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+              await cdp.send("Network.emulateNetworkConditions", {
+                offline: false,
+                latency: 80,
+                downloadThroughput: 200000,
+                uploadThroughput: 100000,
               });
-              if (throttled) {
-                await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
-                await cdp.send("Network.emulateNetworkConditions", {
-                  offline: false,
-                  latency: 80,
-                  downloadThroughput: 200000,
-                  uploadThroughput: 100000,
-                });
-              }
-              await page.goto(`http://127.0.0.1:${address.port}`, {
-                waitUntil: "commit",
-              });
-              await expect(page.locator("html")).toHaveAttribute(
-                "data-hydrated",
-                "true",
-              );
-              await page
-                .getByRole("button", { name: "Settings", exact: true })
-                .click();
-              await expect(
-                page.getByRole("textbox", { name: "Profile name" }),
-              ).toBeVisible();
-              const interaction = await page.evaluate(() => performance.now());
-              await page
-                .getByRole("textbox", { name: "Profile name" })
-                .fill("Keep input");
-              await expect(
-                page
-                  .getByRole("region", { name: "Statistics" })
-                  .getByText("Total 11"),
-              ).toBeVisible({
-                timeout: 15000,
-              });
-              const optional = await page.evaluate(() => performance.now());
-              await page.waitForLoadState("load");
-              await expect(page.locator("preact-island")).toHaveCount(0);
-              await expect(
-                page.getByRole("textbox", { name: "Profile name" }),
-              ).toHaveValue("Keep input");
-              const timing = await page.evaluate(() => {
-                const nav = performance.getEntriesByType(
-                  "navigation",
-                )[0] as PerformanceNavigationTiming;
-                const resources = performance.getEntriesByType(
-                  "resource",
-                ) as PerformanceResourceTiming[];
-                return {
-                  ...(
-                    window as Window & {
-                      optionalMetrics?: { lcp: number; cls: number };
-                    }
-                  ).optionalMetrics,
-                  ttfb: nav.responseStart,
-                  complete: nav.responseEnd,
-                  js: resources
-                    .filter((item) => item.name.includes("/assets/"))
-                    .map((item) => ({
-                      bytes: item.encodedBodySize,
-                      duration: item.duration,
-                    })),
-                  optionalRequests: resources.filter((item) =>
-                    item.name.includes("/stats?"),
-                  ).length,
-                };
-              });
-              rows.push({
-                serverDelay,
-                strategy,
-                delay,
-                throttled,
-                sample,
-                interaction,
-                optional,
-                ...timing,
-              });
-              await context.close();
             }
+            await page.goto(`http://127.0.0.1:${address.port}`, {
+              waitUntil: "commit",
+            });
+            await expect(page.locator("html")).toHaveAttribute(
+              "data-hydrated",
+              "true",
+            );
+            await page
+              .getByRole("button", { name: "Settings", exact: true })
+              .click();
+            await expect(
+              page.getByRole("textbox", { name: "Profile name" }),
+            ).toBeVisible();
+            const interaction = await page.evaluate(() => performance.now());
+            await page
+              .getByRole("textbox", { name: "Profile name" })
+              .fill("Keep input");
+            await expect(
+              page
+                .getByRole("region", { name: "Statistics" })
+                .getByText("Total 11"),
+            ).toBeVisible({
+              timeout: 15000,
+            });
+            const optional = await page.evaluate(() => performance.now());
+            await page.waitForLoadState("load");
+            await expect(page.locator("preact-island")).toHaveCount(0);
+            await expect(
+              page.getByRole("textbox", { name: "Profile name" }),
+            ).toHaveValue("Keep input");
+            const timing = await page.evaluate(() => {
+              const nav = performance.getEntriesByType(
+                "navigation",
+              )[0] as PerformanceNavigationTiming;
+              const resources = performance.getEntriesByType(
+                "resource",
+              ) as PerformanceResourceTiming[];
+              return {
+                ...(
+                  window as Window & {
+                    optionalMetrics?: { lcp: number; cls: number };
+                  }
+                ).optionalMetrics,
+                ttfb: nav.responseStart,
+                complete: nav.responseEnd,
+                js: resources
+                  .filter((item) => item.name.includes("/assets/"))
+                  .map((item) => ({
+                    bytes: item.encodedBodySize,
+                    duration: item.duration,
+                  })),
+                optionalRequests: resources.filter((item) =>
+                  item.name.includes("/stats?"),
+                ).length,
+              };
+            });
+            rows.push({
+              serverDelay,
+              strategy,
+              delay,
+              throttled,
+              sample,
+              interaction,
+              optional,
+              ...timing,
+            });
+            await context.close();
           }
         }
-        const assets = result.output
-          .filter((item) => item.type === "chunk")
-          .map((item) => ({
-            file: item.fileName,
-            raw: Buffer.byteLength(item.code),
-            gzip: gzipSync(item.code, { level: 9 }).length,
-            brotli: brotliCompressSync(item.code).length,
-          }));
-        await writeFile(
-          test.info().outputPath("measurements.json"),
-          JSON.stringify({ strategy, assets, rows }, null, 2),
-        );
-        await test.info().attach("performance", {
-          body: JSON.stringify({ strategy, assets, rows }, null, 2),
-          contentType: "application/json",
-        });
-      })
-      .finally(async () => {
-        for (const timer of timers) clearTimeout(timer);
-        server.closeAllConnections();
-        await new Promise<void>((done) => server.close(() => done()));
-        await rm(output, { recursive: true, force: true });
+      }
+      const assets = result.output
+        .filter((item) => item.type === "chunk")
+        .map((item) => ({
+          file: item.fileName,
+          raw: Buffer.byteLength(item.code),
+          gzip: gzipSync(item.code, { level: 9 }).length,
+          brotli: brotliCompressSync(item.code).length,
+        }));
+      await writeFile(
+        test.info().outputPath("measurements.json"),
+        JSON.stringify({ strategy, assets, rows }, null, 2),
+      );
+      await test.info().attach("performance", {
+        body: JSON.stringify({ strategy, assets, rows }, null, 2),
+        contentType: "application/json",
       });
+    });
+    for (const timer of timers) clearTimeout(timer);
+    server.closeAllConnections();
+    await new Promise<void>((done) => server.close(() => done()));
+    await rm(output, { recursive: true, force: true });
+    if (testError) throw testError.cause ?? testError;
   });
 }

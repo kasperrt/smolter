@@ -26,9 +26,7 @@ async function compile(ssr = false, manifestURL?: string) {
       rollupOptions: { input: "entry" },
     },
   });
-
   if (!("output" in result)) throw new Error("Expected build output");
-
   const file = result.output.find(
     (item) => item.fileName === "smolter-manifest.json",
   );
@@ -36,7 +34,6 @@ async function compile(ssr = false, manifestURL?: string) {
     .filter((item) => item.type === "chunk")
     .map((item) => item.code)
     .join("\n");
-
   return { file, code };
 }
 
@@ -45,9 +42,7 @@ it("emits a deterministic build identity matching the browser module and respect
   const second = await compile(false, "https://assets.test/current.json");
   expect(first.file?.type).toBe("asset");
   expect(second.file?.type).toBe("asset");
-
   if (first.file?.type !== "asset" || second.file?.type !== "asset") return;
-
   const before = JSON.parse(String(first.file.source));
   const after = JSON.parse(String(second.file.source));
   expect(before.version).toBe(after.version);

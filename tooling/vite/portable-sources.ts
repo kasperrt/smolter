@@ -27,17 +27,14 @@ export function portableSources(): Plugin {
     name: "smolter-portable-sources",
     buildStart() {
       rmSync(target, { recursive: true, force: true });
-
       // Assemble portable source modules without publishing private workspace dependencies.
       for (const name of packages) {
         const source = resolve(root, "packages", name, "src");
-
         for (const file of readdirSync(source, {
           recursive: true,
           encoding: "utf8",
         })) {
           if (!/\.tsx?$/.test(file)) continue;
-
           const output = resolve(target, name, file);
           const contents = readFileSync(resolve(source, file), "utf8")
             .replace(/"(\.[^" ]+\.tsx?)"/g, (match, specifier) => {
@@ -73,13 +70,11 @@ export function portableSources(): Plugin {
                   dirname(output),
                   resolve(target, dependency, subpath + extension),
                 );
-
                 return JSON.stringify(
                   path.startsWith(".") ? path : `./${path}`,
                 );
               },
             );
-
           mkdirSync(dirname(output), { recursive: true });
           writeFileSync(output, contents);
         }

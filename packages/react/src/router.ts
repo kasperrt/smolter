@@ -16,10 +16,14 @@ export interface ApplicationProps extends ApplicationContext {
 }
 
 /** Compose a persistent root layout with route views and observable root loader data. */
-export function RouterApplication(props: ApplicationProps): ReactNode {
+export function RouterApplication({
+  root: initialRoot,
+  document: documentMode,
+  ...props
+}: ApplicationProps): ReactNode {
   const store = useMemo(
-    () => props.rootStore ?? createStore(props.root),
-    [props.rootStore, props.root],
+    () => props.rootStore ?? createStore(initialRoot),
+    [props.rootStore, initialRoot],
   );
   const root = useSyncExternalStore(
     store.subscribe,
@@ -44,7 +48,7 @@ export function RouterApplication(props: ApplicationProps): ReactNode {
     createElement(
       Application.Provider,
       { value: { ...props, root } },
-      props.document && Layout ? createElement(Layout, { children }) : children,
+      documentMode && Layout ? createElement(Layout, { children }) : children,
     ),
   );
 }

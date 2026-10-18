@@ -30,7 +30,6 @@ interface LayoutProps {
 
 export function Home() {
   const data = useLoaderData<Data>();
-
   return (
     <>
       <Await
@@ -52,7 +51,6 @@ export function Home() {
           )
         }
       </Await>
-
       {data?.second && (
         <Await fallback={<p>Second data pending</p>} resolve={data.second}>
           {(value) => <p>{value}</p>}
@@ -71,7 +69,6 @@ function Root() {
   const revalidate = useRevalidator();
   const [count, setCount] = useState(0);
   const data = useRootData<RootData>();
-
   return (
     <main>
       <input aria-label="Persistent draft" />

@@ -43,7 +43,6 @@ for (const manual of [false, true]) {
     `,
     );
     await writeFile(join(root, "label.ts"), 'export const label = "Before";');
-
     const server = await createServer({
       root,
       configFile: false,
@@ -65,7 +64,6 @@ for (const manual of [false, true]) {
     await server.listen();
     await page.goto(server.resolvedUrls!.local[0]);
     await expect(page.locator("main")).toHaveText("/ Before");
-
     // An accepted ordinary module edit must update without replacing the document.
     await page.evaluate(() => {
       document.body.dataset.marker = "retained";
@@ -76,7 +74,6 @@ for (const manual of [false, true]) {
       "data-marker",
       "retained",
     );
-
     if (manual)
       await writeFile(
         join(root, "routes.ts"),
@@ -88,7 +85,6 @@ for (const manual of [false, true]) {
         'export default function Added() { return "Added"; }',
       );
     await expect(page.locator("main")).toHaveText("/,/added After");
-
     if (manual)
       await writeFile(
         join(root, "routes.ts"),

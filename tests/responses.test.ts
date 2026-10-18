@@ -10,12 +10,10 @@ it("normalizes JSON responses and preserves redirect responses", async () => {
   expect(await normalizeResult(Response.json({ count: 3 }))).toEqual({
     count: 3,
   });
-
   const response = redirect("/done", {
     status: 303,
     headers: { "Set-Cookie": "saved=1; HttpOnly" },
   });
-
   expect(await normalizeResult(response)).toBe(response);
   expect(response.status).toBe(303);
   expect(response.headers.get("Set-Cookie")).toBe("saved=1; HttpOnly");
@@ -25,7 +23,6 @@ it("retains HTTP error details and distinguishes ordinary errors", async () => {
   const error = await normalizeResult(
     new Response("Room not found", { status: 404, statusText: "Not Found" }),
   );
-
   expect(isRouteErrorResponse(error)).toBe(true);
   expect(error).toBeInstanceOf(Error);
   expect(error).toMatchObject({
@@ -50,7 +47,6 @@ it("resolves deferred arrays inside route data without flattening values", async
       created,
     }),
   );
-
   expect(result).toEqual({
     items: [{ count: 3 }, null, ["nested"]],
     created,
@@ -60,7 +56,6 @@ it("resolves deferred arrays inside route data without flattening values", async
 
 it("propagates deferred and malformed JSON failures to the caller", async () => {
   const error = Error("Unavailable");
-
   await expect(normalizeResult(data([Promise.reject(error)]))).rejects.toBe(
     error,
   );

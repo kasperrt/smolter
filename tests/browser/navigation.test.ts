@@ -21,7 +21,6 @@ it("hands configured Preact links to another application without running a local
     intercepted.push(event.defaultPrevented);
     event.preventDefault();
   };
-
   configureApplication({
     resolveURL: (url) =>
       url.pathname === "/join"
@@ -33,7 +32,6 @@ it("hands configured Preact links to another application without running a local
       handoffs.push(destination.href);
     },
   });
-
   document.body.append(container);
   document.addEventListener("click", preventBrowserNavigation);
   context.onTestFinished(() => {
@@ -43,10 +41,8 @@ it("hands configured Preact links to another application without running a local
     document.removeEventListener("click", preventBrowserNavigation);
     configureApplication({});
   });
-
   await router.navigate(location.href);
   expect(reads).toBe(1);
-
   root.render(
     createElement(
       RouterProvider,
@@ -66,18 +62,14 @@ it("hands configured Preact links to another application without running a local
       ),
     ),
   );
-
   await expect.poll(() => container.querySelectorAll("a").length).toBe(2);
-
   const links = container.querySelectorAll("a");
   expect(links[0].href).toBe("https://remote.example/join?code=hello");
-
   for (const link of links) {
     link.dispatchEvent(
       new MouseEvent("click", { bubbles: true, cancelable: true }),
     );
   }
-
   expect(clicks).toEqual(["join", "external"]);
   expect(intercepted).toEqual([true, false]);
   expect(handoffs).toEqual(["https://remote.example/join?code=hello"]);
@@ -95,7 +87,6 @@ it("delegates ordinary nested anchor clicks and releases the handoff listener on
     intercepted.push(event.defaultPrevented);
     event.preventDefault();
   };
-
   anchor.href = "https://remote.example/join";
   child.textContent = "Join";
   anchor.append(child);
@@ -107,7 +98,6 @@ it("delegates ordinary nested anchor clicks and releases the handoff listener on
       handoffs.push(destination.href);
     },
   });
-
   connectNavigation(router);
   document.addEventListener("click", preventBrowserNavigation);
   context.onTestFinished(() => {
@@ -116,7 +106,6 @@ it("delegates ordinary nested anchor clicks and releases the handoff listener on
     document.removeEventListener("click", preventBrowserNavigation);
     configureApplication({});
   });
-
   child.dispatchEvent(
     new MouseEvent("click", { bubbles: true, cancelable: true }),
   );
@@ -131,7 +120,6 @@ it("delegates ordinary nested anchor clicks and releases the handoff listener on
   child.dispatchEvent(
     new MouseEvent("click", { bubbles: true, cancelable: true }),
   );
-
   expect(intercepted).toEqual([true, false, false]);
   expect(handoffs).toEqual(["https://remote.example/join"]);
 });

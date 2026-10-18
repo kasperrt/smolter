@@ -27,7 +27,6 @@ for (const entry of [
   ][0].replace(/^\.\//, "");
   const source = program.getSourceFile(filename);
   const module = checker.getSymbolAtLocation(source);
-
   for (const exported of checker.getExportsOfModule(module)) {
     const name = exported.name;
     const symbol =
@@ -35,13 +34,10 @@ for (const entry of [
         ? checker.getAliasedSymbol(exported)
         : exported;
     const declaration = symbol.declarations?.[0];
-
     if (!declaration) continue;
-
     const isType =
       ts.isInterfaceDeclaration(declaration) ||
       ts.isTypeAliasDeclaration(declaration);
-
     // Type-only star re-exports do not make core values available at runtime.
     if (
       ["react", "preact"].includes(entry) &&
@@ -50,14 +46,11 @@ for (const entry of [
       !["createRouter", "createDataRouter", "defineRoute"].includes(name)
     )
       continue;
-
     const existing = pages.get(name);
-
     if (existing) {
       existing.entries.push(entry);
       continue;
     }
-
     const file = declaration.getSourceFile();
     const type = checker.getTypeOfSymbolAtLocation(symbol, declaration);
     const functions = symbol.declarations.filter(ts.isFunctionDeclaration);
@@ -93,7 +86,6 @@ for (const entry of [
           ),
         }))
       : [];
-
     pages.set(name, {
       slug: name,
       title: name,
@@ -116,19 +108,16 @@ const content = [...pages.values()];
 
 if (process.argv.includes("--check")) {
   const saved = JSON.parse(readFileSync(output, "utf8"));
-
   if (JSON.stringify(saved) !== JSON.stringify(content)) {
     console.error(
       "Public API documentation is stale. Run pnpm docs:reference.",
     );
     process.exit(1);
   }
-
   for (const page of content) {
     const authored = JSON.parse(
       readFileSync(`packages/ui/src/docs/pages/${page.slug}.json`, "utf8"),
     );
-
     if (
       authored.sections.length < (page.kind === "API" ? 4 : 1) ||
       !authored.sections.some((section) => section.code) ||

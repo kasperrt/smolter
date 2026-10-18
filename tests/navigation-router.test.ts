@@ -9,7 +9,6 @@ it("matches immediately without starting a data engine", async () => {
   const changed = vi.fn();
   const unsubscribe = router.subscribe(changed);
   const stop = router.start();
-
   expect(router.getSnapshot()).toMatchObject({
     path: "/",
     loaded: true,
@@ -25,13 +24,11 @@ it("matches immediately without starting a data engine", async () => {
     state: "idle",
   });
   expect(changed).toHaveBeenCalledTimes(1);
-
   const snapshot = router.getSnapshot();
   await router.navigate(snapshot.url);
   await router.navigate("https://elsewhere.example/items/2");
   expect(router.getSnapshot()).toBe(snapshot);
   expect(changed).toHaveBeenCalledTimes(1);
-
   unsubscribe();
   await router.navigate("/missing");
   expect(router.getSnapshot()).toMatchObject({ path: undefined, params: {} });
@@ -48,7 +45,6 @@ it("isolates server URLs and rejects data routes at the type boundary", () => {
     url: "/b",
     browser: true,
   });
-
   expect(a.getSnapshot().path).toBe("/a");
   expect(b.getSnapshot().path).toBe("/b");
   expectTypeOf<NavigationRoute["loader"]>().toEqualTypeOf<undefined>();

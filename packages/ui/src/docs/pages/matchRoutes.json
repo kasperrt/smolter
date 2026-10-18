@@ -23,6 +23,11 @@
       "title": "Behavior and edge cases",
       "body": "Matching is case-sensitive. One trailing slash is ignored. Supports static segments, :parameters, and terminal *. Invalid percent sequences are decoded using URLSearchParams replacement behavior rather than throwing. Static routes must precede dynamic ones in a manual table.",
       "code": ""
+    },
+    {
+      "title": "Repeated matching",
+      "body": "Parsed path patterns are reused in a bounded cache of up to 256 entries. Route order and current modules still determine each match; params and loader results are never cached here. Replacing a route object or changing its path remains supported. Eviction only requires parsing the pattern again.",
+      "code": ""
     }
   ]
 }

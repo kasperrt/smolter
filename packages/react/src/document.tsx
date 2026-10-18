@@ -25,7 +25,6 @@ import type { MetaDescriptor } from "./route-types.ts";
 function renderMeta(item: MetaDescriptor, index: number) {
   if (typeof item.title === "string")
     return <title key={index}>{item.title}</title>;
-
   if ("script:ld+json" in item)
     return (
       <script
@@ -36,9 +35,7 @@ function renderMeta(item: MetaDescriptor, index: number) {
         }}
       />
     );
-
   const { tagName, ...props } = item;
-
   return createElement(tagName === "link" ? "link" : "meta", {
     ...props,
     key: index,
@@ -60,17 +57,14 @@ export function Meta(): import("react").ReactElement {
   const values = route?.meta?.(args) ?? rootModule?.meta?.(args) ?? [];
   useEffect(() => {
     const title = values.find((item) => typeof item.title === "string")?.title;
-
     if (typeof title === "string") document.title = title;
   }, [values]);
-
   return <Fragment>{values.map(renderMeta)}</Fragment>;
 }
 
 /** Render stylesheet and other link descriptors from the application root. */
 export function Links(): import("react").ReactElement {
   const { rootModule } = useApplication();
-
   return (
     <Fragment>
       {rootModule?.links?.().map((props, index) => (
@@ -94,7 +88,6 @@ export function Scripts({ nonce }: ScriptProps): import("react").ReactElement {
   const [json] = useState(() => {
     if (initialData !== undefined) return initialData;
     if (streaming) return "";
-
     const current = router.getSnapshot();
     const snapshot = {
       ...current,
@@ -104,10 +97,8 @@ export function Scripts({ nonce }: ScriptProps): import("react").ReactElement {
         message: current.error.message,
       },
     };
-
     return serializeData({ root, snapshot, ...(rootError && { rootError }) });
   });
-
   return (
     <Fragment>
       <script
@@ -141,43 +132,31 @@ export function ScrollRestoration(_props: ScriptProps): null {
   const navigation = useNavigationSnapshot(router);
   const positions = scrollPositions(router);
   const restoredLocation = useRef("");
-
   useEffect(() => {
     const previous = history.scrollRestoration;
     history.scrollRestoration = "manual";
-
     return () => {
       history.scrollRestoration = previous;
     };
   }, []);
-
   useLayoutEffect(() => {
     if (state !== "idle") return;
-
     if ((history.state?.key ?? "initial") !== navigation.key) return;
-
     const locationKey = `${navigation.key}:${url}`;
-
     if (restoredLocation.current === locationKey) return;
-
     // Lazy views subscribe independently; restore after their DOM is committed.
     const frame = requestAnimationFrame(() => {
       restoredLocation.current = locationKey;
       const target = new URL(location.href);
       const saved = navigation.type === "POP" && positions.get(navigation.key);
-
       if (!saved && target.hash) {
         document.getElementById(target.hash.slice(1))?.scrollIntoView();
-
         return;
       }
-
       if (!saved && navigation.preventScrollReset) return;
-
       const [left, top] = saved || [0, 0];
       window.scrollTo({ left, top, behavior: "instant" });
     });
-
     return () => cancelAnimationFrame(frame);
   }, [
     url,
@@ -187,7 +166,6 @@ export function ScrollRestoration(_props: ScriptProps): null {
     navigation.type,
     navigation.preventScrollReset,
   ]);
-
   return null;
 }
 
@@ -197,12 +175,14 @@ export interface DocumentProps extends ComponentProps<"html"> {
 }
 
 /** Render the server document and preserve client-managed theme classes on hydration. */
-export function Document(props: DocumentProps): import("react").ReactElement {
-  const { children, ...attributes } = props;
-  const className = String(props.className ?? "");
+export function Document({
+  children,
+  ...attributes
+}: DocumentProps): import("react").ReactElement {
+  const className = String(attributes.className ?? "");
   const previousClassName = useRef(className);
-  const lang = String(props.lang ?? "en");
-  const debug = String(props["data-debug"] ?? false);
+  const lang = String(attributes.lang ?? "en");
+  const debug = String(attributes["data-debug"] ?? false);
   useEffect(() => {
     // Hydration must preserve classes already applied by the browser theme store.
     // Only reconcile classes when the document's own props actually change.
@@ -213,11 +193,9 @@ export function Document(props: DocumentProps): import("react").ReactElement {
       document.documentElement.classList.add(...next);
       previousClassName.current = className;
     }
-
     document.documentElement.lang = lang;
     document.documentElement.dataset.debug = debug;
   }, [className, lang, debug]);
-
   const classes =
     typeof document !== "undefined" && previousClassName.current !== className
       ? [...document.documentElement.classList]
@@ -226,7 +204,7 @@ export function Document(props: DocumentProps): import("react").ReactElement {
           )
           .concat(className.split(/\s+/).filter(Boolean))
           .join(" ")
-      : props.className;
+      : attributes.className;
   return (
     <html {...attributes} className={classes} suppressHydrationWarning>
       {children}

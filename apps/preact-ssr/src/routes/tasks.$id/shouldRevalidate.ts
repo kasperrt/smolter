@@ -11,6 +11,5 @@ export function shouldRevalidate({
   ) {
     return actionResult.changed !== false;
   }
-
   return defaultShouldRevalidate;
 }

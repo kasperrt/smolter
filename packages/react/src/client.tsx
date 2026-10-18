@@ -13,7 +13,12 @@ import {
 import { connectHashHistory } from "@smolter/client/hash-history";
 import { readHydration } from "@smolter/client/hydration";
 import { attachRootData } from "@smolter/client/root-data";
-import { createDataRouter, matchRoutes, type Router } from "@smolter/core";
+import {
+  createDataRouter,
+  matchRoutes,
+  type Router,
+  safeWrapAsync,
+} from "@smolter/core";
 import { connectNavigation } from "@smolter/core/navigation";
 import { prepareRoutes } from "@smolter/core/prepare-routes";
 import { retainRoute } from "@smolter/core/presentation";
@@ -48,29 +53,27 @@ export async function mountApplication(
     hash ? location.hash.slice(1) || "/" : location.href,
     location.origin,
   );
-
   const initialRoute = matchRoutes(routes, initialURL.pathname)?.route as
     | AppRoute
     | undefined;
-
-  await initialRoute?.preload?.().catch(async (error: unknown) => {
+  const { error: preloadError } = await safeWrapAsync(() =>
+    initialRoute?.preload?.(),
+  );
+  if (preloadError) {
     await recoverDeployment(deployment, initialURL);
-    throw error;
-  });
-
+    throw preloadError.cause ?? preloadError;
+  }
   routes = prepareRoutes(routes);
   const element = document.getElementById("smolter-data");
   const initial = element?.textContent
     ? readHydration(element.textContent, deferredTimeout)
     : undefined;
   const hydration: Hydration | undefined = initial?.hydration;
-
   if (hydration?.snapshot.error)
     hydration.snapshot.error = Object.assign(
       new Error(hydration.snapshot.error.message),
       hydration.snapshot.error,
     );
-
   const router = createDataRouter(routes, {
     browser: !hash,
     url: hash
@@ -85,9 +88,7 @@ export async function mountApplication(
   };
   watchDeployment(router, deployment);
   if (hash) connectHashHistory(router);
-
   retainRoute(router, flushSync);
-
   connectNavigation(router);
   const rootStore = attachRootData(router, hydration?.root, rootModule);
   const props = {
@@ -99,7 +100,6 @@ export async function mountApplication(
     rootError: hydration?.rootError,
     initialData: element?.textContent ?? undefined,
   };
-
   if (hydration) {
     const mounted = hydrateRoot(
       document,
@@ -110,12 +110,9 @@ export async function mountApplication(
       mounted.unmount();
       cleanup();
     };
-
     return router;
   }
-
   const target = document.getElementById("root");
-
   if (target) {
     const mounted = createRoot(target);
     mounted.render(<RouterApplication {...props} />);
@@ -125,6 +122,5 @@ export async function mountApplication(
       cleanup();
     };
   }
-
   return router;
 }

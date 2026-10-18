@@ -12,7 +12,6 @@ export default function Counter() {
   const data = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const revalidate = useRevalidator();
-
   return ui.CounterPanel({
     data,
     state: fetcher.state,

@@ -40,7 +40,6 @@ for (const { framework, version } of cases) {
       },
     }),
   );
-
   const deps =
     framework === "react"
       ? [
@@ -63,25 +62,20 @@ for (const { framework, version } of cases) {
     ],
     { cwd, stdio: "inherit" },
   );
-
   const other = framework === "react" ? "preact" : "react";
-
   assert.equal(
     existsSync(join(cwd, "node_modules", other)),
     false,
     `${framework} installs must not pull in ${other}`,
   );
-
   writeFileSync(
     join(cwd, "smoke.mjs"),
     readFileSync(`tests/fixtures/${framework}-packed.mjs`, "utf8"),
   );
-
   execFileSync(process.execPath, [resolve(cwd, "smoke.mjs")], {
     cwd,
     stdio: "inherit",
   });
-
   writeFileSync(
     join(cwd, "consumer.ts"),
     readFileSync("tests/fixtures/packed-types.ts", "utf8").replaceAll(
@@ -105,7 +99,6 @@ for (const { framework, version } of cases) {
     ],
     { cwd, stdio: "inherit" },
   );
-
   writeFileSync(
     join(cwd, "prefetch.mjs"),
     readFileSync("tests/fixtures/prefetch-packed.mjs", "utf8"),
@@ -114,7 +107,6 @@ for (const { framework, version } of cases) {
     cwd,
     stdio: "inherit",
   });
-
   rmSync(cwd, { recursive: true, force: true });
 }
 

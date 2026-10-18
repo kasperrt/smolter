@@ -12,17 +12,14 @@ export function measuredSize(): Plugin {
       { cwd: root },
     );
   };
-
   return {
     name: "measured-router-size",
     configResolved(config) {
       write = config.build.write;
     },
-
     buildStart() {
       if (write) update();
     },
-
     configureServer(server) {
       server.watcher.add(resolve(root, "packages"));
       server.watcher.on("change", (file) => {

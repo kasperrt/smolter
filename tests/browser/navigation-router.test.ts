@@ -23,7 +23,6 @@ it("tracks history, hash changes and concurrent provider lifecycles", async (con
     pushState.mockRestore();
     replaceState.mockRestore();
   });
-
   await router.navigate("/tasks/1", { state: { from: "home" } });
   expect(pushState).toHaveBeenCalledOnce();
   expect(location.pathname).toBe("/tasks/1");
@@ -34,7 +33,6 @@ it("tracks history, hash changes and concurrent provider lifecycles", async (con
   expect(location.pathname).toBe("/tasks/2");
   expect(router.getSnapshot().params.id).toBe("2");
   stop();
-
   history.replaceState(null, "", "/tasks/3#details");
   window.dispatchEvent(new HashChangeEvent("hashchange"));
   expect(router.getSnapshot().params.id).toBe("3");
@@ -46,7 +44,6 @@ it("tracks history, hash changes and concurrent provider lifecycles", async (con
   history.replaceState(null, "", "/tasks/4");
   window.dispatchEvent(new PopStateEvent("popstate"));
   expect(router.getSnapshot()).toBe(before);
-
   const resume = router.start();
   expect(router.getSnapshot().params.id).toBe("4");
   resume();

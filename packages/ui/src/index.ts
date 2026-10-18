@@ -18,7 +18,6 @@ export function createUI<N>(h: ElementFactory<N>) {
   const tasks = createTasks(h, primitives);
   const shell = createShell(h, link);
   const Documentation = createDocumentation(h, code.CodeBlock, link);
-
   return {
     ...primitives,
     ...code,

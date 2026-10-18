@@ -12,14 +12,10 @@ export async function prerender(path: string) {
   const router = createDataRouter(routes, {
     url: `https://kasperrt.github.io${path}`,
   });
-
   await router.navigate(path);
-
   const snapshot = router.getSnapshot();
   const html = renderToString(app(router));
   const data = serialize(snapshot);
-
   router.dispose();
-
   return { html, data, metadata: pageMetadata(path, snapshot.data) };
 }

@@ -54,7 +54,6 @@ export function createDataRouter(
     const listeners = new Set<() => void>();
     const emit = (state: Snapshot["state"], next?: Partial<Snapshot>) => {
       snapshot = { ...snapshot, ...next, state };
-
       for (const listener of listeners) listener();
     };
     const run = async (
@@ -66,33 +65,25 @@ export function createDataRouter(
       redirects = 10,
     ): Promise<Result> => {
       controller?.abort();
-
       controller = new AbortController();
-
       const { signal } = controller;
       const { method = "POST" } = operation;
       revalidators.add(task);
-
       submission = body;
       const previous = snapshot;
       const url = internalURL(main.getSnapshot().url, href);
       const match = url && matchRoutes(routes, url.pathname);
       const commit = () => {
         if (local || !url) return;
-
         const changed = snapshot.url !== url.href;
-
         if (!changed && snapshot.path !== undefined) return;
-
         if (browser && (navigation || body) && changed)
           history[operation.replace ? "replaceState" : "pushState"](
             null,
             "",
             url,
           );
-
         const sameRoute = snapshot.path === match?.route.path;
-
         snapshot = {
           ...snapshot,
           url: url.href,
@@ -102,14 +93,10 @@ export function createDataRouter(
           ...(!sameRoute && { data: undefined, loaded: false }),
         };
       };
-
       if (!body) commit();
-
       emit(body ? "submitting" : "loading", { error: undefined });
-
       const result = await safeWrapAsync(() => {
         if (!match) return Error(url ? "No route" : "External URL");
-
         if (
           navigation !== undefined &&
           previous.loaded &&
@@ -124,14 +111,11 @@ export function createDataRouter(
           }) === false
         )
           return previous.data;
-
         const load = () => {
           const fn =
             match.route[body ? "clientAction" : "clientLoader"] ||
             match.route[body ? "action" : "loader"];
-
           if (!fn) return body && Error("No action");
-
           return (fn as DataFunction)({
             reason: body
               ? "action"
@@ -155,12 +139,9 @@ export function createDataRouter(
           return prefetched.navigate(url, signal, load);
         return load();
       });
-
       if (signal.aborted) return result;
-
       const redirectTo =
         result.data instanceof Response && result.data.headers.get("Location");
-
       if (redirectTo && redirects) {
         await main.load(
           new URL(redirectTo, url!).href,
@@ -169,7 +150,6 @@ export function createDataRouter(
           true,
           redirects - 1,
         );
-
         if (body) {
           const destination = new URL(main.getSnapshot().url);
           const args: RevalidationArgs = {
@@ -183,7 +163,6 @@ export function createDataRouter(
             formData: body,
             actionResult: result.data,
           };
-
           // The destination loader just ran. Refresh root data and other fetchers
           // without loading that page twice or replaying the mutation.
           await Promise.all(
@@ -192,47 +171,37 @@ export function createDataRouter(
               .map((task) => task.revalidate(args)),
           );
         }
-
         if (!signal.aborted) {
           submission = undefined;
           emit("idle");
         }
-
         return result;
       }
-
       if (redirectTo) result.error = Error("Redirect loop");
-
       if (!body && !result.error) loadedURL = url!.href;
-
       if (body && !result.error) commit();
-
       emit(body && !result.error ? "loading" : "idle", {
         [body && !local ? "actionData" : "data"]: result.data,
         error: result.error,
         loaded: body ? snapshot.loaded : !result.error,
       });
-
       if (body && !result.error) {
-        await router
-          .revalidate("action", {
+        const { error } = await safeWrapAsync(() =>
+          router.revalidate("action", {
             formMethod: method,
             formAction: url!.href,
             formData: body,
             actionResult: result.data,
-          })
-          .finally(() => {
-            if (!signal.aborted) {
-              submission = undefined;
-              emit("idle");
-            }
-          });
-
+          }),
+        );
+        if (!signal.aborted) {
+          submission = undefined;
+          emit("idle");
+        }
+        if (error) throw error.cause ?? error;
         return result;
       }
-
       if (!signal.aborted) submission = undefined;
-
       return result;
     };
     const task = {
@@ -241,10 +210,8 @@ export function createDataRouter(
         targets?: readonly string[],
       ) => {
         if (local && (!loadedURL || submission)) return;
-
         const url = new URL(local ? loadedURL! : main.getSnapshot().url);
         const route = matchRoutes(routes, url.pathname)?.route;
-
         // Targets are strings, so an absent route ID cannot match one.
         if (
           !route ||
@@ -253,7 +220,6 @@ export function createDataRouter(
             !targets.includes(route.path))
         )
           return;
-
         if (
           route.shouldRevalidate?.({
             ...args,
@@ -263,13 +229,11 @@ export function createDataRouter(
           }) === false
         )
           return;
-
         return run(url.href);
       },
       getSnapshot: () => snapshot,
       subscribe(listener: () => void) {
         listeners.add(listener);
-
         return () => {
           listeners.delete(listener);
         };
@@ -287,7 +251,6 @@ export function createDataRouter(
       },
     };
     revalidators.add(task);
-
     return task;
   };
   const main = channel(initial);
@@ -298,11 +261,9 @@ export function createDataRouter(
     routes,
     start() {
       if (!started++ && browser) addEventListener("popstate", pop);
-
       // A changed snapshot means a page operation has already started.
       if (!hydrated && main.getSnapshot() === initial)
         void main.load(initial.url);
-
       return () => {
         if (!--started && browser) removeEventListener("popstate", pop);
       };
@@ -329,12 +290,10 @@ export function createDataRouter(
         reason,
       };
       const targets = typeof route === "string" ? [route] : route;
-
       await Promise.all(
         [...revalidators].map((refresh) => refresh.revalidate(args, targets)),
       );
     },
-
     registerRevalidator(id, refresh) {
       const task = {
         revalidate: async (
@@ -345,12 +304,10 @@ export function createDataRouter(
         },
       };
       revalidators.add(task);
-
       return () => {
         revalidators.delete(task);
       };
     },
-
     prefetch(href) {
       return (
         prefetched?.load(href) ??
@@ -361,20 +318,15 @@ export function createDataRouter(
         })
       );
     },
-
     createFetcher() {
       return channel({ state: "idle" }, true);
     },
-
     dispose() {
       prefetched?.clear();
       for (const refresh of revalidators) refresh.dispose?.();
-
       revalidators.clear();
-
       if (browser) removeEventListener("popstate", pop);
     },
   };
-
   return router;
 }

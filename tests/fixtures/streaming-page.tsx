@@ -12,11 +12,9 @@ export function StreamingPage() {
   }>();
   const [count, setCount] = useState(0);
   const fetcher = useFetcher<number>();
-
   return (
     <main>
       <h1>Immediate shell</h1>
-
       <Await
         fallback={<p>Pending detail</p>}
         resolve={data!.detail}
@@ -24,7 +22,6 @@ export function StreamingPage() {
       >
         {(detail) => <p>{detail}</p>}
       </Await>
-
       {data?.later && (
         <Await fallback={<p>Pending later</p>} resolve={data.later}>
           {(value) => <p>{value}</p>}

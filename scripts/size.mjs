@@ -71,7 +71,6 @@ if (!process.argv.includes("--write-only")) {
     ...rows.map(([name, bytes]) => `| \`${name}\` | ${bytes} |`),
     "<!-- size-comparison:end -->",
   ].join("\n");
-
   for (const file of ["README.md"]) {
     const url = new URL(`../${file}`, import.meta.url);
     const source = readFileSync(url, "utf8");
@@ -79,12 +78,9 @@ if (!process.argv.includes("--write-only")) {
       /<!-- size-comparison:start -->[\s\S]*?<!-- size-comparison:end -->/,
       table,
     );
-
     if (source !== updated) writeFileSync(url, updated);
   }
-
   for (const [name, bytes] of rows) console.log(`${name}: ${bytes} B gzip`);
-
   if (process.argv.includes("--breakdown")) {
     console.log(
       "Marginal gzip bytes: the common bundle minus the same bundle without one export.",
@@ -92,7 +88,6 @@ if (!process.argv.includes("--write-only")) {
     console.log(
       "Shared code and gzip compression mean these values are not additive.",
     );
-
     for (const [index, adapter] of ["react", "preact"].entries()) {
       const entry = `./dist/${adapter}/index.js`;
       const breakdown = await Promise.all(
@@ -101,15 +96,12 @@ if (!process.argv.includes("--write-only")) {
             (candidate) => candidate !== name,
           );
           const without = await measure(entry, remaining);
-
           return `${adapter}.${name}: ${shared[index] - without} B`;
         }),
       );
-
       for (const line of breakdown) console.log(line);
     }
   }
-
   for (const [index, adapter] of ["react", "preact"].entries()) {
     if (
       [sizes.reactRouting, sizes.preactRouting][index] >=
@@ -121,7 +113,6 @@ if (!process.argv.includes("--write-only")) {
       process.exitCode = 1;
     }
   }
-
   console.log(
     "Named subsets where labeled; otherwise all exports. Identical minifiers, gzip level 9. Frameworks excluded; runtime dependencies included.",
   );

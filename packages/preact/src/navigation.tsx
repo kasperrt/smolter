@@ -86,7 +86,6 @@ export function Link(options: LinkProps): ReactNode {
   const destination = resolveApplicationURL(new URL(to, current));
   const internal = destination.origin === current.origin;
   const preload = () => prefetchLink(router, destination, prefetchData);
-
   const forwarded = "ref" in props ? props.ref : undefined;
   const observe = useMemo(
     () =>
@@ -95,10 +94,8 @@ export function Link(options: LinkProps): ReactNode {
         : undefined,
     [router, destination.href, prefetchData, forwarded, prefetch],
   );
-
   if (!reloadDocument && prefetch === "intent" && internal)
     intentPrefetch?.(props, preload);
-
   return createElement("a", {
     ...props,
     href: destination.href,
@@ -107,16 +104,12 @@ export function Link(options: LinkProps): ReactNode {
       internal && { ref: observe }),
     onClick(event: TargetedMouseEvent<HTMLAnchorElement>) {
       props.onClick?.(event);
-
       if (reloadDocument || !navigationClick(event, event.currentTarget))
         return;
-
       if (!internal) {
         handoffDocument(event, destination);
-
         return;
       }
-
       event.preventDefault();
       void router.navigate(destination.href, options);
     },
@@ -146,7 +139,6 @@ export function NavLink({
     (pending.pathname === target ||
       (!end && target !== "/" && pending.pathname.startsWith(`${target}/`)));
   const state = { isActive, isPending };
-
   return createElement(Link, {
     ...props,
     to,

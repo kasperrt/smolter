@@ -19,11 +19,8 @@ for (const [framework, plugin] of [
     );
     const loaded = await server.pluginContainer.load(resolved!.id);
     const code = typeof loaded === "string" ? loaded : loaded?.code;
-
     expect(code).toContain(`@kasperrt/smolter/${framework}/client`);
-
     const rendered = await server.ssrLoadModule("virtual:smolter/routes");
-
     expect(rendered.default[0].path).toBe("/");
     expect(await rendered.default[0].loader()).toBe(1);
     expect(await rendered.default[0].clientLoader()).toBe("client");

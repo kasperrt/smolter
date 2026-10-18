@@ -23,11 +23,9 @@ it("React links keep resolved hrefs, prefetches, and clicks on the same route", 
   );
   const container = document.createElement("div");
   const root = createRoot(container);
-
   configureApplication({
     resolveURL(url) {
       if (url.pathname === "/items/two") url.pathname = "/mapped";
-
       return url;
     },
   });
@@ -38,11 +36,9 @@ it("React links keep resolved hrefs, prefetches, and clicks on the same route", 
     container.remove();
     configureApplication({});
   });
-
   function LocationReader() {
     return createElement("output", null, react.useURLLocation().href);
   }
-
   root.render(
     createElement(
       react.RouterProvider,
@@ -60,17 +56,13 @@ it("React links keep resolved hrefs, prefetches, and clicks on the same route", 
       ),
     ),
   );
-
   await expect
     .poll(() => container.querySelector("a")?.href)
     .toBe("http://localhost/mapped");
-
   expect(container.querySelector("output")?.textContent).toBe(
     "http://localhost/items/one",
   );
-
   const anchor = container.querySelector("a")!;
-
   anchor.focus();
   anchor.dispatchEvent(new PointerEvent("pointerover", { bubbles: true }));
   anchor.dispatchEvent(new TouchEvent("touchstart", { bubbles: true }));
@@ -80,7 +72,6 @@ it("React links keep resolved hrefs, prefetches, and clicks on the same route", 
   expect(intents).toEqual(["focus", "pointerenter", "touchstart"]);
   anchor.click();
   await expect.poll(() => router.getSnapshot().data).toBe("Mapped");
-
   await router.navigate("/other/one");
   await expect.poll(() => anchor.href).toBe("http://localhost/other/two");
   anchor.click();

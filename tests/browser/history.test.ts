@@ -18,11 +18,9 @@ it("restores history metadata and hands external navigation to the deployment", 
     ],
     { browser: true, url: new URL("/", location.href).href },
   );
-
   history.replaceState({ key: "home", state: { source: "reload" } }, "", "/");
   await router.navigate("/");
   const stop = router.start();
-
   connectNavigation(router);
   configureApplication({
     leaveDocument: (destination) => handedOff.push(destination.href),
@@ -33,9 +31,7 @@ it("restores history metadata and hands external navigation to the deployment", 
     configureApplication({});
     history.replaceState(originalState, "", originalURL);
   });
-
   const store = navigationStore(router);
-
   await router.navigate("/tasks", {
     replace: true,
     state: { source: "navigation" },
@@ -47,10 +43,8 @@ it("restores history metadata and hands external navigation to the deployment", 
     preventScrollReset: true,
   });
   const taskKey = store.getSnapshot().key;
-
   history.replaceState({ key: "home", state: { source: "reload" } }, "", "/");
   window.dispatchEvent(new PopStateEvent("popstate", { state: history.state }));
-
   await expect.poll(() => router.getSnapshot().data).toBe("home");
   expect(store.getSnapshot()).toMatchObject({
     type: "POP",
@@ -59,9 +53,7 @@ it("restores history metadata and hands external navigation to the deployment", 
     preventScrollReset: false,
   });
   expect(scrollPositions(router).has(taskKey)).toBe(true);
-
   const beforeHandoff = router.getSnapshot();
-
   await router.navigate("https://remote.example/join?code=hello#form");
   expect(handedOff).toEqual(["https://remote.example/join?code=hello#form"]);
   expect(router.getSnapshot()).toBe(beforeHandoff);

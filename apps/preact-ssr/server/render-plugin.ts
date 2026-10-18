@@ -1,14 +1,14 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { safeWrapAsync } from "@smolter/core";
 import type { Plugin } from "vite";
 
 export function serverRendering(): Plugin {
   return {
     name: "example-ssr",
-
     configureServer(server) {
       return () => {
-        server.middlewares.use((request, response, next) => {
+        server.middlewares.use(async (request, response, next) => {
           if (
             request.method !== "GET" ||
             new URL(request.url ?? "/", "http://local").pathname.endsWith(
@@ -16,11 +16,8 @@ export function serverRendering(): Plugin {
             )
           )
             return next();
-
           const controller = new AbortController();
-
           response.once("close", () => controller.abort());
-
           const render = async () => {
             const entry = await server.ssrLoadModule("/src/server.ts");
             const template = await server.transformIndexHtml(
@@ -35,12 +32,11 @@ export function serverRendering(): Plugin {
               },
             );
             const html = await entry.render(incoming, template);
-
             response.setHeader("Content-Type", "text/html; charset=utf-8");
             response.end(html);
           };
-
-          void render().catch(next);
+          const { error } = await safeWrapAsync(render);
+          if (error) next(error);
         });
       };
     },

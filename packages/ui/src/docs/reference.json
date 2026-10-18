@@ -275,7 +275,7 @@
     "entries": ["react", "preact"],
     "kind": "API",
     "summary": "Compose a persistent root layout with route views and observable root loader data.",
-    "signature": "function RouterApplication(props: ApplicationProps): ReactNode;",
+    "signature": "function RouterApplication({\n  root: initialRoot,\n  document: documentMode,\n  ...props\n}: ApplicationProps): ReactNode;",
     "fields": [],
     "source": "packages/react/src/router.ts"
   },
@@ -1608,7 +1608,7 @@
     "entries": ["preact"],
     "kind": "API",
     "summary": "Render a value or promise. An explicit fallback owns pending content during early hydration; errorElement handles rejection.",
-    "signature": "function Await<T>(props: AwaitProps<T>): ComponentChildren;",
+    "signature": "function Await<T>({\n  resolve,\n  ...props\n}: AwaitProps<T>): ComponentChildren;",
     "fields": [],
     "source": "packages/preact/src/await.tsx"
   },
@@ -1862,7 +1862,7 @@
     "entries": ["preact/document", "react/document"],
     "kind": "API",
     "summary": "Render the server document and preserve client-managed theme classes on hydration.",
-    "signature": "function Document(props: DocumentProps): import(\"preact\").JSX.Element;",
+    "signature": "function Document({\n  children,\n  ...attributes\n}: DocumentProps): import(\"preact\").JSX.Element;",
     "fields": [],
     "source": "packages/preact/src/document.tsx"
   },

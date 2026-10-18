@@ -11,7 +11,6 @@ it("round-trips structured action data through the browser form transport", asyn
     method: "PATCH",
     body,
   });
-
   expect(await readSubmission(request)).toEqual(value);
 });
 
@@ -19,7 +18,6 @@ it("preserves existing FormData and converts ordinary form fields to strings", (
   const body = new FormData();
   body.append("tag", "first");
   body.append("tag", "second");
-
   expect(submissionBody(body)).toBe(body);
   expect([...submissionBody({ count: 2, enabled: false })]).toEqual([
     ["count", "2"],
@@ -34,6 +32,5 @@ it("reads a JSON action request without requiring a form envelope", async () => 
     headers: { "Content-Type": "application/json; charset=utf-8" },
     body: JSON.stringify(value),
   });
-
   expect(await readSubmission(request)).toEqual(value);
 });
