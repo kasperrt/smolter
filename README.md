@@ -5,7 +5,7 @@
 [![preact gzip size](https://deno.bundlejs.com/?q=%40kasperrt%2Fsmolter%40latest%2Fpreact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22preact%22%2C%22preact%2F*%22%5D%7D%7D&badge)](https://bundlejs.com/?q=%40kasperrt%2Fsmolter%40latest%2Fpreact&treeshake=%5B*%5D&config=%7B%22compression%22%3A%22gzip%22%2C%22esbuild%22%3A%7B%22external%22%3A%5B%22preact%22%2C%22preact%2F*%22%5D%7D%7D&bundle)
 <!-- bundlejs:end -->
 
-A typed data router for React and Preact. **Zero runtime dependencies.**
+A typed data router for React and Preact. **Zero browser runtime dependencies.**
 
 Loaders read. Actions mutate. Components render. Fetchers read or submit to a
 route without navigating. Successful mutations can revalidate the current
@@ -558,8 +558,9 @@ Data prefetching is opt-in and uses the existing route loader and transport:
 ```
 
 Smolter's Vite `fileRouter()` and `applicationPlugins()` infer capabilities from
-application TypeScript/JSX and imported source. Install TypeScript as a development
-dependency for this build analysis. No capability imports or router setup are needed.
+application TypeScript/JSX and imported source using Smolter’s own pinned TypeScript
+compiler dependency. Your application can use TypeScript 7 independently; the
+compiler is only loaded by Vite tooling and never enters browser bundles. No capability imports or router setup are needed.
 
 A plain Link uses intent. Viewport-only usage omits intent handlers; intent-only
 usage omits viewport observation. `prefetch="none"` uses neither. Typed unions and

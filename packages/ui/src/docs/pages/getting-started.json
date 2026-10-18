@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Install",
-      "body": "Install the router and the framework you use. Framework peers are optional; choosing React does not install Preact. When using Smolter’s Vite plugin, install TypeScript as a development dependency for typed prefetch selection; it is not a browser dependency.",
+      "body": "Install the router and the framework you use. Framework peers are optional; choosing React does not install Preact. Smolter’s Vite plugin uses its own pinned compiler for typed prefetch selection. Your application can keep TypeScript 7; no compiler downgrade or peer installation is required. The compiler does not enter browser bundles.",
       "code": "pnpm add @kasperrt/smolter react react-dom\n# Or: pnpm add @kasperrt/smolter preact\n# With Smolter’s Vite plugin:\npnpm add -D vite typescript"
     },
     {
