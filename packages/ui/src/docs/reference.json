@@ -1756,7 +1756,7 @@
     "entries": ["react/client", "preact/client"],
     "kind": "Types",
     "summary": "Build identity and the fresh, non-cacheable manifest URL emitted by deploymentPlugin.",
-    "signature": "interface DeploymentOptions {\n  version: string;\n  /** Generated shared application fingerprint; omitted for legacy manifests. */\n  shared?: string;\n  /** Generated route dependency fingerprints, in route matching order. */\n  routes?: { path: string; fingerprint: string }[];\n  /** Minimum interval between successful routine manifest checks (default 30 seconds). Chunk failures bypass it. */\n  checkInterval?: number;\n  manifestURL: string;\n  /** Maximum time to wait for the update check before continuing navigation. */\n  timeout?: number;\n  /** Override document navigation, for example to ask about unsaved changes. */\n  reload?: (destination: URL) => void;\n}",
+    "signature": "interface DeploymentOptions {\n  version: string;\n  /** Generated shared application fingerprint; omitted for legacy manifests. */\n  shared?: string;\n  /** Generated route dependency fingerprints, in route matching order. */\n  routes?: { path: string; fingerprint: string }[];\n  /** Minimum interval between completed routine manifest checks (default 30 seconds). Chunk failures bypass it. */\n  checkInterval?: number;\n  manifestURL: string;\n  /** Maximum duration of a manifest request; ordinary navigation does not wait for it. */\n  timeout?: number;\n  /** Override document navigation, for example to ask about unsaved changes. */\n  reload?: (destination: URL) => void;\n}",
     "fields": [
       {
         "name": "version",
@@ -1776,7 +1776,7 @@
       {
         "name": "checkInterval",
         "signature": "checkInterval?: number;",
-        "summary": "Minimum interval between successful routine manifest checks (default 30 seconds). Chunk failures bypass it."
+        "summary": "Minimum interval between completed routine manifest checks (default 30 seconds). Chunk failures bypass it."
       },
       {
         "name": "manifestURL",
@@ -1786,7 +1786,7 @@
       {
         "name": "timeout",
         "signature": "timeout?: number;",
-        "summary": "Maximum time to wait for the update check before continuing navigation."
+        "summary": "Maximum duration of a manifest request; ordinary navigation does not wait for it."
       },
       {
         "name": "reload",
@@ -1811,7 +1811,7 @@
     "title": "watchDeployment",
     "entries": ["react/client", "preact/client"],
     "kind": "API",
-    "summary": "Check for deployment changes before navigation. Install before creating fetchers. Returns a cleanup function.",
+    "summary": "Check for deployment changes alongside navigation. Install before creating fetchers. Returns a cleanup function.",
     "signature": "function watchDeployment(\n  router: NavigationRouter,\n  options: DeploymentOptions | null,\n): () => void;",
     "fields": [],
     "source": "packages/client/src/deployment.ts"
