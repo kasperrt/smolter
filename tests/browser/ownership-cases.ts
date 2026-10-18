@@ -203,12 +203,14 @@ export function ownershipCases(owned = false, selected?: string[]) {
           "true",
         );
         await expect(
-          page.getByText(
-            ["nested", "reject-after"].includes(mode)
-              ? "Nested data pending"
-              : "Optional data pending",
-            { exact: true },
-          ),
+          page
+            .getByRole("main")
+            .getByText(
+              ["nested", "reject-after"].includes(mode)
+                ? "Nested data pending"
+                : "Optional data pending",
+              { exact: true },
+            ),
         ).toBeVisible();
         if (!pure) {
           await page.getByLabel("Persistent draft").fill("Retain this");
@@ -217,10 +219,14 @@ export function ownershipCases(owned = false, selected?: string[]) {
         if (mode === "opposite") {
           secondSettle("Second resolved content");
           await expect(
-            page.getByText("Second resolved content", { exact: true }),
+            page
+              .getByRole("main")
+              .getByText("Second resolved content", { exact: true }),
           ).toBeVisible();
           await expect(
-            page.getByText("Optional data pending", { exact: true }),
+            page
+              .getByRole("main")
+              .getByText("Optional data pending", { exact: true }),
           ).toBeVisible();
         }
         if (mode === "nested") {
@@ -234,7 +240,9 @@ export function ownershipCases(owned = false, selected?: string[]) {
             .getByRole("button", { name: "Refresh root", exact: true })
             .click();
           await expect(
-            page.getByText("Current root content", { exact: true }),
+            page
+              .getByRole("main")
+              .getByText("Current root content", { exact: true }),
           ).toBeVisible();
         }
         if (disconnect) {
@@ -253,7 +261,9 @@ export function ownershipCases(owned = false, selected?: string[]) {
             contentType: "application/json",
           });
           await expect(
-            page.getByText("Optional failed", { exact: true }),
+            page
+              .getByRole("main")
+              .getByText("Optional failed", { exact: true }),
           ).toBeVisible({ timeout: 10_000 });
           await expect.poll(() => aborted).toBe(1);
         }
@@ -269,13 +279,17 @@ export function ownershipCases(owned = false, selected?: string[]) {
             .getByRole("button", { name: "Return", exact: true })
             .click();
           await expect(
-            page.getByText("Current route content", { exact: true }),
+            page
+              .getByRole("main")
+              .getByText("Current route content", { exact: true }),
           ).toBeVisible();
         }
         if (mode === "history") {
           await page.evaluate(() => history.back());
           await expect(
-            page.getByText("Current route content", { exact: true }),
+            page
+              .getByRole("main")
+              .getByText("Current route content", { exact: true }),
           ).toBeVisible();
           await page.evaluate(() => history.forward());
           await expect(
@@ -288,7 +302,9 @@ export function ownershipCases(owned = false, selected?: string[]) {
               .getByRole("button", { name: "Return", exact: true })
               .click();
             await expect(
-              page.getByText("Current route content", { exact: true }),
+              page
+                .getByRole("main")
+                .getByText("Current route content", { exact: true }),
             ).toBeVisible();
             await page
               .getByRole("button", { name: "Navigate", exact: true })
@@ -334,7 +350,9 @@ export function ownershipCases(owned = false, selected?: string[]) {
             page.getByText("Old resolved content", { exact: true }),
           ).toHaveCount(0);
           await expect(
-            page.getByText("Root data pending", { exact: true }),
+            page
+              .getByRole("main")
+              .getByText("Root data pending", { exact: true }),
           ).toBeVisible();
         }
         rootSettle("Original root content");
@@ -376,7 +394,9 @@ export function ownershipCases(owned = false, selected?: string[]) {
           ).toBeVisible();
         if (mode === "revalidate") {
           await expect(
-            page.getByText("Current root content", { exact: true }),
+            page
+              .getByRole("main")
+              .getByText("Current root content", { exact: true }),
           ).toBeVisible();
           await expect
             .soft(page.getByText("Root data pending", { exact: true }))
