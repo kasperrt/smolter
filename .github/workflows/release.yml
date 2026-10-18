@@ -45,10 +45,7 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - name: Publish JSR and verify availability
-        timeout-minutes: 3
-        run: node scripts/release.mjs publish-jsr
-      - name: Publish npm after JSR succeeds
+      - name: Publish npm and verify availability
         timeout-minutes: 3
         run: node scripts/release.mjs publish-npm
       - name: Create GitHub release
