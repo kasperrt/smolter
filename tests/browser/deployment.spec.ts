@@ -14,6 +14,7 @@ test.afterEach(async () => {
 
 for (const [mode, base] of [
   ["before", "/"],
+  ["nonblocking", "/"],
   ["during", "/admin/"],
   ["prefetch", "/remotes/"],
   ["redirect", "/embed/custom/"],
@@ -94,7 +95,7 @@ for (const [mode, base] of [
       await mkdir(directory);
       await writeFile(
         join(directory, "index.html"),
-        `<h1>${version} document</h1><button id="next">Next</button><button id="other">Other</button><output></output><script type="module" src="/entry.ts"></script>`,
+        `<h1>${version} document</h1><button id="next">Next</button><button id="other">Other</button><input aria-label="Persistent note"><output></output><script type="module" src="/entry.ts"></script>`,
       );
       await writeFile(
         join(directory, "page.ts"),
@@ -146,6 +147,41 @@ for (const [mode, base] of [
           route.fulfill({ contentType: "application/json", body: oldManifest }),
         { times: 1 },
       );
+    }
+    if (mode === "nonblocking") {
+      let release!: () => void;
+      const pending = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      await page.route("**/smolter-manifest.json", async (route) => {
+        await pending;
+        await route.fulfill({
+          contentType: "application/json",
+          body: await readFile(
+            join(root, "b", "smolter-manifest.json"),
+            "utf8",
+          ),
+        });
+      });
+      await page
+        .getByRole("textbox", { name: "Persistent note" })
+        .fill("Retain this input");
+      await page.getByRole("button", { name: "Next" }).click();
+      await expect(page.locator("output")).toHaveText("a route");
+      await expect(page).toHaveURL(`${origin}${base}next?tab=2#details`);
+      const manifest = page.waitForResponse("**/smolter-manifest.json");
+      release();
+      await (await manifest).finished();
+      await expect(
+        page.getByRole("textbox", { name: "Persistent note" }),
+      ).toHaveValue("Retain this input");
+      await expect(page.locator("h1")).toHaveText("a document");
+      active = join(root, "b");
+      await page.getByRole("button", { name: "Other" }).click();
+      await expect(page.locator("h1")).toHaveText("b document");
+      await expect(page.locator("output")).toHaveText("b route");
+      await expect(page).toHaveURL(`${origin}${base}other?tab=3#latest`);
+      return;
     }
     active = join(root, "b");
     if (mode === "prefetch") {

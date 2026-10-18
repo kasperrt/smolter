@@ -37,19 +37,26 @@ export function deploymentCheck(options: DeploymentOptions) {
   const key = `smolter:deployment:${manifest.href}:${version}`;
   let stopped = false;
   let pending: Promise<Manifest | undefined> | undefined;
+  let forced = false;
   let controller: AbortController | undefined;
   let cached: Manifest | undefined;
   let checked = 0;
 
-  function read(force: boolean) {
-    if (pending) return pending;
+  function read(force: boolean): Promise<Manifest | undefined> {
+    if (stopped) return Promise.resolve(undefined);
+    if (pending)
+      return force && !forced
+        ? pending.then((latest) =>
+            latest && latest.version !== version ? latest : read(true),
+          )
+        : pending;
     if (
       !force &&
-      options.shared &&
-      cached &&
+      checked &&
       Date.now() - checked < (options.checkInterval ?? 30_000)
     )
       return Promise.resolve(cached);
+    forced = force;
     controller = new AbortController();
     const timer = setTimeout(() => controller?.abort(), timeout);
     pending = safeWrapAsync(async () => {
@@ -63,19 +70,18 @@ export function deploymentCheck(options: DeploymentOptions) {
       .then(({ data }) => {
         if (data) {
           cached = data;
-          checked = Date.now();
         }
         return data;
       })
       .finally(() => {
+        checked = Date.now();
         clearTimeout(timer);
         pending = undefined;
       });
     return pending;
   }
 
-  async function changed(target?: URL, force = false) {
-    const latest = await read(force);
+  function differs(latest: Manifest | undefined, target?: URL, force = false) {
     if (!latest || latest.version === version) return false;
     if (
       force ||
@@ -108,7 +114,9 @@ export function deploymentCheck(options: DeploymentOptions) {
   }
 
   return {
-    changed,
+    changed: async (target?: URL, force = false) =>
+      differs(await read(force), target, force),
+    known: (target: URL) => differs(cached, target),
     reload,
     dispose() {
       stopped = true;

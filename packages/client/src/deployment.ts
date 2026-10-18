@@ -16,16 +16,16 @@ export interface DeploymentOptions {
   shared?: string;
   /** Generated route dependency fingerprints, in route matching order. */
   routes?: { path: string; fingerprint: string }[];
-  /** Minimum interval between successful routine manifest checks (default 30 seconds). Chunk failures bypass it. */
+  /** Minimum interval between completed routine manifest checks (default 30 seconds). Chunk failures bypass it. */
   checkInterval?: number;
   manifestURL: string;
-  /** Maximum time to wait for the update check before continuing navigation. */
+  /** Maximum duration of a manifest request; ordinary navigation does not wait for it. */
   timeout?: number;
   /** Override document navigation, for example to ask about unsaved changes. */
   reload?: (destination: URL) => void;
 }
 
-/** Check for deployment changes before navigation. Install before creating fetchers. Returns a cleanup function. */
+/** Check for deployment changes alongside navigation. Install before creating fetchers. Returns a cleanup function. */
 export function watchDeployment(
   router: NavigationRouter,
   options: DeploymentOptions | null,
@@ -36,7 +36,7 @@ export function watchDeployment(
   state.cleanup?.();
   watchers.set(router, state);
   const check = deploymentCheck(options);
-  const { changed, reload } = check;
+  const { changed, known, reload } = check;
   const read = router.getSnapshot;
   const navigate = router.navigate;
   const dispose = router.dispose;
@@ -73,26 +73,25 @@ export function watchDeployment(
     valid(current) && state.mutations === 0;
 
   const guarded: NavigationRouter["navigate"] = async (href, operation) => {
-    const target = new URL(href, router.getSnapshot().url);
-    const currentURL = new URL(router.getSnapshot().url);
+    const target = new URL(href, read().url);
+    const previous = new URL(read().url);
     const current = ++state.sequence;
 
     if (
       target.origin === location.origin &&
-      (target.pathname !== currentURL.pathname ||
-        target.search !== currentURL.search) &&
-      (await changed(target))
+      (target.pathname !== previous.pathname ||
+        target.search !== previous.search)
     ) {
-      if (!valid(current) || (await reload(target, () => canReload(current))))
+      if (known(target) && (await reload(target, () => canReload(current))))
         return;
+      void changed(target);
     }
 
-    if (current === state.sequence && !stopped) await navigate(href, operation);
+    if (valid(current)) await navigate(href, operation);
   };
 
   const pop = (event: PopStateEvent) => {
     if (replay) return;
-
     const target = new URL(location.href);
     const previous = new URL(read().url);
     const current = ++state.sequence;
@@ -103,12 +102,14 @@ export function watchDeployment(
     )
       return;
 
-    event.stopImmediatePropagation();
-    void changed(target).then(async (updated) => {
-      if (!valid(current)) return;
-      if (updated && (await reload(target, () => canReload(current)))) return;
-      if (!valid(current)) return;
+    if (!known(target) || !canReload(current)) {
+      void changed(target);
+      return;
+    }
 
+    event.stopImmediatePropagation();
+    void reload(target, () => canReload(current)).then((reloaded) => {
+      if (reloaded || !valid(current)) return;
       replay = true;
       window.dispatchEvent(
         new PopStateEvent("popstate", { state: event.state }),

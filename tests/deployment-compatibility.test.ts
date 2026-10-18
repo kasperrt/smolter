@@ -68,3 +68,49 @@ it("forces a fresh check for missing chunks even when compatible metadata is cac
   expect(fetcher).toHaveBeenCalledTimes(2);
   check.dispose();
 });
+
+it("throttles failed routine probes but lets chunk recovery retry immediately", async () => {
+  vi.stubGlobal("location", { href: "https://app.test/" });
+  const fetcher = vi
+    .fn()
+    .mockResolvedValueOnce(new Response(null, { status: 503 }))
+    .mockResolvedValueOnce(Response.json({ version: "new" }));
+  vi.stubGlobal("fetch", fetcher);
+  const check = deploymentCheck({ version: "old", manifestURL: "/manifest" });
+  const target = new URL("https://app.test/next");
+  expect(await check.changed(target)).toBe(false);
+  expect(await check.changed(target)).toBe(false);
+  expect(fetcher).toHaveBeenCalledOnce();
+  expect(check.known(target)).toBe(false);
+  expect(await check.changed(target, true)).toBe(true);
+  expect(fetcher).toHaveBeenCalledTimes(2);
+  expect(check.known(target)).toBe(true);
+  check.dispose();
+});
+
+it("refreshes an older in-flight routine result once for concurrent chunk failures", async () => {
+  vi.stubGlobal("location", { href: "https://app.test/" });
+  let finish!: (response: Response) => void;
+  const fetcher = vi
+    .fn()
+    .mockReturnValueOnce(
+      new Promise<Response>((resolve) => {
+        finish = resolve;
+      }),
+    )
+    .mockImplementation(async () => Response.json({ version: "new" }));
+  vi.stubGlobal("fetch", fetcher);
+  const check = deploymentCheck({ version: "old", manifestURL: "/manifest" });
+  const target = new URL("https://app.test/next");
+  const routine = check.changed(target);
+  const first = check.changed(target, true);
+  const second = check.changed(target, true);
+  finish(Response.json({ version: "old" }));
+  expect(await routine).toBe(false);
+  expect(await first).toBe(true);
+  expect(await second).toBe(true);
+  expect(fetcher).toHaveBeenCalledTimes(2);
+  check.dispose();
+  expect(await check.changed(target, true)).toBe(false);
+  expect(fetcher).toHaveBeenCalledTimes(2);
+});

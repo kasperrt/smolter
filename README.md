@@ -644,12 +644,12 @@ a claim of identical features.
 | `Preact: routing-only named exports` | 1755 |
 | `@kasperrt/smolter/react` | 5732 |
 | `@kasperrt/smolter/preact` | 5998 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 7217 |
-| `@kasperrt/smolter/preact + server transport` | 7493 |
-| `@kasperrt/smolter/react + client + document (application)` | 10280 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 10554 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 10595 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 10878 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7269 |
+| `@kasperrt/smolter/preact + server transport` | 7545 |
+| `@kasperrt/smolter/react + client + document (application)` | 10337 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 10610 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 10652 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 10932 |
 | `React: common routing/data exports` | 4022 |
 | `Preact: common routing/data exports` | 3998 |
 | `wouter: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
@@ -767,9 +767,11 @@ Serve the emitted `smolter-manifest.json` with `Cache-Control: no-store` and HTM
 with `no-cache`. Builds have deterministic content identities. Lazy file-route builds
 also carry shared and per-route dependency fingerprints: an unrelated route change
 does not reload a compatible destination. Shared changes, changed/missing destinations,
-and builds without route metadata retain conservative destination reloads. Successful
-routine checks are reused for 30 seconds (`checkInterval` overrides this); missing-chunk
-failures bypass that cache and can recover even when route fingerprints match. Hash-only links skip the check, failed checks continue
+and builds without route metadata retain conservative destination reloads. Routine checks
+run in the background without delaying navigation or Back/Forward. A discovered change
+is applied on the next eligible navigation; a late response never reloads a successfully
+rendered page. Completed checks, including failures, are reused for 30 seconds
+(`checkInterval` overrides this). Missing-chunk failures bypass that interval and can recover even when route fingerprints match. Hash-only links skip the check, failed checks continue
 normally, and a session marker prevents reload loops. Development/SSR builds
 disable the helper. This optional client module adds nothing to the routing-only
 entrypoints and never replays form submissions.

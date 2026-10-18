@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.5-beta.3
+
+- Keep deployment manifest requests off the navigation and Back/Forward critical path. Routine checks run in the background; confirmed changes apply on the next eligible navigation, without reloading a successfully rendered page when a late response arrives.
+- Reuse completed routine checks, including failed checks, for 30 seconds by default. Missing-chunk recovery bypasses the interval and refreshes an older in-flight result when necessary; concurrent recovery callers share the fresh request.
+- Preserve destination fingerprints, query/hash/base paths, mutation protection and one-reload safeguards. Add production coverage for a held manifest request, persistent input and subsequent deployment recovery.
+
 ## 0.4.5-beta.2
 
 - Fix Vite production builds in TypeScript 7 consumers by declaring the compiler API used for prefetch analysis as Smolter's own pinned, separately named `typescript-compiler` build-time dependency instead of an unconstrained consumer peer. Application TypeScript versions remain independent; no compiler enters browser output.

@@ -48,6 +48,7 @@ function setup(version = "old") {
   const options = {
     version: "old",
     manifestURL: "/smolter-manifest.json",
+    checkInterval: 0,
     reload,
   };
   cleanups.push(watchDeployment(router, options));
@@ -77,11 +78,13 @@ it("checks navigations without caching and skips hash-only or external targets",
 
 it("reloads the intended destination once per old build, then permits ordinary errors", async () => {
   const { router, reload, storage } = setup("new");
+  await router.navigate("/?probe");
+  await new Promise((done) => setTimeout(done, 0));
   await router.navigate("/next?tab=1#heading");
   expect(reload.mock.calls[0][0].href).toBe(
     "https://app.test/next?tab=1#heading",
   );
-  expect(router.getSnapshot().url).toBe("https://app.test/");
+  expect(router.getSnapshot().url).toBe("https://app.test/?probe");
   expect(storage.size).toBe(1);
   await router.navigate("/next");
   expect(reload).toHaveBeenCalledTimes(1);
@@ -92,6 +95,8 @@ it("uses document navigation by default and avoids loops when storage is unavail
   const { router, location, options } = setup("new");
   router.dispose();
   cleanups.push(watchDeployment(router, { ...options, reload: undefined }));
+  await router.navigate("/?probe");
+  await new Promise((done) => setTimeout(done, 0));
   await router.navigate("/next");
   expect(location.assign).toHaveBeenCalledWith("https://app.test/next");
   vi.stubGlobal("sessionStorage", {
@@ -127,7 +132,7 @@ it("continues after unavailable, invalid JSON and offline responses", async () =
   expect(reload).not.toHaveBeenCalled();
 });
 
-it("shares concurrent probes and only the newest navigation may reload", async () => {
+it("shares concurrent probes without interrupting completed navigation", async () => {
   const { router, fetcher, reload } = setup();
   let resolve!: (response: Response) => void;
   fetcher.mockReturnValue(
@@ -140,8 +145,11 @@ it("shares concurrent probes and only the newest navigation may reload", async (
   resolve(Response.json({ version: "new" }));
   await Promise.all([first, last]);
   expect(fetcher).toHaveBeenCalledTimes(1);
-  expect(reload).toHaveBeenCalledTimes(1);
-  expect(reload.mock.calls[0][0].pathname).toBe("/next");
+  await new Promise((done) => setTimeout(done, 0));
+  expect(reload).not.toHaveBeenCalled();
+  expect(router.getSnapshot().url).toBe("https://app.test/next");
+  await router.navigate("/next?updated");
+  expect(reload.mock.calls[0][0].href).toBe("https://app.test/next?updated");
 });
 
 it("cleans up listeners and ignores in-flight checks after disposal", async () => {
@@ -171,7 +179,7 @@ it("recovers chunk failures only after a confirmed deployment and never during a
   await vi.waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
 });
 
-it("replays unchanged back/forward events with their state and reloads changed builds", async () => {
+it("passes history immediately and uses previously discovered changes on later history", async () => {
   const { fetcher, events, location, reload } = setup();
   const listener = vi.fn();
   events.addEventListener("popstate", listener);
@@ -182,9 +190,39 @@ it("replays unchanged back/forward events with their state and reloads changed b
   events.dispatchEvent(new PopStateEvent("popstate", { state: "back" }));
   await vi.waitFor(() => expect(listener).toHaveBeenCalledTimes(2));
   expect(listener.mock.calls[1][0].state).toBe("back");
+  await new Promise((done) => setTimeout(done, 0));
   fetcher.mockImplementation(async () => Response.json({ version: "new" }));
   events.dispatchEvent(new PopStateEvent("popstate", { state: "next" }));
+  await new Promise((done) => setTimeout(done, 0));
+  expect(reload).not.toHaveBeenCalled();
+  events.dispatchEvent(new PopStateEvent("popstate", { state: "known" }));
   await vi.waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
+});
+
+it("completes navigation and history dispatch while the manifest is unresolved", async () => {
+  const { router, fetcher, events, location, reload, storage } = setup();
+  let finish!: (response: Response) => void;
+  fetcher.mockReturnValue(
+    new Promise<Response>((resolve) => {
+      finish = resolve;
+    }),
+  );
+  let completed = false;
+  const navigation = router.navigate("/next?ready=1#scope").then(() => {
+    completed = true;
+  });
+  await vi.waitFor(() => expect(completed).toBe(true));
+  expect(router.getSnapshot().url).toBe("https://app.test/next?ready=1#scope");
+  const history = vi.fn();
+  events.addEventListener("popstate", history);
+  location.href = "https://app.test/?back=1#scope";
+  events.dispatchEvent(new PopStateEvent("popstate", { state: "back" }));
+  expect(history).toHaveBeenCalledOnce();
+  expect(history.mock.calls[0][0].state).toBe("back");
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+  finish(Response.json({ version: "old" }));
+  await navigation;
 });
 
 it("times out without preventing navigation", async () => {
@@ -243,8 +281,10 @@ it("leaves intent-prefetch failures idle until a click records its destination",
   expect(storage.size).toBe(0);
 
   await router.navigate("/next?security#settings");
+  router.getSnapshot().state = "loading";
+  events.dispatchEvent(new Event("vite:preloadError"));
 
-  expect(reload).toHaveBeenCalledOnce();
+  await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
   expect(reload.mock.calls[0][0].href).toBe(
     "https://app.test/next?security#settings",
   );
@@ -264,12 +304,14 @@ it("preserves the newest click after prefetch failure and overlapping navigation
   router.getSnapshot().state = "loading";
   events.dispatchEvent(new Event("vite:preloadError"));
   const last = router.navigate("/next");
+  router.getSnapshot().state = "loading";
+  events.dispatchEvent(new Event("vite:preloadError"));
 
   resolve(Response.json({ version: "new" }));
   await Promise.all([first, last]);
 
   expect(fetcher).toHaveBeenCalledOnce();
-  expect(reload).toHaveBeenCalledOnce();
+  await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
   expect(reload.mock.calls[0][0].pathname).toBe("/next");
 });
 
@@ -388,7 +430,9 @@ it("uses the latest overlapping history destination including its query and hash
   location.href = "https://app.test/next?tab=2#latest";
   events.dispatchEvent(new PopStateEvent("popstate", { state: 2 }));
   resolve(Response.json({ version: "new" }));
-
+  await new Promise((done) => setTimeout(done, 0));
+  expect(reload).not.toHaveBeenCalled();
+  events.dispatchEvent(new PopStateEvent("popstate", { state: 3 }));
   await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
   expect(reload.mock.calls[0][0].href).toBe(location.href);
   expect(fetcher).toHaveBeenCalledOnce();
@@ -446,6 +490,7 @@ it("keeps navigation usable without reloading while either fetcher mutation is p
   finishes[0]();
   await submissions[0];
   await router.navigate("/next?pending=1#details");
+  await new Promise((done) => setTimeout(done, 0));
 
   expect(router.getSnapshot().url).toBe(
     "https://app.test/next?pending=1#details",
@@ -564,6 +609,7 @@ for (const ending of ["failure", "abort", "dispose"] as const) {
     if (ending === "failure")
       expect(failed.error?.message).toContain("Action failed");
     await router.navigate("/next?pending=1#scope");
+    await new Promise((done) => setTimeout(done, 0));
     expect(reload).not.toHaveBeenCalled();
     expect(storage.size).toBe(0);
     finish();
@@ -657,6 +703,7 @@ it("preserves pending mutation protection and navigation ownership across watche
   const navigation = router.navigate("/next?protected=1#scope");
   old();
   await navigation;
+  await new Promise((done) => setTimeout(done, 0));
   expect(router.getSnapshot().url).toBe(
     "https://app.test/next?protected=1#scope",
   );
@@ -676,6 +723,7 @@ it("keeps unchanged destination dependencies and caches routine checks without h
     watchDeployment(router, {
       ...options,
       shared: "shell",
+      checkInterval: 30_000,
       routes: [
         { path: "/", fingerprint: "home" },
         { path: "/next", fingerprint: "next" },
@@ -693,6 +741,7 @@ it("keeps unchanged destination dependencies and caches routine checks without h
     }),
   );
   await router.navigate("/next?q=1#scope");
+  await new Promise((done) => setTimeout(done, 0));
   expect(reload).not.toHaveBeenCalled();
   expect(storage.size).toBe(0);
   await router.navigate("/next?q=2");
@@ -700,4 +749,24 @@ it("keeps unchanged destination dependencies and caches routine checks without h
   await router.navigate("/");
   expect(reload).toHaveBeenCalledTimes(1);
   expect(reload.mock.calls[0][0].pathname).toBe("/");
+});
+
+it("delivers a known-update history event once when storage prevents recovery", async () => {
+  const { router, location, events, reload } = setup("new");
+  await router.navigate("/next?prime");
+  await new Promise((done) => setTimeout(done, 0));
+  vi.stubGlobal("sessionStorage", {
+    getItem() {
+      throw new Error("Storage unavailable");
+    },
+  });
+  const listener = vi.fn();
+  events.addEventListener("popstate", listener);
+  location.href = "https://app.test/?back=1#scope";
+  events.dispatchEvent(
+    new PopStateEvent("popstate", { state: { key: "back" } }),
+  );
+  await vi.waitFor(() => expect(listener).toHaveBeenCalledOnce());
+  expect(listener.mock.calls[0][0].state).toEqual({ key: "back" });
+  expect(reload).not.toHaveBeenCalled();
 });

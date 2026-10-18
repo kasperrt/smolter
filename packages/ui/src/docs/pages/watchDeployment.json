@@ -16,7 +16,7 @@
     },
     {
       "title": "Navigation behavior",
-      "body": "Pathname/query navigation and Back/Forward compare destination dependencies and shared application fingerprints. Unrelated route changes keep client navigation. Changed shared code, changed/missing destinations, or missing compatibility metadata require document recovery. Successful routine checks are reused for 30 seconds (checkInterval); chunk failures bypass this cache. Hash-only/external links skip checks. Concurrent checks share a request; only the latest intent may reload. Mutations are never replayed.",
+      "body": "Pathname/query navigation and Back/Forward compare destination dependencies and shared application fingerprints. Unrelated route changes keep client navigation. Changed shared code, changed/missing destinations, or missing compatibility metadata require document recovery. Routine checks run in the background and never delay navigation or Back/Forward. A discovered change applies on the next eligible navigation, not as a late reload of a successfully rendered page. Completed checks, including failures, are reused for 30 seconds (checkInterval); chunk failures bypass this interval. Hash-only/external links skip checks. Concurrent checks share a request; only the latest intent may reload. Mutations are never replayed.",
       "code": ""
     },
     {
