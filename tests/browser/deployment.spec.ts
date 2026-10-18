@@ -17,6 +17,8 @@ for (const [mode, base] of [
   ["during", "/admin/"],
   ["prefetch", "/remotes/"],
   ["redirect", "/embed/custom/"],
+  ["redirect-fast", "/admin/"],
+  ["redirect-delayed", "/admin/"],
   ["overlap", "/casting/receiver/"],
   ["offline", "/"],
   ["history", "/"],
@@ -30,11 +32,21 @@ for (const [mode, base] of [
     const root = await mkdtemp(join(tmpdir(), "smolter-deployment-"));
     cleanups.push(() => rm(root, { recursive: true, force: true }));
     let active = join(root, "a");
+    let finishRoot!: () => void;
+    const rootPending = new Promise<void>((resolve) => {
+      finishRoot = resolve;
+    });
+    cleanups.push(async () => finishRoot());
     const serve: RequestListener = async (request, response) => {
       response.setHeader("Access-Control-Allow-Origin", "*");
       const path = new URL(request.url!, "http://local").pathname.slice(
         base.length - 1,
       );
+      if (path === "/root-refresh") {
+        await rootPending;
+        response.end("done");
+        return;
+      }
       const file =
         path.startsWith("/assets/") || path.endsWith(".json")
           ? path.slice(1)
@@ -114,10 +126,14 @@ for (const [mode, base] of [
           } },
         ], { browser: true });
         watchDeployment(router, ${mode === "nonblocking" ? "deployment && { ...deployment, timeout: 60_000 }" : "deployment"});
+        router.registerRevalidator("root", async () => {
+          sessionStorage.setItem("roots", String(Number(sessionStorage.getItem("roots")) + 1));
+          ${mode.startsWith("redirect-") ? 'await fetch("' + base + 'root-refresh");' : ""}
+        });
         router.subscribe(() => { document.querySelector("output").textContent = router.getSnapshot().data || ""; });
         router.start();
         ${mode === "prefetch" ? 'document.querySelector("button").onpointerenter = () => void safeWrapAsync(() => import("./page"));' : ""}
-        document.querySelector("#next").onclick = () => ${mode === "redirect" ? 'router.submit("' + base + 'login", new FormData())' : 'router.navigate("' + base + 'next?tab=2#details")'};
+        document.querySelector("#next").onclick = () => ${mode.startsWith("redirect") ? 'router.submit("' + base + 'login", new FormData())' : 'router.navigate("' + base + 'next?tab=2#details")'};
         document.querySelector("#other").onclick = () => router.navigate("${base}other?tab=3#latest");
       `,
       );
@@ -255,14 +271,52 @@ for (const [mode, base] of [
         return;
       }
     }
-    await page.getByRole("button", { name: "Next" }).click();
+    if (mode.startsWith("redirect-")) {
+      let releaseManifest!: () => void;
+      const manifestPending = new Promise<void>((resolve) => {
+        releaseManifest = resolve;
+      });
+      cleanups.push(async () => releaseManifest());
+      if (mode === "redirect-delayed")
+        await page.route("**/smolter-manifest.json", async (route) => {
+          await manifestPending;
+          await route.continue();
+        });
+      const manifest = page.waitForResponse("**/smolter-manifest.json");
+      const rootRequest = page.waitForRequest("**/root-refresh");
+      await page.getByRole("button", { name: "Next" }).click();
+      await rootRequest;
+      if (mode === "redirect-fast") {
+        await (await manifest).finished();
+        await expect(page.locator("h1")).toHaveText("a document");
+        expect(
+          await page.evaluate(() =>
+            Object.keys(sessionStorage).filter((key) =>
+              key.startsWith("smolter:deployment:"),
+            ),
+          ),
+        ).toEqual([]);
+        finishRoot();
+      } else {
+        const refreshed = page.waitForResponse("**/root-refresh");
+        finishRoot();
+        await (await refreshed).finished();
+        releaseManifest();
+      }
+    } else {
+      await page.getByRole("button", { name: "Next" }).click();
+    }
     await expect(page.locator("h1")).toHaveText("b document");
     await expect(page.locator("output")).toHaveText("b route");
     await expect(page).toHaveURL(`${origin}${base}next?tab=2#details`);
-    if (mode === "redirect")
+    if (mode.startsWith("redirect")) {
       expect(
         await page.evaluate(() => sessionStorage.getItem("mutations")),
       ).toBe("1");
+      expect(await page.evaluate(() => sessionStorage.getItem("roots"))).toBe(
+        "1",
+      );
+    }
     await page.close();
   });
 }
