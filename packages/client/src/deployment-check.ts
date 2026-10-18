@@ -66,18 +66,13 @@ export function deploymentCheck(options: DeploymentOptions) {
       });
       if (!response.ok) return;
       return manifestValue(await response.json());
-    })
-      .then(({ data }) => {
-        if (data) {
-          cached = data;
-        }
-        return data;
-      })
-      .finally(() => {
-        checked = Date.now();
-        clearTimeout(timer);
-        pending = undefined;
-      });
+    }).then(({ data }) => {
+      if (data) cached = data;
+      checked = Date.now();
+      clearTimeout(timer);
+      pending = undefined;
+      return data;
+    });
     return pending;
   }
 

@@ -770,3 +770,38 @@ it("delivers a known-update history event once when storage prevents recovery", 
   expect(listener.mock.calls[0][0].state).toEqual({ key: "back" });
   expect(reload).not.toHaveBeenCalled();
 });
+
+it("releases tracked mutation ownership when a custom submission throws", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { options, reload } = setup("new");
+  const router = createDataRouter([{ path: "/" }, { path: "/next" }], {
+    url: "https://app.test/",
+  });
+  const error = new Error("Custom submission failed");
+  router.submit = () => {
+    throw error;
+  };
+  cleanups.push(watchDeployment(router, options));
+  await expect(router.submit("/", new FormData())).rejects.toBe(error);
+  await router.navigate("/next?probe");
+  await new Promise((done) => setTimeout(done, 0));
+  await router.navigate("/next?eligible");
+  expect(reload).toHaveBeenCalledOnce();
+});
+
+it("propagates bootstrap setup failures through safeWrapAsync cleanup", async () => {
+  const { recoverDeployment } = await import(
+    "../packages/client/src/deployment.ts"
+  );
+  const { options } = setup();
+  const error = new Error("AbortController unavailable");
+  vi.stubGlobal(
+    "AbortController",
+    class {
+      constructor() {
+        throw error;
+      }
+    },
+  );
+  await expect(recoverDeployment(options)).rejects.toBe(error);
+});

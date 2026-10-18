@@ -104,7 +104,7 @@ for (const [mode, base] of [
       await writeFile(
         join(directory, "entry.ts"),
         `
-        import { createDataRouter } from ${JSON.stringify(resolve("packages/core/src/index.ts"))};
+        import { createDataRouter, safeWrapAsync } from ${JSON.stringify(resolve("packages/core/src/index.ts"))};
         import { watchDeployment } from ${JSON.stringify(resolve("packages/client/src/deployment.ts"))};
         import deployment from "virtual:smolter/deployment";
         const router = createDataRouter([
@@ -119,7 +119,7 @@ for (const [mode, base] of [
         watchDeployment(router, deployment);
         router.subscribe(() => { document.querySelector("output").textContent = router.getSnapshot().data || ""; });
         router.start();
-        ${mode === "prefetch" ? 'document.querySelector("button").onpointerenter = () => import("./page").catch(() => {});' : ""}
+        ${mode === "prefetch" ? 'document.querySelector("button").onpointerenter = () => void safeWrapAsync(() => import("./page"));' : ""}
         document.querySelector("#next").onclick = () => ${mode === "redirect" ? 'router.submit("' + base + 'login", new FormData())' : 'router.navigate("' + base + 'next?tab=2#details")'};
         document.querySelector("#other").onclick = () => router.navigate("${base}other?tab=3#latest");
       `,

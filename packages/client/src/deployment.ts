@@ -1,4 +1,8 @@
-import type { NavigationRouter, Router } from "@smolter/core";
+import {
+  type NavigationRouter,
+  type Router,
+  safeWrapAsync,
+} from "@smolter/core";
 import { deploymentCheck } from "./deployment-check.ts";
 
 interface WatcherState {
@@ -52,8 +56,10 @@ export function watchDeployment(
       state.sequence++;
       state.mutations++;
 
-      return submit(...args).finally(() => {
+      return safeWrapAsync(() => submit(...args)).then(({ data, error }) => {
         state.mutations--;
+        if (error) throw error.cause ?? error;
+        return data!;
       });
     };
   const guardedSubmit = submit && trackSubmission(submit);
@@ -177,10 +183,11 @@ export async function recoverDeployment(
 
   const check = deploymentCheck(options);
 
-  return check
-    .changed(destination ?? new URL(location.href), true)
-    .then((changed) =>
-      changed ? check.reload(destination ?? new URL(location.href)) : false,
-    )
-    .finally(check.dispose);
+  const result = await safeWrapAsync(async () => {
+    const target = destination ?? new URL(location.href);
+    return (await check.changed(target, true)) ? check.reload(target) : false;
+  });
+  check.dispose();
+  if (result.error) throw result.error.cause ?? result.error;
+  return result.data!;
 }
