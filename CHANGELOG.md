@@ -2,7 +2,8 @@
 
 ## 0.4.5-beta.2
 
-- Fix Vite production builds in TypeScript 7 consumers by declaring the compiler API used for prefetch analysis as Smolter's own pinned build-time dependency instead of an unconstrained consumer peer. Application TypeScript versions remain independent; no compiler enters browser output.
+- Fix Vite production builds in TypeScript 7 consumers by declaring the compiler API used for prefetch analysis as Smolter's own pinned, separately named `typescript-compiler` build-time dependency instead of an unconstrained consumer peer. Application TypeScript versions remain independent; no compiler enters browser output.
+- Upgrade Smolter compilation and typechecking to TypeScript 7.0.2. Analysis and documentation tooling use the stable TypeScript 6 compiler API; no experimental TypeScript APIs are used.
 - Add packed-package React 18/19 and Preact consumer builds with TypeScript 7.0.2, checking browser/SSR output, disabled prefetch, viewport/data selection, and conservative union spreads.
 - Clarify compiler ownership in the README and prefetch guides. Browser implementations and size budgets are unchanged.
 

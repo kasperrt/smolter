@@ -11,6 +11,6 @@
     "@smolter/files": "workspace:*",
     "vite": "8.3.4",
     "@smolter/server": "workspace:*",
-    "typescript": "6.0.3"
+    "typescript-compiler": "npm:typescript@6.0.3"
   }
 }

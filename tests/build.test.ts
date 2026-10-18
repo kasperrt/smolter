@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { build as bundleBrowser } from "esbuild";
 import { minify } from "terser";
-import ts from "typescript";
+import ts from "typescript-compiler";
 import { build } from "vite";
 import { expect, it } from "vitest";
 

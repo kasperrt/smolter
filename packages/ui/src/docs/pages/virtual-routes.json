@@ -71,7 +71,7 @@
     },
     {
       "title": "Typed prefetch capabilities",
-      "body": "fileRouter and applicationPlugins infer prefetch usage for both React and Preact. Intent is the default for plain links. Literal viewport selects only the observer; unions and typed spreads retain every possible mode. prefetchData or router.prefetch selects the data cache. Spreads follow JSX override order. Broad values and Link passed to unknown component consumers retain capabilities conservatively. Smolter owns a pinned TypeScript compiler dependency for build analysis, independent of the application’s TypeScript version (including TypeScript 7). Imported type changes invalidate client and SSR capability modules; changing the capability set reloads existing router instances. Other edits retain normal HMR.",
+      "body": "fileRouter and applicationPlugins infer prefetch usage for both React and Preact. Intent is the default for plain links. Literal viewport selects only the observer; unions and typed spreads retain every possible mode. prefetchData or router.prefetch selects the data cache. Spreads follow JSX override order. Broad values and Link passed to unknown component consumers retain capabilities conservatively. Smolter owns a pinned stable TypeScript 6 compiler-API dependency (typescript-compiler) for build analysis, independent of the application’s TypeScript version (including TypeScript 7). Imported type changes invalidate client and SSR capability modules; changing the capability set reloads existing router instances. Other edits retain normal HMR.",
       "code": "pnpm add -D typescript\n\n<Link prefetch=\"viewport\" prefetchData to=\"/items\">Items</Link>"
     }
   ]

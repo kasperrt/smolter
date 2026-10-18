@@ -558,8 +558,8 @@ Data prefetching is opt-in and uses the existing route loader and transport:
 ```
 
 Smolter's Vite `fileRouter()` and `applicationPlugins()` infer capabilities from
-application TypeScript/JSX and imported source using Smolter’s own pinned TypeScript
-compiler dependency. Your application can use TypeScript 7 independently; the
+application TypeScript/JSX and imported source using Smolter’s own pinned stable TypeScript 6 compiler-API
+dependency (`typescript-compiler`). Your application can use TypeScript 7 independently; the
 compiler is only loaded by Vite tooling and never enters browser bundles. No capability imports or router setup are needed.
 
 A plain Link uses intent. Viewport-only usage omits intent handlers; intent-only
