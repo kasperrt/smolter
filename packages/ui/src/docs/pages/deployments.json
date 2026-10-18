@@ -43,6 +43,11 @@
       "title": "Compatibility boundaries",
       "body": "Only dependencies visible to the browser build graph can be fingerprinted. Route CSS/assets and raw route files participate; independently deployed server dependencies, runtime configuration and external assets need a compatibility key change when incompatible. Preserve old hashed assets during rollouts. Missing chunks can require recovery even when route fingerprints match. New route code is never injected into an old runtime based only on a fingerprint.",
       "code": "deploymentPlugin({ compatibility: \"server-contract-v2\" });\nwatchDeployment(router, deployment && { ...deployment, checkInterval: 30_000 });"
+    },
+    {
+      "title": "When to change the compatibility key",
+      "body": "Usually no key is needed: changes visible to the browser build already change its fingerprints. Use a stable contract identifier only for incompatible changes outside that graph, then rebuild and deploy the frontend and its manifest with the new key. For example, an independently deployed API changing { name } to { displayName } is invisible to an unchanged browser build. A new key makes old tabs eligible for recovery; the newly deployed frontend must already understand the new response. It does not repair incompatible code, detect backend deployments automatically, or replace coordinated rollout and backward compatibility. Do not change the key for ordinary data updates.",
+      "code": "deploymentPlugin({ compatibility: \"profile-contract-v2\" });"
     }
   ]
 }

@@ -773,7 +773,7 @@ normally, and a session marker prevents reload loops. Development/SSR builds
 disable the helper. This optional client module adds nothing to the routing-only
 entrypoints and never replays form submissions.
 
-Fingerprints cover the browser module graph, including route styles/assets and raw files present in that graph. Server-only dependencies outside that graph require an explicit `deploymentPlugin({ compatibility: "server-contract-v2" })` change when their contract becomes incompatible. Retain old hashed assets during deployments; missing assets can still require recovery. No route module is hot-swapped between deployments.
+Fingerprints cover the browser module graph, including route styles/assets and raw files present in that graph. Server-only dependencies outside that graph require an explicit `deploymentPlugin({ compatibility: "server-contract-v2" })` change when their contract becomes incompatible. The key is optional and stable across ordinary data updates. Changing it requires rebuilding and deploying the frontend and manifest; the new frontend must already support the changed contract. It cannot detect backend deployments automatically or repair incompatible code. Retain old hashed assets during deployments; missing assets can still require recovery. No route module is hot-swapped between deployments.
 
 See [deployment updates](https://kasperrt.github.io/smolter/docs/deployments/)
 for Express, CDN paths, TypeScript declarations and unsaved-state handling.

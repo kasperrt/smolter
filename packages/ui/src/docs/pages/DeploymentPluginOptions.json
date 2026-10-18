@@ -13,6 +13,11 @@
       "title": "Server compatibility",
       "body": "compatibility contributes to build and shared fingerprints. Change it for incompatible independently deployed server contracts or external runtime configuration that the browser graph cannot observe. It does not substitute for retaining old assets or consistent deployment ordering.",
       "code": "deploymentPlugin({ compatibility: \"server-contract-v2\" });"
+    },
+    {
+      "title": "When to change the compatibility key",
+      "body": "Usually no key is needed: changes visible to the browser build already change its fingerprints. Use a stable contract identifier only for incompatible changes outside that graph, then rebuild and deploy the frontend and its manifest with the new key. For example, an independently deployed API changing { name } to { displayName } is invisible to an unchanged browser build. A new key makes old tabs eligible for recovery; the newly deployed frontend must already understand the new response. It does not repair incompatible code, detect backend deployments automatically, or replace coordinated rollout and backward compatibility. Do not change the key for ordinary data updates.",
+      "code": "deploymentPlugin({ compatibility: \"profile-contract-v2\" });"
     }
   ]
 }
