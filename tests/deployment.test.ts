@@ -3,14 +3,11 @@ import { afterEach, expect, it, vi } from "vitest";
 import { watchDeployment } from "../packages/client/src/deployment.ts";
 
 const cleanups: (() => void)[] = [];
-
 afterEach(() => {
   for (const cleanup of cleanups.splice(0)) cleanup();
-
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
-
 function setup(version = "old") {
   const events = new EventTarget();
   const storage = new Map<string, string>();
@@ -27,7 +24,6 @@ function setup(version = "old") {
     Response.json({ version }),
   );
   const reload = vi.fn<(destination: URL) => void>();
-
   vi.stubGlobal("window", events);
   vi.stubGlobal("location", location);
   vi.stubGlobal("fetch", fetcher);
@@ -52,16 +48,13 @@ function setup(version = "old") {
     reload,
   };
   cleanups.push(watchDeployment(router, options));
-
   return { router, fetcher, reload, events, location, options, storage };
 }
-
 it("is inert without build metadata or a browser", () => {
   const router = createRouter([]);
   watchDeployment(router, null)();
   watchDeployment(router, { version: "x", manifestURL: "/manifest" })();
 });
-
 it("checks navigations without caching and skips hash-only or external targets", async () => {
   const { router, fetcher, reload } = setup();
   await router.navigate("/#section");
@@ -75,7 +68,6 @@ it("checks navigations without caching and skips hash-only or external targets",
   ]);
   expect(reload).not.toHaveBeenCalled();
 });
-
 it("reloads the intended destination once per old build, then permits ordinary errors", async () => {
   const { router, reload, storage } = setup("new");
   await router.navigate("/?probe");
@@ -90,7 +82,6 @@ it("reloads the intended destination once per old build, then permits ordinary e
   expect(reload).toHaveBeenCalledTimes(1);
   expect(router.getSnapshot().url).toBe("https://app.test/next");
 });
-
 it("uses document navigation by default and avoids loops when storage is unavailable", async () => {
   const { router, location, options } = setup("new");
   router.dispose();
@@ -108,7 +99,6 @@ it("uses document navigation by default and avoids loops when storage is unavail
   expect(location.assign).toHaveBeenCalledTimes(1);
   expect(router.getSnapshot().url).toContain("?again");
 });
-
 it.each([null, {}, { version: 3 }, { version: "" }])(
   "ignores malformed manifests: %j",
   async (body) => {
@@ -118,7 +108,6 @@ it.each([null, {}, { version: 3 }, { version: "" }])(
     expect(reload).not.toHaveBeenCalled();
   },
 );
-
 it("continues after unavailable, invalid JSON and offline responses", async () => {
   const { router, fetcher, reload } = setup();
   fetcher.mockImplementationOnce(
@@ -131,7 +120,6 @@ it("continues after unavailable, invalid JSON and offline responses", async () =
   await router.navigate("/next");
   expect(reload).not.toHaveBeenCalled();
 });
-
 it("shares concurrent probes without interrupting completed navigation", async () => {
   const { router, fetcher, reload } = setup();
   let resolve!: (response: Response) => void;
@@ -151,7 +139,6 @@ it("shares concurrent probes without interrupting completed navigation", async (
   await router.navigate("/next?updated");
   expect(reload.mock.calls[0][0].href).toBe("https://app.test/next?updated");
 });
-
 it("cleans up listeners and ignores in-flight checks after disposal", async () => {
   const { router, fetcher, reload, events } = setup();
   let resolve!: (response: Response) => void;
@@ -168,7 +155,6 @@ it("cleans up listeners and ignores in-flight checks after disposal", async () =
   expect(reload).not.toHaveBeenCalled();
   expect(fetcher).toHaveBeenCalledTimes(1);
 });
-
 it("recovers chunk failures only after a confirmed deployment and never during a submission", async () => {
   const { router, fetcher, reload, events } = setup("new");
   router.getSnapshot().state = "submitting";
@@ -178,7 +164,6 @@ it("recovers chunk failures only after a confirmed deployment and never during a
   events.dispatchEvent(new Event("vite:preloadError"));
   await vi.waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
 });
-
 it("passes history immediately and uses previously discovered changes on later history", async () => {
   const { fetcher, events, location, reload } = setup();
   const listener = vi.fn();
@@ -198,7 +183,6 @@ it("passes history immediately and uses previously discovered changes on later h
   events.dispatchEvent(new PopStateEvent("popstate", { state: "known" }));
   await vi.waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
 });
-
 it("completes navigation and history dispatch while the manifest is unresolved", async () => {
   const { router, fetcher, events, location, reload, storage } = setup();
   let finish!: (response: Response) => void;
@@ -208,9 +192,11 @@ it("completes navigation and history dispatch while the manifest is unresolved",
     }),
   );
   let completed = false;
-  const navigation = router.navigate("/next?ready=1#scope").then(() => {
+  async function completeNavigation() {
+    await router.navigate("/next?ready=1#scope");
     completed = true;
-  });
+  }
+  const navigation = completeNavigation();
   await vi.waitFor(() => expect(completed).toBe(true));
   expect(router.getSnapshot().url).toBe("https://app.test/next?ready=1#scope");
   const history = vi.fn();
@@ -224,7 +210,6 @@ it("completes navigation and history dispatch while the manifest is unresolved",
   finish(Response.json({ version: "old" }));
   await navigation;
 });
-
 it("times out without preventing navigation", async () => {
   const { router, fetcher, reload } = setup();
   fetcher.mockImplementation(
@@ -242,7 +227,6 @@ it("times out without preventing navigation", async () => {
   expect(reload).not.toHaveBeenCalled();
   expect(router.getSnapshot().url).toBe("https://app.test/next");
 });
-
 it("reloads the document when a failed chunk has already committed its URL", async () => {
   const { router, location, options, events } = setup("new");
   router.dispose();
@@ -251,7 +235,6 @@ it("reloads the document when a failed chunk has already committed its URL", asy
   events.dispatchEvent(new Event("vite:preloadError"));
   await vi.waitFor(() => expect(location.reload).toHaveBeenCalledTimes(1));
 });
-
 it("recovers bootstrap failures before mounting and shares the reload-loop safeguard", async () => {
   const { recoverDeployment } = await import(
     "../packages/client/src/deployment.ts"
@@ -269,27 +252,21 @@ it("recovers bootstrap failures before mounting and shares the reload-loop safeg
   fetcher.mockResolvedValue(Response.json({ version: "old" }));
   expect(await recoverDeployment(options)).toBe(false);
 });
-
 it("leaves intent-prefetch failures idle until a click records its destination", async () => {
   const { router, events, fetcher, reload, storage } = setup("new");
-
   events.dispatchEvent(new Event("vite:preloadError"));
   await Promise.resolve();
-
   expect(fetcher).not.toHaveBeenCalled();
   expect(reload).not.toHaveBeenCalled();
   expect(storage.size).toBe(0);
-
   await router.navigate("/next?security#settings");
   router.getSnapshot().state = "loading";
   events.dispatchEvent(new Event("vite:preloadError"));
-
   await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
   expect(reload.mock.calls[0][0].href).toBe(
     "https://app.test/next?security#settings",
   );
 });
-
 it("preserves the newest click after prefetch failure and overlapping navigation", async () => {
   const { router, events, fetcher, reload } = setup();
   let resolve!: (response: Response) => void;
@@ -298,7 +275,6 @@ it("preserves the newest click after prefetch failure and overlapping navigation
       resolve = done;
     }),
   );
-
   events.dispatchEvent(new Event("vite:preloadError"));
   const first = router.navigate("/first");
   router.getSnapshot().state = "loading";
@@ -306,15 +282,12 @@ it("preserves the newest click after prefetch failure and overlapping navigation
   const last = router.navigate("/next");
   router.getSnapshot().state = "loading";
   events.dispatchEvent(new Event("vite:preloadError"));
-
   resolve(Response.json({ version: "new" }));
   await Promise.all([first, last]);
-
   expect(fetcher).toHaveBeenCalledOnce();
   await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
   expect(reload.mock.calls[0][0].pathname).toBe("/next");
 });
-
 it("cancels a pending Back check when Forward returns to the current route", async () => {
   const { events, location, fetcher, reload, storage } = setup();
   let resolve!: (response: Response) => void;
@@ -323,18 +296,15 @@ it("cancels a pending Back check when Forward returns to the current route", asy
       resolve = done;
     }),
   );
-
   location.href = "https://app.test/previous";
   events.dispatchEvent(new PopStateEvent("popstate", { state: "back" }));
   location.href = "https://app.test/#returned";
   events.dispatchEvent(new PopStateEvent("popstate", { state: "forward" }));
   resolve(Response.json({ version: "new" }));
   await new Promise((done) => setTimeout(done, 0));
-
   expect(reload).not.toHaveBeenCalled();
   expect(storage.size).toBe(0);
 });
-
 it("does not reload when a mutation starts while chunk recovery is checking", async () => {
   const { router, events, fetcher, reload, storage } = setup();
   let resolve!: (response: Response) => void;
@@ -348,11 +318,9 @@ it("does not reload when a mutation starts while chunk recovery is checking", as
   router.getSnapshot().state = "submitting";
   resolve(Response.json({ version: "new" }));
   await new Promise((done) => setTimeout(done, 0));
-
   expect(reload).not.toHaveBeenCalled();
   expect(storage.size).toBe(0);
 });
-
 it("recovers the committed action redirect destination without replaying its mutation", async () => {
   const { createDataRouter } = await import("@smolter/core");
   const { events, options, reload } = setup("new");
@@ -379,17 +347,14 @@ it("recovers the committed action redirect destination without replaying its mut
   const rootRefresh = vi.fn(async () => undefined);
   router.registerRevalidator("root", rootRefresh);
   cleanups.push(watchDeployment(router, options));
-
   await router.submit("/", new FormData());
   await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
-
   expect(reload.mock.calls[0][0].href).toBe(
     "https://app.test/next?from=login#account",
   );
   expect(action).toHaveBeenCalledOnce();
   expect(rootRefresh).toHaveBeenCalledOnce();
 });
-
 it("invalidates pending recovery even when a newer mutation finishes before the manifest", async () => {
   const { createDataRouter } = await import("@smolter/core");
   const { options, events, fetcher, reload, storage } = setup();
@@ -406,16 +371,13 @@ it("invalidates pending recovery even when a newer mutation finishes before the 
   cleanups.push(watchDeployment(router, options));
   router.getSnapshot().state = "loading";
   events.dispatchEvent(new Event("vite:preloadError"));
-
   await router.submit("/", new FormData());
   resolve(Response.json({ version: "new" }));
   await new Promise((done) => setTimeout(done, 0));
-
   expect(action).toHaveBeenCalledOnce();
   expect(reload).not.toHaveBeenCalled();
   expect(storage.size).toBe(0);
 });
-
 it("uses the latest overlapping history destination including its query and hash", async () => {
   const { events, location, fetcher, reload } = setup();
   let resolve!: (response: Response) => void;
@@ -424,7 +386,6 @@ it("uses the latest overlapping history destination including its query and hash
       resolve = done;
     }),
   );
-
   location.href = "https://app.test/previous";
   events.dispatchEvent(new PopStateEvent("popstate", { state: 1 }));
   location.href = "https://app.test/next?tab=2#latest";
@@ -437,7 +398,6 @@ it("uses the latest overlapping history destination including its query and hash
   expect(reload.mock.calls[0][0].href).toBe(location.href);
   expect(fetcher).toHaveBeenCalledOnce();
 });
-
 it("does not reload an older chunk failure after independent fetcher mutations", async () => {
   const { createDataRouter } = await import("@smolter/core");
   const { options, events, fetcher, reload, storage } = setup();
@@ -456,19 +416,16 @@ it("does not reload an older chunk failure after independent fetcher mutations",
   events.dispatchEvent(new Event("vite:preloadError"));
   const first = router.createFetcher();
   const second = router.createFetcher();
-
   await Promise.all([
     first.submit("/", new FormData()),
     second.submit("/", new FormData()),
   ]);
   resolve(Response.json({ version: "new" }));
   await new Promise((done) => setTimeout(done, 0));
-
   expect(action).toHaveBeenCalledTimes(2);
   expect(reload).not.toHaveBeenCalled();
   expect(storage.size).toBe(0);
 });
-
 it("keeps navigation usable without reloading while either fetcher mutation is pending", async () => {
   const { createDataRouter } = await import("@smolter/core");
   const { options, reload, storage } = setup("new");
@@ -491,17 +448,14 @@ it("keeps navigation usable without reloading while either fetcher mutation is p
   await submissions[0];
   await router.navigate("/next?pending=1#details");
   await new Promise((done) => setTimeout(done, 0));
-
   expect(router.getSnapshot().url).toBe(
     "https://app.test/next?pending=1#details",
   );
   expect(reload).not.toHaveBeenCalled();
   expect(storage.size).toBe(0);
-
   finishes[1]();
   await submissions[1];
   await router.navigate("/next?ready=1#details");
-
   expect(action).toHaveBeenCalledTimes(2);
   expect(reload).toHaveBeenCalledOnce();
   expect(reload.mock.calls[0][0].href).toBe(
@@ -510,7 +464,6 @@ it("keeps navigation usable without reloading while either fetcher mutation is p
   cleanup();
   expect(router.createFetcher).toBe(original);
 });
-
 it("does not recover a new navigation while a page mutation remains pending", async () => {
   const { createDataRouter } = await import("@smolter/core");
   const { options, reload, storage } = setup("new");
@@ -528,15 +481,12 @@ it("does not recover a new navigation while a page mutation remains pending", as
   const submitted = router.submit("/", new FormData());
   await vi.waitFor(() => expect(action).toHaveBeenCalledOnce());
   await router.navigate("/next?pending=1#scope");
-
   expect(reload).not.toHaveBeenCalled();
   expect(storage.size).toBe(0);
-
   finish();
   await submitted;
   expect(action).toHaveBeenCalledOnce();
 });
-
 it("invalidates an older recovery probe across overlapping page and fetcher submissions", async () => {
   const { createDataRouter } = await import("@smolter/core");
   const { options, events, fetcher, reload, storage } = setup();
@@ -559,12 +509,10 @@ it("invalidates an older recovery probe across overlapping page and fetcher subm
   ]);
   manifest(Response.json({ version: "new" }));
   await new Promise((done) => setTimeout(done, 0));
-
   expect(action).toHaveBeenCalledTimes(2);
   expect(reload).not.toHaveBeenCalled();
   expect(storage.size).toBe(0);
 });
-
 for (const ending of ["failure", "abort", "dispose"] as const) {
   it(`keeps recovery blocked when one fetcher ends by ${ending} and another remains pending`, async () => {
     const { createDataRouter } = await import("@smolter/core");
@@ -601,7 +549,6 @@ for (const ending of ["failure", "abort", "dispose"] as const) {
     const firstPending = first.submit("/first", new FormData());
     const secondPending = second.submit("/second", new FormData());
     await vi.waitFor(() => expect(otherAction).toHaveBeenCalledOnce());
-
     if (ending === "failure") fail(new Error("Action failed"));
     if (ending === "dispose") first.dispose();
     if (ending === "abort") await first.load("/next");
@@ -620,7 +567,6 @@ for (const ending of ["failure", "abort", "dispose"] as const) {
     expect(otherAction).toHaveBeenCalledOnce();
   });
 }
-
 it("restores methods before watcher reinstallation and ignores the disposed probe", async () => {
   const { createDataRouter } = await import("@smolter/core");
   const { options, fetcher, reload, storage } = setup();
@@ -660,7 +606,6 @@ it("restores methods before watcher reinstallation and ignores the disposed prob
   );
   expect(fetcher).toHaveBeenCalledTimes(2);
 });
-
 it("replaces a watcher without stacking methods or letting old cleanup restore stale wrappers", async () => {
   const { router, options, fetcher, reload, storage } = setup();
   const stopOld = cleanups.pop()!;
@@ -681,7 +626,6 @@ it("replaces a watcher without stacking methods or letting old cleanup restore s
   expect(router.getSnapshot().url).toBe("https://app.test/?restored=1");
   expect(fetcher).toHaveBeenCalledOnce();
 });
-
 it("preserves pending mutation protection and navigation ownership across watcher replacement", async () => {
   const { createDataRouter } = await import("@smolter/core");
   const { options, reload, storage } = setup("new");
@@ -716,7 +660,6 @@ it("preserves pending mutation protection and navigation ownership across watche
   expect(reload).toHaveBeenCalledOnce();
   expect(storage.size).toBe(1);
 });
-
 it("keeps unchanged destination dependencies and caches routine checks without hiding chunk failure", async () => {
   const { router, options, fetcher, reload, storage } = setup();
   cleanups.push(
@@ -750,7 +693,6 @@ it("keeps unchanged destination dependencies and caches routine checks without h
   expect(reload).toHaveBeenCalledTimes(1);
   expect(reload.mock.calls[0][0].pathname).toBe("/");
 });
-
 it("delivers a known-update history event once when storage prevents recovery", async () => {
   const { router, location, events, reload } = setup("new");
   await router.navigate("/next?prime");
@@ -770,7 +712,6 @@ it("delivers a known-update history event once when storage prevents recovery", 
   expect(listener.mock.calls[0][0].state).toEqual({ key: "back" });
   expect(reload).not.toHaveBeenCalled();
 });
-
 it("releases tracked mutation ownership when a custom submission throws", async () => {
   const { createDataRouter } = await import("@smolter/core");
   const { options, reload } = setup("new");
@@ -788,7 +729,6 @@ it("releases tracked mutation ownership when a custom submission throws", async 
   await router.navigate("/next?eligible");
   expect(reload).toHaveBeenCalledOnce();
 });
-
 it("propagates bootstrap setup failures through safeWrapAsync cleanup", async () => {
   const { recoverDeployment } = await import(
     "../packages/client/src/deployment.ts"

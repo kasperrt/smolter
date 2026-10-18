@@ -2,7 +2,6 @@ import { afterEach, expect, it, vi } from "vitest";
 import { deploymentCheck } from "../packages/client/src/deployment-check.ts";
 
 afterEach(() => vi.unstubAllGlobals());
-
 it("compares route dependencies, shared code, missing routes and legacy manifests conservatively", async () => {
   vi.stubGlobal("location", { href: "https://app.test/admin/" });
   const fetcher = vi.fn();
@@ -47,7 +46,6 @@ it("compares route dependencies, shared code, missing routes and legacy manifest
   }
   check.dispose();
 });
-
 it("forces a fresh check for missing chunks even when compatible metadata is cached", async () => {
   vi.stubGlobal("location", { href: "https://app.test/" });
   const metadata = {
@@ -68,7 +66,6 @@ it("forces a fresh check for missing chunks even when compatible metadata is cac
   expect(fetcher).toHaveBeenCalledTimes(2);
   check.dispose();
 });
-
 it("throttles failed routine probes but lets chunk recovery retry immediately", async () => {
   vi.stubGlobal("location", { href: "https://app.test/" });
   const fetcher = vi
@@ -87,7 +84,6 @@ it("throttles failed routine probes but lets chunk recovery retry immediately", 
   expect(check.known(target)).toBe(true);
   check.dispose();
 });
-
 it("refreshes an older in-flight routine result once for concurrent chunk failures", async () => {
   vi.stubGlobal("location", { href: "https://app.test/" });
   let finish!: (response: Response) => void;
