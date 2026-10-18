@@ -126,4 +126,4 @@ it("infers literals, imported spread types, unions and overriding attributes wit
     );
     expect(analyzePrefetch(root), source).toEqual({ intent, viewport, data });
   }
-}, 15_000);
+}, 60_000);

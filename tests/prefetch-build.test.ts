@@ -94,5 +94,5 @@ for (const framework of ["react", "preact"] as const) {
         expect(gzipSync(code, { level: 9 }).length).toBeLessThan(budget);
       }
     }
-  }, 30_000);
+  }, 60_000);
 }

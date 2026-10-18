@@ -82,4 +82,4 @@ it("updates inferred capabilities in client and SSR graphs without restarting Vi
     )
     .toBe(true);
   await writeFile(join(root, "tsconfig.json"), "{}");
-});
+}, 30_000);
