@@ -91,3 +91,22 @@ README updates to GitHub. This command refuses to expose badges before both
 versions exist. Each badge links to its reproducible BundleJS configuration.
 BundleJS uses its own bundler settings; its displayed size is independent of our
 local CI measurement. The local size gate remains authoritative for releases.
+
+## Stalled registry publications
+
+The release job has a 10-minute ceiling. Each registry publishing step has a
+3-minute ceiling; JSR must succeed before npm can start. A stalled or queued JSR
+upload fails the workflow at that deadline instead of holding a runner for hours.
+Registry availability requests time out after 15 seconds. Availability retries
+are limited to four checks with five-second waits, not an indefinite loop.
+
+Cancel a stuck run with `gh run cancel RUN_ID`. Cancellation stops the Actions
+runner, but does not cancel a publication already queued inside JSR. Check the
+package's JSR Versions page before retrying. Do not repeatedly rerun while that
+publication remains queued, and do not bypass JSR to publish npm.
+
+Once the queued version is available, rerun the release workflow. Already
+published versions are skipped, so it can proceed to npm without reuploading JSR.
+The release commit must still be current main; otherwise use the release workflow
+for the newer validated main commit. There are no scheduled publication retries.
+Timeout changes apply to new workflow runs, not an already running job.
