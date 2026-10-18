@@ -42,6 +42,7 @@ export function watchDeployment(
   const dispose = router.dispose;
   let stopped = false;
   let replay = false;
+  let recovery: { current: number; target: URL } | undefined;
   const dataRouter = router as NavigationRouter &
     Partial<Pick<Router, "createFetcher" | "submit">>;
   const createFetcher = dataRouter.createFetcher;
@@ -53,6 +54,7 @@ export function watchDeployment(
       state.mutations++;
       const { data, error } = await safeWrapAsync(() => submit(...args));
       state.mutations--;
+      await recover();
       if (error) throw error.cause ?? error;
       return data!;
     };
@@ -105,24 +107,33 @@ export function watchDeployment(
     window.dispatchEvent(new PopStateEvent("popstate", { state: event.state }));
     replay = false;
   };
+  async function recover() {
+    if (!recovery || state.mutations) return;
+    const { current, target } = recovery;
+    recovery = undefined;
+    await reload(
+      target,
+      () =>
+        canReload(current) &&
+        read().state !== "submitting" &&
+        read().url === target.href,
+    );
+  }
   const preloadError = async () => {
     // Speculative imports cannot claim recovery before navigation starts.
     if (read().state !== "loading") return;
     const current = state.sequence;
     const target = new URL(read().url);
-    if (await changed(target, true))
-      await reload(
-        target,
-        () =>
-          canReload(current) &&
-          read().state !== "submitting" &&
-          read().url === target.href,
-      );
+    if ((await changed(target, true)) && valid(current)) {
+      recovery = { current, target };
+      await recover();
+    }
   };
   function cleanup() {
     if (stopped) return;
     if (state.cleanup === cleanup) state.cleanup = undefined;
     stopped = true;
+    recovery = undefined;
     state.sequence++;
     check.dispose();
     window.removeEventListener("popstate", pop, true);

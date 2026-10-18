@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.5-beta.4
+
+- Recover a missing action-redirect destination chunk after tracked submissions and root revalidation finish. Keep the original destination, query and hash without replaying the mutation or refreshing root data twice.
+- Invalidate queued recovery when newer navigation, history, mutation or watcher cleanup supersedes it. Other pending tracked fetchers continue to prevent document recovery.
+- Add rejected-promise and production missing-chunk regressions with fast and delayed manifest responses. Ordinary navigation remains nonblocking.
+
 ## 0.4.5-beta.3
 
 - Publish npm independently of JSR registry queues, retaining JSR validation in CI and npm prerelease/provenance checks.

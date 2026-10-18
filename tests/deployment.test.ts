@@ -321,40 +321,43 @@ it("does not reload when a mutation starts while chunk recovery is checking", as
   expect(reload).not.toHaveBeenCalled();
   expect(storage.size).toBe(0);
 });
-it("recovers the committed action redirect destination without replaying its mutation", async () => {
-  const { createDataRouter } = await import("@smolter/core");
-  const { events, options, reload } = setup("new");
-  const action = vi.fn(
-    () =>
-      new Response(null, {
-        status: 302,
-        headers: { Location: "/next?from=login#account" },
-      }),
-  );
-  const router = createDataRouter(
-    [
-      { path: "/", action },
-      {
-        path: "/next",
-        loader: () => {
-          events.dispatchEvent(new Event("vite:preloadError"));
-          return new Error("Missing destination chunk");
+for (const rejected of [false, true]) {
+  it(`recovers the committed action redirect destination (rejected: ${rejected}) without replaying its mutation`, async () => {
+    const { createDataRouter } = await import("@smolter/core");
+    const { events, options, reload } = setup("new");
+    const action = vi.fn(
+      () =>
+        new Response(null, {
+          status: 302,
+          headers: { Location: "/next?from=login#account" },
+        }),
+    );
+    const router = createDataRouter(
+      [
+        { path: "/", action },
+        {
+          path: "/next",
+          loader: () => {
+            events.dispatchEvent(new Event("vite:preloadError"));
+            const error = new Error("Missing destination chunk");
+            return rejected ? Promise.reject(error) : error;
+          },
         },
-      },
-    ],
-    { url: "https://app.test/" },
-  );
-  const rootRefresh = vi.fn(async () => undefined);
-  router.registerRevalidator("root", rootRefresh);
-  cleanups.push(watchDeployment(router, options));
-  await router.submit("/", new FormData());
-  await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
-  expect(reload.mock.calls[0][0].href).toBe(
-    "https://app.test/next?from=login#account",
-  );
-  expect(action).toHaveBeenCalledOnce();
-  expect(rootRefresh).toHaveBeenCalledOnce();
-});
+      ],
+      { url: "https://app.test/" },
+    );
+    const rootRefresh = vi.fn(async () => undefined);
+    router.registerRevalidator("root", rootRefresh);
+    cleanups.push(watchDeployment(router, options));
+    await router.submit("/", new FormData());
+    await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
+    expect(reload.mock.calls[0][0].href).toBe(
+      "https://app.test/next?from=login#account",
+    );
+    expect(action).toHaveBeenCalledOnce();
+    expect(rootRefresh).toHaveBeenCalledOnce();
+  });
+}
 it("invalidates pending recovery even when a newer mutation finishes before the manifest", async () => {
   const { createDataRouter } = await import("@smolter/core");
   const { options, events, fetcher, reload, storage } = setup();
@@ -744,4 +747,124 @@ it("propagates bootstrap setup failures through safeWrapAsync cleanup", async ()
     },
   );
   await expect(recoverDeployment(options)).rejects.toBe(error);
+});
+for (const interrupt of [
+  "none",
+  "navigation",
+  "mutation",
+  "history",
+  "cleanup",
+]) {
+  it(`reconsiders protected redirect recovery after root refresh (${interrupt})`, async () => {
+    const { createDataRouter } = await import("@smolter/core");
+    const { events, options, reload, fetcher, storage, location } =
+      setup("new");
+    let finish!: () => void;
+    const root = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const action = vi.fn(
+      () =>
+        new Response(null, {
+          status: 303,
+          headers: { Location: "/next?created=1#user" },
+        }),
+    );
+    const router = createDataRouter(
+      [
+        { path: "/", action },
+        {
+          path: "/next",
+          loader: () => {
+            events.dispatchEvent(new Event("vite:preloadError"));
+            return Promise.reject(new TypeError("Missing redirect chunk"));
+          },
+        },
+        { path: "/other", action: () => new Error("Rejected mutation") },
+      ],
+      { url: location.href },
+    );
+    router.registerRevalidator("root", root);
+    const cleanup = watchDeployment(router, options);
+    cleanups.push(cleanup);
+    const submitted = router.submit("/", new FormData());
+    await vi.waitFor(() => expect(root).toHaveBeenCalledOnce());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(reload).not.toHaveBeenCalled();
+    expect(storage.size).toBe(0);
+    if (interrupt === "navigation") await router.navigate("/other");
+    if (interrupt === "mutation")
+      await router.createFetcher().submit("/other", new FormData());
+    if (interrupt === "history") {
+      location.href = "https://app.test/other";
+      events.dispatchEvent(new PopStateEvent("popstate", { state: null }));
+    }
+    if (interrupt === "cleanup") cleanup();
+    finish();
+    await submitted;
+    expect(action).toHaveBeenCalledOnce();
+    expect(root).toHaveBeenCalledOnce();
+    expect(reload).toHaveBeenCalledTimes(interrupt === "none" ? 1 : 0);
+    expect(storage.size).toBe(interrupt === "none" ? 1 : 0);
+    if (interrupt === "none")
+      expect(reload.mock.calls[0][0].href).toBe(
+        "https://app.test/next?created=1#user",
+      );
+  });
+}
+it("waits for another tracked fetcher before recovering a failed action redirect", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { events, options, reload, storage } = setup("new");
+  let finish!: (error: Error) => void;
+  const otherAction = vi.fn(
+    () =>
+      new Promise<Error>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const action = vi.fn(
+    () =>
+      new Response(null, {
+        status: 303,
+        headers: { Location: "/next?created=1#user" },
+      }),
+  );
+  const root = vi.fn(async () => undefined);
+  const router = createDataRouter(
+    [
+      { path: "/", action },
+      { path: "/other", action: otherAction },
+      {
+        path: "/next",
+        loader: () => {
+          events.dispatchEvent(new Event("vite:preloadError"));
+          return Promise.reject(new TypeError("Missing redirect chunk"));
+        },
+      },
+    ],
+    { url: "https://app.test/" },
+  );
+  router.registerRevalidator("root", root);
+  cleanups.push(watchDeployment(router, options));
+  const other = router.createFetcher().submit("/other", new FormData());
+  await vi.waitFor(() => expect(otherAction).toHaveBeenCalledOnce());
+  await router.submit("/", new FormData());
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+  finish(new Error("Other submission failed"));
+  const result = await other;
+  expect(result.error?.message).toBe("Other submission failed");
+  expect(action).toHaveBeenCalledOnce();
+  expect(otherAction).toHaveBeenCalledOnce();
+  expect(root).toHaveBeenCalledOnce();
+  expect(reload).toHaveBeenCalledOnce();
+  expect(reload.mock.calls[0][0].href).toBe(
+    "https://app.test/next?created=1#user",
+  );
+  expect(storage.size).toBe(1);
 });
