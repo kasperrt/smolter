@@ -11,6 +11,7 @@
     "./submission": "./src/submission.ts",
     "./navigation": "./src/navigation.ts",
     "./presentation": "./src/presentation.ts",
+    "./viewport": "./src/viewport.ts",
     "./store": "./src/store.ts",
     "./url": "./src/url.ts",
     "./serialize": "./src/serialize.ts",

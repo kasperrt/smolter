@@ -325,11 +325,11 @@
     "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Request, path parameters, and cancellation signal passed to a data handler.",
-    "signature": "interface DataArgs {\n  /** Why this handler ran; independent of when browser history is committed. */\n  reason?: \"initial\" | \"navigation\" | \"revalidation\" | \"fetcher\" | \"action\";\n  request: Request;\n  params: Params;\n  signal: AbortSignal;\n}",
+    "signature": "interface DataArgs {\n  /** Why this handler ran; independent of when browser history is committed. */\n  reason?:\n    | \"initial\"\n    | \"navigation\"\n    | \"revalidation\"\n    | \"fetcher\"\n    | \"action\"\n    | \"prefetch\";\n  request: Request;\n  params: Params;\n  signal: AbortSignal;\n}",
     "fields": [
       {
         "name": "reason",
-        "signature": "reason?: \"initial\" | \"navigation\" | \"revalidation\" | \"fetcher\" | \"action\";",
+        "signature": "reason?:\n    | \"initial\"\n    | \"navigation\"\n    | \"revalidation\"\n    | \"fetcher\"\n    | \"action\"\n    | \"prefetch\";",
         "summary": "Why this handler ran; independent of when browser history is committed."
       },
       {
@@ -800,7 +800,7 @@
     "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Route navigation, subscriptions, fetchers, and loader revalidation.",
-    "signature": "interface Router {\n  routes: readonly Route[];\n  getSnapshot: () => Snapshot;\n  subscribe: (listener: () => void) => () => void;\n  start: () => () => void;\n  navigate: (url: string, options?: NavigateOptions) => Promise<void>;\n  revalidate: (\n    options?: RevalidateOptions | RevalidationArgs[\"reason\"],\n    context?: RevalidationContext,\n  ) => Promise<void>;\n  /** Register layout data under a route ID. The returned function unregisters it. */\n  registerRevalidator: (id: string, revalidate: Revalidator) => () => void;\n  submit: (\n    url: string,\n    body: FormData,\n    options?: SubmitOptions,\n  ) => Promise<Result>;\n  /** Create an independent fetcher. Framework useFetcher hooks manage disposal automatically. */\n  createFetcher: () => Fetcher;\n  dispose: () => void;\n}",
+    "signature": "interface Router {\n  routes: readonly Route[];\n  getSnapshot: () => Snapshot;\n  subscribe: (listener: () => void) => () => void;\n  start: () => () => void;\n  navigate: (url: string, options?: NavigateOptions) => Promise<void>;\n  revalidate: (\n    options?: RevalidateOptions | RevalidationArgs[\"reason\"],\n    context?: RevalidationContext,\n  ) => Promise<void>;\n  /** Register layout data under a route ID. The returned function unregisters it. */\n  registerRevalidator: (id: string, revalidate: Revalidator) => () => void;\n  submit: (\n    url: string,\n    body: FormData,\n    options?: SubmitOptions,\n  ) => Promise<Result>;\n  /** Create an independent fetcher. Framework useFetcher hooks manage disposal automatically. */\n  createFetcher: () => Fetcher;\n  /** Speculatively read route data without navigation; cached for one navigation, at most 30 seconds. */\n  prefetch: (url: string) => Promise<Result>;\n  dispose: () => void;\n}",
     "fields": [
       {
         "name": "routes",
@@ -846,6 +846,11 @@
         "name": "createFetcher",
         "signature": "createFetcher: () => Fetcher;",
         "summary": "Create an independent fetcher. Framework useFetcher hooks manage disposal automatically."
+      },
+      {
+        "name": "prefetch",
+        "signature": "prefetch: (url: string) => Promise<Result>;",
+        "summary": "Speculatively read route data without navigation; cached for one navigation, at most 30 seconds."
       },
       {
         "name": "dispose",
@@ -1079,7 +1084,7 @@
     "title": "Link",
     "entries": ["react", "preact"],
     "kind": "API",
-    "summary": "Render an anchor with same-origin router navigation and optional intent prefetching.",
+    "summary": "Render an anchor with same-origin router navigation and intent or viewport prefetching.",
     "signature": "function Link(options: LinkProps): ReactNode;",
     "fields": [],
     "source": "packages/react/src/navigation.ts"
@@ -1120,7 +1125,7 @@
     "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Anchor properties and router navigation options, including document reload and prefetch controls.",
-    "signature": "interface LinkProps\n  extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, \"href\"> {\n  to?: string;\n  href?: string;\n  replace?: boolean;\n  prefetch?: string;\n  state?: unknown;\n  preventScrollReset?: boolean;\n  viewTransition?: boolean;\n  reloadDocument?: boolean;\n}",
+    "signature": "interface LinkProps\n  extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, \"href\"> {\n  to?: string;\n  href?: string;\n  replace?: boolean;\n  prefetch?: PrefetchMode;\n  /** Also prefetch loader data. Opt in only for safe, speculative GET reads. */\n  prefetchData?: boolean;\n  state?: unknown;\n  preventScrollReset?: boolean;\n  viewTransition?: boolean;\n  reloadDocument?: boolean;\n}",
     "fields": [
       {
         "name": "to",
@@ -1139,8 +1144,13 @@
       },
       {
         "name": "prefetch",
-        "signature": "prefetch?: string;",
+        "signature": "prefetch?: PrefetchMode;",
         "summary": ""
+      },
+      {
+        "name": "prefetchData",
+        "signature": "prefetchData?: boolean;",
+        "summary": "Also prefetch loader data. Opt in only for safe, speculative GET reads."
       },
       {
         "name": "state",

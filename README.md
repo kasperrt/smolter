@@ -546,6 +546,27 @@ The adapter has no Express dependency and forwards failures to `next(error)`.
 See the [Express guide](https://kasperrt.github.io/smolter/docs/express)
 for a complete server example and streaming and hydration behavior.
 
+## Viewport prefetching
+
+Both adapters support code prefetching on intent (the default) or viewport entry.
+Data prefetching is opt-in and uses the existing route loader and transport:
+
+```tsx
+<Link to="/tasks" prefetch="viewport" prefetchData>Tasks</Link>
+```
+
+Use `prefetch="none"` to disable speculative work. `prefetchData` requires
+`createDataRouter`; a navigation-only router can preload code but has no loaders.
+Loaders receive `reason: "prefetch"`. Only opt in for safe reads, and treat this
+reason like initial navigation when choosing initial pagination. Actions and root
+loaders are never prefetched.
+
+The router keeps at most 16 URL-specific reads for 30 seconds, with no polling or
+background refresh. Navigation consumes fresh data once, including an in-flight
+request. Mutations and explicit revalidation invalidate the cache. Errors and
+redirects are retried on navigation and cannot trigger speculative recovery.
+Viewport observation ends on entry or unmount; unsupported browsers skip it.
+
 ## Independent data requests
 
 Both adapters include `useFetcher`, `useSubmit`, `Form` and the loader/action hooks
@@ -604,18 +625,18 @@ a claim of identical features.
 | --- | ---: |
 | `React Router: declarative routing subset` | 12882 |
 | `React Router: data routing subset` | 29780 |
-| `React: routing-only named exports` | 1419 |
-| `Preact: routing-only named exports` | 1405 |
-| `@kasperrt/smolter/react` | 4801 |
-| `@kasperrt/smolter/preact` | 5076 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 6060 |
-| `@kasperrt/smolter/preact + server transport` | 6345 |
-| `@kasperrt/smolter/react + client + document (application)` | 9124 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 9401 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 9435 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 9721 |
-| `React: common routing/data exports` | 3071 |
-| `Preact: common routing/data exports` | 3046 |
+| `React: routing-only named exports` | 1667 |
+| `Preact: routing-only named exports` | 1651 |
+| `@kasperrt/smolter/react` | 5567 |
+| `@kasperrt/smolter/preact` | 5834 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 6816 |
+| `@kasperrt/smolter/preact + server transport` | 7090 |
+| `@kasperrt/smolter/react + client + document (application)` | 9886 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 10160 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 10202 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 10481 |
+| `React: common routing/data exports` | 3860 |
+| `Preact: common routing/data exports` | 3840 |
 | `wouter: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |

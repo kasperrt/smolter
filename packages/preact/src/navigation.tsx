@@ -1,15 +1,19 @@
-import { matchRoutes, type NavigateOptions } from "@smolter/core";
+import type { NavigateOptions } from "@smolter/core";
 import {
   handoffDocument,
   resolveApplicationURL,
 } from "@smolter/core/environment";
 import { navigationClick } from "@smolter/core/url";
+import {
+  type PrefetchMode,
+  prefetchLink,
+  viewportRef,
+} from "@smolter/core/viewport";
 import type { TargetedMouseEvent } from "preact";
 import type { ComponentProps, ReactNode } from "preact/compat";
 import { useRouter, useSnapshot } from "./context.ts";
 import { useNavigation, useURLLocation } from "./route-hooks.tsx";
-import type { AppRoute } from "./route-types.ts";
-import { createElement } from "./runtime.ts";
+import { createElement, useMemo } from "./runtime.ts";
 
 export type { NavigateOptions } from "@smolter/core";
 
@@ -42,7 +46,9 @@ export interface LinkProps extends Omit<ComponentProps<"a">, "href" | "role"> {
     | "doc-biblioref"
     | "doc-glossref"
     | "doc-noteref";
-  prefetch?: string;
+  prefetch?: PrefetchMode;
+  /** Also prefetch loader data. Opt in only for safe, speculative GET reads. */
+  prefetchData?: boolean;
   state?: unknown;
   preventScrollReset?: boolean;
   viewTransition?: boolean;
@@ -63,7 +69,7 @@ export interface NavLinkProps
   children?: ReactNode | ((state: NavLinkRenderProps) => ReactNode);
 }
 
-/** Render an anchor with same-origin router navigation and optional intent prefetching. */
+/** Render an anchor with same-origin router navigation and intent or viewport prefetching. */
 export function Link(options: LinkProps): ReactNode {
   const {
     href: hrefProp,
@@ -71,7 +77,8 @@ export function Link(options: LinkProps): ReactNode {
     replace,
     preventScrollReset,
     viewTransition,
-    prefetch,
+    prefetch = "intent",
+    prefetchData = false,
     state,
     reloadDocument,
     ...props
@@ -80,15 +87,15 @@ export function Link(options: LinkProps): ReactNode {
   const current = new URL(useSnapshot("url"));
   const destination = resolveApplicationURL(new URL(to, current));
   const internal = destination.origin === current.origin;
-  const preload = () => {
-    const route = matchRoutes(router.routes, destination.pathname)?.route as
-      | AppRoute
-      | undefined;
+  const preload = () => prefetchLink(router, destination, prefetchData);
 
-    void route?.preload?.().catch(() => {});
-  };
+  const forwarded = "ref" in props ? props.ref : undefined;
+  const observe = useMemo(
+    () => viewportRef(preload, forwarded),
+    [router, destination.href, prefetchData, forwarded],
+  );
 
-  if (!reloadDocument && prefetch !== "none" && internal) {
+  if (!reloadDocument && prefetch === "intent" && internal) {
     for (const name of ["onPointerEnter", "onFocus", "onTouchStart"] as const) {
       const handler = props[name] as ((event: Event) => void) | undefined;
 
@@ -102,6 +109,9 @@ export function Link(options: LinkProps): ReactNode {
   return createElement("a", {
     ...props,
     href: destination.href,
+    ...(prefetch === "viewport" &&
+      !reloadDocument &&
+      internal && { ref: observe }),
     onClick(event: TargetedMouseEvent<HTMLAnchorElement>) {
       props.onClick?.(event);
 

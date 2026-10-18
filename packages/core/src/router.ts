@@ -1,5 +1,6 @@
 import { safeWrapAsync } from "./errors.ts";
 import { matchRoutes } from "./match.ts";
+import { prefetchCache } from "./prefetch.ts";
 import type {
   DataFunction,
   NavigateOptions,
@@ -42,6 +43,13 @@ export function createDataRouter(
       params: {},
       state: "idle",
     }),
+  };
+  let prefetched: ReturnType<typeof prefetchCache> | undefined;
+  let mutations = 0;
+  let revision = 0;
+  const invalidate = () => {
+    revision++;
+    prefetched?.clear();
   };
   const revalidators = new Set<RevalidationTask>();
   const channel = <S extends ChannelSnapshot>(initial: S, local?: boolean) => {
@@ -123,30 +131,42 @@ export function createDataRouter(
         )
           return previous.data;
 
-        const fn =
-          match.route[body ? "clientAction" : "clientLoader"] ||
-          match.route[body ? "action" : "loader"];
+        const load = () => {
+          const fn =
+            match.route[body ? "clientAction" : "clientLoader"] ||
+            match.route[body ? "action" : "loader"];
 
-        if (!fn) return body && Error("No action");
+          if (!fn) return body && Error("No action");
 
-        return (fn as DataFunction)({
-          reason: body
-            ? "action"
-            : navigation !== undefined
-              ? "navigation"
-              : local
-                ? "fetcher"
-                : previous.loaded
-                  ? "revalidation"
-                  : "initial",
-          request: new Request(url, {
+          return (fn as DataFunction)({
+            reason: body
+              ? "action"
+              : navigation !== undefined
+                ? "navigation"
+                : local
+                  ? "fetcher"
+                  : previous.loaded
+                    ? "revalidation"
+                    : "initial",
+            request: new Request(url, {
+              signal,
+              method: body && method,
+              body,
+            }),
+            params: match.params,
             signal,
-            method: body && method,
-            body,
-          }),
-          params: match.params,
-          signal,
-        });
+          });
+        };
+        if (prefetched && !body && navigation !== undefined && !mutations) {
+          const version = revision;
+          return prefetched.take(url, signal).then((cached) => {
+            if (signal.aborted) return;
+            if (cached && !mutations && version === revision)
+              return cached.data;
+            return load();
+          });
+        }
+        return load();
       });
 
       if (signal.aborted) return result;
@@ -268,7 +288,17 @@ export function createDataRouter(
         };
       },
       load: run,
-      submit: run,
+      submit(href: string, body: FormData, options?: SubmitOptions) {
+        mutations++;
+        invalidate();
+        const pending = run(href, body, options);
+        const release = () => {
+          mutations--;
+          invalidate();
+        };
+        void pending.then(release, release);
+        return pending;
+      },
       dispose() {
         controller?.abort();
         listeners.clear();
@@ -300,6 +330,7 @@ export function createDataRouter(
       await main.load(url, undefined, operation, true);
     },
     async revalidate(options = {}, context) {
+      invalidate();
       const {
         route,
         reason = "manual",
@@ -339,11 +370,18 @@ export function createDataRouter(
       };
     },
 
+    prefetch(href) {
+      if (mutations) return Promise.resolve({});
+      prefetched ??= prefetchCache(routes, () => main.getSnapshot().url);
+      return prefetched.load(href);
+    },
+
     createFetcher() {
       return channel({ state: "idle" }, true);
     },
 
     dispose() {
+      invalidate();
       for (const refresh of revalidators) refresh.dispose?.();
 
       revalidators.clear();

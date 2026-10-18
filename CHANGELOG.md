@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add opt-in viewport code/data prefetching to React and Preact links. Reuse bounded, router-local speculative loader results on navigation; invalidate on mutations, revalidation and disposal. Keep existing links intent/code-only by default.
+
 ## 0.4.4
 
 - Remove the separate `/react/data` resource router. Both main adapters provide route data, forms, submissions and independent fetchers through `createDataRouter`; migrate ResourceProvider/Resource hooks to RouterProvider and the main data hooks. The old pathless resource store and tuple fetcher API are removed, not aliased to incompatible signatures.
