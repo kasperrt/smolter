@@ -2,7 +2,7 @@
 
 ## 0.4.5-beta.7
 
-- Prevent late Preact Suspense islands from restoring abandoned route content. Track original stream markers within inert outlet anchors and invalidate them only after another route component commits; preserve shared components and persistent root boundaries.
+- Prevent late Preact Suspense islands from restoring abandoned route content. Claim stream targets within inert outlet anchors during hydration while retaining Preact’s boundary structure, then remove abandoned markers on component changes, including later nested markers. Preserve shared components and persistent root boundaries.
 - Keep Await component identity stable when a pending promise becomes resolved data, including root revalidation during streaming.
 - Reduce the default initial deferred-data deadline from 30 seconds to 8 seconds so silent document interruptions reach failure UI within a bounded interval. Longer explicit deferredTimeout budgets remain supported; this is timeout handling, not immediate transport failure detection.
 - Add production regressions for outer Suspense, delayed island animation frames, root revalidation, and default-budget response destruction. See the [reproduction and size report](https://github.com/kasperrt/smolter/blob/main/reports/0.4.5-beta.7.md).

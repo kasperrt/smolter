@@ -60,17 +60,27 @@ for (const failure of [false, true]) {
       container,
     );
     expect(markers).toHaveLength(2);
+    expect(markers.map((marker) => marker.data)).toEqual([
+      "$s:route:smolter",
+      "/$s:route:smolter",
+    ]);
     const input = container.querySelector("input");
     const rootMarker = document.createComment("$s:root");
     container.querySelector("main")!.prepend(rootMarker);
     await router.navigate("/same");
     await expect.poll(() => router.getSnapshot().state).toBe("idle");
     expect(markers.every((marker) => marker.isConnected)).toBe(true);
+    const nestedStart = document.createComment("$s:nested");
+    const nestedEnd = document.createComment("/$s:nested");
+    container.querySelector("p")!.before(nestedStart);
+    container.querySelector("p")!.after(nestedEnd);
     await router.navigate("/next");
     await expect
       .poll(() => container.textContent)
       .toContain(failure ? "Destination failed" : "Destination");
     expect(markers.every((marker) => !marker.isConnected)).toBe(true);
+    expect(nestedStart.isConnected).toBe(false);
+    expect(nestedEnd.isConnected).toBe(false);
     expect(rootMarker.isConnected).toBe(true);
     expect(container.querySelector("input")).toBe(input);
     await router.navigate("/");

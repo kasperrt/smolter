@@ -643,13 +643,13 @@ a claim of identical features.
 | `React: routing-only named exports` | 1855 |
 | `Preact: routing-only named exports` | 1838 |
 | `@kasperrt/smolter/react` | 5847 |
-| `@kasperrt/smolter/preact` | 6425 |
+| `@kasperrt/smolter/preact` | 6439 |
 | `@kasperrt/smolter/react + server transport (named client exports)` | 7562 |
-| `@kasperrt/smolter/preact + server transport` | 8156 |
+| `@kasperrt/smolter/preact + server transport` | 8169 |
 | `@kasperrt/smolter/react + client + document (application)` | 10681 |
 | `@kasperrt/smolter/react + client + document + lazy-route` | 10967 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11270 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11564 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11286 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11579 |
 | `React: common routing/data exports` | 4135 |
 | `Preact: common routing/data exports` | 4116 |
 | `wouter: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
@@ -842,6 +842,6 @@ import { Await } from "@kasperrt/smolter/preact";
 </Await>
 ```
 
-The explicit `fallback` prop uses component-owned pending HTML and the existing deferred data stream. `Await` inside Preact `Suspense` is also supported in Smolter applications: inert outlet anchors identify the original component’s stream markers, which are invalidated when a different component commits. Root boundaries and shared route components retain ownership. No dependency patch, global observer, extra request or polling is used. This does not repair arbitrary Preact-only Suspense/lazy boundaries outside Smolter. Early-mode explicit-fallback content requires JavaScript; ordinary SSR without early hydration still streams resolved HTML.
+The explicit `fallback` prop uses component-owned pending HTML and the existing deferred data stream. `Await` inside Preact `Suspense` is also supported in Smolter applications: inert outlet anchors identify stream markers. Hydration renames their renderer targets while retaining the comment structure Preact needs; navigation removes abandoned markers, including nested markers that arrived later. Root boundaries and shared route components retain ownership. No dependency patch, global observer, extra request or polling is used. This does not repair arbitrary Preact-only Suspense/lazy boundaries outside Smolter. Early-mode explicit-fallback content requires JavaScript; ordinary SSR without early hydration still streams resolved HTML.
 
 Initial deferred values have an **8-second total budget** after payload revival. Silent document interruptions may provide no browser error event, so the existing one-shot deadline supplies bounded failure UI. It is not immediate disconnect detection. For intentionally slower data, set `mountApplication(routes, root, { deferredTimeout: 30_000 })`. No loader or mutation is replayed.

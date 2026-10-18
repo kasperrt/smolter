@@ -25,7 +25,7 @@
       "code": ""
     },
     {
-      "body": "Await also works inside Preact Suspense during early hydration. Application outlets invalidate the abandoned component’s streamed markers so delayed renderer islands cannot insert content below a new route. Await keeps the same inner component when a pending value is replaced by resolved data, including root revalidation. Persistent shell controls are retained. For directly owned pending UI, the fallback prop remains the simpler choice.",
+      "body": "Await also works inside Preact Suspense during early hydration. Application outlets claim their streamed targets during hydration while retaining the comment structure Preact needs. Component changes remove abandoned markers, including nested markers arriving after initial hydration, so delayed islands cannot restore old content. Await keeps the same inner component when a pending value is replaced by resolved data, including root revalidation. Persistent shell controls are retained. For directly owned pending UI, the fallback prop remains the simpler choice.",
       "code": "<Suspense fallback={<p>Loading optional data…</p>}>\n  <Await resolve={data.optional} errorElement={<p>Optional data unavailable</p>}>\n    {(value) => <p>{value}</p>}\n  </Await>\n</Suspense>",
       "title": "Outer Preact Suspense"
     }

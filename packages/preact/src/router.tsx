@@ -39,8 +39,8 @@ interface StreamOutletProps {
   children: ReactNode;
 }
 
-// Only the original outlet owns these streamed markers. Root boundaries sit
-// outside its inert anchors and remain available after route navigation.
+// Hydration claims only this outlet’s stream targets, retaining the comment
+// structure Preact needs. Root boundaries remain outside its inert anchors.
 function StreamOutlet({ children }: StreamOutletProps) {
   const { path, loaded, error } = useSnapshot();
   const application = useContext(Application)!;
@@ -55,14 +55,8 @@ function StreamOutlet({ children }: StreamOutletProps) {
   );
   useLayoutEffect(() => {
     if (!loaded && !error) return;
-    if (initial.current) {
-      if (initial.current.owner !== owner) {
-        for (const marker of initial.current.markers) marker.remove();
-        initial.current.markers = [];
-      }
-      return;
-    }
-    const markers: Comment[] = [];
+    if (initial.current?.owner === owner) return;
+    const markers: Comment[] = initial.current?.markers ?? [];
     const walker = document.createNodeIterator(start.current!.parentNode!, 128);
     let node: Node | null;
     while ((node = walker.nextNode())) {
@@ -72,6 +66,12 @@ function StreamOutlet({ children }: StreamOutletProps) {
         /^\/?\$s:/.test((node as Comment).data)
       )
         markers.push(node as Comment);
+    }
+    if (initial.current) {
+      for (const marker of markers) marker.remove();
+      markers.length = 0;
+    } else {
+      for (const marker of markers) marker.data += ":smolter";
     }
     initial.current = { owner, markers };
   }, [owner, loaded, error]);
