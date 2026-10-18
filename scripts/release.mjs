@@ -10,6 +10,7 @@ const repository = "kasperrt/smolter";
 const sha = process.env.RELEASE_SHA;
 const mode = process.argv[2];
 const prerelease = manifest.version.includes("-");
+const beta = manifest.version.includes("-beta.");
 
 function command(binary, args, options = {}) {
   return execFileSync(binary, args, { stdio: "inherit", ...options });
@@ -38,7 +39,7 @@ if (manifest.version !== jsr.version) fail("npm and JSR versions must match.");
 if (mode === "verify") {
   if (process.env.GITHUB_ACTIONS !== "true" || !sha)
     fail("Release requires GitHub Actions.");
-  const pulls = github(`repos/${repository}/commits/${sha}/pulls`);
+  const pulls = beta ? [] : github(`repos/${repository}/commits/${sha}/pulls`);
   const matchesMerge = (pr) =>
     pr.merged_at &&
     pr.base.ref === "main" &&
@@ -46,6 +47,7 @@ if (mode === "verify") {
     pr.merge_commit_sha === sha;
   // GitHub can confirm a merged PR before its commit association is indexed.
   const merged =
+    beta ||
     pulls.some(matchesMerge) ||
     github(
       `repos/${repository}/pulls?state=closed&base=main&sort=updated&direction=desc&per_page=100`,

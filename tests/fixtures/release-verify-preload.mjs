@@ -1,9 +1,21 @@
 import assert from "node:assert/strict";
 import childProcess from "node:child_process";
+import fs from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 
 const scenario = process.env.RELEASE_TEST_SCENARIO;
 const sha = process.env.RELEASE_SHA;
+
+const readFileSync = fs.readFileSync;
+fs.readFileSync = (file, ...args) => {
+  const contents = readFileSync(file, ...args);
+  if (/\/(package|jsr)\.json$/.test(String(file)))
+    return JSON.stringify({
+      ...JSON.parse(contents),
+      version: process.env.RELEASE_TEST_VERSION || "0.4.4",
+    });
+  return contents;
+};
 
 globalThis.fetch = async (input) => {
   const url = new URL(input);

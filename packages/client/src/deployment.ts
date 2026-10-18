@@ -3,6 +3,7 @@ import {
   type Router,
   safeWrapAsync,
 } from "@smolter/core";
+import { holdRouteError } from "@smolter/core/presentation";
 import { deploymentCheck } from "./deployment-check.ts";
 
 interface WatcherState {
@@ -35,6 +36,7 @@ export function watchDeployment(
   const state = watchers.get(router) ?? { sequence: 0, mutations: 0 };
   state.cleanup?.();
   watchers.set(router, state);
+  const customReload = options.reload;
   const check = deploymentCheck(options);
   const { changed, known, reload } = check;
   const read = router.getSnapshot;
@@ -42,7 +44,11 @@ export function watchDeployment(
   const dispose = router.dispose;
   let stopped = false;
   let replay = false;
-  let recovery: { current: number; target: URL } | undefined;
+  let recovery:
+    | { current: number; target: URL; release: () => void }
+    | undefined;
+  let releaseError = () => {};
+  let handedOff: number | undefined;
   const dataRouter = router as NavigationRouter &
     Partial<Pick<Router, "createFetcher" | "submit">>;
   const createFetcher = dataRouter.createFetcher;
@@ -109,25 +115,32 @@ export function watchDeployment(
   };
   async function recover() {
     if (!recovery || state.mutations) return;
-    const { current, target } = recovery;
+    const { current, target, release } = recovery;
     recovery = undefined;
-    await reload(
+    const reloaded = await reload(
       target,
       () =>
         canReload(current) &&
         read().state !== "submitting" &&
         read().url === target.href,
     );
+    if (reloaded && !customReload) handedOff = current;
+    else if (handedOff !== current) release();
   }
   const preloadError = async () => {
     // Speculative imports cannot claim recovery before navigation starts.
     if (read().state !== "loading") return;
     const current = state.sequence;
     const target = new URL(read().url);
+    const release = holdRouteError(
+      router,
+      () => valid(current) && read().url === target.href,
+    );
+    releaseError = release;
     if ((await changed(target, true)) && valid(current)) {
-      recovery = { current, target };
+      recovery = { current, target, release };
       await recover();
-    }
+    } else release();
   };
   function cleanup() {
     if (stopped) return;
@@ -135,6 +148,7 @@ export function watchDeployment(
     stopped = true;
     recovery = undefined;
     state.sequence++;
+    releaseError();
     check.dispose();
     window.removeEventListener("popstate", pop, true);
     window.removeEventListener("vite:preloadError", preloadError);

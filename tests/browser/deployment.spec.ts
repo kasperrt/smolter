@@ -19,6 +19,11 @@ for (const [mode, base] of [
   ["redirect", "/embed/custom/"],
   ["redirect-fast", "/admin/"],
   ["redirect-delayed", "/admin/"],
+  ["presentation", "/"],
+  ["presentation-react", "/"],
+  ["presentation-failed", "/"],
+  ["presentation-unchanged", "/"],
+  ["presentation-offline", "/"],
   ["overlap", "/casting/receiver/"],
   ["offline", "/"],
   ["history", "/"],
@@ -115,6 +120,14 @@ for (const [mode, base] of [
         `
         import { createDataRouter, safeWrapAsync } from ${JSON.stringify(resolve("packages/core/src/index.ts"))};
         import { watchDeployment } from ${JSON.stringify(resolve("packages/client/src/deployment.ts"))};
+        import { retainRoute } from ${JSON.stringify(resolve("packages/core/src/presentation.ts"))};
+        ${
+          mode === "presentation-react"
+            ? `import { createElement, useSyncExternalStore } from ${JSON.stringify(resolve("node_modules/react/index.js"))};
+        import { createRoot } from ${JSON.stringify(resolve("node_modules/react-dom/client.js"))};`
+            : `import { createElement, render } from ${JSON.stringify(resolve("node_modules/preact/dist/preact.mjs"))};
+        import { useSyncExternalStore } from ${JSON.stringify(resolve("node_modules/preact/compat/dist/compat.mjs"))};`
+        }
         import deployment from "virtual:smolter/deployment";
         const router = createDataRouter([
           { path: "${base}", loader: () => "${version} home" },
@@ -126,11 +139,19 @@ for (const [mode, base] of [
           } },
         ], { browser: true });
         watchDeployment(router, ${mode === "nonblocking" ? "deployment && { ...deployment, timeout: 60_000 }" : "deployment"});
+        const read = router.getSnapshot;
+        router.subscribe(() => { document.documentElement.dataset.loadError = read().error ? "yes" : "no"; });
+        retainRoute(router, (commit) => commit());
         router.registerRevalidator("root", async () => {
           sessionStorage.setItem("roots", String(Number(sessionStorage.getItem("roots")) + 1));
           ${mode.startsWith("redirect-") ? 'await fetch("' + base + 'root-refresh");' : ""}
         });
-        router.subscribe(() => { document.querySelector("output").textContent = router.getSnapshot().data || ""; });
+        function View() {
+          const snapshot = useSyncExternalStore(router.subscribe, router.getSnapshot);
+          if (snapshot.error) sessionStorage.setItem("errors", String(Number(sessionStorage.getItem("errors")) + 1));
+          return createElement("span", null, snapshot.error ? "Unavailable" : snapshot.data || "");
+        }
+        ${mode === "presentation-react" ? 'createRoot(document.querySelector("output")).render(createElement(View));' : 'render(createElement(View), document.querySelector("output"));'}
         router.start();
         ${mode === "prefetch" ? 'document.querySelector("button").onpointerenter = () => void safeWrapAsync(() => import("./page"));' : ""}
         document.querySelector("#next").onclick = () => ${mode.startsWith("redirect") ? 'router.submit("' + base + 'login", new FormData())' : 'router.navigate("' + base + 'next?tab=2#details")'};
@@ -196,6 +217,72 @@ for (const [mode, base] of [
       return;
     }
     active = join(root, "b");
+    if (mode.startsWith("presentation")) {
+      let release!: () => void;
+      let requested!: () => void;
+      const held = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const started = new Promise<void>((resolve) => {
+        requested = resolve;
+      });
+      cleanups.push(async () => release());
+      await page.route("**/smolter-manifest.json", async (route) => {
+        requested();
+        await held;
+        if (mode === "presentation-offline") await route.abort();
+        else if (mode === "presentation-failed")
+          await route.fulfill({ status: 503, body: "Unavailable" });
+        else if (mode === "presentation-unchanged")
+          await route.fulfill({
+            contentType: "application/json",
+            body: oldManifest,
+          });
+        else await route.continue();
+      });
+      await page
+        .getByRole("textbox", { name: "Persistent note" })
+        .fill("Keep my input");
+      const failedChunk = page.waitForResponse(
+        (response) =>
+          response.url().includes("/assets/page-") && response.status() === 404,
+      );
+      await page.getByRole("button", { name: "Next" }).click();
+      await failedChunk;
+      await started;
+      await expect(page.locator("html")).toHaveAttribute(
+        "data-load-error",
+        "yes",
+      );
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          ),
+      );
+      await expect(page.locator("output")).toHaveText("a home");
+      await expect(
+        page.getByRole("textbox", { name: "Persistent note" }),
+      ).toHaveValue("Keep my input");
+      expect(
+        await page.evaluate(() => sessionStorage.getItem("errors")),
+      ).toBeNull();
+      release();
+      if (mode !== "presentation" && mode !== "presentation-react") {
+        await expect(page.locator("output")).toHaveText("Unavailable");
+        await expect(page.locator("h1")).toHaveText("a document");
+        await expect(
+          page.getByRole("textbox", { name: "Persistent note" }),
+        ).toHaveValue("Keep my input");
+        return;
+      }
+      await expect(page.locator("h1")).toHaveText("b document");
+      await expect(page.locator("output")).toHaveText("b route");
+      expect(
+        await page.evaluate(() => sessionStorage.getItem("errors")),
+      ).toBeNull();
+      return;
+    }
     if (mode === "prefetch") {
       const failedChunk = page.waitForResponse(
         (response) =>
@@ -310,6 +397,9 @@ for (const [mode, base] of [
     await expect(page.locator("output")).toHaveText("b route");
     await expect(page).toHaveURL(`${origin}${base}next?tab=2#details`);
     if (mode.startsWith("redirect")) {
+      expect(
+        await page.evaluate(() => sessionStorage.getItem("errors")),
+      ).toBeNull();
       expect(
         await page.evaluate(() => sessionStorage.getItem("mutations")),
       ).toBe("1");

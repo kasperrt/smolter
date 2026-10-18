@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.5-beta.5
+
+- Keep the previous usable React/Preact application view while a failed chunk is being checked for deployment recovery. Successful document recovery no longer briefly commits the route error boundary.
+- Release genuine errors when confirmation fails, the manifest is unchanged, recovery is unavailable or a custom reload callback returns. Preserve submission ownership and redirect recovery without delaying ordinary navigation.
+- Allow locally validated beta releases directly from current main, retaining main CI and stable-release PR requirements.
+
 ## 0.4.5-beta.4
 
 - Recover a missing action-redirect destination chunk after tracked submissions and root revalidation finish. Keep the original destination, query and hash without replaying the mutation or refreshing root data twice.

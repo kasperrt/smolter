@@ -162,3 +162,27 @@ for (const scenario of ["jsr-rejected", "jsr-missing", "jsr-unavailable"]) {
     expect(result.status, result.stderr).toBe(0);
   });
 }
+
+for (const scenario of ["unmerged", "stale"]) {
+  it(`allows direct beta releases only from current main (${scenario})`, () => {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--import",
+        "./tests/fixtures/release-verify-preload.mjs",
+        "scripts/release.mjs",
+        "verify",
+      ],
+      {
+        env: {
+          GITHUB_ACTIONS: "true",
+          RELEASE_SHA: "current-sha",
+          RELEASE_TEST_SCENARIO: scenario,
+          RELEASE_TEST_VERSION: "0.4.5-beta.5",
+        },
+        encoding: "utf8",
+      },
+    );
+    expect(result.status, result.stderr).toBe(scenario === "stale" ? 1 : 0);
+  });
+}

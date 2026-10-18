@@ -19,7 +19,7 @@ Read `.agents/skills/smolter/SKILL.md` in full before changing or reviewing this
 - Before committing, run `pnpm lint`, `pnpm typecheck`, and tests appropriate to the changed behavior. For runtime changes, verify coverage, packed consumers, production-browser behavior and sizes. Keep the existing coverage and size gates.
 - Inspect the diff for prohibited async syntax and padding inside code blocks; Biome alone does not enforce every rule above.
 - Update affected guides, generated API references, size tables and changelog. Distinguish reproducible evidence from assumptions and untested consumer behavior.
-- Preserve the established PR/CI process, JSR validation in CI and independent npm publication, and prerelease tags. A beta release must not move npm `latest`. Verify actual registry availability and package integrity; an accepted or queued upload is not a completed release.
+- For beta releases, validate locally and push directly to main without a PR to avoid duplicate CI runs. Stable releases retain the PR process. Keep main CI, JSR validation and independent npm publication. A beta release must not move npm `latest`. Verify actual registry availability and package integrity; an accepted or queued upload is not a completed release.
 - Stop temporary servers and browser sessions started for the task. Preserve existing user development processes and unrelated changes.
 
 ## Infrastructure and publication safety
