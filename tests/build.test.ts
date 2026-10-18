@@ -1,6 +1,5 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { gzipSync } from "node:zlib";
 import { build as bundleBrowser } from "esbuild";
 import { minify } from "terser";
 import ts from "typescript";
@@ -100,44 +99,6 @@ for (const framework of ["react", "preact"]) {
     expect(navigation.outputFiles[0].text).not.toMatch(
       /AbortController|new Request|createFetcher|registerRevalidator/,
     );
-
-    for (const viewport of [false, true]) {
-      for (const data of [false, true]) {
-        const result = await bundle(
-          [
-            "createDataRouter",
-            "Link",
-            ...(viewport ? ["viewportPrefetch"] : []),
-            ...(data ? ["dataPrefetch"] : []),
-          ].join(", "),
-        );
-        const retained = Object.values(result.metafile.outputs).flatMap(
-          (output) =>
-            Object.entries(output.inputs)
-              .filter(([, input]) => input.bytesInOutput > 0)
-              .map(([name]) => name),
-        );
-        const { code } = await minify(result.outputFiles[0].text, {
-          module: true,
-          compress: { passes: 3 },
-          mangle: true,
-        });
-        // Link + data engine: independent ceilings for omitted and retained capabilities.
-        const budget = data
-          ? viewport
-            ? 3_800
-            : 3_650
-          : viewport
-            ? 3_300
-            : 3_150;
-        expect(gzipSync(code!, { level: 9 }).length).toBeLessThan(budget);
-        expect(retained.includes("dist/core/viewport.js")).toBe(viewport);
-        expect(retained.includes("dist/core/prefetch.js")).toBe(data);
-        expect(
-          result.outputFiles[0].text.includes("IntersectionObserver"),
-        ).toBe(viewport);
-      }
-    }
 
     const minimal = await bundle("defineRoute");
     const complete = await bundle(

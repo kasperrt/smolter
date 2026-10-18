@@ -1,9 +1,4 @@
-import type { Route } from "@smolter/core";
-import { createDataRouter as createRouter } from "@smolter/core";
-import { dataPrefetch } from "@smolter/core/prefetch";
-
-const createDataRouter = (routes: readonly Route[]) =>
-  createRouter(routes, { prefetch: dataPrefetch });
+import { createDataRouter } from "@smolter/core";
 
 import { expect, it, vi } from "vitest";
 import { deferred } from "./helpers/deferred.ts";
@@ -143,6 +138,7 @@ it("cannot use an invalidated in-flight read when a noncooperative loader resolv
   const prefetch = router.prefetch("/item");
   await expect.poll(() => loader.mock.calls.length).toBe(1);
   const navigation = router.navigate("/item");
+  await Promise.resolve(); // Let navigation attach to the pending speculative read.
   loader.mockReturnValue(Promise.resolve("new"));
   const fetcher = router.createFetcher();
   await fetcher.submit("/save", new FormData());
@@ -190,14 +186,4 @@ it("does not invoke work cancelled before its scheduled loader starts", async ()
   router.dispose();
   await pending;
   expect(loader).not.toHaveBeenCalled();
-});
-
-it("reports missing data-prefetch capability without loading", async () => {
-  const loader = vi.fn();
-  const router = createRouter([{ path: "/", loader }]);
-  expect((await router.prefetch("/")).error?.message).toContain(
-    "Enable dataPrefetch",
-  );
-  expect(loader).not.toHaveBeenCalled();
-  router.dispose();
 });

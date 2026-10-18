@@ -17,6 +17,7 @@
     "./serialize": "./src/serialize.ts",
     "./prepare-routes": "./src/prepare-routes.ts",
     "./prefetch": "./src/prefetch.ts",
-    "./link-prefetch": "./src/link-prefetch.ts"
+    "./link-prefetch": "./src/link-prefetch.ts",
+    "./intent": "./src/intent.ts"
   }
 }

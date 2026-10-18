@@ -552,19 +552,25 @@ Both adapters support code prefetching on intent (the default) or viewport entry
 Data prefetching is opt-in and uses the existing route loader and transport:
 
 ```tsx
-import { createDataRouter, dataPrefetch, Link, viewportPrefetch } from "@kasperrt/smolter/preact";
-
-const router = createDataRouter(routes, { prefetch: dataPrefetch });
-<Link to="/tasks" prefetch={viewportPrefetch} prefetchData>Tasks</Link>
+<Link to="/tasks" prefetch="viewport" prefetchData>Tasks</Link>
+<Link to="/settings" prefetch="intent">Settings</Link>
+<Link to="/private" prefetch="none">Private</Link>
 ```
 
+Smolter's Vite `fileRouter()` and `applicationPlugins()` infer capabilities from
+application TypeScript/JSX and imported source. Install TypeScript as a development
+dependency for this build analysis. No capability imports or router setup are needed.
+
+A plain Link uses intent. Viewport-only usage omits intent handlers; intent-only
+usage omits viewport observation. `prefetch="none"` uses neither. Typed unions and
+spreads retain every possible mode, and data caching is included when prefetchData
+can be true or a programmatic router.prefetch call is present. Later JSX attributes
+override earlier spreads. Broad/opaque values and Link passed as a component value
+retain all capabilities. This analysis is conservative, not a promise that arbitrary
+runtime code can be inferred. Other bundlers retain all implementations for correctness.
+
 Use `prefetch="none"` to disable speculative work. `prefetchData` requires
-`createDataRouter(routes, { prefetch: dataPrefetch })`; for SSR hydration pass
-`{ prefetch: dataPrefetch }` to `mountApplication` instead. React uses the same
-exports from `/react`. A navigation-only router can preload code but has no loaders.
-Unused capability implementations are tree-shaken: omitting `viewportPrefetch`
-removes the observer, and omitting `dataPrefetch` removes its cache and mutation
-bookkeeping. Shared Link/router integration remains.
+`createDataRouter`; a navigation-only router can preload code but has no loaders.
 Loaders receive `reason: "prefetch"`. Only opt in for safe reads, and treat this
 reason like initial navigation when choosing initial pagination. Actions and root
 loaders are never prefetched.
@@ -633,18 +639,18 @@ a claim of identical features.
 | --- | ---: |
 | `React Router: declarative routing subset` | 12882 |
 | `React Router: data routing subset` | 29780 |
-| `React: routing-only named exports` | 1580 |
-| `Preact: routing-only named exports` | 1564 |
-| `@kasperrt/smolter/react` | 5677 |
-| `@kasperrt/smolter/preact` | 5945 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 6933 |
-| `@kasperrt/smolter/preact + server transport` | 7206 |
-| `@kasperrt/smolter/react + client + document (application)` | 10009 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 10282 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 10326 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 10608 |
-| `React: common routing/data exports` | 3312 |
-| `Preact: common routing/data exports` | 3293 |
+| `React: routing-only named exports` | 1771 |
+| `Preact: routing-only named exports` | 1755 |
+| `@kasperrt/smolter/react` | 5732 |
+| `@kasperrt/smolter/preact` | 5998 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 6985 |
+| `@kasperrt/smolter/preact + server transport` | 7257 |
+| `@kasperrt/smolter/react + client + document (application)` | 10053 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 10326 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 10368 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 10649 |
+| `React: common routing/data exports` | 4022 |
+| `Preact: common routing/data exports` | 3998 |
 | `wouter: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |

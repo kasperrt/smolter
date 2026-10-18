@@ -16,7 +16,7 @@
     },
     {
       "title": "Optional prefetch capabilities",
-      "body": "Import viewportPrefetch to retain IntersectionObserver support and dataPrefetch to retain the speculative loader cache. They tree-shake independently. A boolean JSX prop cannot eliminate a statically imported implementation, so use the capability imports shown in the Link guide. Shared Link/router wiring remains even without capabilities. Whole-entry measurements include both exports; named-export measurements do not.",
+      "body": "Smolter’s Vite plugin selects prefetch implementations from typed JSX, spreads and createElement calls. Intent-only applications omit the observer; viewport-only applications omit intent handlers; unused data prefetch omits its cache. Unions retain all possible modes. Plain Link means intent. Opaque inputs and component-value escapes retain capabilities conservatively. Source-level analysis can retain code from unused source files; it does not claim whole-program runtime inference. Without the plugin, all implementations remain available. Existing entrypoint tables use ordinary bundling without this Vite selection; the command below measures production Vite fixtures separately.",
       "code": "pnpm build\nnode scripts/prefetch-size.mjs"
     },
     {

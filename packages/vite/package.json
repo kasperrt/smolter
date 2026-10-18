@@ -10,6 +10,7 @@
   "dependencies": {
     "@smolter/files": "workspace:*",
     "vite": "8.3.4",
-    "@smolter/server": "workspace:*"
+    "@smolter/server": "workspace:*",
+    "typescript": "6.0.3"
   }
 }

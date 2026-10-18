@@ -1,3 +1,4 @@
+/*! @smolter/prefetch:data */
 import { safeWrapAsync } from "./errors.ts";
 import { matchRoutes } from "./match.ts";
 import type { DataFunction, Result, Route } from "./types.ts";
@@ -68,7 +69,10 @@ function prefetchCache(routes: readonly Route[], current: () => string) {
       });
       return entry.result;
     },
-    async take(url: URL, signal: AbortSignal): Promise<Result | undefined> {
+    take(
+      url: URL,
+      signal: AbortSignal,
+    ): Promise<Result | undefined> | undefined {
       const key = keyFor(url);
       const entry = entries.get(key);
       if (!entry) return;
@@ -76,10 +80,11 @@ function prefetchCache(routes: readonly Route[], current: () => string) {
         remove(key);
         return;
       }
-      const result = await entry.result;
-      if (signal.aborted || entries.get(key) !== entry) return;
-      entries.delete(key);
-      return result;
+      return entry.result.then((result) => {
+        if (signal.aborted || entries.get(key) !== entry) return;
+        entries.delete(key);
+        return result;
+      });
     },
   };
 }
@@ -102,7 +107,9 @@ export function dataPrefetch(
     navigate(url, signal, load) {
       if (mutations) return load();
       const version = revision;
-      return cache.take(url, signal).then((cached) => {
+      const pending = cache.take(url, signal);
+      if (!pending) return load();
+      return pending.then((cached) => {
         if (signal.aborted) return;
         if (cached && !mutations && version === revision) return cached.data;
         return load();

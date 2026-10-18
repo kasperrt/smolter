@@ -31,14 +31,7 @@ export const preactConfig: UserConfig = {
     noExternal: ["@kasperrt/smolter"],
   },
   optimizeDeps: {
-    include: [
-      "preact",
-      "preact/hooks",
-      "preact/compat",
-      "preact/jsx-runtime",
-      "@kasperrt/smolter/preact",
-      "@kasperrt/smolter/preact/lazy-route",
-    ],
+    include: ["preact", "preact/hooks", "preact/compat", "preact/jsx-runtime"],
   },
 };
 

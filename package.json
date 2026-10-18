@@ -144,7 +144,8 @@
     "preact-render-to-string": ">=6.8.1",
     "react": ">=18",
     "vite": ">=8",
-    "react-dom": ">=18"
+    "react-dom": ">=18",
+    "typescript": ">=5.4"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -160,6 +161,9 @@
       "optional": true
     },
     "react-dom": {
+      "optional": true
+    },
+    "typescript": {
       "optional": true
     }
   },

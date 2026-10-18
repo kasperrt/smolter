@@ -4,10 +4,7 @@ import type { NavigationRouter } from "./navigation-router.ts";
 import type { Router } from "./types.ts";
 
 /** Trigger speculative loading on intent or viewport entry, or disable it. */
-export type PrefetchMode =
-  | "none"
-  | "intent"
-  | typeof import("./viewport.ts").viewportPrefetch;
+export type PrefetchMode = "none" | "intent" | "viewport";
 
 export function prefetchLink(
   router: NavigationRouter,

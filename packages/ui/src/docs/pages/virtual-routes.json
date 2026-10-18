@@ -17,7 +17,7 @@
     {
       "title": "What does it export?",
       "body": "Its default export is a route array discovered from src/routes. Dots separate URL segments; $name captures a parameter; _index maps to the index path. Route modules export their default view and colocated behavior. No second file-routes directory is needed.",
-      "code": "src/routes/_index/route.tsx           \u2192 /\nsrc/routes/tasks/route.tsx            \u2192 /tasks\nsrc/routes/tasks.$id/route.tsx        \u2192 /tasks/:id\n\n// src/routes/tasks.$id/route.tsx\nexport { loader } from \"./loader\";\nexport { action } from \"./action\";\nexport { clientLoader } from \"./clientLoader\";\nexport { clientAction } from \"./clientAction\";\nexport { shouldRevalidate } from \"./shouldRevalidate\";\nexport { Task as default } from \"./components/Task\";"
+      "code": "src/routes/_index/route.tsx           → /\nsrc/routes/tasks/route.tsx            → /tasks\nsrc/routes/tasks.$id/route.tsx        → /tasks/:id\n\n// src/routes/tasks.$id/route.tsx\nexport { loader } from \"./loader\";\nexport { action } from \"./action\";\nexport { clientLoader } from \"./clientLoader\";\nexport { clientAction } from \"./clientAction\";\nexport { shouldRevalidate } from \"./shouldRevalidate\";\nexport { Task as default } from \"./components/Task\";"
     },
     {
       "title": "Different browser and server manifests",
@@ -56,7 +56,7 @@
     },
     {
       "title": "Development updates and HMR",
-      "body": "The dev server watches flat route entry files. Adding, removing or renaming a route refreshes discovery in both the browser and SSR module graphs and reloads the browser. Editing a route entry also reloads so changed paths, IDs and handler exports cannot leave an old router running. Colocated components and helpers use normal Vite HMR; state preservation depends on your framework plugin and its accepted update boundaries. Manual clientRoutes/serverRoutes modules use Vite\u2019s import graph, including edits that add or remove entries. Without an accepting HMR boundary, Vite reloads the page. No server restart is needed for route changes. Vite configuration changes still follow Vite\u2019s normal restart behavior. Production deployment manifests are disabled during development.",
+      "body": "The dev server watches flat route entry files. Adding, removing or renaming a route refreshes discovery in both the browser and SSR module graphs and reloads the browser. Editing a route entry also reloads so changed paths, IDs and handler exports cannot leave an old router running. Colocated components and helpers use normal Vite HMR; state preservation depends on your framework plugin and its accepted update boundaries. Manual clientRoutes/serverRoutes modules use Vite’s import graph, including edits that add or remove entries. Without an accepting HMR boundary, Vite reloads the page. No server restart is needed for route changes. Vite configuration changes still follow Vite’s normal restart behavior. Production deployment manifests are disabled during development.",
       "code": ""
     },
     {
@@ -68,6 +68,11 @@
       "title": "Production tree shaking",
       "body": "Lazy file-route imports select supported browser exports explicitly instead of passing a complete module namespace. Unused helpers can be dropped; CSS and module side effects are preserved. Supported exports include default, clientLoader, clientAction, meta, links, handle, HydrateFallback, ErrorBoundary and shouldRevalidate. Server handlers remain behind server transport. Manual route arrays follow normal bundler rules: avoid spreading arbitrary module namespaces when you want unused exports removed. This does not eagerly load optional routes or disable package side effects.",
       "code": ""
+    },
+    {
+      "title": "Typed prefetch capabilities",
+      "body": "fileRouter and applicationPlugins infer prefetch usage for both React and Preact. Intent is the default for plain links. Literal viewport selects only the observer; unions and typed spreads retain every possible mode. prefetchData or router.prefetch selects the data cache. Spreads follow JSX override order. Broad values and Link passed to unknown component consumers retain capabilities conservatively. TypeScript is a build-only peer dependency. Imported type changes invalidate client and SSR capability modules; changing the capability set reloads existing router instances. Other edits retain normal HMR.",
+      "code": "pnpm add -D typescript\n\n<Link prefetch=\"viewport\" prefetchData to=\"/items\">Items</Link>"
     }
   ]
 }

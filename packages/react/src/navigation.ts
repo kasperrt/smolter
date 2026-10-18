@@ -3,8 +3,10 @@ import {
   handoffDocument,
   resolveApplicationURL,
 } from "@smolter/core/environment";
+import { intentPrefetch } from "@smolter/core/intent";
 import { type PrefetchMode, prefetchLink } from "@smolter/core/link-prefetch";
 import { navigationClick } from "@smolter/core/url";
+import { viewportPrefetch } from "@smolter/core/viewport";
 import { useRouter, useSnapshot } from "./context.ts";
 import { useNavigation, useURLLocation } from "./route-hooks.ts";
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "./runtime.ts";
@@ -72,25 +74,19 @@ export function Link(options: LinkProps): ReactNode {
   const forwarded = "ref" in props ? props.ref : undefined;
   const observe = useMemo(
     () =>
-      typeof prefetch === "function" ? prefetch(preload, forwarded) : undefined,
+      prefetch === "viewport"
+        ? viewportPrefetch?.(preload, forwarded)
+        : undefined,
     [router, destination.href, prefetchData, forwarded, prefetch],
   );
 
-  if (!reloadDocument && prefetch === "intent" && internal) {
-    for (const name of ["onPointerEnter", "onFocus", "onTouchStart"] as const) {
-      const handler = props[name] as ((event: unknown) => void) | undefined;
-
-      props[name] = (event) => {
-        handler?.(event);
-        preload();
-      };
-    }
-  }
+  if (!reloadDocument && prefetch === "intent" && internal)
+    intentPrefetch?.(props, preload);
 
   return createElement("a", {
     ...props,
     href: destination.href,
-    ...(typeof prefetch === "function" &&
+    ...(prefetch === "viewport" &&
       !reloadDocument &&
       internal && { ref: observe }),
     onClick(event: MouseEvent<HTMLAnchorElement>) {

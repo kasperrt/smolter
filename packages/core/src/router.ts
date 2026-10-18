@@ -1,5 +1,6 @@
 import { safeWrapAsync } from "./errors.ts";
 import { matchRoutes } from "./match.ts";
+import { dataPrefetch } from "./prefetch.ts";
 import type {
   DataFunction,
   NavigateOptions,
@@ -43,7 +44,7 @@ export function createDataRouter(
       state: "idle",
     }),
   };
-  const prefetched = options.prefetch?.(routes, () => main.getSnapshot().url);
+  const prefetched = dataPrefetch?.(routes, () => main.getSnapshot().url);
   const revalidators = new Set<RevalidationTask>();
   const channel = <S extends ChannelSnapshot>(initial: S, local?: boolean) => {
     let snapshot = initial;
@@ -355,7 +356,7 @@ export function createDataRouter(
         prefetched?.load(href) ??
         Promise.resolve({
           error: new Error(
-            "Enable dataPrefetch in router options before prefetching data.",
+            "Data prefetching was excluded from this build. Use router.prefetch or prefetchData in analyzed application source.",
           ),
         })
       );

@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 import { flatRoutes } from "@smolter/files";
 import { type Plugin, transformWithOxc } from "vite";
+import { prefetchSelection } from "./prefetch-plugin.ts";
 import { configureTransport } from "./transport.ts";
 
 export interface FileRouterOptions {
@@ -20,6 +21,7 @@ export function routerPlugin({
   serverRoutes,
   framework = "react",
 }: FileRouterOptions = {}): Plugin {
+  const prefetch = prefetchSelection();
   let root: string;
   let projectRoot: string;
   const publicId = "virtual:smolter/routes";
@@ -30,7 +32,21 @@ export function routerPlugin({
     name: "smolter-flat-routes",
     enforce: "pre",
 
+    config() {
+      return {
+        // Keep capability implementations visible to this plugin instead of hiding it
+        // inside a development dependency prebundle or an external SSR package.
+        optimizeDeps: { exclude: ["@kasperrt/smolter"] },
+        ssr: { noExternal: ["@kasperrt/smolter"] },
+      };
+    },
+
+    transform(code, id) {
+      return prefetch.transform(code, id);
+    },
+
     configResolved(config) {
+      prefetch.configure(config.root);
       projectRoot = config.root;
       root = resolve(config.root, directory);
     },
@@ -198,6 +214,7 @@ export function routerPlugin({
     },
 
     configureServer(server) {
+      prefetch.watch(server);
       server.watcher.add(root);
 
       const refresh = (file: string) => {

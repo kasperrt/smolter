@@ -2,7 +2,7 @@
 
 ## 0.4.5-beta.1
 
-- Keep viewport observation and speculative data caching independently tree-shakeable through explicit `viewportPrefetch` and `dataPrefetch` capabilities. Both adapters expose the same API.
+- Infer intent, viewport and data prefetch capabilities in the Vite plugin from typed JSX and spreads. Keep the string-based Link API identical in React and Preact; omit unused implementations without capability imports. Unions and opaque inputs retain all possible capabilities. Refresh client and SSR capability selection during development. TypeScript is an optional build-only peer required by the Vite plugin.
 - Select supported browser exports in generated lazy file-route imports so unrelated exports can be removed without disabling CSS or module side effects.
 - Publish this prerelease under npm `beta`, never `latest`; JSR remains the first publication gate.
 - Add opt-in viewport code/data prefetching to React and Preact links. Reuse bounded, router-local speculative loader results on navigation; invalidate on mutations, revalidation and disposal. Keep existing links intent/code-only by default.

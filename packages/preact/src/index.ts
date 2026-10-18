@@ -10,11 +10,9 @@ export {
   defineRoute,
 } from "@smolter/core";
 export type { ApplicationEnvironment } from "@smolter/core/environment";
-export { dataPrefetch } from "@smolter/core/prefetch";
 export * from "@smolter/core/responses";
 export type { Submission, SubmissionOptions } from "@smolter/core/submission";
 export { readSubmission } from "@smolter/core/submission";
-export { viewportPrefetch } from "@smolter/core/viewport";
 export { Await } from "./await.tsx";
 export {
   RouterProvider,
