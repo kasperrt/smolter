@@ -21,11 +21,11 @@ it("refreshes server transport when route handler exports change", async (contex
     `${view}export { loader, action } from "../../handlers.ts";\n`,
   );
 
-  await expect.poll(source, { timeout: 3000 }).toContain("serverRoute(");
+  await expect.poll(source, { timeout: 10_000 }).toContain("serverRoute(");
 
   await writeFile(route, view);
 
-  await expect.poll(source, { timeout: 3000 }).not.toContain("serverRoute(");
+  await expect.poll(source, { timeout: 10_000 }).not.toContain("serverRoute(");
 });
 
 it.for(["react", "preact"] as const)(

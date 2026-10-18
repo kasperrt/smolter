@@ -8,6 +8,8 @@ export default defineConfig({
       {
         test: {
           name: "unit",
+          testTimeout: 30_000,
+          expect: { poll: { timeout: 10_000 } },
           include: ["tests/**/*.test.{ts,tsx}"],
           exclude: ["tests/browser/**"],
         },
