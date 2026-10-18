@@ -23,11 +23,12 @@ let jsrVisible = false;
 let waits = 0;
 
 timers.setTimeout = async (delay) => {
-  assert.equal(delay, 15_000);
+  assert.equal(delay, 5_000);
   waits++;
 };
 
-globalThis.fetch = async (input) => {
+globalThis.fetch = async (input, options) => {
+  assert.ok(options.signal instanceof AbortSignal);
   const url = new URL(input);
 
   if (url.hostname === "jsr.io") {
@@ -108,7 +109,7 @@ process.on("exit", (code) => {
     ["delayed", "jsr-delayed"].includes(scenario)
       ? 2
       : ["staged", "jsr-missing"].includes(scenario)
-        ? 19
+        ? 3
         : 0,
   );
 });
