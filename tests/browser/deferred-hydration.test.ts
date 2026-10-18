@@ -185,3 +185,33 @@ it("disposal clears its deadline and completion listener", async (context) => {
   await vi.advanceTimersByTimeAsync(100);
   await expect(hydration.pending).rejects.toThrow("Hydration stream closed");
 });
+
+it("bounds the default budget at eight seconds and honors a longer explicit budget", async (context) => {
+  vi.useFakeTimers();
+  const state = vi
+    .spyOn(document, "readyState", "get")
+    .mockReturnValue("loading");
+  context.onTestFinished(() => {
+    state.mockRestore();
+    vi.useRealTimers();
+  });
+  Reflect.deleteProperty(window, "__smolterDeferred");
+  const first = readHydration('{"pending":{"__smolterPending":0}}');
+  const rejected = expect(first.hydration.pending).rejects.toThrow(
+    "Hydration stream timed out",
+  );
+  await vi.advanceTimersByTimeAsync(7999);
+  expect(vi.getTimerCount()).toBe(1);
+  await vi.advanceTimersByTimeAsync(1);
+  await rejected;
+  expect(vi.getTimerCount()).toBe(0);
+  Reflect.deleteProperty(window, "__smolterDeferred");
+  const second = readHydration('{"pending":{"__smolterPending":0}}', 30_000);
+  await vi.advanceTimersByTimeAsync(20_000);
+  deferredWindow.__smolterDeferred?.push(
+    [0, "slow success", null],
+    [-1, null, null],
+  );
+  expect(await second.hydration.pending).toBe("slow success");
+  expect(vi.getTimerCount()).toBe(0);
+});

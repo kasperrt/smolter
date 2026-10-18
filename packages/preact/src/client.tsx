@@ -33,7 +33,7 @@ export { configureApplication } from "@smolter/core/environment";
 export interface MountApplicationOptions {
   hash?: boolean;
   deployment?: DeploymentOptions | null;
-  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000. */
+  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 8,000. */
   deferredTimeout?: number;
 }
 

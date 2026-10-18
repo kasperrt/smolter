@@ -1,3 +1,11 @@
+# 0.4.5-beta.7 update
+
+The historical native-Suspense limitation below is superseded for Smolter applications. Both `owned-deferred.spec.ts` and `suspense-deferred.spec.ts` are blocking production tests, including assertions after document completion and two animation frames. Outlet-scoped inert template anchors identify the initial route’s stream markers; a committed different component invalidates those markers without touching persistent root ranges. Await retains its inner component across promise-to-value updates, fixing native root revalidation. No Preact patches, renderer hooks or global observers are used.
+
+The default initial deferred budget is now 8 seconds rather than 30. Chromium can leave an interrupted document in `loading` without any page-visible failure event. The one-shot deadline bounds this case; it does not detect disconnects immediately. Longer intentionally slow initial data remains supported through `deferredTimeout`. Default-budget interrupted-response tests use real time and no timeout override.
+
+The following sections are historical investigation notes, not current release status or instructions.
+
 # 0.4.2 supported boundary contract
 
 The release uses the existing `Await` export with an explicit `fallback` prop. All thirteen Smolter ownership scenarios remain blocking production-browser assertions in `tests/browser/owned-deferred.spec.ts`, using the unchanged shared assertion harness. The native Preact variant is preserved, not repaired: run `pnpm exec playwright test --config tests/reproductions/playwright.config.ts` to reproduce it. That diagnostic is not a release claim about Smolter's component-owned path.

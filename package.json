@@ -57,7 +57,7 @@
     "wouter-preact": "3.13.0",
     "typescript": "7.0.2"
   },
-  "version": "0.4.5-beta.6",
+  "version": "0.4.5-beta.7",
   "description": "A tiny typed data router for React and Preact.",
   "sideEffects": false,
   "license": "MIT",

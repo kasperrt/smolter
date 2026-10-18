@@ -1638,7 +1638,7 @@
     "entries": ["react/client", "preact/client"],
     "kind": "Types",
     "summary": "Browser hydration settings for hash history, deployment recovery and deferred-data timeout.",
-    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000. */\n  deferredTimeout?: number;\n}",
+    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 8,000. */\n  deferredTimeout?: number;\n}",
     "fields": [
       {
         "name": "hash",
@@ -1653,7 +1653,7 @@
       {
         "name": "deferredTimeout",
         "signature": "deferredTimeout?: number;",
-        "summary": "Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000."
+        "summary": "Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 8,000."
       }
     ],
     "source": "packages/react/src/client.tsx"

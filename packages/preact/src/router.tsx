@@ -2,7 +2,8 @@
 
 import { createRootStore } from "@smolter/client/root-data";
 import type { ReactNode } from "preact/compat";
-import { RouterProvider } from "./context.ts";
+import { useLayoutEffect, useRef } from "preact/hooks";
+import { RouterProvider, useSnapshot } from "./context.ts";
 import {
   Application,
   type ApplicationContext,
@@ -23,10 +24,63 @@ export function Outlet({
   children,
 }: OutletProps): import("preact").JSX.Element {
   const current = useContext(OutletContext);
+  const application = useContext(Application);
+  const content = children ?? (
+    <Routes fallback={<p role="status">Loading…</p>} />
+  );
   return (
     <OutletContext value={context ?? current}>
-      {children ?? <Routes fallback={<p role="status">Loading…</p>} />}
+      {application ? <StreamOutlet>{content}</StreamOutlet> : content}
     </OutletContext>
+  );
+}
+
+interface StreamOutletProps {
+  children: ReactNode;
+}
+
+// Only the original outlet owns these streamed markers. Root boundaries sit
+// outside its inert anchors and remain available after route navigation.
+function StreamOutlet({ children }: StreamOutletProps) {
+  const { path, loaded, error } = useSnapshot();
+  const application = useContext(Application)!;
+  const route = application.routes.find((route) => route.path === path);
+  const owner = error
+    ? route?.ErrorBoundary
+    : (route?.resolveComponent?.() ?? route?.default);
+  const start = useRef<HTMLTemplateElement>(null);
+  const end = useRef<HTMLTemplateElement>(null);
+  const initial = useRef<{ owner: unknown; markers: Comment[] } | undefined>(
+    undefined,
+  );
+  useLayoutEffect(() => {
+    if (!loaded && !error) return;
+    if (initial.current) {
+      if (initial.current.owner !== owner) {
+        for (const marker of initial.current.markers) marker.remove();
+        initial.current.markers = [];
+      }
+      return;
+    }
+    const markers: Comment[] = [];
+    const walker = document.createNodeIterator(start.current!.parentNode!, 128);
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      if (
+        start.current!.compareDocumentPosition(node) & 4 &&
+        end.current!.compareDocumentPosition(node) & 2 &&
+        /^\/?\$s:/.test((node as Comment).data)
+      )
+        markers.push(node as Comment);
+    }
+    initial.current = { owner, markers };
+  }, [owner, loaded, error]);
+  return (
+    <>
+      <template ref={start} />
+      {children}
+      <template ref={end} />
+    </>
   );
 }
 

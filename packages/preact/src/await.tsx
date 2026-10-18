@@ -25,7 +25,7 @@ export function Await<T>({
 }: AwaitProps<T>): ComponentChildren {
   const app = useContext(Application);
   if (!(resolve instanceof Promise))
-    return props.children(resolve as Awaited<T>);
+    return <SuspendedAwait {...props} resolve={resolve} />;
   if (!("fallback" in props))
     return <SuspendedAwait {...props} resolve={resolve} />;
   if (app?.deferredBoundary)
@@ -40,7 +40,8 @@ function SuspendedAwait<T>({
   resolve,
   children,
   errorElement,
-}: AwaitProps<T> & { resolve: Promise<T> }): ComponentChildren {
+}: AwaitProps<T>): ComponentChildren {
+  if (!(resolve instanceof Promise)) return children(resolve as Awaited<T>);
   let pending = resolutions.get(resolve);
   if (!pending) {
     const observe = async (): Promise<Resolution> => {

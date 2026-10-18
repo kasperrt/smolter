@@ -13,7 +13,7 @@ export interface DeferredWindow extends Window {
 }
 
 /** Restore promise identity before hydrating Suspense boundaries. */
-export function readHydration(json: string, timeout = 30_000) {
+export function readHydration(json: string, timeout = 8_000) {
   if (!Number.isInteger(timeout) || timeout < 1 || timeout > 2_147_483_647)
     throw new RangeError(
       "deferredTimeout must be an integer between 1 and 2147483647 ms",

@@ -25,9 +25,9 @@
       "code": ""
     },
     {
-      "title": "Existing Suspense usage",
-      "body": "Await without a fallback retains its existing Suspense behavior. Published Preact 11.0.1 can retain abandoned fallback nodes when native streamed Suspense is hydrated before settlement. For early hydration, replace the outer Suspense with Await fallback on each deferred section, including persistent root sections. This integrated path needs no dependency patch or separate import. It does not fix arbitrary native Suspense or lazy-component boundaries.",
-      "code": ""
+      "body": "Await also works inside Preact Suspense during early hydration. Application outlets invalidate the abandoned component’s streamed markers so delayed renderer islands cannot insert content below a new route. Await keeps the same inner component when a pending value is replaced by resolved data, including root revalidation. Persistent shell controls are retained. For directly owned pending UI, the fallback prop remains the simpler choice.",
+      "code": "<Suspense fallback={<p>Loading optional data…</p>}>\n  <Await resolve={data.optional} errorElement={<p>Optional data unavailable</p>}>\n    {(value) => <p>{value}</p>}\n  </Await>\n</Suspense>",
+      "title": "Outer Preact Suspense"
     }
   ]
 }

@@ -18,7 +18,7 @@ import * as explicit from "../fixtures/owned-ownership-page.tsx";
 import * as original from "../fixtures/ownership-page.tsx";
 import { PreactRoot } from "../fixtures/preact-ownership.tsx";
 
-export function ownershipCases(owned = false) {
+export function ownershipCases(owned = false, selected?: string[]) {
   const { Destination, Home, root } = owned ? explicit : original;
   for (const mode of [
     "navigate",
@@ -34,8 +34,10 @@ export function ownershipCases(owned = false) {
     "history",
     "disconnect",
     "disconnect-real",
+    "disconnect-default",
     "preact-only",
   ]) {
+    if (selected && !selected.includes(mode)) continue;
     const pure = mode === "preact-only";
     if (owned && pure) continue;
     const disconnect = mode.startsWith("disconnect");
@@ -45,7 +47,14 @@ export function ownershipCases(owned = false) {
       const output = await mkdtemp(join(tmpdir(), "smolter-ownership-"));
       const result = await build({
         configFile: false,
-        define: { DEFERRED_TIMEOUT: disconnect ? "2000" : "30000" },
+        define: {
+          DEFERRED_TIMEOUT:
+            mode === "disconnect-default"
+              ? "undefined"
+              : disconnect
+                ? "2000"
+                : "30000",
+        },
         logLevel: "silent",
         build: {
           outDir: output,
@@ -245,7 +254,7 @@ export function ownershipCases(owned = false) {
           });
           await expect(
             page.getByText("Optional failed", { exact: true }),
-          ).toBeVisible();
+          ).toBeVisible({ timeout: 10_000 });
           await expect.poll(() => aborted).toBe(1);
         }
         if (mode === "race") settle("Old resolved content");
@@ -329,7 +338,17 @@ export function ownershipCases(owned = false) {
           ).toBeVisible();
         }
         rootSettle("Original root content");
-        if (!disconnect) await page.waitForLoadState("load");
+        if (!disconnect) {
+          await page.waitForLoadState("load");
+          await page.evaluate(
+            () =>
+              new Promise<void>((resolve) =>
+                requestAnimationFrame(() =>
+                  requestAnimationFrame(() => resolve()),
+                ),
+              ),
+          );
+        }
         if (mode !== "return")
           await expect(
             page.getByRole("heading", { name: "Destination ready" }),

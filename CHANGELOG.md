@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.5-beta.7
+
+- Prevent late Preact Suspense islands from restoring abandoned route content. Track original stream markers within inert outlet anchors and invalidate them only after another route component commits; preserve shared components and persistent root boundaries.
+- Keep Await component identity stable when a pending promise becomes resolved data, including root revalidation during streaming.
+- Reduce the default initial deferred-data deadline from 30 seconds to 8 seconds so silent document interruptions reach failure UI within a bounded interval. Longer explicit deferredTimeout budgets remain supported; this is timeout handling, not immediate transport failure detection.
+- Add production regressions for outer Suspense, delayed island animation frames, root revalidation, and default-budget response destruction. See the [reproduction and size report](https://github.com/kasperrt/smolter/blob/main/reports/0.4.5-beta.7.md).
+
 ## 0.4.5-beta.6
 
 - Replace promise chains with guarded async/await across runtime, tooling and fixtures while preserving rejected responses, deferred errors and cleanup. Enforce async syntax, explicit types and contiguous blocks during lint.
