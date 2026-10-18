@@ -27,7 +27,7 @@ function fail(message) {
 }
 
 async function published(url) {
-  const response = await fetch(url);
+  const response = await fetch(url, { signal: AbortSignal.timeout(15_000) });
 
   if (response.status === 404) return false;
 
@@ -100,11 +100,11 @@ if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
 
   // JSR acceptance and registry visibility are prerequisites for touching npm.
   for (let attempt = 0; !(await published(jsrUrl)); attempt++) {
-    if (mode === "publish-npm" || attempt === 19)
+    if (mode === "publish-npm" || attempt === 3)
       fail("JSR publication is not available; npm publication is blocked.");
 
     console.log("Waiting for JSR publication to become available...");
-    await setTimeout(15_000);
+    await setTimeout(5_000);
   }
 
   if (mode !== "publish-jsr" && !(await published(npmUrl))) {
@@ -135,7 +135,7 @@ if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
   }
 
   // Registries can accept a publication before their read endpoints expose it.
-  for (let attempt = 0; mode !== "publish-jsr" && attempt < 20; attempt++) {
+  for (let attempt = 0; mode !== "publish-jsr" && attempt < 4; attempt++) {
     const available = await Promise.all([
       published(
         `https://registry.npmjs.org/${manifest.name}/${manifest.version}`,
@@ -145,13 +145,13 @@ if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
 
     if (available.every(Boolean)) break;
 
-    if (attempt === 19)
+    if (attempt === 3)
       fail(
         "Registry publication is incomplete. A staged npm upload is not a released version.",
       );
 
     console.log("Waiting for registry publication to become available...");
-    await setTimeout(15_000);
+    await setTimeout(5_000);
   }
 }
 
