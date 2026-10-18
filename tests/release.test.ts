@@ -59,7 +59,6 @@ for (const scenario of [
         encoding: "utf8",
       },
     );
-
     expect(result.status).toBe(
       [
         "released",
@@ -90,7 +89,6 @@ it("does not report a staged npm upload as a released version", () => {
       encoding: "utf8",
     },
   );
-
   expect(result.status).toBe(1);
   expect(result.stderr).toContain(
     "A staged npm upload is not a released version",
@@ -117,7 +115,6 @@ for (const scenario of [
         encoding: "utf8",
       },
     );
-
     expect(result.status).toBe(scenario === "jsr-delayed" ? 0 : 1);
     if (scenario === "jsr-rejected")
       expect(result.stderr).toContain("JSR rejected publication");
@@ -143,26 +140,25 @@ for (const mode of ["publish-jsr", "publish-npm"]) {
         encoding: "utf8",
       },
     );
-
     expect(result.status, result.stderr).toBe(0);
   });
 }
 
-it("blocks the standalone npm step when JSR is missing", () => {
-  const result = spawnSync(
-    process.execPath,
-    [
-      "--import",
-      "./tests/fixtures/release-preload.mjs",
-      "scripts/release.mjs",
-      "publish-npm",
-    ],
-    {
-      env: { GITHUB_ACTIONS: "true", RELEASE_TEST_SCENARIO: "jsr-rejected" },
-      encoding: "utf8",
-    },
-  );
-
-  expect(result.status).toBe(1);
-  expect(result.stderr).toContain("npm publication is blocked");
-});
+for (const scenario of ["jsr-rejected", "jsr-missing", "jsr-unavailable"]) {
+  it(`publishes npm independently of ${scenario}`, () => {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--import",
+        "./tests/fixtures/release-preload.mjs",
+        "scripts/release.mjs",
+        "publish-npm",
+      ],
+      {
+        env: { GITHUB_ACTIONS: "true", RELEASE_TEST_SCENARIO: scenario },
+        encoding: "utf8",
+      },
+    );
+    expect(result.status, result.stderr).toBe(0);
+  });
+}

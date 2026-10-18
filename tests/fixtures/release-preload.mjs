@@ -5,15 +5,14 @@ import { syncBuiltinESMExports } from "node:module";
 import timers from "node:timers/promises";
 
 const scenario = process.env.RELEASE_TEST_SCENARIO;
+const npmOnly = process.argv[2] === "publish-npm";
 const version = process.env.RELEASE_TEST_VERSION || "0.0.1-rc.1";
 const readFileSync = fs.readFileSync;
 
 fs.readFileSync = (file, ...args) => {
   const contents = readFileSync(file, ...args);
-
   if (/\/(package|jsr)\.json$/.test(String(file)))
     return JSON.stringify({ ...JSON.parse(contents), version });
-
   return contents;
 };
 
@@ -30,20 +29,16 @@ timers.setTimeout = async (delay) => {
 globalThis.fetch = async (input, options) => {
   assert.ok(options.signal instanceof AbortSignal);
   const url = new URL(input);
-
   if (url.hostname === "jsr.io") {
+    assert.equal(npmOnly, false, "npm must not query JSR");
     if (scenario === "jsr-unavailable")
       return new Response(null, { status: 503 });
-
     jsrVisible =
       !scenario?.startsWith("jsr-") ||
       (jsrPublications > 0 && scenario === "jsr-delayed" && waits >= 2);
-
     return new Response(null, { status: jsrVisible ? 200 : 404 });
   }
-
   assert.equal(url.hostname, "registry.npmjs.org");
-
   const packageLookup = url.pathname === "/@kasperrt/smolter";
   const exists =
     scenario === "published" ||
@@ -51,7 +46,6 @@ globalThis.fetch = async (input, options) => {
       scenario !== "staged" &&
       (scenario !== "delayed" || waits >= 2)) ||
     (packageLookup && scenario === "existing");
-
   return new Response(null, { status: exists ? 200 : 404 });
 };
 
@@ -59,14 +53,11 @@ childProcess.execFileSync = (binary, args, options) => {
   if (binary === "node") {
     assert.deepEqual(args, ["scripts/jsr.mjs", "--publish"]);
     jsrPublications++;
-
     if (scenario === "jsr-rejected")
       throw new Error("JSR rejected publication");
-
     return "";
   }
-
-  assert.ok(jsrVisible, "npm must wait for the published JSR version");
+  if (!npmOnly) assert.ok(jsrVisible, "combined publishing verifies JSR");
   assert.equal(binary, "npm");
   assert.deepEqual(args, [
     "publish",
@@ -82,9 +73,7 @@ childProcess.execFileSync = (binary, args, options) => {
   ]);
   assert.equal(options.env.SMOLTER_NPM_BOOTSTRAP_TOKEN, undefined);
   assert.equal(options.env.NODE_AUTH_TOKEN, undefined);
-
   publications++;
-
   return "";
 };
 
@@ -102,14 +91,19 @@ process.on("exit", (code) => {
       publications,
       scenario === "published" || process.argv[2] === "publish-jsr" ? 0 : 1,
     );
-  if (["jsr-rejected", "jsr-missing", "jsr-unavailable"].includes(scenario))
+  if (
+    !npmOnly &&
+    ["jsr-rejected", "jsr-missing", "jsr-unavailable"].includes(scenario)
+  )
     assert.equal(publications, 0);
   assert.equal(
     waits,
-    ["delayed", "jsr-delayed"].includes(scenario)
-      ? 2
-      : ["staged", "jsr-missing"].includes(scenario)
-        ? 3
-        : 0,
+    npmOnly && scenario?.startsWith("jsr-")
+      ? 0
+      : ["delayed", "jsr-delayed"].includes(scenario)
+        ? 2
+        : ["staged", "jsr-missing"].includes(scenario)
+          ? 3
+          : 0,
   );
 });

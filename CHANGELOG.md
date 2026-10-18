@@ -2,6 +2,8 @@
 
 ## 0.4.5-beta.3
 
+- Publish npm independently of JSR registry queues, retaining JSR validation in CI and npm prerelease/provenance checks.
+
 - Keep deployment manifest requests off the navigation and Back/Forward critical path. Routine checks run in the background; confirmed changes apply on the next eligible navigation, without reloading a successfully rendered page when a late response arrives.
 - Reuse completed routine checks, including failed checks, for 30 seconds by default. Missing-chunk recovery bypasses the interval and refreshes an older in-flight result when necessary; concurrent recovery callers share the fresh request.
 - Use safeWrapAsync for deployment cleanup and submission failure propagation; remove promise chains and catch/finally paths from the deployment fixture and runtime.
