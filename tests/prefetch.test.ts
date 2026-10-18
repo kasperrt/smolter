@@ -1,4 +1,10 @@
-import { createDataRouter } from "@smolter/core";
+import type { Route } from "@smolter/core";
+import { createDataRouter as createRouter } from "@smolter/core";
+import { dataPrefetch } from "@smolter/core/prefetch";
+
+const createDataRouter = (routes: readonly Route[]) =>
+  createRouter(routes, { prefetch: dataPrefetch });
+
 import { expect, it, vi } from "vitest";
 import { deferred } from "./helpers/deferred.ts";
 
@@ -184,4 +190,14 @@ it("does not invoke work cancelled before its scheduled loader starts", async ()
   router.dispose();
   await pending;
   expect(loader).not.toHaveBeenCalled();
+});
+
+it("reports missing data-prefetch capability without loading", async () => {
+  const loader = vi.fn();
+  const router = createRouter([{ path: "/", loader }]);
+  expect((await router.prefetch("/")).error?.message).toContain(
+    "Enable dataPrefetch",
+  );
+  expect(loader).not.toHaveBeenCalled();
+  router.dispose();
 });

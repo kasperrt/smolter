@@ -15,6 +15,11 @@
       "code": ""
     },
     {
+      "title": "Optional prefetch capabilities",
+      "body": "Import viewportPrefetch to retain IntersectionObserver support and dataPrefetch to retain the speculative loader cache. They tree-shake independently. A boolean JSX prop cannot eliminate a statically imported implementation, so use the capability imports shown in the Link guide. Shared Link/router wiring remains even without capabilities. Whole-entry measurements include both exports; named-export measurements do not.",
+      "code": "pnpm build\nnode scripts/prefetch-size.mjs"
+    },
+    {
       "title": "Full applications",
       "body": "Full applications use createDataRouter. The SSR and file-router client helpers already select it. SSR applications additionally use /preact/client and /preact/document; lazy file routes use /preact/lazy-route. Server rendering and the Vite plugin stay in their dedicated subpaths. Complete client-entry measurements include the optional deployment watcher. Named imports that do not use watchDeployment remove it; the routing and data entrypoints do not import it.",
       "code": ""

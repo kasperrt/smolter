@@ -134,8 +134,39 @@ export function lazyFiles(
 
         if (fields.default) modules.set(file, String(fields.path));
 
+        // A namespace escaping into lazyRoute retains every route export.
+        // Select supported browser exports statically so the bundler can remove
+        // unrelated helpers while preserving module and stylesheet side effects.
+        const selected = [
+          "default",
+          "clientLoader",
+          "clientAction",
+          "meta",
+          "links",
+          "handle",
+          "HydrateFallback",
+          "ErrorBoundary",
+          "shouldRevalidate",
+        ].filter((name) => fields[name]);
+        const members = selected
+          .map((name) => `${name}: route.${name}`)
+          .join(", ");
+        const capabilities = Object.fromEntries(
+          [
+            "path",
+            "dataEndpoint",
+            "loader",
+            "action",
+            "clientAction",
+            "meta",
+            "shouldRevalidate",
+            "ErrorBoundary",
+          ]
+            .filter((name) => name in fields)
+            .map((name) => [name, fields[name]]),
+        );
         definitions.push(
-          `lazyRoute(${JSON.stringify(fields)}, () => import(${JSON.stringify(file)}))`,
+          `lazyRoute(${JSON.stringify(capabilities)}, () => import(${JSON.stringify(file)}).then(route => ({${members}})))`,
         );
       }
 

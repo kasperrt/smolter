@@ -98,6 +98,8 @@ export interface Snapshot {
 
 /** Initial URL, browser history, and hydration configuration. */
 export interface RouterOptions {
+  /** Opt into bounded, single-use speculative loader reads. */
+  prefetch?: typeof import("./prefetch.ts").dataPrefetch;
   url?: string;
   /** Explicitly opt into browser history; leave off for SSR and tests. */
   browser?: boolean;

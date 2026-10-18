@@ -1,6 +1,5 @@
 import { safeWrapAsync } from "./errors.ts";
 import { matchRoutes } from "./match.ts";
-import { prefetchCache } from "./prefetch.ts";
 import type {
   DataFunction,
   NavigateOptions,
@@ -44,13 +43,7 @@ export function createDataRouter(
       state: "idle",
     }),
   };
-  let prefetched: ReturnType<typeof prefetchCache> | undefined;
-  let mutations = 0;
-  let revision = 0;
-  const invalidate = () => {
-    revision++;
-    prefetched?.clear();
-  };
+  const prefetched = options.prefetch?.(routes, () => main.getSnapshot().url);
   const revalidators = new Set<RevalidationTask>();
   const channel = <S extends ChannelSnapshot>(initial: S, local?: boolean) => {
     let snapshot = initial;
@@ -157,15 +150,8 @@ export function createDataRouter(
             signal,
           });
         };
-        if (prefetched && !body && navigation !== undefined && !mutations) {
-          const version = revision;
-          return prefetched.take(url, signal).then((cached) => {
-            if (signal.aborted) return;
-            if (cached && !mutations && version === revision)
-              return cached.data;
-            return load();
-          });
-        }
+        if (prefetched && !body && navigation !== undefined)
+          return prefetched.navigate(url, signal, load);
         return load();
       });
 
@@ -289,15 +275,9 @@ export function createDataRouter(
       },
       load: run,
       submit(href: string, body: FormData, options?: SubmitOptions) {
-        mutations++;
-        invalidate();
-        const pending = run(href, body, options);
-        const release = () => {
-          mutations--;
-          invalidate();
-        };
-        void pending.then(release, release);
-        return pending;
+        return prefetched
+          ? prefetched.submit(() => run(href, body, options))
+          : run(href, body, options);
       },
       dispose() {
         controller?.abort();
@@ -330,7 +310,7 @@ export function createDataRouter(
       await main.load(url, undefined, operation, true);
     },
     async revalidate(options = {}, context) {
-      invalidate();
+      prefetched?.clear();
       const {
         route,
         reason = "manual",
@@ -371,9 +351,14 @@ export function createDataRouter(
     },
 
     prefetch(href) {
-      if (mutations) return Promise.resolve({});
-      prefetched ??= prefetchCache(routes, () => main.getSnapshot().url);
-      return prefetched.load(href);
+      return (
+        prefetched?.load(href) ??
+        Promise.resolve({
+          error: new Error(
+            "Enable dataPrefetch in router options before prefetching data.",
+          ),
+        })
+      );
     },
 
     createFetcher() {
@@ -381,7 +366,7 @@ export function createDataRouter(
     },
 
     dispose() {
-      invalidate();
+      prefetched?.clear();
       for (const refresh of revalidators) refresh.dispose?.();
 
       revalidators.clear();

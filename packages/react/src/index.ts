@@ -10,12 +10,14 @@ export {
   defineRoute,
 } from "@smolter/core";
 export type { ApplicationEnvironment } from "@smolter/core/environment";
+export { dataPrefetch } from "@smolter/core/prefetch";
 export * from "@smolter/core/responses";
 export {
   readSubmission,
   type Submission,
   type SubmissionOptions,
 } from "@smolter/core/submission";
+export { viewportPrefetch } from "@smolter/core/viewport";
 export {
   RouterProvider,
   type RouterProviderProps,

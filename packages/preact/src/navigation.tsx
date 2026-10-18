@@ -3,12 +3,8 @@ import {
   handoffDocument,
   resolveApplicationURL,
 } from "@smolter/core/environment";
+import { type PrefetchMode, prefetchLink } from "@smolter/core/link-prefetch";
 import { navigationClick } from "@smolter/core/url";
-import {
-  type PrefetchMode,
-  prefetchLink,
-  viewportRef,
-} from "@smolter/core/viewport";
 import type { TargetedMouseEvent } from "preact";
 import type { ComponentProps, ReactNode } from "preact/compat";
 import { useRouter, useSnapshot } from "./context.ts";
@@ -91,8 +87,9 @@ export function Link(options: LinkProps): ReactNode {
 
   const forwarded = "ref" in props ? props.ref : undefined;
   const observe = useMemo(
-    () => viewportRef(preload, forwarded),
-    [router, destination.href, prefetchData, forwarded],
+    () =>
+      typeof prefetch === "function" ? prefetch(preload, forwarded) : undefined,
+    [router, destination.href, prefetchData, forwarded, prefetch],
   );
 
   if (!reloadDocument && prefetch === "intent" && internal) {
@@ -109,7 +106,7 @@ export function Link(options: LinkProps): ReactNode {
   return createElement("a", {
     ...props,
     href: destination.href,
-    ...(prefetch === "viewport" &&
+    ...(typeof prefetch === "function" &&
       !reloadDocument &&
       internal && { ref: observe }),
     onClick(event: TargetedMouseEvent<HTMLAnchorElement>) {

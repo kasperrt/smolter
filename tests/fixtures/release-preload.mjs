@@ -73,7 +73,11 @@ childProcess.execFileSync = (binary, args, options) => {
     "public",
     "--provenance",
     "--tag",
-    version.includes("-") ? "next" : "latest",
+    version.includes("-beta.")
+      ? "beta"
+      : version.includes("-")
+        ? "next"
+        : "latest",
   ]);
   assert.equal(options.env.SMOLTER_NPM_BOOTSTRAP_TOKEN, undefined);
   assert.equal(options.env.NODE_AUTH_TOKEN, undefined);

@@ -1,7 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { expect, it } from "vitest";
 
-for (const version of ["0.0.1-rc.1", "0.0.1"]) {
+for (const version of ["0.0.1-rc.1", "0.4.5-beta.1", "0.0.1"]) {
   for (const scenario of ["new", "existing", "published", "delayed"]) {
     it(`uses only OIDC for a ${scenario} npm package at ${version}`, () => {
       execFileSync(

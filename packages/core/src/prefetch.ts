@@ -13,7 +13,7 @@ interface Entry {
 }
 
 // Router-local, single-use navigation reads. No timers or background refreshes.
-export function prefetchCache(routes: readonly Route[], current: () => string) {
+function prefetchCache(routes: readonly Route[], current: () => string) {
   const entries = new Map<string, Entry>();
   const remove = (key: string) => {
     entries.get(key)?.controller.abort();
@@ -82,4 +82,49 @@ export function prefetchCache(routes: readonly Route[], current: () => string) {
       return result;
     },
   };
+}
+
+/** Enable bounded speculative loader reads without adding a cache to ordinary routers. */
+export function dataPrefetch(
+  routes: readonly Route[],
+  current: () => string,
+): DataPrefetch {
+  const cache = prefetchCache(routes, current);
+  let mutations = 0;
+  let revision = 0;
+  const clear = () => {
+    revision++;
+    cache.clear();
+  };
+  return {
+    clear,
+    load: (href) => (mutations ? Promise.resolve({}) : cache.load(href)),
+    navigate(url, signal, load) {
+      if (mutations) return load();
+      const version = revision;
+      return cache.take(url, signal).then((cached) => {
+        if (signal.aborted) return;
+        if (cached && !mutations && version === revision) return cached.data;
+        return load();
+      });
+    },
+    submit(work) {
+      mutations++;
+      clear();
+      const pending = work();
+      const release = () => {
+        mutations--;
+        clear();
+      };
+      void pending.then(release, release);
+      return pending;
+    },
+  };
+}
+
+interface DataPrefetch {
+  clear: () => void;
+  load: (href: string) => Promise<Result>;
+  navigate: (url: URL, signal: AbortSignal, load: () => unknown) => unknown;
+  submit: <T>(work: () => Promise<T>) => Promise<T>;
 }

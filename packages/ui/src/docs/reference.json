@@ -623,8 +623,13 @@
     "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "Initial URL, browser history, and hydration configuration.",
-    "signature": "interface RouterOptions {\n  url?: string;\n  /** Explicitly opt into browser history; leave off for SSR and tests. */\n  browser?: boolean;\n  hydrationData?: Snapshot;\n}",
+    "signature": "interface RouterOptions {\n  /** Opt into bounded, single-use speculative loader reads. */\n  prefetch?: typeof import(\"./prefetch.ts\").dataPrefetch;\n  url?: string;\n  /** Explicitly opt into browser history; leave off for SSR and tests. */\n  browser?: boolean;\n  hydrationData?: Snapshot;\n}",
     "fields": [
+      {
+        "name": "prefetch",
+        "signature": "prefetch?: typeof import(\"./prefetch.ts\").dataPrefetch;",
+        "summary": "Opt into bounded, single-use speculative loader reads."
+      },
       {
         "name": "url",
         "signature": "url?: string;",
@@ -1638,12 +1643,17 @@
     "entries": ["react/client", "preact/client"],
     "kind": "Types",
     "summary": "Browser hydration settings for hash history, deployment recovery and deferred-data timeout.",
-    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000. */\n  deferredTimeout?: number;\n}",
+    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  /** Enable speculative loader reads with the dataPrefetch capability. */\n  prefetch?: RouterOptions[\"prefetch\"];\n  deployment?: DeploymentOptions | null;\n  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000. */\n  deferredTimeout?: number;\n}",
     "fields": [
       {
         "name": "hash",
         "signature": "hash?: boolean;",
         "summary": ""
+      },
+      {
+        "name": "prefetch",
+        "signature": "prefetch?: RouterOptions[\"prefetch\"];",
+        "summary": "Enable speculative loader reads with the dataPrefetch capability."
       },
       {
         "name": "deployment",

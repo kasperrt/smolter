@@ -11,7 +11,12 @@ import {
   watchDeployment,
 } from "@smolter/client";
 import { connectHashHistory } from "@smolter/client/hash-history";
-import { createDataRouter, matchRoutes, type Router } from "@smolter/core";
+import {
+  createDataRouter,
+  matchRoutes,
+  type Router,
+  type RouterOptions,
+} from "@smolter/core";
 import { connectNavigation } from "@smolter/core/navigation";
 import { retainRoute } from "@smolter/core/presentation";
 import { hydrate, render } from "preact";
@@ -27,6 +32,8 @@ export { configureApplication } from "@smolter/core/environment";
 /** Browser hydration settings for hash history, deployment recovery and deferred-data timeout. */
 export interface MountApplicationOptions {
   hash?: boolean;
+  /** Enable speculative loader reads with the dataPrefetch capability. */
+  prefetch?: RouterOptions["prefetch"];
   deployment?: DeploymentOptions | null;
   /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 30,000. */
   deferredTimeout?: number;
@@ -72,6 +79,7 @@ export async function mountApplication(
 
   const router = createDataRouter(routes, {
     browser: !hash,
+    prefetch: typeof options === "object" ? options.prefetch : undefined,
     url: hash
       ? new URL(location.hash.slice(1) || "/", location.origin).href
       : location.href,

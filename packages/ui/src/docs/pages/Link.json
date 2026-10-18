@@ -26,8 +26,8 @@
     },
     {
       "title": "Prefetching",
-      "body": "prefetch accepts intent (the default), viewport, or none. Intent loads code on hover, focus or touch. Viewport loads code once the link intersects the viewport, using IntersectionObserver; unsupported browsers skip speculative loading. Add prefetchData to run the matched route loader too. This is opt-in: only enable it for loaders safe to execute before a user navigates. It never calls actions or refreshes root data.",
-      "code": "<Link to=\"/tasks\" prefetch=\"viewport\" prefetchData>Tasks</Link>\n<Link to=\"/settings\" prefetch=\"intent\" prefetchData>Settings</Link>\n<Link to=\"/private\" prefetch=\"none\">Private</Link>"
+      "body": "Intent is the default: load code on hover, focus or touch. Pass the imported viewportPrefetch capability for viewport entry, or none to disable. Import dataPrefetch and configure the data router before adding prefetchData. Both capabilities are shared by React and Preact and tree-shake independently when not imported. Shared Link/router wiring remains. IntersectionObserver is disconnected after entry or unmount; unsupported browsers skip it. Only enable data reads that are safe before navigation; actions and root loaders are never prefetched.",
+      "code": "import { createDataRouter, dataPrefetch, Link, viewportPrefetch } from \"@kasperrt/smolter/preact\";\n// Identical exports from /react.\nconst router = createDataRouter(routes, { prefetch: dataPrefetch });\n// With SSR: mountApplication(routes, root, { prefetch: dataPrefetch })\n<Link to=\"/tasks\" prefetch={viewportPrefetch} prefetchData>Tasks</Link>\n<Link to=\"/settings\" prefetchData>Settings</Link>\n<Link to=\"/private\" prefetch=\"none\">Private</Link>"
     },
     {
       "title": "Data reuse and invalidation",

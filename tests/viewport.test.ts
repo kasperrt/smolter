@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vitest";
-import { viewportRef } from "../packages/core/src/viewport.ts";
+import { viewportPrefetch } from "../packages/core/src/viewport.ts";
 
 it("observes once and releases forwarded callback/object refs without late work", () => {
   let callback!: IntersectionObserverCallback;
@@ -23,7 +23,7 @@ it("observes once and releases forwarded callback/object refs without late work"
     );
   const load = vi.fn();
   const forwarded = { current: null as HTMLAnchorElement | null };
-  const ref = viewportRef(load, forwarded);
+  const ref = viewportPrefetch(load, forwarded);
   ref(element);
   expect(forwarded.current).toBe(element);
   notify(false);
@@ -37,7 +37,7 @@ it("observes once and releases forwarded callback/object refs without late work"
   expect(load).toHaveBeenCalledTimes(1);
   const release = vi.fn();
   const forward = vi.fn(() => release);
-  const next = viewportRef(load, forward);
+  const next = viewportPrefetch(load, forward);
   next(element);
   next(null);
   expect(forward).toHaveBeenCalledExactlyOnceWith(element);
@@ -45,7 +45,7 @@ it("observes once and releases forwarded callback/object refs without late work"
   notify(true);
   expect(load).toHaveBeenCalledTimes(1);
   const legacy = vi.fn();
-  const last = viewportRef(load, legacy);
+  const last = viewportPrefetch(load, legacy);
   last(element);
   last(null);
   expect(legacy).toHaveBeenLastCalledWith(null);
@@ -56,7 +56,7 @@ it("observes once and releases forwarded callback/object refs without late work"
 it("does not eagerly load when IntersectionObserver is unavailable", () => {
   vi.stubGlobal("IntersectionObserver", undefined);
   const load = vi.fn();
-  const ref = viewportRef(load);
+  const ref = viewportPrefetch(load);
   ref({} as HTMLAnchorElement);
   ref(null);
   expect(load).not.toHaveBeenCalled();

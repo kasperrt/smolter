@@ -25,17 +25,20 @@ for (const { name, api, h, mount } of [
         return Response.json({ message: "Prefetched" });
       });
     const preload = vi.fn(async () => {});
-    const router = api.createDataRouter([
-      { path: "/" },
-      api.defineRoute("/item", {
-        ...serverRoute(
-          "/item",
-          {},
-          { loader: true, dataEndpoint: "/admin/_smolter" },
-        ),
-        preload,
-      }),
-    ]);
+    const router = api.createDataRouter(
+      [
+        { path: "/" },
+        api.defineRoute("/item", {
+          ...serverRoute(
+            "/item",
+            {},
+            { loader: true, dataEndpoint: "/admin/_smolter" },
+          ),
+          preload,
+        }),
+      ],
+      { prefetch: api.dataPrefetch },
+    );
     await router.navigate("/");
     const container = document.createElement("div");
     document.body.append(container);
@@ -63,7 +66,7 @@ for (const { name, api, h, mount } of [
           ),
         ),
       );
-    render("viewport", true, "200vh");
+    render(api.viewportPrefetch, true, "200vh");
     await expect.poll(() => container.querySelector("a")).toBeTruthy();
     // Let the observer deliver its initial offscreen observation.
     await new Promise<void>((resolve) =>
@@ -71,7 +74,7 @@ for (const { name, api, h, mount } of [
     );
     expect(requests).toEqual([]);
     expect(preload).not.toHaveBeenCalled();
-    render("viewport", true, "0px");
+    render(api.viewportPrefetch, true, "0px");
     await expect.poll(() => requests.length).toBe(1);
     expect(requests[0]).toBe("/admin/_smolter?url=%2Fitem%3Fq%3D1");
     expect(router.getSnapshot().url).toBe("http://localhost/");
@@ -101,9 +104,10 @@ for (const { name, api, h, mount } of [
   it(`${name} skips disabled, document-reload and external viewport links`, async (context) => {
     const loader = vi.fn();
     const preload = vi.fn(async () => {});
-    const router = api.createDataRouter([
-      api.defineRoute("/item", { loader, preload }),
-    ]);
+    const router = api.createDataRouter(
+      [api.defineRoute("/item", { loader, preload })],
+      { prefetch: api.dataPrefetch },
+    );
     const container = document.createElement("div");
     document.body.append(container);
     const root = mount(container);
@@ -125,7 +129,7 @@ for (const { name, api, h, mount } of [
           api.Link,
           {
             to: "/item",
-            prefetch: "viewport",
+            prefetch: api.viewportPrefetch,
             prefetchData: true,
             reloadDocument: true,
           },
@@ -135,7 +139,7 @@ for (const { name, api, h, mount } of [
           api.Link,
           {
             to: "https://outside.test/item",
-            prefetch: "viewport",
+            prefetch: api.viewportPrefetch,
             prefetchData: true,
           },
           "External",
@@ -160,7 +164,7 @@ for (const { name, api, h, mount } of [
       .mockResolvedValue("retried");
     const router = api.createDataRouter(
       [{ path: "/" }, { path: "/item", loader }],
-      { url: location.origin + "/" },
+      { url: location.origin + "/", prefetch: api.dataPrefetch },
     );
     await router.navigate("/");
     const reload = vi.fn();
@@ -187,7 +191,7 @@ for (const { name, api, h, mount } of [
         { router },
         h(
           api.Link,
-          { to: "/item", prefetch: "viewport", prefetchData: true },
+          { to: "/item", prefetch: api.viewportPrefetch, prefetchData: true },
           "Next",
         ),
       ),
