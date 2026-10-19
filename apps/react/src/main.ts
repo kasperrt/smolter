@@ -1,8 +1,10 @@
 import routes from "virtual:smolter/routes";
 import { createDataRouter } from "@kasperrt/smolter/react";
 import { deserialize } from "@kasperrt/smolter/react/client";
+import { retainRoute } from "@smolter/core/presentation";
 import { siteHistory, siteRoute } from "@smolter/ui/hosting";
 import { watchMetadata } from "@smolter/ui/metadata";
+import { flushSync } from "react-dom";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { app } from "./app";
 import "@smolter/ui/style.css";
@@ -36,6 +38,7 @@ const router = createDataRouter(routes, {
 if (import.meta.env.VITE_HOSTED) {
   siteHistory(router, import.meta.env.BASE_URL);
 }
+retainRoute(router, flushSync);
 watchMetadata(router);
 
 if (root) {

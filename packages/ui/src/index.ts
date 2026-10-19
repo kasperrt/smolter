@@ -9,15 +9,20 @@ import type { ElementFactory, LinkFactory } from "./types";
 export type * from "./types";
 
 /** Pure UI shared by both renderers; no routing, requests, or framework hooks. */
-export function createUI<N>(h: ElementFactory<N>) {
+export function createUI<N>(h: ElementFactory<N>, sizeSelector: () => N) {
   const link: LinkFactory<N> = (href, children, className) =>
     h("a", { href, className }, children);
   const primitives = createPrimitives(h);
   const code = createCode(h, primitives);
   const counter = createCounter(h, primitives);
   const tasks = createTasks(h, primitives);
-  const shell = createShell(h, link);
-  const Documentation = createDocumentation(h, code.CodeBlock, link);
+  const shell = createShell(h, link, sizeSelector);
+  const Documentation = createDocumentation(
+    h,
+    code.CodeBlock,
+    link,
+    sizeSelector,
+  );
   return {
     ...primitives,
     ...code,

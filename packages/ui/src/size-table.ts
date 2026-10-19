@@ -40,27 +40,6 @@ export function createSizeTable<N>(h: ElementFactory<N>) {
   };
 }
 
-export const entryRows: (string | number)[][] = [
-  ["Routing-only named imports", sizes.reactRouting, sizes.preactRouting],
-  ["Common routing + data imports", sizes.reactCommon, sizes.preactCommon],
-  ["Complete /react or /preact entry", sizes.react, sizes.preact],
-  [
-    "Complete entry + server request transport",
-    sizes.reactServer,
-    sizes.preactServer,
-  ],
-  [
-    "Application: adapter + /client + /document",
-    sizes.reactApplication,
-    sizes.preactApplication,
-  ],
-  [
-    "Application + /lazy-route",
-    sizes.reactLazyApplication,
-    sizes.preactLazyApplication,
-  ],
-];
-
 export const comparisonRows: (string | number)[][] = [
   ["smolter routing-only", sizes.reactRouting, sizes.preactRouting],
   ["wouter routing subset", sizes.wouterRouting, sizes.wouterPreactRouting],
@@ -72,62 +51,3 @@ export const comparisonRows: (string | number)[][] = [
   ["smolter common routing + data", sizes.reactCommon, sizes.preactCommon],
   ["React Router data routing subset", sizes.reactRouterData, "React API"],
 ];
-
-export function createSizeCards<N>(h: ElementFactory<N>) {
-  return function SizeCards() {
-    return h(
-      "div",
-      { className: "size-cards" },
-      ...[
-        {
-          title: "Navigation",
-          api: "createRouter",
-          description: "Paths, links and history.",
-          react: sizes.reactRouting,
-          preact: sizes.preactRouting,
-        },
-        {
-          title: "Routing + data",
-          api: "createDataRouter",
-          description: "Loaders, actions, forms and fetchers.",
-          react: sizes.reactCommon,
-          preact: sizes.preactCommon,
-        },
-      ].map((tier) =>
-        h(
-          "section",
-          { className: "size-card", key: tier.api },
-          h("h4", null, tier.title),
-          h("code", null, tier.api),
-          h("p", null, tier.description),
-          h(
-            "dl",
-            null,
-            ...[
-              ["React", tier.react],
-              ["Preact", tier.preact],
-            ].map(([name, bytes]) =>
-              h(
-                "div",
-                { key: name },
-                h("dt", null, name),
-                h(
-                  "dd",
-                  null,
-                  h("strong", null, bytes),
-                  " B",
-                  h("small", null, "gzip"),
-                ),
-              ),
-            ),
-          ),
-          h(
-            "span",
-            { className: "size-card-note" },
-            "Named imports · framework excluded",
-          ),
-        ),
-      ),
-    );
-  };
-}

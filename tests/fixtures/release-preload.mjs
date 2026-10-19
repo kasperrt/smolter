@@ -20,10 +20,13 @@ let publications = 0;
 let jsrPublications = 0;
 let jsrVisible = false;
 let waits = 0;
+let elapsed = 0;
+Date.now = () => elapsed;
 
 timers.setTimeout = async (delay) => {
-  assert.equal(delay, 5_000);
+  assert.equal(delay, publications ? 30_000 : 5_000);
   waits++;
+  elapsed += delay;
 };
 
 globalThis.fetch = async (input, options) => {
@@ -44,7 +47,8 @@ globalThis.fetch = async (input, options) => {
     scenario === "published" ||
     (publications > 0 &&
       scenario !== "staged" &&
-      (scenario !== "delayed" || waits >= 2)) ||
+      (scenario !== "delayed" || waits >= 2) &&
+      (scenario !== "long-delay" || waits >= 20)) ||
     (packageLookup && scenario === "existing");
   return new Response(null, { status: exists ? 200 : 404 });
 };
@@ -102,8 +106,12 @@ process.on("exit", (code) => {
       ? 0
       : ["delayed", "jsr-delayed"].includes(scenario)
         ? 2
-        : ["staged", "jsr-missing"].includes(scenario)
-          ? 3
-          : 0,
+        : scenario === "long-delay"
+          ? 20
+          : scenario === "staged"
+            ? 30
+            : scenario === "jsr-missing"
+              ? 3
+              : 0,
   );
 });
