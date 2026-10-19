@@ -35,7 +35,6 @@ for (const example of examples) {
     page,
   }) => {
     await page.goto(origin);
-    const originalTitle = await page.title();
     await page.evaluate(() => {
       document.documentElement.dataset.docs = "mounted";
     });
@@ -89,28 +88,18 @@ for (const example of examples) {
       ).toBe(true);
     }
     await page.getByRole("link", { name: "Docs", exact: true }).click();
-    await page
-      .getByRole("link", {
-        name: "Search: GET forms and URL parameters →",
-        exact: true,
-      })
-      .click();
-    await expect(page).toHaveTitle(originalTitle);
+    await page.getByRole("link", { name: "Fetchers →", exact: true }).click();
+    await expect(page).toHaveTitle(
+      "Independent reads and writes · smolter docs",
+    );
   });
   test(`${example.name}: route search, deep links, and back navigation`, async ({
     page,
   }) => {
-    await page.goto(origin);
+    await page.goto(`${origin}/tasks/search`);
     await page.evaluate(() => {
       document.documentElement.dataset.mounted = "once";
     });
-    await page.getByRole("link", { name: "Docs", exact: true }).click();
-    await page
-      .getByRole("link", {
-        name: "Search: GET forms and URL parameters →",
-        exact: true,
-      })
-      .click();
     await page.getByLabel("Search query").fill("Edit");
     await page
       .getByRole("button", { name: "Search tasks", exact: true })

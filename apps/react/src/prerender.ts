@@ -4,7 +4,7 @@ import { docs } from "@smolter/ui/docs";
 import { pageMetadata } from "@smolter/ui/metadata";
 import { renderToString } from "react-dom/server";
 import { app } from "./app";
-import { routes } from "./manual-routes";
+import { routes } from "./site-routes";
 
 export const paths = ["", "docs", ...docs.map((page) => `docs/${page.slug}`)];
 

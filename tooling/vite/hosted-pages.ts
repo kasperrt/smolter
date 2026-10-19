@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { safeWrapAsync } from "@smolter/core";
-import { pageMetadata } from "@smolter/ui/metadata";
+import type { pageMetadata } from "@smolter/ui/metadata";
 import { createServer, type Plugin, type ResolvedConfig } from "vite";
 import { metadataTags } from "./site-metadata.ts";
 
@@ -56,13 +56,7 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
         };
         if (framework === "preact") {
           for (const legacy of ["react", "preact"]) {
-            for (const route of [
-              ...paths,
-              "tasks",
-              "tasks/1",
-              "tasks/search",
-              "examples/counter",
-            ]) {
+            for (const route of paths) {
               const target = `/smolter/${route}`;
               this.emitFile({
                 type: "asset",
@@ -103,21 +97,6 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
       });
       await server.close();
       if (error) throw error.cause ?? error;
-      for (const route of [
-        "tasks",
-        "tasks/1",
-        "tasks/search",
-        "examples/counter",
-      ]) {
-        this.emitFile({
-          type: "asset",
-          fileName: `${route}/index.html`,
-          source: template.replace(
-            /<title>.*?<\/title>/,
-            metadataTags(pageMetadata(`/${route}`)),
-          ),
-        });
-      }
     },
   };
 }

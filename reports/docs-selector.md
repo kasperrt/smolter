@@ -33,3 +33,9 @@ Local validation: lint, typechecking, generated references, 453 tests with 100% 
 The selector now eases its three totals over 280 ms using one bounded animation-frame sequence. New selections retarget from the currently displayed values. Initial server-rendered values do not animate, reduced motion settles immediately, and effect cleanup cancels pending frames when the selection changes or the component unmounts. The live region exposes the final gzip total while visual intermediate numbers are hidden from assistive technology. No dependency or package export changes; the package stays at 0.4.6. Controlled-clock browser checks cover upward/downward movement, rapid reversal, exact settlement and reduced motion.
 
 The number-transition build measures 82,458 B minified, 26,681 B gzip and 23,292 B Brotli: +708 / +267 / +193 B against the preceding docs build with identical settings. The existing 28,000 B site gzip gate still passes. Published package sizes are unchanged.
+
+## Retired public demos
+
+Hosted builds now use a landing/docs-only route list. Task, counter and search HTML pages and their legacy React/Preact redirects are no longer emitted. The source viewer is excluded from hosted builds, and the getting-started guide links to the loaders, actions and fetchers guides. The static 404 restores only documentation paths; retired demo URLs stay 404/noindex and cannot reopen through the old `__route` parameter. Local example routes remain regression fixtures.
+
+Hosted browser tests assert missing artifacts and genuine 404 responses for the retired task, search, counter and about URLs, including legacy framework prefixes. Existing documentation deep links and hydration checks remain. The docs entry now measures 75,280 B minified, 24,578 B gzip and 21,237 B Brotli, down 7,178 / 2,103 / 2,055 B from the counting-animation rollout with identical settings. No package runtime or version change.
