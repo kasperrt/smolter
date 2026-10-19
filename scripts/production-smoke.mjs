@@ -45,10 +45,12 @@ async function verify() {
     await page.getByRole("link", { name: "Docs", exact: true }).click();
     await page
       .getByRole("link", {
-        name: "Tasks: creation, updates, and fetcher reads →",
+        name: "Fetchers →",
         exact: true,
       })
       .click();
+    await page.waitForURL("**/docs/fetchers");
+    await page.goto(`${origin}/tasks`);
     await page.getByRole("button", { name: "Fetch task 1" }).click();
     await page.waitForFunction(
       () =>
