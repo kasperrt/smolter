@@ -28,6 +28,11 @@
       "body": "Await also works inside Preact Suspense during early hydration. Application outlets claim their streamed targets during hydration while retaining the comment structure Preact needs. Component changes remove abandoned markers, including nested markers arriving after initial hydration, so delayed islands cannot restore old content. Await keeps the same inner component when a pending value is replaced by resolved data, including root revalidation. Persistent shell controls are retained. For directly owned pending UI, the fallback prop remains the simpler choice.",
       "code": "<Suspense fallback={<p>Loading optional data…</p>}>\n  <Await resolve={data.optional} errorElement={<p>Optional data unavailable</p>}>\n    {(value) => <p>{value}</p>}\n  </Await>\n</Suspense>",
       "title": "Outer Preact Suspense"
+    },
+    {
+      "title": "Client-loader promises",
+      "body": "From 0.4.6, nested clientLoader promises reach the page without blocking navigation. Use fallback for pending content and errorElement for local rejection. This uses ordinary client rendering, not an SSR document stream, and does not use deferredTimeout. Keep the promise from loader data stable rather than starting a request during render.",
+      "code": "const data = useLoaderData<typeof clientLoader>();\nreturn <Await resolve={data!.stats}\n  fallback={<p>Loading statistics…</p>}\n  errorElement={<p>Statistics unavailable.</p>}>\n  {(stats) => <p>{stats.rooms} rooms</p>}\n</Await>;"
     }
   ]
 }

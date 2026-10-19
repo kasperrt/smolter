@@ -84,6 +84,9 @@ function prefetchCache(routes: readonly Route[], current: () => string) {
         const result = await entry.result;
         if (signal.aborted || entries.get(key) !== entry) return;
         entries.delete(key);
+        signal.addEventListener("abort", () => entry.controller.abort(), {
+          once: true,
+        });
         return result;
       };
       return consume();

@@ -70,6 +70,7 @@ export interface RouteModule {
   ErrorBoundary?: unknown;
   loader?: DataFunction;
   action?: DataFunction;
+  /** Browser read: await the top-level result, retaining nested promises for deferred UI. */
   clientLoader?(args: ClientLoaderArgs): unknown;
   clientAction?(args: ClientActionArgs): unknown;
   shouldRevalidate?: (args: RevalidationArgs) => boolean;

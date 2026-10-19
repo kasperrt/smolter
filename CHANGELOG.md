@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.6
+
+[Validation and matched bundle sizes](reports/0.4.6.md).
+
+- Preserve nested clientLoader promises in React and Preact applications instead of resolving them before committing navigation. Top-level required work still blocks; optional data renders through Await or use/Suspense. Promise identity is retained for revalidation, fetchers and prefetch reuse.
+- Observe deferred rejections without replacing promises so abandoned or speculative values do not create unhandled rejections; mounted boundaries still receive the original failure.
+- Transfer consumed prefetch cancellation to its navigation, allowing signal-aware optional requests to abort when their owner leaves.
+- Keep server JSON transport, action-result normalization and the 8-second SSR hydration deadline unchanged. Client-created promises have no automatic Smolter deadline.
+- Document deferred loader rendering, rejection, cancellation and cache behavior; add production-built React/Preact acceptance tests.
+
 ## 0.4.5
 
 **Compatibility: initial deferred data now has an 8-second total budget, reduced from 30 seconds.** This applies to React and Preact hydration. If initial data intentionally takes longer, pass `mountApplication(routes, root, { deferredTimeout: 30_000 })` (or another explicit budget). Settlements do not restart the deadline. This bounds silent stream interruptions; it is not immediate disconnect detection or a performance improvement.

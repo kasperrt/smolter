@@ -223,6 +223,18 @@ export async function clientAction({ serverAction }: ClientActionArgs<typeof act
 }
 ```
 
+From **0.4.6**, `clientLoader` may return nested promises without blocking the
+page. Only the top-level loader result is awaited. For example, return
+`{ title: "Rooms", stats: readStats(signal) }`, then render `stats` through
+Preact `Await` or React 19 `use` inside `Suspense` with an error boundary.
+Promise identities survive navigation, fetcher reads and prefetch reuse.
+Pass the loader signal to optional requests; leaving the route aborts signal-aware
+work, including consumed prefetches. Late results cannot restore an abandoned
+page. Nested failures remain observable by deferred UI; Smolter also handles
+unobserved rejections after abandonment. Client-created promises have no automatic
+timeout: `deferredTimeout` applies only to initial SSR hydration. Server JSON
+transport and action-result normalization are unchanged.
+
 Handlers receive `{ request, params, signal }`. Server callbacks add the typed
 call-through functions. A client-only handler can instead use browser storage
 or call an unrelated API itself; components do not need to fetch.
@@ -642,16 +654,16 @@ a claim of identical features.
 | `React Router: data routing subset` | 29780 |
 | `React: routing-only named exports` | 1855 |
 | `Preact: routing-only named exports` | 1838 |
-| `@kasperrt/smolter/react` | 5847 |
-| `@kasperrt/smolter/preact` | 6439 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 7562 |
-| `@kasperrt/smolter/preact + server transport` | 8169 |
-| `@kasperrt/smolter/react + client + document (application)` | 10681 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 10967 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11286 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11579 |
-| `React: common routing/data exports` | 4135 |
-| `Preact: common routing/data exports` | 4116 |
+| `@kasperrt/smolter/react` | 5858 |
+| `@kasperrt/smolter/preact` | 6450 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7574 |
+| `@kasperrt/smolter/preact + server transport` | 8181 |
+| `@kasperrt/smolter/react + client + document (application)` | 10786 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 11074 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11389 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11684 |
+| `React: common routing/data exports` | 4150 |
+| `Preact: common routing/data exports` | 4128 |
 | `wouter: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |

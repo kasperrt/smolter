@@ -53,6 +53,11 @@
       "title": "Externally injected head elements",
       "body": "Whole-document hydration requires matching server/client layouts. Mark externally owned direct children of head with data-smolter-preserve; do not also render them in the application. Preact temporarily excludes these nodes during hydration. React 19 uses its native head reconciliation. Tests retain marked scripts/styles through hydration, revalidation and navigation. This is not permission for arbitrary body injection or changes to the hydration payload.",
       "code": "<script data-smolter-preserve src=\"/infrastructure-instrumentation.js\"></script>\n<meta data-smolter-preserve name=\"infrastructure-tag\" content=\"example\">"
+    },
+    {
+      "title": "Client promises versus server transport",
+      "body": "Deferred clientLoader data in 0.4.6 stays in browser memory and needs neither earlyHydration nor the SSR promise protocol. Server loader HTTP responses still resolve nested values before JSON serialization. A clientLoader can await serverLoader() for required data and return separate optional promises. SSR behavior and the 8-second initial hydration budget are unchanged.",
+      "code": ""
     }
   ]
 }

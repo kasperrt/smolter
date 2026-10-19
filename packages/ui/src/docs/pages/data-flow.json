@@ -10,6 +10,11 @@
       "code": "// loader.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\n\nexport async function clientLoader({ request, signal }: DataArgs) {\n  const query = new URL(request.url).searchParams.get(\"q\") ?? \"\";\n  const response = await fetch(`/api/tasks?q=${encodeURIComponent(query)}`, { signal });\n\n  return response.json();\n}\n\n// route.tsx\nexport { clientLoader } from \"./loader\";\nexport { clientAction } from \"./action\";\nexport { default } from \"./view\";"
     },
     {
+      "title": "Deferred client-loader data",
+      "body": "From 0.4.6, clientLoader waits only for its top-level result. Promises nested in records or arrays retain their identity: navigation, revalidation and fetcher loads can finish while optional data remains pending. Await required work before returning. Read optional values with Preact Await or React 19 use(promise) inside Suspense; React needs an error boundary for rejection. React 18 has no use hook: keep awaiting required data or use an existing Suspense-compatible reader. Do not render a promise directly.",
+      "code": "import type { DataArgs } from \"@kasperrt/smolter/preact\";\n\nasync function readStats(signal: AbortSignal) {\n  const response = await fetch(\"/api/stats\", { signal });\n  if (!response.ok) throw new Error(\"Statistics unavailable\");\n  return response.json();\n}\n\nexport function clientLoader({ signal }: DataArgs) {\n  return { title: \"Rooms\", stats: readStats(signal) };\n}"
+    },
+    {
       "title": "Server data",
       "body": "loader and action execute on the server when using the generated transport or serverRoute. handleRequest must be installed on your production server. Exporting a server handler in a plain browser route table does not move that code to a backend automatically.",
       "code": "// action.ts\nimport type { DataArgs } from \"@kasperrt/smolter/react\";\n\nexport async function action({ request, params }: DataArgs) {\n  const body = await request.formData();\n\n  return updateTask(params.id, String(body.get(\"title\")));\n}"
@@ -22,6 +27,11 @@
     {
       "title": "Pending, errors, cancellation",
       "body": "A newer request aborts the older request on the same channel. Pass signal to fetch and other abort-aware work. Returned or rejected errors become route error state. HydrateFallback renders before the first successful loader; ErrorBoundary receives an error prop. An error does not undo writes already committed by a server.",
+      "code": ""
+    },
+    {
+      "title": "Deferred ownership and failures",
+      "body": "Pass signal to optional fetches so a newer navigation, revalidation or fetcher disposal can abort them. Consumed prefetch data uses the consuming navigation’s cancellation signal. Smolter observes nested rejections even if their page is abandoned, without replacing the promises or suppressing errors from Await/use. Settlements do not rerun loaders, change the current route or extend router pending state. Client-created promises have no Smolter timeout: deferredTimeout only bounds initial SSR hydration data. Add a request deadline in application code when needed.",
       "code": ""
     }
   ]
