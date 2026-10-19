@@ -3,7 +3,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join } from "node:path";
 import { gzipSync } from "node:zlib";
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import { safeWrapAsync } from "@smolter/core";
 
 const server = createServer((request, response) => {
@@ -326,8 +326,37 @@ const result = await safeWrapAsync(async () => {
   );
   const selector = page.getByRole("region", { name: "Build your bundle" });
   const total = selector.locator("output strong");
+  const now = Date.now();
+  await page.clock.install({ time: now });
+  await page.clock.pauseAt(now + 1000);
+  const serverPages = selector.getByRole("checkbox", {
+    name: "Server-rendered pages",
+  });
+  await serverPages.check();
+  await page.clock.runFor(120);
+  const rising = Number((await total.innerText()).replaceAll(",", ""));
+  assert(
+    rising > combinations.preact[5][1] && rising < combinations.preact[7][1],
+    "Total must count upward through intermediate values",
+  );
+  assert.equal(
+    await selector.locator(".size-announcement").innerText(),
+    `${combinations.preact[7][1].toLocaleString("en-US")} bytes gzip`,
+  );
+  await serverPages.uncheck();
+  await page.clock.runFor(120);
+  const falling = Number((await total.innerText()).replaceAll(",", ""));
+  assert(
+    falling < rising && falling > combinations.preact[5][1],
+    "Rapid changes must retarget downward from the displayed value",
+  );
+  await page.clock.runFor(400);
   assert.equal(
     await total.innerText(),
+    combinations.preact[5][1].toLocaleString("en-US"),
+  );
+  await page.clock.resume();
+  await expect(total).toHaveText(
     combinations.preact[5][1].toLocaleString("en-US"),
   );
   assert(
@@ -341,8 +370,7 @@ const result = await safeWrapAsync(async () => {
   await selector
     .getByRole("checkbox", { name: "Load and save data" })
     .uncheck();
-  assert.equal(
-    await total.innerText(),
+  await expect(total).toHaveText(
     combinations.preact[0][1].toLocaleString("en-US"),
   );
   await selector
@@ -358,13 +386,11 @@ const result = await safeWrapAsync(async () => {
       .getByRole("checkbox", { name: "Load and save data" })
       .isChecked(),
   );
-  assert.equal(
-    await total.innerText(),
+  await expect(total).toHaveText(
     combinations.preact[3][1].toLocaleString("en-US"),
   );
   await selector.getByRole("radio", { name: "React", exact: true }).check();
-  assert.equal(
-    await total.innerText(),
+  await expect(total).toHaveText(
     combinations.react[3][1].toLocaleString("en-US"),
   );
   const reactChoice = selector.getByRole("radio", {
@@ -378,8 +404,7 @@ const result = await safeWrapAsync(async () => {
       .getByRole("radio", { name: "Preact", exact: true })
       .isChecked(),
   );
-  assert.equal(
-    await total.innerText(),
+  await expect(total).toHaveText(
     combinations.preact[3][1].toLocaleString("en-US"),
   );
   await page.keyboard.press("ArrowRight");
@@ -391,6 +416,14 @@ const result = await safeWrapAsync(async () => {
     ),
     "0s",
   );
+  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 100);
+  await selector.getByRole("radio", { name: "Preact", exact: true }).check();
+  await page.clock.runFor(80);
+  assert.equal(
+    await total.innerText(),
+    combinations.preact[3][1].toLocaleString("en-US"),
+  );
+  await page.clock.resume();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   console.log(
     "Pages: selector keyboard, reduced motion, dependencies and measured totals passed",
