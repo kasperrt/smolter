@@ -36,12 +36,32 @@ export function prepareRoutes(
         const { data, error } = await safeWrapAsync(async () => ({
           value: await handler(args),
         }));
-        return normalizeResult(
+        const value = await normalizeResult(
           error ? error.cause : data!.value,
-          !preserveDeferred,
+          !preserveDeferred && key !== "clientLoader",
         );
+        if (key === "clientLoader") observeDeferred(value);
+        return value;
       };
     }
     return wrapped;
   });
+}
+
+// Observe abandoned/speculative rejections without replacing consumer promises.
+function observeDeferred(value: unknown, seen = new WeakSet<object>()) {
+  if (!value || typeof value !== "object" || seen.has(value)) return;
+  seen.add(value);
+  if (value instanceof Promise) {
+    const observe = async () => {
+      const { data } = await safeWrapAsync(() => value);
+      observeDeferred(data, seen);
+    };
+    void observe();
+  } else if (
+    Array.isArray(value) ||
+    Object.getPrototypeOf(value) === Object.prototype
+  ) {
+    for (const field of Object.values(value)) observeDeferred(field, seen);
+  }
 }

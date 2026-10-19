@@ -485,7 +485,7 @@
     "entries": ["react", "preact"],
     "kind": "Types",
     "summary": "A route component and its optional server and client data handlers.",
-    "signature": "interface RouteModule {\n  /** Stable identifier for targeted revalidation; defaults to the path. */\n  id?: string;\n  default?: unknown;\n  HydrateFallback?: unknown;\n  ErrorBoundary?: unknown;\n  loader?: DataFunction;\n  action?: DataFunction;\n  clientLoader?(args: ClientLoaderArgs): unknown;\n  clientAction?(args: ClientActionArgs): unknown;\n  shouldRevalidate?: (args: RevalidationArgs) => boolean;\n}",
+    "signature": "interface RouteModule {\n  /** Stable identifier for targeted revalidation; defaults to the path. */\n  id?: string;\n  default?: unknown;\n  HydrateFallback?: unknown;\n  ErrorBoundary?: unknown;\n  loader?: DataFunction;\n  action?: DataFunction;\n  /** Browser read: await the top-level result, retaining nested promises for deferred UI. */\n  clientLoader?(args: ClientLoaderArgs): unknown;\n  clientAction?(args: ClientActionArgs): unknown;\n  shouldRevalidate?: (args: RevalidationArgs) => boolean;\n}",
     "fields": [
       {
         "name": "id",
@@ -520,7 +520,7 @@
       {
         "name": "clientLoader",
         "signature": "clientLoader?(args: ClientLoaderArgs): unknown;",
-        "summary": ""
+        "summary": "Browser read: await the top-level result, retaining nested promises for deferred UI."
       },
       {
         "name": "clientAction",

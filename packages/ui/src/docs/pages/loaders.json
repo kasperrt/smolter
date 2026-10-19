@@ -11,6 +11,12 @@
       "group": "Define & connect"
     },
     {
+      "title": "Deferred client-loader data",
+      "body": "From 0.4.6, clientLoader waits only for its top-level result. Promises nested in records or arrays retain their identity: navigation, revalidation and fetcher loads can finish while optional data remains pending. Await required work before returning. Read optional values with Preact Await or React 19 use(promise) inside Suspense; React needs an error boundary for rejection. React 18 has no use hook: keep awaiting required data or use an existing Suspense-compatible reader. Do not render a promise directly.",
+      "code": "import type { DataArgs } from \"@kasperrt/smolter/preact\";\n\nasync function readStats(signal: AbortSignal) {\n  const response = await fetch(\"/api/stats\", { signal });\n  if (!response.ok) throw new Error(\"Statistics unavailable\");\n  return response.json();\n}\n\nexport function clientLoader({ signal }: DataArgs) {\n  return { title: \"Rooms\", stats: readStats(signal) };\n}",
+      "group": "URLs & loading"
+    },
+    {
       "title": "Register and render the route",
       "body": "Manual registration associates a URL pattern with the module. File routing derives /tasks/:id from tasks.$id/route.ts. Export the handler and view from that module. The tasks service above is application code: its read method returns a typed task or an Error.",
       "code": "// routes/tasks.$id/route.ts\nexport { clientLoader } from \"./clientLoader\";\nexport { default } from \"./view\";\nexport { HydrateFallback } from \"./HydrateFallback\";\n\n// router.ts\nimport { createDataRouter, defineRoute } from \"@kasperrt/smolter/react\";\nimport * as task from \"./routes/tasks.$id/route\";\n\nexport const router = createDataRouter([defineRoute(\"/tasks/:id\", task)], {\n  browser: true,\n});",
@@ -55,6 +61,12 @@
     {
       "title": "JSON across the server boundary",
       "body": "Server transport and hydration serialize data. Prefer plain records, arrays, strings, numbers, booleans, and null. Dates become strings; functions and class instances do not retain their runtime behavior. A TypeScript return annotation cannot make a value survive serialization unchanged.",
+      "code": "",
+      "group": "Independent reads"
+    },
+    {
+      "title": "Deferred ownership and failures",
+      "body": "Pass signal to optional fetches so a newer navigation, revalidation or fetcher disposal can abort them. Consumed prefetch data uses the consuming navigation’s cancellation signal. Smolter observes nested rejections even if their page is abandoned, without replacing the promises or suppressing errors from Await/use. Settlements do not rerun loaders, change the current route or extend router pending state. Client-created promises have no Smolter timeout: deferredTimeout only bounds initial SSR hydration data. Add a request deadline in application code when needed.",
       "code": "",
       "group": "Independent reads"
     }
