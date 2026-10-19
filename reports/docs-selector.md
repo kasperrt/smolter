@@ -16,7 +16,7 @@ After one npm upload, release verification now waits up to 15 minutes, polling r
 
 No published router, adapter, SSR or Vite runtime implementation changes. The existing named-export measurements remain unchanged: routing-only React 1,855 B gzip and Preact 1,838 B; common routing/data React 4,150 B and Preact 4,128 B.
 
-The hosted docs entry is 81,750 B minified, 26,414 B gzip and 23,099 B Brotli in the local production build. Its gzip ceiling moves from 25,000 to 28,000 B to accommodate the interactive selector, measurements and retained presentation. This is additional documentation-site cost, not a package-runtime improvement. No LCP, TTFB or general speed claim is made.
+The initial selector rollout’s hosted docs entry was 81,750 B minified, 26,414 B gzip and 23,099 B Brotli in the local production build. Its gzip ceiling moves from 25,000 to 28,000 B to accommodate the interactive selector, measurements and retained presentation. This is additional documentation-site cost, not a package-runtime improvement. No LCP, TTFB or general speed claim is made.
 
 ## Verification
 
@@ -27,3 +27,9 @@ Release subprocess tests simulate ten minutes of delayed registry visibility, pe
 No consumer application was modified. These are upstream fixtures and documentation checks, not a fresh Vibes migration or device sign-off. Consumers need no API or configuration changes.
 
 Local validation: lint, typechecking, generated references, 453 tests with 100% line and function coverage, packed React/Preact consumers, JSR dry-run validation, production example builds and SSR smoke tests, and hosted-site browser checks passed. Browser suites cover both file and manual routing; their results are recorded in the PR. No npm version bump is included.
+
+## Number transitions
+
+The selector now eases its three totals over 280 ms using one bounded animation-frame sequence. New selections retarget from the currently displayed values. Initial server-rendered values do not animate, reduced motion settles immediately, and effect cleanup cancels pending frames when the selection changes or the component unmounts. The live region exposes the final gzip total while visual intermediate numbers are hidden from assistive technology. No dependency or package export changes; the package stays at 0.4.6. Controlled-clock browser checks cover upward/downward movement, rapid reversal, exact settlement and reduced motion.
+
+The number-transition build measures 82,458 B minified, 26,681 B gzip and 23,292 B Brotli: +708 / +267 / +193 B against the preceding docs build with identical settings. The existing 28,000 B site gzip gate still passes. Published package sizes are unchanged.

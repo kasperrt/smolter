@@ -2,6 +2,11 @@ import measurements from "./size-combinations.json";
 import type { ElementFactory } from "./types";
 
 type UseState = <T>(initial: T) => [T, (value: T) => void];
+type UseEffect = (
+  effect: () => (() => void) | undefined,
+  dependencies: readonly unknown[],
+) => void;
+type UseRef = <T>(initial: T) => { current: T };
 const features = [
   {
     bit: 1,
@@ -41,12 +46,45 @@ const features = [
 export function createSizeSelector<N>(
   h: ElementFactory<N>,
   useState: UseState,
+  useEffect: UseEffect,
+  useRef: UseRef,
 ) {
   return function SizeSelector() {
     const [selection, select] = useState(5);
     const [framework, setFramework] = useState<"react" | "preact">("preact");
     const table: Record<string, number[]> = measurements[framework];
-    const [raw, gzip, brotli] = table[selection];
+    const target = table[selection];
+    const [values, setValues] = useState(target);
+    const current = useRef(target);
+    useEffect(() => {
+      if (current.current === target) return;
+      const motion = matchMedia("(prefers-reduced-motion: reduce)");
+      const from = current.current;
+      const started = performance.now();
+      let frame = 0;
+      const finish = () => {
+        cancelAnimationFrame(frame);
+        current.current = target;
+        setValues(target);
+      };
+      const tick = (now: number) => {
+        const progress = Math.min(1, (now - started) / 280);
+        const eased = 1 - (1 - progress) ** 3;
+        current.current = target.map((value, index) =>
+          Math.round(from[index] + (value - from[index]) * eased),
+        );
+        setValues(current.current);
+        if (progress < 1) frame = requestAnimationFrame(tick);
+      };
+      if (motion.matches) finish();
+      else frame = requestAnimationFrame(tick);
+      motion.addEventListener("change", finish);
+      return () => {
+        cancelAnimationFrame(frame);
+        motion.removeEventListener("change", finish);
+      };
+    }, [target]);
+    const [raw, gzip, brotli] = values;
     const toggle = (bit: number) => {
       let next = selection ^ bit;
       if (next & 2) next |= 1;
@@ -126,9 +164,14 @@ export function createSizeSelector<N>(
             "aria-live": "polite",
             "aria-atomic": true,
           },
-          h("strong", null, gzip.toLocaleString("en-US")),
-          " B",
-          h("small", null, "gzip"),
+          h(
+            "span",
+            { className: "size-announcement" },
+            `${target[1].toLocaleString("en-US")} bytes gzip`,
+          ),
+          h("strong", { "aria-hidden": true }, gzip.toLocaleString("en-US")),
+          h("span", { "aria-hidden": true }, " B"),
+          h("small", { "aria-hidden": true }, "gzip"),
         ),
         h(
           "dl",
