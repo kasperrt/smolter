@@ -14,7 +14,7 @@ const routing =
       }
     : {};
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   optimizeDeps: { include: ["react", "react-dom/client"] },
 
   plugins: [
@@ -25,7 +25,14 @@ export default defineConfig({
       include: /\/apps\/react(?:-ssr)?\/src\/.*\.[jt]sx?(?:\?.*)?$/,
     }),
     demoAssets(),
-    fileRouter(routing),
+    fileRouter(
+      mode === "hosted"
+        ? {
+            clientRoutes: "src/site-routes.ts",
+            serverRoutes: "src/site-routes.ts",
+          }
+        : routing,
+    ),
     measuredSize(),
   ],
-});
+}));

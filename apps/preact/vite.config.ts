@@ -13,7 +13,7 @@ const routing =
       }
     : {};
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   resolve: { dedupe: ["preact"] },
   optimizeDeps: { include: ["preact", "preact/hooks", "preact/compat"] },
 
@@ -21,7 +21,14 @@ export default defineConfig({
     hostedPages("preact"),
     splitDocumentation(),
     demoAssets(),
-    fileRouter(routing),
+    fileRouter(
+      mode === "hosted"
+        ? {
+            clientRoutes: "src/site-routes.ts",
+            serverRoutes: "src/site-routes.ts",
+          }
+        : routing,
+    ),
     measuredSize(),
   ],
-});
+}));

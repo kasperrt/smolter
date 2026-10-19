@@ -69,6 +69,10 @@ pnpm dev
 | [React SSR](./apps/react-ssr) | http://127.0.0.1:5175 | Server loaders/actions, hydration |
 | [Preact SSR](./apps/preact-ssr) | http://127.0.0.1:5176 | Server loaders/actions, hydration |
 
+The hosted website publishes only the landing page and documentation. The
+counter, task and search routes below are local regression fixtures, not public
+demo pages.
+
 Each app has its own entrypoints, routes, and data code. Only UI components are
 shared. Preact examples do not import React. Each includes:
 
@@ -76,7 +80,6 @@ shared. Preact examples do not import React. Each includes:
 - `/examples/counter`: fetcher POST, automatic and manual revalidation.
 - `/tasks`: list, create form, and a fetcher-only task preview.
 - `/tasks/:id`: PATCH, DELETE, validation, and skipping no-op revalidation.
-- `/about`: the separation between data and rendering.
 
 The right panel shows an equivalent public-API example with styling omitted,
 plus the actual loader/action files. Its content follows the current route and

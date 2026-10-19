@@ -9,7 +9,7 @@ export function siteHref(href: string): string {
 
 export function siteRoute(base: string): string {
   const restored = new URLSearchParams(location.search).get("__route");
-  if (restored?.startsWith("/") && !restored.startsWith("//")) {
+  if (restored && /^\/docs(?:[/?#]|$)/.test(restored)) {
     history.replaceState(null, "", base.slice(0, -1) + restored);
     return restored;
   }

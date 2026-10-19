@@ -60,6 +60,16 @@ const result = await safeWrapAsync(async () => {
   const awaitHtml = readFileSync("site/docs/Await/index.html", "utf8");
   assert(awaitHtml.includes("React 19+ provides use(promise)"));
   assert(awaitHtml.includes("https://react.dev/reference/react/use"));
+  const gettingStartedHtml = readFileSync(
+    "site/docs/getting-started/index.html",
+    "utf8",
+  );
+  assert(
+    !/href="(?:\/smolter)?\/(?:tasks|counter|examples\/counter)(?:[/?#"])/.test(
+      gettingStartedHtml,
+    ),
+    "Guide must not link to retired demos",
+  );
   const landingHtml = readFileSync("site/index.html", "utf8");
   assert(
     landingHtml.includes("Data flow you can follow."),
@@ -478,60 +488,34 @@ const result = await safeWrapAsync(async () => {
   await page
     .getByRole("heading", { name: "Getting started", exact: true })
     .waitFor();
-  const tasksHref = await page
-    .getByRole("link", {
-      name: "Tasks: creation, updates, and fetcher reads →",
-      exact: true,
-    })
-    .getAttribute("href");
-  assert.equal(new URL(tasksHref, page.url()).href, `${origin}/smolter/tasks`);
-  const documentPage = await browser.newPage();
-  await documentPage.goto(new URL(tasksHref, page.url()).href);
-  await documentPage
-    .getByRole("heading", { name: "Tasks", exact: true })
+  await page.goto(`${origin}/smolter/?__route=/tasks/2`);
+  await page
+    .getByRole("heading", { name: "Data flow you can follow.", exact: true })
     .waitFor();
-  await documentPage.close();
-  await page
-    .getByRole("link", {
-      name: "Tasks: creation, updates, and fetcher reads →",
-      exact: true,
-    })
-    .click();
-  await page.getByRole("button", { name: "Fetch task 1" }).click();
-  await page.getByRole("heading", { name: "Tasks", exact: true }).waitFor();
-  assert.equal(page.url(), `${origin}/smolter/tasks`);
-  const routeHref = await page
-    .getByRole("link", { name: "Read the route", exact: true })
-    .getAttribute("href");
-  assert.ok(routeHref);
-  assert.equal(
-    new URL(routeHref, page.url()).href,
-    `${origin}/smolter/tasks/1`,
-  );
-  await page.getByLabel("New task").fill("Check a deep link");
-  await page.getByRole("button", { name: "Create task", exact: true }).click();
-  await page
-    .getByRole("link", { name: "Check a deep link", exact: true })
-    .click();
-  const detail = page.url();
-  await page.reload();
-  await page.getByRole("heading", { name: "Edit task", exact: true }).waitFor();
-  assert.equal(page.url(), detail);
-  await page.getByRole("link", { name: "← All tasks", exact: true }).click();
-  assert.equal(page.url(), `${origin}/smolter/tasks`);
-  await page.getByRole("link", { name: "Docs", exact: true }).click();
-  await page
-    .getByRole("link", {
-      name: "Search: GET forms and URL parameters →",
-      exact: true,
-    })
-    .click();
-  await page.getByLabel("Search query").fill("route");
-  await page.getByRole("button", { name: "Search tasks", exact: true }).click();
-  await page.waitForURL(`${origin}/smolter/tasks/search?q=route`);
-  await page
-    .getByRole("link", { name: "Read the route", exact: true })
-    .waitFor();
+  assert.equal(new URL(page.url()).pathname, "/smolter/");
+  for (const prefix of ["", "react/", "preact/"]) {
+    for (const retired of [
+      "tasks",
+      "tasks/1",
+      "tasks/search",
+      "counter",
+      "examples/counter",
+      "search",
+    ]) {
+      const path = `${prefix}${retired}`;
+      assert(!existsSync(`site/${path}/index.html`));
+      const response = await page.goto(`${origin}/smolter/${path}`);
+      assert.equal(response.status(), 404);
+      await page
+        .getByRole("heading", { name: "Page not found", exact: true })
+        .waitFor();
+      assert.equal(page.url(), `${origin}/smolter/${path}`);
+      assert.equal(
+        await page.locator('meta[name="robots"]').getAttribute("content"),
+        "noindex,follow",
+      );
+    }
+  }
   for (const framework of ["preact"]) {
     await page.goto(`${origin}/smolter/docs/useFetcher`);
     await page
@@ -592,5 +576,5 @@ if (result.error) {
 }
 
 console.log(
-  "Pages: Preact SSR, split articles, legacy redirects, fetcher reads, and deep-link refresh passed",
+  "Pages: Preact SSR, split articles, legacy documentation redirects, retired demo 404s, and deep-link refresh passed",
 );

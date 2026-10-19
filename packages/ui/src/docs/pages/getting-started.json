@@ -30,21 +30,21 @@
       "code": "import { RouterProvider, Routes } from \"@kasperrt/smolter/react\";\nimport { router } from \"./router\";\n\nexport function App() {\n  return <RouterProvider router={router}>\n    <Routes fallback={<p>Page not found.</p>} />\n  </RouterProvider>;\n}"
     },
     {
-      "title": "Working examples",
-      "body": "Use these examples alongside the guides. Each pairs a working UI with route registration and its loader/action source.",
+      "title": "Next steps",
+      "body": "Continue with the guides for reading data, handling mutations and background requests.",
       "code": "",
       "links": [
         {
-          "href": "/examples/counter",
-          "label": "Counter: actions and revalidation →"
+          "href": "/docs/loaders",
+          "label": "Loaders →"
         },
         {
-          "href": "/tasks",
-          "label": "Tasks: creation, updates, and fetcher reads →"
+          "href": "/docs/actions",
+          "label": "Actions →"
         },
         {
-          "href": "/tasks/search",
-          "label": "Search: GET forms and URL parameters →"
+          "href": "/docs/fetchers",
+          "label": "Fetchers →"
         }
       ]
     }

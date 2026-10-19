@@ -4,19 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex,follow" />
-    <title>smolter _</title>
+    <title>Page not found · smolter</title>
     <script>
-      const match = location.pathname.match(/^\/smolter(?:\/(?:react|preact))?(\/.*)$/);
-
+      const match = location.pathname.match(/^\/smolter(?:\/(?:react|preact))?(\/docs(?:\/.*)?)$/);
       if (match) {
         const route = match[1] + location.search + location.hash;
         const target = `/smolter/?__route=${encodeURIComponent(route)}`;
-
         location.replace(target);
       }
     </script>
   </head>
   <body>
-    <a href="/smolter/">Open smolter</a>
+    <h1>Page not found</h1>
+    <p>This page is no longer available.</p>
+    <a href="/smolter/">Home</a>
+    <a href="/smolter/docs/getting-started/">Documentation</a>
   </body>
 </html>

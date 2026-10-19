@@ -9,7 +9,9 @@ import { siteHref } from "@smolter/ui/hosting";
 import { ui } from "@smolter/ui/react";
 import { createElement as h, lazy, Suspense } from "react";
 
-const Source = lazy(() => import("./source"));
+const Source = import.meta.env.VITE_HOSTED
+  ? null
+  : lazy(() => import("./source"));
 
 export function app(router: Router) {
   return h(RouterProvider, { router }, h(Example, {}));
@@ -18,7 +20,7 @@ export function app(router: Router) {
 function Example() {
   const [routePath] = useLocation();
   return ui.Shell({
-    source: h(Suspense, { fallback: null }, h(Source, {})),
+    source: Source && h(Suspense, { fallback: null }, h(Source, {})),
     routePath,
     hosted: Boolean(import.meta.env.VITE_HOSTED),
     mode: "React",
