@@ -12,6 +12,7 @@ const json = `${JSON.stringify(sizes, null, 2)}\n`;
 if (readFileSync(path, "utf8") !== json) writeFileSync(path, json);
 
 if (!process.argv.includes("--write-only")) {
+  await import("./size-combinations.mjs");
   const manifest = JSON.parse(
     readFileSync(new URL("../package.json", import.meta.url), "utf8"),
   );

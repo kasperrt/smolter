@@ -5,6 +5,11 @@
   "kind": "Guides",
   "sections": [
     {
+      "title": "Choose your features",
+      "body": "The selector measures each valid combination as one production Vite bundle. Paths, links and history are always included. Server rendering requires data routing; speculative data requires data routing and a prefetch mode. Choose React or Preact to see gzip, Brotli and minified bytes. Framework runtimes and application code are excluded. Shared code means feature sizes cannot be added together. These Vite measurements differ from the esbuild/Terser comparison table below.",
+      "code": ""
+    },
+    {
       "title": "Routing only",
       "body": "Use createRouter with named imports from @kasperrt/smolter/preact for navigation only. Its data engine is absent from the bundle. Use createDataRouter for loaders/actions, fetchers and revalidation. React offers both factories through /react.",
       "code": "import { render } from \"preact\";\nimport {\n  createRouter,\n  defineRoute,\n  Link,\n  RouterProvider,\n  Routes,\n} from \"@kasperrt/smolter/preact\";\nimport Home from \"./routes/home\";\nimport About from \"./routes/about\";\n\nconst router = createRouter([\n  defineRoute(\"/\", { default: Home }),\n  defineRoute(\"/about\", { default: About }),\n], { browser: true });\n\nrender(\n  <RouterProvider router={router}>\n    <nav>\n      <Link href=\"/\">Home</Link>\n      <Link href=\"/about\">About</Link>\n    </nav>\n    <Routes />\n  </RouterProvider>,\n  document.getElementById(\"app\")!,\n);"
@@ -31,7 +36,7 @@
     },
     {
       "title": "Reproduce",
-      "body": "pnpm size builds the package and measures production ESM with esbuild, Terser and gzip level 9. Runtime library dependencies are included; React, React DOM and Preact are external. Your own bundler and selected exports can produce different results.",
+      "body": "pnpm size refreshes both the named-export comparison table (esbuild, Terser, gzip level 9) and the feature selector (production Vite with Smolter’s plugin, gzip level 9, Brotli quality 11). React, React DOM and Preact are external. The selector builds every valid combination, including its small Link fixture, rather than adding separate compressed totals. Your application imports and build configuration can produce different results.",
       "code": "pnpm size\npnpm size -- --breakdown"
     }
   ]

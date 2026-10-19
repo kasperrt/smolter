@@ -641,8 +641,11 @@ actions, fetchers and revalidation. Both are named exports from
 `@kasperrt/smolter/preact` and `/react`. No extra package or plugin is required.
 The production bundler can remove the data engine when only `createRouter` is used.
 
-`pnpm size` regenerates this table and the site's size data using identical
-minifiers. The routing-only gate compares our selected exports with wouter's
+`pnpm size` regenerates this comparison table using identical minifiers.
+The [feature selector](https://kasperrt.github.io/smolter/docs/bundle-size/)
+separately measures every valid feature combination through production Vite
+and Smolter’s plugin, with gzip and Brotli totals. Shared code is measured
+together; compressed feature sizes are never added. The routing-only gate compares our selected exports with wouter's
 routing subset: `Router`, `Route`, `Switch`, `Link`, `useParams`, and `useLocation`.
 Both complete wouter entries are reported too. The APIs differ; this is not
 a claim of identical features.

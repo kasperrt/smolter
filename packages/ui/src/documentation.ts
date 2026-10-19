@@ -16,6 +16,7 @@ export function createDocumentation<N>(
   h: ElementFactory<N>,
   CodeBlock: CodeRenderer<N>,
   link: LinkFactory<N>,
+  sizeSelector: () => N,
 ) {
   function Documentation({
     page,
@@ -118,6 +119,7 @@ export function createDocumentation<N>(
             ),
           ),
         ),
+        ...(page.slug === "bundle-size" ? [sizeSelector()] : []),
         ...(page.entries
           ? [
               h(

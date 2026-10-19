@@ -1,16 +1,14 @@
 import { version } from "../../../package.json";
 import sizes from "./size.json";
-import {
-  comparisonRows,
-  createSizeCards,
-  createSizeTable,
-  entryRows,
-} from "./size-table";
+import { comparisonRows, createSizeTable } from "./size-table";
 import type { ElementFactory, LinkFactory, ShellProps } from "./types";
 
-export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
+export function createShell<N>(
+  h: ElementFactory<N>,
+  link: LinkFactory<N>,
+  sizeSelector: () => N,
+) {
   const SizeTable = createSizeTable(h);
-  const SizeCards = createSizeCards(h);
   function Brand(renderLink = link) {
     return renderLink(
       "/",
@@ -68,12 +66,7 @@ export function createShell<N>(h: ElementFactory<N>, link: LinkFactory<N>) {
         null,
         "Import from @kasperrt/smolter/react or /preact. createRouter keeps navigation lean; createDataRouter adds loaders, actions and fetchers.",
       ),
-      SizeCards(),
-      SizeTable(
-        "Complete entries & optional features · gzip bytes",
-        ["Browser bundle", "React", "Preact"],
-        entryRows.slice(2),
-      ),
+      sizeSelector(),
       h(
         "p",
         null,

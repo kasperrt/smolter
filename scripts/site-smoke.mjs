@@ -39,6 +39,7 @@ await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const origin = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch();
 const page = await browser.newPage();
+page.setDefaultTimeout(10_000);
 const errors = [];
 
 page.on("pageerror", (error) => errors.push(error.message));
@@ -69,8 +70,8 @@ const result = await safeWrapAsync(async () => {
     join("site", entry.replace(/^\/smolter\//, "")),
   );
   assert(
-    gzipSync(entryBytes, { level: 9 }).length < 25_000,
-    "Site initial JavaScript exceeded its 25 kB gzip budget",
+    gzipSync(entryBytes, { level: 9 }).length < 28_000,
+    "Site initial JavaScript exceeded its 28 kB gzip budget",
   );
   assert(
     !existsSync("site/react/assets"),
@@ -320,18 +321,83 @@ const result = await safeWrapAsync(async () => {
   }
   await page.goto(`${origin}/smolter/`);
   const sizes = JSON.parse(readFileSync("packages/ui/src/size.json", "utf8"));
-  const entries = page.getByRole("table", {
-    name: "Complete entries & optional features · gzip bytes",
+  const combinations = JSON.parse(
+    readFileSync("packages/ui/src/size-combinations.json", "utf8"),
+  );
+  const selector = page.getByRole("region", { name: "Build your bundle" });
+  const total = selector.locator("output strong");
+  assert.equal(
+    await total.innerText(),
+    combinations.preact[5][1].toLocaleString("en-US"),
+  );
+  assert(
+    await selector
+      .getByRole("checkbox", { name: "Paths, links & history" })
+      .isDisabled(),
+  );
+  await selector
+    .getByRole("checkbox", { name: "Prefetch on intent" })
+    .uncheck();
+  await selector
+    .getByRole("checkbox", { name: "Load and save data" })
+    .uncheck();
+  assert.equal(
+    await total.innerText(),
+    combinations.preact[0][1].toLocaleString("en-US"),
+  );
+  await selector
+    .getByRole("checkbox", { name: "Server-rendered pages" })
+    .check();
+  assert(
+    await selector
+      .getByRole("checkbox", { name: "Load and save data" })
+      .isDisabled(),
+  );
+  assert(
+    await selector
+      .getByRole("checkbox", { name: "Load and save data" })
+      .isChecked(),
+  );
+  assert.equal(
+    await total.innerText(),
+    combinations.preact[3][1].toLocaleString("en-US"),
+  );
+  await selector.getByRole("radio", { name: "React", exact: true }).check();
+  assert.equal(
+    await total.innerText(),
+    combinations.react[3][1].toLocaleString("en-US"),
+  );
+  const reactChoice = selector.getByRole("radio", {
+    name: "React",
+    exact: true,
   });
+  await reactChoice.focus();
+  await page.keyboard.press("ArrowLeft");
+  assert(
+    await selector
+      .getByRole("radio", { name: "Preact", exact: true })
+      .isChecked(),
+  );
+  assert.equal(
+    await total.innerText(),
+    combinations.preact[3][1].toLocaleString("en-US"),
+  );
+  await page.keyboard.press("ArrowRight");
+  assert(await reactChoice.isChecked());
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  assert.equal(
+    await reactChoice.evaluate(
+      (input) => getComputedStyle(input.parentElement).transitionDuration,
+    ),
+    "0s",
+  );
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  console.log(
+    "Pages: selector keyboard, reduced motion, dependencies and measured totals passed",
+  );
   const comparisons = page.getByRole("table", {
     name: "Same measurement tools · gzip bytes",
   });
-  assert((await entries.innerText()).includes(String(sizes.preact)));
-  assert(
-    (await page.locator(".size-cards").innerText()).includes(
-      String(sizes.preactRouting),
-    ),
-  );
   assert(
     (await comparisons.innerText()).includes(String(sizes.reactRouterData)),
   );
@@ -345,7 +411,40 @@ const result = await safeWrapAsync(async () => {
   await page
     .getByRole("heading", { name: "Data flow you can follow.", exact: true })
     .waitFor();
-  await page.getByRole("link", { name: "Get started →", exact: true }).click();
+  let releaseGuide;
+  const guideReady = new Promise((resolve) => {
+    releaseGuide = resolve;
+  });
+  const guideRequested = page.waitForRequest(
+    "**/*_smolter-doc_getting-started-*.js",
+  );
+  await page.route("**/*_smolter-doc_getting-started-*.js", async (route) => {
+    await guideReady;
+    await route.continue();
+  });
+  await page.evaluate(() => {
+    window.landingBeforeGuide = document.querySelector(".landing");
+    window.headerBeforeGuide = document.querySelector("header");
+    document.querySelector('header a[href$="/docs/getting-started"]').click();
+  });
+  console.log("Pages: waiting for cold guide request");
+  await guideRequested;
+  assert(
+    await page.evaluate(
+      () =>
+        window.landingBeforeGuide === document.querySelector(".landing") &&
+        window.headerBeforeGuide === document.querySelector("header"),
+    ),
+    "Opening docs replaced usable content with a loading panel",
+  );
+  assert.equal(
+    await page.getByText("Loading documentation…", { exact: true }).count(),
+    0,
+  );
+  releaseGuide();
+  await page
+    .getByRole("heading", { name: "Getting started", exact: true })
+    .waitFor();
   const tasksHref = await page
     .getByRole("link", {
       name: "Tasks: creation, updates, and fetcher reads →",
@@ -451,6 +550,7 @@ const result = await safeWrapAsync(async () => {
 });
 
 await browser.close();
+server.closeAllConnections();
 await new Promise((resolve) => server.close(resolve));
 
 if (result.error) {

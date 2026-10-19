@@ -21,6 +21,7 @@ export function siteRoute(base: string): string {
 /** Map a standalone example's route URLs into its static hosting directory. */
 export function siteHistory(router: Router, base: string): void {
   const navigate = router.navigate;
+  const read = router.getSnapshot;
   router.navigate = (href, options) => {
     const url = new URL(href, location.href);
     const local =
@@ -38,7 +39,7 @@ export function siteHistory(router: Router, base: string): void {
     void router.navigate(current());
   };
   router.subscribe(() => {
-    const url = new URL(router.getSnapshot().url);
+    const url = new URL(read().url);
     const next = base.slice(0, -1) + url.pathname + url.search + url.hash;
     if (next !== location.pathname + location.search + location.hash) {
       history.pushState(null, "", next);

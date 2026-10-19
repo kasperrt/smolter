@@ -1,5 +1,9 @@
-import { createElement, type ReactNode } from "react";
+import { createElement as h, type ReactNode, useState } from "react";
 import { createUI } from "./index";
-export const ui = createUI<ReactNode>((tag, props, ...children) =>
-  createElement(tag, props, ...children),
-);
+import { createSizeSelector } from "./size-selector";
+import type { ElementFactory } from "./types";
+
+const element: ElementFactory<ReactNode> = (tag, props, ...children) =>
+  h(tag, props, ...children);
+const SizeSelector = createSizeSelector(element, useState);
+export const ui = createUI(element, () => h(SizeSelector, {}));

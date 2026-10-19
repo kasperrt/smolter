@@ -120,7 +120,8 @@ if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
     );
   }
   // Registries can accept a publication before their read endpoints expose it.
-  for (let attempt = 0; mode !== "publish-jsr" && attempt < 4; attempt++) {
+  const deadline = Date.now() + 15 * 60_000;
+  for (; mode !== "publish-jsr"; ) {
     const available = await Promise.all([
       published(
         `https://registry.npmjs.org/${manifest.name}/${manifest.version}`,
@@ -128,12 +129,12 @@ if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
       ...(mode === "publish-npm" ? [] : [published(jsrUrl)]),
     ]);
     if (available.every(Boolean)) break;
-    if (attempt === 3)
+    if (Date.now() >= deadline)
       fail(
         "Registry publication is incomplete. A staged npm upload is not a released version.",
       );
     console.log("Waiting for registry publication to become available...");
-    await setTimeout(5_000);
+    await setTimeout(30_000);
   }
 }
 
