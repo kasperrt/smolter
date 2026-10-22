@@ -741,6 +741,8 @@ larger client/document/lazy-route tier; they are not represented by the routing-
 Exact current measurements are generated in
 [`packages/ui/src/size.json`](./packages/ui/src/size.json).
 
+Development and release builds use Node 26.12.1 (`.node-version`); CI also checks Node 22 compatibility. Use a patched runtime when hosting the Node adapter.
+
 ```sh
 pnpm fix               # Formatting
 pnpm check             # Lint, types, tests, build, size gate
@@ -813,7 +815,7 @@ import { mountApplication } from "@kasperrt/smolter/preact/client";
 await mountApplication(routes, root, { deployment });
 ```
 
-Preact SSR starts root and route loaders concurrently. Return nested promises and use `Await` with an explicit `fallback` for component-owned pending content during early hydration. The Node/Express adapter streams the response; hydration starts after the document stream finishes by default. Pass `{ earlyHydration: true }` to `renderApplication` to hydrate the shell while optional promises stream independently. Initial deferred values share a total 8-second budget after their payload is read, not an inactivity timeout or reliable disconnect detector. Settlements do not extend it; configure `mountApplication` with `{ deferredTimeout: 60_000 }` for intentionally slower data (integer milliseconds from 1 through 2147483647; invalid values throw RangeError). A broken document can emit no completion event, so this deadline rejects unfinished values without retrying requests. Root-loader failures render the root error boundary. Vite development HTML transformation still buffers the document.
+Preact SSR starts root and route loaders concurrently. Return nested promises and use `Await` with an explicit `fallback` for component-owned pending content during early hydration. The Node/Express adapter streams the response and cancels unread bodies after a clean client disconnect without forwarding it to error middleware; genuine render and stream failures still propagate. Hydration starts after the document stream finishes by default. Pass `{ earlyHydration: true }` to `renderApplication` to hydrate the shell while optional promises stream independently. Initial deferred values share a total 8-second budget after their payload is read, not an inactivity timeout or reliable disconnect detector. Settlements do not extend it; configure `mountApplication` with `{ deferredTimeout: 60_000 }` for intentionally slower data (integer milliseconds from 1 through 2147483647; invalid values throw RangeError). A broken document can emit no completion event, so this deadline rejects unfinished values without retrying requests. Root-loader failures render the root error boundary. Vite development HTML transformation still buffers the document.
 
 Successful action redirects refresh registered root data without replaying the mutation. Loader arguments expose `reason` to distinguish initial loads, navigation, revalidation and fetcher reads without comparing browser URLs.
 

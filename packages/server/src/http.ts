@@ -1,6 +1,7 @@
 import type { ServerResponse } from "node:http";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import { safeWrapAsync } from "@smolter/core";
 import type { ServerIncomingMessage } from "./handler.ts";
 
 /** Convert a Node request to a Web Request with cancellation and an optional normalized route target. */
@@ -17,6 +18,7 @@ export async function webRequest(
   }
   const controller = new AbortController();
   outgoing.once("close", () => controller.abort());
+  if (outgoing.destroyed || outgoing.writableEnded) controller.abort();
   const chunks: Uint8Array[] = [];
   for await (const chunk of incoming) chunks.push(chunk);
   return new Request(
@@ -39,6 +41,10 @@ interface StreamingResponse extends ServerResponse {
 
 /** Write a Web Response to Node with streaming backpressure and disconnect cancellation. */
 export async function send(response: Response, outgoing: StreamingResponse) {
+  if (outgoing.destroyed || outgoing.writableEnded) {
+    await response.body?.cancel();
+    return;
+  }
   outgoing.statusCode = response.status;
   response.headers.forEach((value, name) => {
     if (name !== "set-cookie") outgoing.setHeader(name, value);
@@ -57,10 +63,19 @@ export async function send(response: Response, outgoing: StreamingResponse) {
     outgoing.end();
     return;
   }
-  await pipeline(
-    Readable.fromWeb(
-      response.body as import("node:stream/web").ReadableStream<Uint8Array>,
-    ),
+  const source = Readable.fromWeb(
+    response.body as import("node:stream/web").ReadableStream<Uint8Array>,
+  );
+  let disconnected = false;
+  const close = () => {
+    // pipeline also closes the destination after source/write failures.
+    // Only a clean downstream disconnect owns cancellation here.
+    disconnected =
+      !outgoing.writableFinished && !source.errored && !outgoing.errored;
+  };
+  outgoing.once("close", close);
+  const transfer = pipeline(
+    source,
     new Transform({
       transform(chunk, _encoding, done) {
         done(null, chunk);
@@ -69,4 +84,8 @@ export async function send(response: Response, outgoing: StreamingResponse) {
     }),
     outgoing,
   );
+  const { error } = await safeWrapAsync(() => transfer);
+  outgoing.off("close", close);
+  if (error && !disconnected)
+    throw outgoing.errored ?? source.errored ?? error.cause ?? error;
 }
