@@ -4,7 +4,7 @@
 
 - Cancel unread response bodies when the Node destination has already closed or ended, preventing ERR_STREAM_UNABLE_TO_PIPE after a client disconnects during rendering.
 - Treat clean downstream disconnects during streaming as cancellation while preserving genuine renderer, source, destination and body-cancellation failures for error handling. Abort Web Request signals even when the destination closed before request conversion.
-- Pin development, coverage, browser, documentation and publication builds to Node 26.12.1, including its Brotli security fix. Check the newest available releases of Node 22, 24 and 26 with stable major-version job names; consumer runtime requirements are unchanged.
+- Check the newest available releases of Node 22, 24 and 26 with stable major-version job names. Coverage, browser, documentation and publication jobs use the newest Node 26 release without a patch-version pin; consumer runtime requirements are unchanged.
 - Add gated HTTP disconnect/error regressions and deterministic nested-stream ownership tests. Document the Node adapter cancellation contract. Browser bundle sizes are unchanged.
 
 ## 0.4.6

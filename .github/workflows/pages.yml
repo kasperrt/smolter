@@ -37,7 +37,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version-file: .node-version
+          node-version: 26
+          check-latest: true
       - name: Verify release commit and bootstrap policy
         env:
           GH_TOKEN: ${{ github.token }}

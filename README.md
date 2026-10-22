@@ -741,7 +741,7 @@ larger client/document/lazy-route tier; they are not represented by the routing-
 Exact current measurements are generated in
 [`packages/ui/src/size.json`](./packages/ui/src/size.json).
 
-Development and release builds use Node 26.12.1 (`.node-version`); CI checks the newest available releases of Node 22, 24 and 26. Use a patched runtime when hosting the Node adapter.
+CI checks the newest available releases of Node 22, 24 and 26. Coverage, browser, documentation and publication jobs use the newest Node 26 release. Use a patched runtime when hosting the Node adapter.
 
 ```sh
 pnpm fix               # Formatting
