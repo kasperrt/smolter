@@ -6,6 +6,8 @@ ownershipCases(false, [
   "return",
   "opposite",
   "nested",
+  "nested-parent",
+  "nested-parent-reject-after",
   "root",
   "root-first",
   "repeat",
