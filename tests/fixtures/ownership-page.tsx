@@ -16,7 +16,7 @@ interface Detail {
 }
 
 interface Data {
-  optional: string | Promise<string | Detail>;
+  optional: string | Detail | Promise<string | Detail>;
   second?: Promise<string>;
 }
 

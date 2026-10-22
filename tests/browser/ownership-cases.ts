@@ -10,13 +10,14 @@ import {
 } from "@kasperrt/smolter/preact/server";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
 import { expect, test } from "@playwright/test";
-import { safeWrapAsync } from "@smolter/core";
+import { type Router, safeWrapAsync } from "@smolter/core";
 import { createElement } from "preact";
 import { renderToReadableStream } from "preact-render-to-string/stream";
 import { build } from "vite";
 import * as explicit from "../fixtures/owned-ownership-page.tsx";
 import * as original from "../fixtures/ownership-page.tsx";
 import { PreactRoot } from "../fixtures/preact-ownership.tsx";
+import { deferred } from "../helpers/deferred.ts";
 
 export function ownershipCases(owned = false, selected?: string[]) {
   const { Destination, Home, root } = owned ? explicit : original;
@@ -26,6 +27,8 @@ export function ownershipCases(owned = false, selected?: string[]) {
     "return",
     "opposite",
     "nested",
+    "nested-parent",
+    "nested-parent-reject-after",
     "root",
     "root-first",
     "repeat",
@@ -83,6 +86,10 @@ export function ownershipCases(owned = false, selected?: string[]) {
         fail = reject;
       });
       void safeWrapAsync(() => nested);
+      const detail = deferred<{ nested: Promise<string> }>();
+      const nestedParent = mode.startsWith("nested-parent");
+      const hasNested =
+        nestedParent || ["nested", "reject-after"].includes(mode);
       const second = new Promise<string>((resolve) => {
         secondSettle = resolve;
       });
@@ -108,9 +115,11 @@ export function ownershipCases(owned = false, selected?: string[]) {
             return {
               optional:
                 loads === 1
-                  ? ["nested", "reject-after"].includes(mode)
-                    ? Promise.resolve({ nested })
-                    : optional
+                  ? nestedParent
+                    ? detail.promise
+                    : hasNested
+                      ? { nested }
+                      : optional
                   : "Current route content",
               ...(mode === "opposite" && { second }),
             };
@@ -206,12 +215,31 @@ export function ownershipCases(owned = false, selected?: string[]) {
           page
             .getByRole("main")
             .getByText(
-              ["nested", "reject-after"].includes(mode)
+              hasNested && !nestedParent
                 ? "Nested data pending"
                 : "Optional data pending",
               { exact: true },
             ),
         ).toBeVisible();
+        if (nestedParent) {
+          detail.resolve({ nested });
+          await page.evaluate(async () => {
+            const router = (window as Window & { ownershipRouter?: Router })
+              .ownershipRouter;
+            if (!router) throw new Error("Missing ownership fixture router");
+            await (router.getSnapshot().data as { optional: unknown }).optional;
+          });
+          // Suspense retains its server fallback during hydration; explicit Await
+          // owns its fallback and can show the newly pending nested boundary.
+          await expect(
+            page
+              .getByRole("main")
+              .getByText(
+                owned ? "Nested data pending" : "Optional data pending",
+                { exact: true },
+              ),
+          ).toBeVisible();
+        }
         if (!pure) {
           await page.getByLabel("Persistent draft").fill("Retain this");
           await page.getByRole("button", { name: "Count 0" }).click();
@@ -229,7 +257,7 @@ export function ownershipCases(owned = false, selected?: string[]) {
               .getByText("Optional data pending", { exact: true }),
           ).toBeVisible();
         }
-        if (mode === "nested") {
+        if (mode === "nested" || mode === "nested-parent") {
           fail(new Error("Nested rejected"));
           await expect(
             page.getByRole("main").getByText("Nested failed", { exact: true }),
@@ -314,7 +342,8 @@ export function ownershipCases(owned = false, selected?: string[]) {
             ).toBeVisible();
           }
         }
-        if (mode === "reject-after") fail(new Error("Abandoned rejection"));
+        if (mode.endsWith("reject-after"))
+          fail(new Error("Abandoned rejection"));
         if (mode === "root-first") {
           rootSettle("Original root content");
           await expect(
@@ -433,6 +462,7 @@ export function ownershipCases(owned = false, selected?: string[]) {
           await expect(page.getByLabel("Persistent draft")).toBeFocused();
         }
       });
+      detail.resolve({ nested });
       settle("Old resolved content");
       secondSettle("Second resolved content");
       rootSettle("Original root content");

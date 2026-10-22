@@ -21,7 +21,7 @@
     },
     {
       "title": "Behavior and limits",
-      "body": "Preserves status, headers and separate Set-Cookie headers. Secure cookies are relaxed for local non-production HTTP. Streams response chunks and calls an available compression flush method. Stream errors propagate to the caller.",
+      "body": "Preserves status, headers and separate Set-Cookie headers. Secure cookies are relaxed for local non-production HTTP. Streams response chunks with backpressure and calls an available compression flush method. If the Node response has already ended or closed, cancels the unread body without writing headers. A clean client disconnect cancels streaming without rejecting; genuine source, destination and cancellation failures still propagate.",
       "code": ""
     }
   ]

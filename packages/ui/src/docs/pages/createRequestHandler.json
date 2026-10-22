@@ -11,7 +11,7 @@
     },
     {
       "title": "Middleware order",
-      "body": "Mount Prometheus, tracing, authentication, body size limits and static serving first. Do not consume the request stream with a body parser before this middleware. Errors are passed to next(error). Express trust proxy remains your application\u2019s responsibility. The adapter does not start a server, install Prometheus, or depend on Express.",
+      "body": "Mount Prometheus, tracing, authentication, body size limits and static serving first. Do not consume the request stream with a body parser before this middleware. Genuine render and stream failures are passed to next(error). Clean client disconnects cancel the response without calling error middleware. Express trust proxy remains your application’s responsibility. The adapter does not start a server, install Prometheus, or depend on Express.",
       "code": ""
     },
     {
@@ -21,7 +21,7 @@
     },
     {
       "title": "Early shell interactivity",
-      "body": "Configure earlyHydration on renderApplication in your server entry, not on this middleware. Keep reverse-proxy buffering disabled if the shell must arrive before optional data. The adapter respects response backpressure and flushes compression when the response provides flush(). A disconnected browser aborts the request and cancels its response reader.",
+      "body": "Configure earlyHydration on renderApplication in your server entry, not on this middleware. Keep reverse-proxy buffering disabled if the shell must arrive before optional data. The adapter respects response backpressure and flushes compression when the response provides flush(). A disconnected browser aborts the request and cancels its response reader. Responses returned after disconnection are cancelled instead of piped to a closed socket.",
       "code": ""
     }
   ]
