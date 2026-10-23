@@ -1,7 +1,7 @@
 import { createDataRouter } from "@smolter/core";
 import { prepareRoutes } from "@smolter/core/prepare-routes";
 import { data } from "@smolter/core/responses";
-import { expect, it } from "vitest";
+import { expect, it, onTestFinished } from "vitest";
 import { deferred } from "./helpers/deferred.ts";
 
 it("commits client loader data without awaiting nested promises", async () => {
@@ -22,6 +22,41 @@ it("commits client loader data without awaiting nested promises", async () => {
   expect(await payload.optional).toBe("ready");
   router.dispose();
 });
+
+it.each(["loader", "clientLoader", "action", "clientAction"] as const)(
+  "preserves returned Error identity and normalizes thrown Responses from %s",
+  async (key) => {
+    const failure = Error("Returned failure", {
+      cause: Error("Earlier failure"),
+    });
+    let throwsResponse = false;
+    const router = createDataRouter(
+      prepareRoutes([
+        {
+          path: "/",
+          [key]: () => {
+            if (throwsResponse)
+              throw new Response("Forbidden", { status: 403 });
+            return failure;
+          },
+        },
+      ]),
+    );
+    onTestFinished(router.dispose);
+    const run = () =>
+      key === "loader" || key === "clientLoader"
+        ? router.navigate("/")
+        : router.submit("/", new FormData());
+    await run();
+    expect(router.getSnapshot().error).toBe(failure);
+    throwsResponse = true;
+    await run();
+    expect(router.getSnapshot().error).toMatchObject({
+      message: "Forbidden",
+      status: 403,
+    });
+  },
+);
 
 it("awaits required client work while preserving cycles and nested promise identity", async () => {
   const required = deferred<void>();

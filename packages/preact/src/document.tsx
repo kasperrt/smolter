@@ -3,32 +3,30 @@
  *
  * @module
  */
-/** @jsxImportSource preact */
 
 import { applicationEnvironment } from "@smolter/core/environment";
 import { scrollPositions } from "@smolter/core/navigation";
 import { serializeData } from "@smolter/core/serialize";
-import { createElement, Fragment } from "preact";
+import { Fragment } from "preact";
 import type { ComponentProps } from "preact/compat";
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { useNavigationSnapshot } from "./navigation-state.ts";
 import { useApplication } from "./root-context.ts";
 import { useSnapshot } from "./route-hooks.tsx";
 import type { MetaDescriptor } from "./route-types.ts";
+import { createElement, useEffect } from "./runtime.ts";
 
 function renderMeta(item: MetaDescriptor, index: number) {
   if (typeof item.title === "string")
-    return <title key={index}>{item.title}</title>;
+    return createElement("title", { key: index }, item.title);
   if ("script:ld+json" in item)
-    return (
-      <script
-        key={index}
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: serializeData(item["script:ld+json"]),
-        }}
-      />
-    );
+    return createElement("script", {
+      key: index,
+      type: "application/ld+json",
+      dangerouslySetInnerHTML: {
+        __html: serializeData(item["script:ld+json"]),
+      },
+    });
   const { tagName, ...props } = item;
   return createElement(tagName === "link" ? "link" : "meta", {
     ...props,
@@ -53,18 +51,18 @@ export function Meta(): import("preact").JSX.Element {
     const title = values.find((item) => typeof item.title === "string")?.title;
     if (typeof title === "string") document.title = title;
   }, [values]);
-  return <Fragment>{values.map(renderMeta)}</Fragment>;
+  return createElement(Fragment, null, values.map(renderMeta));
 }
 
 /** Render stylesheet and other link descriptors from the application root. */
 export function Links(): import("preact").JSX.Element {
   const { rootModule } = useApplication();
-  return (
-    <Fragment>
-      {rootModule?.links?.().map((props, index) => (
-        <link key={index} {...props} />
-      ))}
-    </Fragment>
+  return createElement(
+    Fragment,
+    null,
+    rootModule
+      ?.links?.()
+      .map((props, index) => createElement("link", { key: index, ...props })),
   );
 }
 
@@ -93,29 +91,28 @@ export function Scripts({ nonce }: ScriptProps): import("preact").JSX.Element {
     };
     return serializeData({ root, snapshot, ...(rootError && { rootError }) });
   });
-  return (
-    <Fragment>
-      <script
-        {...(nonce && { nonce })}
-        dangerouslySetInnerHTML={{
-          __html: applicationEnvironment?.entryScript ?? "",
-        }}
-      />
-      <script
-        id="smolter-data"
-        type="application/json"
-        {...(nonce && { nonce })}
-        dangerouslySetInnerHTML={{ __html: json }}
-      />
-      {entry && (
-        <script
-          type="module"
-          async={initialData !== undefined}
-          src={entry}
-          {...(nonce && { nonce })}
-        />
-      )}
-    </Fragment>
+  return createElement(
+    Fragment,
+    null,
+    createElement("script", {
+      ...(nonce && { nonce }),
+      dangerouslySetInnerHTML: {
+        __html: applicationEnvironment?.entryScript ?? "",
+      },
+    }),
+    createElement("script", {
+      id: "smolter-data",
+      type: "application/json",
+      ...(nonce && { nonce }),
+      dangerouslySetInnerHTML: { __html: json },
+    }),
+    entry &&
+      createElement("script", {
+        type: "module",
+        async: initialData !== undefined,
+        src: entry,
+        ...(nonce && { nonce }),
+      }),
   );
 }
 
@@ -191,6 +188,6 @@ export function Document({
     document.documentElement.dataset.debug = debug;
   }, [className, lang, debug]);
   if (typeof document === "undefined")
-    return <html {...attributes}>{children}</html>;
-  return <>{children}</>;
+    return createElement("html", attributes, children);
+  return createElement(Fragment, null, children);
 }

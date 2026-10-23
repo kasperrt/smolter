@@ -3,6 +3,6 @@
  *
  * @module
  */
-export * from "./match.ts";
+export { defineRoute, matchRoutes } from "./match.ts";
 export * from "./serialize.ts";
-export * from "./url.ts";
+export { internalURL, navigationClick } from "./url.ts";

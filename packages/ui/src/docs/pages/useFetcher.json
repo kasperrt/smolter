@@ -36,7 +36,7 @@
     },
     {
       "title": "submit(body, options): mutations",
-      "body": "Pass FormData, an optional action URL, and an uppercase method. The default method is POST. The action result goes to fetcher.data. Successful mutations revalidate the active page loader subject to shouldRevalidate. The returned Promise resolves to a Result with data or error; use fetcher.data for the hook’s inferred result type.",
+      "body": "Pass FormData, an optional action URL, and an uppercase method. The default method is POST. The action result goes to fetcher.data. Successful mutations revalidate the active page loader subject to shouldRevalidate. The returned Promise resolves to a Result with data or error; use fetcher.data for the hook’s inferred result type. A subsequent registered revalidator can still reject the submission Promise. The fetcher leaves submitting state before that failure is propagated, including after a redirect, and remains usable for later requests. Handle that rejection without repeating a successful mutation.",
       "code": "const body = new FormData();\nbody.set(\"title\", \"Updated task\");\n\nawait fetcher.submit(body, { action: \"/tasks/42\", method: \"PATCH\" });\n\n// DELETE uses the same registered route action.\nawait fetcher.submit(new FormData(), {\n  action: \"/tasks/42\",\n  method: \"DELETE\",\n});"
     },
     {
@@ -51,7 +51,7 @@
     },
     {
       "title": "data and error: ownership and lifetime",
-      "body": "data is initially undefined and retains the previous result while another request is pending. A validation object is data, while an Error is exposed through error. An action result is not the same as the page’s freshly loaded data. There is no global keyed fetcher registry and no automatic refresh of every previously loaded fetcher after a mutation; call load again when that preview must refresh.",
+      "body": "data is initially undefined and retains the previous result while another request is pending. A validation object is data, while an Error is exposed through error. An action result is not the same as the page’s freshly loaded data. There is no global keyed fetcher registry. Successful mutations revalidate registered fetchers that have completed a read, subject to their route’s shouldRevalidate; submitting fetchers and disposed channels are skipped.",
       "code": ""
     },
     {

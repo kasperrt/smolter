@@ -2159,16 +2159,6 @@
     "source": "packages/core/src/match.ts"
   },
   {
-    "slug": "serializeData",
-    "title": "serializeData",
-    "entries": ["utils"],
-    "kind": "API",
-    "summary": "Encode JSON for embedding inside an HTML script element.",
-    "signature": "function serializeData(value: unknown): string;",
-    "fields": [],
-    "source": "packages/core/src/serialize.ts"
-  },
-  {
     "slug": "internalURL",
     "title": "internalURL",
     "entries": ["utils"],
@@ -2187,6 +2177,16 @@
     "signature": "function navigationClick(\n  event: NavigationClickEvent,\n  anchor: HTMLAnchorElement,\n): boolean;",
     "fields": [],
     "source": "packages/core/src/url.ts"
+  },
+  {
+    "slug": "serializeData",
+    "title": "serializeData",
+    "entries": ["utils"],
+    "kind": "API",
+    "summary": "Encode JSON for embedding inside an HTML script element.",
+    "signature": "function serializeData(value: unknown): string;",
+    "fields": [],
+    "source": "packages/core/src/serialize.ts"
   },
   {
     "slug": "createRequestHandler",

@@ -11,7 +11,7 @@
     },
     {
       "title": "Result and disposal",
-      "body": "Returns a cleanup function. Cleanup removes the popstate and Vite listeners, aborts a pending manifest request and restores router methods. router.dispose() also calls cleanup.",
+      "body": "Returns a cleanup function. Cleanup removes the popstate and Vite listeners, aborts a pending manifest request and restores router methods. router.dispose() also calls cleanup. Installing a replacement watcher keeps submission protection for already tracked fetchers and allows the replacement to recover after they settle. Calling the previous cleanup function again does not stop the replacement.",
       "code": "stop();"
     },
     {

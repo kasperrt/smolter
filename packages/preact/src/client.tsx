@@ -3,7 +3,6 @@
  *
  * @module
  */
-/** @jsxImportSource preact */
 
 import {
   type DeploymentOptions,
@@ -25,6 +24,7 @@ import { hydrate, render } from "preact";
 import { flushSync } from "preact/compat";
 import type { AppRoute, Hydration, RootModule } from "./route-types.ts";
 import { prepareRoutes, RouterApplication } from "./router.tsx";
+import { createElement } from "./runtime.ts";
 
 export * from "@smolter/client";
 export { configureApplication } from "@smolter/core/environment";
@@ -108,7 +108,10 @@ export async function mountApplication(
     );
     for (const { node } of preserved) node.remove();
     const { error } = await safeWrapAsync(() =>
-      hydrate(<RouterApplication {...props} document />, document),
+      hydrate(
+        createElement(RouterApplication, { ...props, document: true }),
+        document,
+      ),
     );
     for (const { node, next, parent } of preserved.reverse())
       parent.insertBefore(node, next?.parentNode === parent ? next : null);
@@ -116,6 +119,6 @@ export async function mountApplication(
     return router;
   }
   const target = document.getElementById("root");
-  if (target) render(<RouterApplication {...props} />, target);
+  if (target) render(createElement(RouterApplication, props), target);
   return router;
 }

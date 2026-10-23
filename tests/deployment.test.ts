@@ -99,6 +99,19 @@ it("uses document navigation by default and avoids loops when storage is unavail
   expect(location.assign).toHaveBeenCalledTimes(1);
   expect(router.getSnapshot().url).toContain("?again");
 });
+it("claims cached deployment recovery only for the newest synchronous navigation", async () => {
+  const { router, reload, storage } = setup("new");
+  await router.navigate("/?probe");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const first = router.navigate("/next?first=1#old");
+  const latest = router.navigate("/next?latest=1#current");
+  await Promise.all([first, latest]);
+  expect(reload).toHaveBeenCalledOnce();
+  expect(reload.mock.calls[0][0].href).toBe(
+    "https://app.test/next?latest=1#current",
+  );
+  expect(storage.size).toBe(1);
+});
 it.each([null, {}, { version: 3 }, { version: "" }])(
   "ignores malformed manifests: %j",
   async (body) => {
@@ -358,6 +371,42 @@ for (const rejected of [false, true]) {
     expect(rootRefresh).toHaveBeenCalledOnce();
   });
 }
+it("keeps newer navigation after an immediately submitted tracked action", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { options, reload, storage } = setup();
+  const action = vi.fn(
+    () =>
+      new Response(null, {
+        status: 303,
+        headers: { Location: "/redirect" },
+      }),
+  );
+  const destination = vi.fn(() => "obsolete");
+  const router = createDataRouter(
+    [
+      { path: "/", loader: () => "home" },
+      { path: "/save", action },
+      { path: "/redirect", loader: destination },
+      { path: "/new", loader: () => "current" },
+    ],
+    { url: "https://app.test/" },
+  );
+  cleanups.push(router.dispose);
+  await router.navigate("/");
+  cleanups.push(watchDeployment(router, options));
+  const submission = router.submit("/save", new FormData());
+  const navigation = router.navigate("/new?latest=1#current");
+  await Promise.all([submission, navigation]);
+  expect(action).toHaveBeenCalledOnce();
+  expect(destination).not.toHaveBeenCalled();
+  expect(router.getSnapshot()).toMatchObject({
+    url: "https://app.test/new?latest=1#current",
+    state: "idle",
+    data: "current",
+  });
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+});
 it("invalidates pending recovery even when a newer mutation finishes before the manifest", async () => {
   const { createDataRouter } = await import("@smolter/core");
   const { options, events, fetcher, reload, storage } = setup();
@@ -662,6 +711,52 @@ it("preserves pending mutation protection and navigation ownership across watche
   await router.navigate("/next?eligible=1#scope");
   expect(reload).toHaveBeenCalledOnce();
   expect(storage.size).toBe(1);
+});
+it("reconsiders current recovery when a previous watcher's fetcher settles", async () => {
+  const { createDataRouter } = await import("@smolter/core");
+  const { options, reload, storage, fetcher: manifest, events } = setup("new");
+  let finish!: () => void;
+  const action = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const destination = vi.fn(() => {
+    events.dispatchEvent(new Event("vite:preloadError"));
+    throw new TypeError("Missing destination chunk");
+  });
+  const router = createDataRouter(
+    [
+      { path: "/", action },
+      {
+        path: "/next",
+        loader: destination,
+        shouldRevalidate: ({ reason }) => reason !== "action",
+      },
+    ],
+    { url: "https://app.test/" },
+  );
+  const old = watchDeployment(router, options);
+  const pending = router.createFetcher().submit("/", new FormData());
+  await vi.waitFor(() => expect(action).toHaveBeenCalledOnce());
+  const current = watchDeployment(router, options);
+  cleanups.push(current);
+  await router.navigate("/next?pending=1#scope");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  old();
+  expect(manifest).toHaveBeenCalledOnce();
+  expect(reload).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+  finish();
+  await pending;
+  expect(reload).toHaveBeenCalledOnce();
+  expect(reload.mock.calls[0][0].href).toBe(
+    "https://app.test/next?pending=1#scope",
+  );
+  expect(storage.size).toBe(1);
+  expect(action).toHaveBeenCalledOnce();
+  expect(destination).toHaveBeenCalledOnce();
 });
 it("keeps unchanged destination dependencies and caches routine checks without hiding chunk failure", async () => {
   const { router, options, fetcher, reload, storage } = setup();

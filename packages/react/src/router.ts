@@ -30,16 +30,20 @@ export function RouterApplication({
     store.getSnapshot,
     store.getSnapshot,
   );
-  const snapshot = useSyncExternalStore(
-    props.router.subscribe,
-    props.router.getSnapshot,
-    props.router.getSnapshot,
-  );
-  const route = props.routes.find((item) => item.path === snapshot.path);
-  const Root =
-    snapshot.error && (props.rootError || !route?.ErrorBoundary)
-      ? (props.rootModule?.ErrorBoundary ?? Outlet)
-      : (props.rootModule?.default ?? Outlet);
+  const getRoot = () => {
+    const snapshot = props.router.getSnapshot();
+    return (
+      props.rootModule?.[
+        snapshot.error &&
+        (props.rootError ||
+          !props.routes.find((item) => item.path === snapshot.path)
+            ?.ErrorBoundary)
+          ? "ErrorBoundary"
+          : "default"
+      ] ?? Outlet
+    );
+  };
+  const Root = useSyncExternalStore(props.router.subscribe, getRoot, getRoot);
   const Layout = props.rootModule?.Layout;
   const children = createElement(Root);
   return createElement(

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.8
+
+- Reduce duplicated prefetch, submission and adapter bookkeeping while preserving cancellation, consume-once reads, mutation invalidation and React/Preact behavior. Keep excluded prefetch capabilities removable from browser builds.
+- Share scroll history with the existing navigation store and avoid route-component lookups when view transitions are disabled or unavailable. Retain Preact root updates required for streamed Suspense cleanup.
+- Let previously created fetchers notify the currently installed deployment watcher when submissions finish. A replaced watcher can recover its eligible destination after protected work settles; stale cleanup cannot discard the new watcher.
+- Preserve externally managed React document classes across subsequent application renders. Keep hydration, input state, root errors and deferred promise values covered by regressions.
+- Start guarded mutation work in call order so an earlier page action cannot redirect over newer navigation. Preserve cancellation before speculative loader execution.
+- Release redirecting fetchers from submission state when destination loading or root refresh rejects, then surface the original failure without replaying the mutation.
+- Preserve error-element attributes, including alert roles, ARIA metadata and styles, when Preact resumes a rejected streamed Suspense boundary. Mount the replacement error UI before paint while retaining the surrounding shell and input state.
+
 ## 0.4.7
 
 - Cancel unread response bodies when the Node destination has already closed or ended, preventing ERR_STREAM_UNABLE_TO_PIPE after a client disconnects during rendering.

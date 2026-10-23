@@ -4,6 +4,21 @@ export function internalURL(base: string, href = base): URL | undefined {
   if (url.origin === new URL(base).origin) return url;
 }
 
+/** Match a location against an anchor's origin and path, optionally including descendants. */
+export function matchesLocation(
+  location: URL | undefined,
+  destination: URL,
+  end?: boolean,
+): boolean {
+  const path = destination.pathname;
+  return (
+    !!location &&
+    location.origin === destination.origin &&
+    (location.pathname === path ||
+      (!end && path !== "/" && location.pathname.startsWith(`${path}/`)))
+  );
+}
+
 /** Browser and framework event fields used by navigation interception. */
 type NavigationClickEvent = Pick<
   MouseEvent,

@@ -10,6 +10,8 @@ interface WatcherState {
   sequence: number;
   mutations: number;
   cleanup?: () => void;
+  // Previously created fetchers must notify the currently installed watcher.
+  settled?: () => Promise<void>;
 }
 const watchers = new WeakMap<NavigationRouter, WatcherState>();
 /** Build identity and the fresh, non-cacheable manifest URL emitted by deploymentPlugin. */
@@ -42,7 +44,6 @@ export function watchDeployment(
   const read = router.getSnapshot;
   const navigate = router.navigate;
   const dispose = router.dispose;
-  let stopped = false;
   let replay = false;
   let recovery:
     | { current: number; target: URL; release: () => void }
@@ -58,9 +59,9 @@ export function watchDeployment(
     async (...args) => {
       state.sequence++;
       state.mutations++;
-      const { data, error } = await safeWrapAsync(() => submit(...args));
+      const { data, error } = await safeWrapAsync(() => submit(...args), true);
       state.mutations--;
-      await recover();
+      await state.settled?.();
       if (error) throw error.cause ?? error;
       return data!;
     };
@@ -74,18 +75,20 @@ export function watchDeployment(
     });
   if (guardedSubmit) dataRouter.submit = guardedSubmit;
   if (guardedFetcher) dataRouter.createFetcher = guardedFetcher;
-  const valid = (current: number) => current === state.sequence && !stopped;
+  const valid = (current: number) =>
+    current === state.sequence && state.cleanup === cleanup;
   const canReload = (current: number) =>
     valid(current) && state.mutations === 0;
+  const samePage = (target: URL) => {
+    const previous = new URL(read().url);
+    return (
+      target.pathname === previous.pathname && target.search === previous.search
+    );
+  };
   const guarded: NavigationRouter["navigate"] = async (href, operation) => {
     const target = new URL(href, read().url);
-    const previous = new URL(read().url);
     const current = ++state.sequence;
-    if (
-      target.origin === location.origin &&
-      (target.pathname !== previous.pathname ||
-        target.search !== previous.search)
-    ) {
+    if (target.origin === location.origin && !samePage(target)) {
       if (known(target) && (await reload(target, () => canReload(current))))
         return;
       void changed(target);
@@ -95,13 +98,8 @@ export function watchDeployment(
   const pop = async (event: PopStateEvent) => {
     if (replay) return;
     const target = new URL(location.href);
-    const previous = new URL(read().url);
     const current = ++state.sequence;
-    if (
-      target.pathname === previous.pathname &&
-      target.search === previous.search
-    )
-      return;
+    if (samePage(target)) return;
     if (!known(target) || !canReload(current)) {
       void changed(target);
       return;
@@ -143,9 +141,9 @@ export function watchDeployment(
     } else release();
   };
   function cleanup() {
-    if (stopped) return;
-    if (state.cleanup === cleanup) state.cleanup = undefined;
-    stopped = true;
+    if (state.cleanup !== cleanup) return;
+    state.cleanup = undefined;
+    state.settled = undefined;
     recovery = undefined;
     state.sequence++;
     releaseError();
@@ -164,6 +162,7 @@ export function watchDeployment(
     dispose();
   }
   state.cleanup = cleanup;
+  state.settled = recover;
   router.navigate = guarded;
   router.dispose = guardedDispose;
   window.addEventListener("popstate", pop, true);

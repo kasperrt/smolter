@@ -1,11 +1,13 @@
 /** Small observable value shared by layout data and navigation state. */
-export function createStore<T>(initial: T): {
+export function createStore<T>(
+  initial: T,
+  listeners: Set<() => void> = new Set(),
+): {
   getSnapshot: () => T;
   subscribe(listener: () => void): () => void;
   update(next: T): void;
 } {
   let value = initial;
-  const listeners = new Set<() => void>();
   return {
     getSnapshot: () => value,
     subscribe(listener: () => void) {

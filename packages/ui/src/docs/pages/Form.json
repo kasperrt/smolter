@@ -73,6 +73,11 @@
       "title": "SSR and JavaScript requirements",
       "body": "Server rendering outputs a real form element, but a complete no-JavaScript submission flow requires an HTTP application that accepts the native form URL and returns HTML or a redirect. handleRequest returns data, not a complete HTML response. PATCH, PUT, and DELETE rely on the JavaScript handler; the underlying HTML form uses POST. Do not assume SSR alone provides progressive enhancement.",
       "code": ""
+    },
+    {
+      "title": "Navigation options",
+      "body": "replace, state, preventScrollReset and viewTransition apply to GET navigation. Mutation submission currently forwards the action and method; those navigation options are not forwarded to the mutation. An action redirect chooses its destination through the router. A fetcher form remains on the current page unless its action redirects.",
+      "code": ""
     }
   ]
 }

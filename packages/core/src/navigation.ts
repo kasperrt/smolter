@@ -17,20 +17,16 @@ export interface NavigationSnapshot {
   preventScrollReset: boolean;
 }
 
-const scrollHistory = new WeakMap<Router, Map<string, [number, number]>>();
-
 export function scrollPositions(router: Router) {
-  let positions = scrollHistory.get(router);
-  if (!positions) {
-    positions = new Map();
-    scrollHistory.set(router, positions);
-  }
-  return positions;
+  const store = navigationStore(router);
+  return (store.positions ??= new Map());
 }
 
 const stores = new WeakMap<Router, ReturnType<typeof createNavigationStore>>();
 
-function createNavigationStore() {
+function createNavigationStore(): ReturnType<
+  typeof createStore<NavigationSnapshot>
+> & { positions?: Map<string, [number, number]> } {
   return createStore<NavigationSnapshot>({
     type: "POP",
     state: typeof history === "undefined" ? null : history.state?.state,

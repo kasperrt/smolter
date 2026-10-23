@@ -117,6 +117,9 @@ for (const scenario of [
     expect(
       messages.find((message) => message.type === "navigated")?.preserved,
     ).toBe(true);
+    expect(
+      messages.find((message) => message.type === "navigated")?.classes,
+    ).toBe("dark next-layout wide");
   });
 }
 

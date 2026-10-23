@@ -1,5 +1,6 @@
-/*! @smolter/prefetch:viewport */
-/** Opt into one viewport observation per mounted link, released on entry or unmount. */
+/** Opt into one viewport observation per mounted link, released on entry or unmount.
+ * @smolter/prefetch:viewport
+ */
 export function viewportPrefetch(
   load: () => void,
   forwarded?: unknown,

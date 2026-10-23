@@ -262,6 +262,9 @@ export function ownershipCases(owned = false, selected?: string[]) {
           await expect(
             page.getByRole("main").getByText("Nested failed", { exact: true }),
           ).toBeVisible();
+          await expect(page.getByRole("main").getByRole("alert")).toHaveText(
+            "Nested failed",
+          );
         }
         if (mode === "revalidate") {
           await page
@@ -274,6 +277,27 @@ export function ownershipCases(owned = false, selected?: string[]) {
           ).toBeVisible();
         }
         if (disconnect) {
+          const deadline = await page.evaluate(
+            () => performance.now() + 10_000,
+          );
+          await page.evaluate(() => {
+            const frames = { empty: 0, done: false };
+            Object.assign(window, { ownershipFrames: frames });
+            const sample = () => {
+              if (frames.done) return;
+              const visible = Array.from(
+                document.querySelectorAll("main p"),
+              ).some(
+                (node) =>
+                  ["Optional data pending", "Optional failed"].includes(
+                    node.textContent ?? "",
+                  ) && node.getClientRects().length > 0,
+              );
+              if (!visible) frames.empty++;
+              requestAnimationFrame(sample);
+            };
+            requestAnimationFrame(sample);
+          });
           documentResponse!.destroy();
           await expect.poll(() => aborted).toBe(1);
           await expect.poll(() => failedRequests.length).toBeGreaterThan(0);
@@ -288,11 +312,46 @@ export function ownershipCases(owned = false, selected?: string[]) {
             }),
             contentType: "application/json",
           });
+          if (mode === "disconnect-default") {
+            // The browser owns the eight-second timer. Its clock can advance
+            // more slowly than the Node assertion clock under a loaded runner.
+            await page.waitForFunction(
+              (deadline) => {
+                if (
+                  Array.from(document.querySelectorAll("main p")).some(
+                    (node) =>
+                      node.textContent === "Optional failed" &&
+                      node.getClientRects().length > 0,
+                  )
+                )
+                  return true;
+                if (performance.now() >= deadline)
+                  throw new Error(
+                    "Deferred failure UI exceeded its browser deadline",
+                  );
+                return false;
+              },
+              deadline,
+              { timeout: 20_000 },
+            );
+          }
           await expect(
             page
               .getByRole("main")
               .getByText("Optional failed", { exact: true }),
           ).toBeVisible({ timeout: 10_000 });
+          await expect(page.getByRole("main").getByRole("alert")).toHaveText(
+            "Optional failed",
+          );
+          const emptyFrames = await page.evaluate(() => {
+            const { ownershipFrames } = window as Window & {
+              ownershipFrames?: { empty: number; done: boolean };
+            };
+            if (!ownershipFrames) throw new Error("Missing frame observations");
+            ownershipFrames.done = true;
+            return ownershipFrames.empty;
+          });
+          expect(emptyFrames).toBe(0);
           await expect.poll(() => aborted).toBe(1);
         }
         if (mode === "race") settle("Old resolved content");

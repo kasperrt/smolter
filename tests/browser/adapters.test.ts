@@ -1,4 +1,5 @@
 import { configureApplication } from "@smolter/core/environment";
+import { createStore } from "@smolter/core/store";
 import {
   type FormSubmissionEvent,
   submissionBody,
@@ -24,6 +25,98 @@ const frameworks = [
 ];
 
 for (const { name, api, element: h, root: mount } of frameworks) {
+  it(`${name} keeps the application shell stable during route updates`, async (context) => {
+    const pending = deferred<string>();
+    let rootRenders = 0;
+    const rootStore = createStore("initial root");
+    function Page() {
+      return h("output", { id: "page" }, api.useLoaderData<string>());
+    }
+    function LocalError() {
+      return h("output", { id: "page" }, api.useRouteError()?.message);
+    }
+    function RootError() {
+      return h("output", { id: "root-error" }, api.useRouteError()?.message);
+    }
+    function Root() {
+      rootRenders++;
+      return h(
+        "main",
+        null,
+        h("input", { defaultValue: "retained" }),
+        h("output", { id: "root-data" }, api.useRootData<string>()),
+        h(api.Outlet),
+      );
+    }
+    const routes = [
+      { path: "/", default: Page, loader: () => "initial" },
+      { path: "/next", default: Page, loader: () => pending.promise },
+      {
+        path: "/local-error",
+        default: Page,
+        loader: () => new Error("local failure"),
+        ErrorBoundary: LocalError,
+      },
+      { path: "/root-error", loader: () => new Error("root failure") },
+    ];
+    const router = api.createDataRouter(routes);
+    await router.navigate("/");
+    const container = document.createElement("div");
+    const root = mount(container);
+    document.body.append(container);
+    context.onTestFinished(() => {
+      pending.resolve("next");
+      root.unmount();
+      router.dispose();
+      container.remove();
+    });
+    root.render(
+      h(api.RouterApplication, {
+        router,
+        routes,
+        root: "initial root",
+        rootStore,
+        rootModule: {
+          default: Root,
+          ErrorBoundary: RootError,
+          Layout: api.Outlet,
+        },
+      }),
+    );
+    await expect
+      .poll(() => container.querySelector("#page")?.textContent)
+      .toBe("initial");
+    const initialRenders = rootRenders;
+    const input = container.querySelector("input")!;
+    input.value = "user input";
+    const navigation = router.navigate("/next");
+    await new Promise(requestAnimationFrame);
+    if (name === "React") expect(rootRenders).toBe(initialRenders);
+    pending.resolve("next");
+    await navigation;
+    await expect
+      .poll(() => container.querySelector("#page")?.textContent)
+      .toBe("next");
+    if (name === "React") expect(rootRenders).toBe(initialRenders);
+    expect(container.querySelector("input")).toBe(input);
+    expect(input.value).toBe("user input");
+    rootStore.update("refreshed root");
+    await expect
+      .poll(() => container.querySelector("#root-data")?.textContent)
+      .toBe("refreshed root");
+    const refreshedRenders = rootRenders;
+    await router.navigate("/local-error");
+    await expect
+      .poll(() => container.querySelector("#page")?.textContent)
+      .toBe("local failure");
+    if (name === "React") expect(rootRenders).toBe(refreshedRenders);
+    expect(container.querySelector("input")).toBe(input);
+    await router.navigate("/root-error");
+    await expect
+      .poll(() => container.querySelector("#root-error")?.textContent)
+      .toBe("root failure");
+    expect(container.querySelector("main")).toBeNull();
+  });
   it(`${name} only rerenders readers when their selected value changes`, async (context) => {
     let value = 1;
     let dataRenders = 0;
@@ -798,3 +891,31 @@ for (const { name, api, element: h, root: mount } of frameworks) {
     await expect.poll(() => container.textContent).toContain("Not found");
   });
 }
+
+it("native form submissions keep successful controls rather than JSON-wrapping FormData", async () => {
+  const router = react.createDataRouter([
+    react.defineRoute("/", {
+      action: async ({ request }) => [...(await request.formData())],
+    }),
+  ]);
+  const form = document.createElement("form");
+  const input = document.createElement("input");
+  input.name = "title";
+  input.value = "Native form";
+  form.append(input);
+  const options = { action: "/", encType: "application/json" };
+  submitForm(
+    router,
+    {
+      currentTarget: form,
+      defaultPrevented: false,
+      preventDefault() {},
+    },
+    null,
+    options,
+  );
+  await expect
+    .poll(() => router.getSnapshot().actionData)
+    .toEqual([["title", "Native form"]]);
+  router.dispose();
+});

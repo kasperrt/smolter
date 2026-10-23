@@ -3,38 +3,29 @@
  *
  * @module
  */
-/** @jsxImportSource react */
 
 import { applicationEnvironment } from "@smolter/core/environment";
 import { scrollPositions } from "@smolter/core/navigation";
 import { serializeData } from "@smolter/core/serialize";
 import type { ComponentProps } from "react";
-import {
-  createElement,
-  Fragment,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { Fragment, useLayoutEffect, useRef, useState } from "react";
 import { useNavigationSnapshot } from "./navigation-state.ts";
 import { useApplication } from "./root-context.ts";
 import { useSnapshot } from "./route-hooks.ts";
 import type { MetaDescriptor } from "./route-types.ts";
+import { createElement, useEffect, useMemo } from "./runtime.ts";
 
 function renderMeta(item: MetaDescriptor, index: number) {
   if (typeof item.title === "string")
-    return <title key={index}>{item.title}</title>;
+    return createElement("title", { key: index }, item.title);
   if ("script:ld+json" in item)
-    return (
-      <script
-        key={index}
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: serializeData(item["script:ld+json"]),
-        }}
-      />
-    );
+    return createElement("script", {
+      key: index,
+      type: "application/ld+json",
+      dangerouslySetInnerHTML: {
+        __html: serializeData(item["script:ld+json"]),
+      },
+    });
   const { tagName, ...props } = item;
   return createElement(tagName === "link" ? "link" : "meta", {
     ...props,
@@ -59,18 +50,18 @@ export function Meta(): import("react").ReactElement {
     const title = values.find((item) => typeof item.title === "string")?.title;
     if (typeof title === "string") document.title = title;
   }, [values]);
-  return <Fragment>{values.map(renderMeta)}</Fragment>;
+  return createElement(Fragment, null, values.map(renderMeta));
 }
 
 /** Render stylesheet and other link descriptors from the application root. */
 export function Links(): import("react").ReactElement {
   const { rootModule } = useApplication();
-  return (
-    <Fragment>
-      {rootModule?.links?.().map((props, index) => (
-        <link key={index} {...props} />
-      ))}
-    </Fragment>
+  return createElement(
+    Fragment,
+    null,
+    rootModule
+      ?.links?.()
+      .map((props, index) => createElement("link", { key: index, ...props })),
   );
 }
 
@@ -99,29 +90,28 @@ export function Scripts({ nonce }: ScriptProps): import("react").ReactElement {
     };
     return serializeData({ root, snapshot, ...(rootError && { rootError }) });
   });
-  return (
-    <Fragment>
-      <script
-        {...(nonce && { nonce })}
-        dangerouslySetInnerHTML={{
-          __html: applicationEnvironment?.entryScript ?? "",
-        }}
-      />
-      <script
-        id="smolter-data"
-        type="application/json"
-        {...(nonce && { nonce })}
-        dangerouslySetInnerHTML={{ __html: json }}
-      />
-      {entry && (
-        <script
-          type="module"
-          async={initialData !== undefined}
-          src={entry}
-          {...(nonce && { nonce })}
-        />
-      )}
-    </Fragment>
+  return createElement(
+    Fragment,
+    null,
+    createElement("script", {
+      ...(nonce && { nonce }),
+      dangerouslySetInnerHTML: {
+        __html: applicationEnvironment?.entryScript ?? "",
+      },
+    }),
+    createElement("script", {
+      id: "smolter-data",
+      type: "application/json",
+      ...(nonce && { nonce }),
+      dangerouslySetInnerHTML: { __html: json },
+    }),
+    entry &&
+      createElement("script", {
+        type: "module",
+        async: initialData !== undefined,
+        src: entry,
+        ...(nonce && { nonce }),
+      }),
   );
 }
 
@@ -184,30 +174,31 @@ export function Document({
   const lang = String(attributes.lang ?? "en");
   const debug = String(attributes["data-debug"] ?? false);
   useEffect(() => {
-    // Hydration must preserve classes already applied by the browser theme store.
-    // Only reconcile classes when the document's own props actually change.
-    if (previousClassName.current !== className) {
-      const previous = previousClassName.current.split(/\s+/).filter(Boolean);
-      const next = className.split(/\s+/).filter(Boolean);
-      document.documentElement.classList.remove(...previous);
-      document.documentElement.classList.add(...next);
-      previousClassName.current = className;
-    }
+    previousClassName.current = className;
     document.documentElement.lang = lang;
     document.documentElement.dataset.debug = debug;
   }, [className, lang, debug]);
-  const classes =
-    typeof document !== "undefined" && previousClassName.current !== className
-      ? [...document.documentElement.classList]
-          .filter(
-            (value) => !previousClassName.current.split(/\s+/).includes(value),
-          )
-          .concat(className.split(/\s+/).filter(Boolean))
-          .join(" ")
-      : attributes.className;
-  return (
-    <html {...attributes} className={classes} suppressHydrationWarning>
-      {children}
-    </html>
+  // React owns the html element. Preserve external classes in its next props
+  // instead of repeating the same reconciliation after React commits them.
+  const classes = useMemo(
+    () =>
+      typeof document !== "undefined" && previousClassName.current !== className
+        ? [
+            ...new Set(
+              [...document.documentElement.classList]
+                .filter(
+                  (value) =>
+                    !previousClassName.current.split(/\s+/).includes(value),
+                )
+                .concat(className.split(/\s+/).filter(Boolean)),
+            ),
+          ].join(" ")
+        : attributes.className,
+    [className],
+  );
+  return createElement(
+    "html",
+    { ...attributes, className: classes, suppressHydrationWarning: true },
+    children,
   );
 }

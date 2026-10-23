@@ -1,5 +1,6 @@
 import { createDataRouter } from "@smolter/core";
 import { configureApplication } from "@smolter/core/environment";
+import { connectNavigation } from "@smolter/core/navigation";
 import * as preact from "@smolter/preact";
 import * as react from "@smolter/react";
 import { createElement as preactElement } from "preact/compat";
@@ -18,6 +19,49 @@ for (const { name, api, h, mount } of [
     mount: preactRoot as typeof createRoot,
   },
 ]) {
+  it(`${name} search readers ignore history-only changes and follow the active pathname`, async (context) => {
+    const initialState = history.state;
+    const router = createDataRouter(
+      [{ path: location.pathname }, { path: "/search-other" }],
+      { url: location.href },
+    );
+    connectNavigation(router);
+    const root = mount(document.createElement("div"));
+    let renders = 0;
+    let search: ReturnType<typeof api.useSearchParams> | undefined;
+    let historyState: unknown;
+    function Probe() {
+      renders++;
+      search = api.useSearchParams();
+      return null;
+    }
+    function HistoryProbe() {
+      historyState = api.useURLLocation().state;
+      return null;
+    }
+    context.onTestFinished(() => {
+      root.unmount();
+      router.dispose();
+      history.replaceState(initialState, "", location.href);
+    });
+    root.render(h(api.RouterProvider, { router }, h(Probe), h(HistoryProbe)));
+    await expect.poll(() => renders).toBe(1);
+    const initialSearch = search;
+    await router.navigate(location.href, { state: { visit: 2 } });
+    await expect.poll(() => historyState).toEqual({ visit: 2 });
+    expect(renders).toBe(1);
+    expect(search).toBe(initialSearch);
+    await router.navigate("/search-other?tag=first&tag=second#scope");
+    await expect
+      .poll(() => search?.[0].getAll("tag"))
+      .toEqual(["first", "second"]);
+    search?.[1]({ mode: "watch" }, { replace: true, state: { visit: 3 } });
+    await expect
+      .poll(() => router.getSnapshot().url)
+      .toBe(`${location.origin}/search-other?mode=watch`);
+    expect(history.state.state).toEqual({ visit: 3 });
+    await expect.poll(() => search?.[0].get("mode")).toBe("watch");
+  });
   it(`${name} reports page pending destinations and NavLink state separately from fetchers`, async (context) => {
     const loading = deferred<string>();
     const independent = deferred<string>();

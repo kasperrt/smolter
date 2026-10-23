@@ -3,7 +3,6 @@
  *
  * @module
  */
-/** @jsxImportSource react */
 
 import {
   type DeploymentOptions,
@@ -26,6 +25,7 @@ import { flushSync } from "react-dom";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import type { AppRoute, Hydration, RootModule } from "./route-types.ts";
 import { RouterApplication } from "./router.ts";
+import { createElement } from "./runtime.ts";
 
 export * from "@smolter/client";
 export { configureApplication } from "@smolter/core/environment";
@@ -100,22 +100,15 @@ export async function mountApplication(
     rootError: hydration?.rootError,
     initialData: element?.textContent ?? undefined,
   };
-  if (hydration) {
-    const mounted = hydrateRoot(
-      document,
-      <RouterApplication {...props} document />,
-    );
-    const cleanup = router.dispose;
-    router.dispose = () => {
-      mounted.unmount();
-      cleanup();
-    };
-    return router;
-  }
   const target = document.getElementById("root");
-  if (target) {
-    const mounted = createRoot(target);
-    mounted.render(<RouterApplication {...props} />);
+  const mounted = hydration
+    ? hydrateRoot(
+        document,
+        createElement(RouterApplication, { ...props, document: true }),
+      )
+    : target && createRoot(target);
+  if (mounted) {
+    if (!hydration) mounted.render(createElement(RouterApplication, props));
     const cleanup = router.dispose;
     router.dispose = () => {
       mounted.unmount();

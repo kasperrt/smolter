@@ -3,22 +3,14 @@ import type { DeploymentOptions } from "./deployment.ts";
 
 type Manifest = Pick<DeploymentOptions, "version" | "shared" | "routes">;
 function manifestValue(value: unknown): Manifest | undefined {
+  if (!value || typeof value !== "object") return;
+  const { version, shared, routes } = value as Record<string, unknown>;
+  if (typeof version !== "string" || !version) return;
+  if (!("shared" in value) && !("routes" in value)) return { version };
   if (
-    !value ||
-    typeof value !== "object" ||
-    !("version" in value) ||
-    typeof value.version !== "string" ||
-    !value.version
-  )
-    return;
-  if (!("shared" in value) && !("routes" in value))
-    return { version: value.version };
-  if (
-    !("shared" in value) ||
-    typeof value.shared !== "string" ||
-    !("routes" in value) ||
-    !Array.isArray(value.routes) ||
-    !value.routes.every(
+    typeof shared !== "string" ||
+    !Array.isArray(routes) ||
+    !routes.every(
       (route) =>
         route &&
         typeof route === "object" &&
@@ -27,7 +19,7 @@ function manifestValue(value: unknown): Manifest | undefined {
     )
   )
     return;
-  return { version: value.version, shared: value.shared, routes: value.routes };
+  return { version, shared, routes };
 }
 export function deploymentCheck(options: DeploymentOptions) {
   const { version, manifestURL, timeout = 2000 } = options;
