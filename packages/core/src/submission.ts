@@ -1,6 +1,7 @@
 import type {
   Fetcher,
   NavigateOptions,
+  Result,
   Router,
   SubmitOptions,
 } from "./types.ts";
@@ -83,18 +84,48 @@ export function submitForm(
   );
   if (!target) return;
   const data = new FormData(event.currentTarget, submitter);
-  const method = (
-    submitter?.getAttribute("formmethod") ?? options.method
-  )?.toUpperCase();
+  const method = submitter?.getAttribute("formmethod") ?? options.method;
   event.preventDefault();
+  void submitValue(
+    router,
+    data,
+    { ...options, encType: undefined, action: target.href, method },
+    fetcher,
+  );
+}
+
+// Share GET encoding and action dispatch across forms, page hooks and fetchers.
+export function submitValue(
+  router: Router,
+  value: Submission,
+  options: SubmissionOptions | undefined,
+  fetcher: Fetcher,
+  fallback?: string,
+): Promise<Result>;
+export function submitValue(
+  router: Router,
+  value: Submission,
+  options?: SubmissionOptions,
+  fetcher?: Fetcher,
+): Promise<void> | Promise<Result>;
+export function submitValue(
+  router: Router,
+  value: Submission,
+  options: SubmissionOptions = {},
+  fetcher?: Fetcher,
+  fallback?: string,
+): Promise<void> | Promise<Result> {
+  const body = submissionBody(value, options.encType);
+  const method = options.method?.toUpperCase();
+  const action = options.action ?? fallback ?? router.getSnapshot().url;
   if (method === "GET") {
-    target.search = submissionSearch(data);
-    void (fetcher
-      ? fetcher.load(target.href)
-      : router.navigate(target.href, options));
-    return;
+    const url = new URL(action, router.getSnapshot().url);
+    url.search = submissionSearch(body);
+    return fetcher
+      ? fetcher.load(url.href)
+      : router.navigate(url.href, options);
   }
-  void (fetcher ?? router).submit(target.href, data, {
+  return (fetcher ?? router).submit(action, body, {
     method: method as SubmitOptions["method"],
   });
 }

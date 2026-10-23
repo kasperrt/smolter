@@ -1,6 +1,5 @@
-/** @jsxImportSource preact */
-
 import { createRootStore } from "@smolter/client/root-data";
+import { Fragment } from "preact";
 import type { ReactNode } from "preact/compat";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { RouterProvider, useSnapshot } from "./context.ts";
@@ -10,7 +9,12 @@ import {
   OutletContext,
 } from "./root-context.ts";
 import { Routes } from "./routes.ts";
-import { useContext, useMemo, useSyncExternalStore } from "./runtime.ts";
+import {
+  createElement,
+  useContext,
+  useMemo,
+  useSyncExternalStore,
+} from "./runtime.ts";
 
 /** Optional children and context shared with descendants through useOutletContext. */
 export interface OutletProps {
@@ -25,13 +29,15 @@ export function Outlet({
 }: OutletProps): import("preact").JSX.Element {
   const current = useContext(OutletContext);
   const application = useContext(Application);
-  const content = children ?? (
-    <Routes fallback={<p role="status">Loading…</p>} />
-  );
-  return (
-    <OutletContext value={context ?? current}>
-      {application ? <StreamOutlet>{content}</StreamOutlet> : content}
-    </OutletContext>
+  const content =
+    children ??
+    createElement(Routes, {
+      fallback: createElement("p", { role: "status" }, "Loading…"),
+    });
+  return createElement(
+    OutletContext,
+    { value: context ?? current },
+    application ? createElement(StreamOutlet, { children: content }) : content,
   );
 }
 
@@ -57,14 +63,11 @@ function StreamOutlet({ children }: StreamOutletProps) {
     if (!loaded && !error) return;
     if (initial.current?.owner === owner) return;
     const markers: Comment[] = initial.current?.markers ?? [];
-    const walker = document.createNodeIterator(start.current!.parentNode!, 128);
+    const walker = document.createTreeWalker(start.current!.parentNode!, 129);
+    walker.currentNode = start.current!;
     let node: Node | null;
-    while ((node = walker.nextNode())) {
-      if (
-        start.current!.compareDocumentPosition(node) & 4 &&
-        end.current!.compareDocumentPosition(node) & 2 &&
-        /^\/?\$s:/.test((node as Comment).data)
-      )
+    while ((node = walker.nextNode()) && node !== end.current) {
+      if (node.nodeType === 8 && /^\/?\$s:/.test((node as Comment).data))
         markers.push(node as Comment);
     }
     if (initial.current) {
@@ -75,12 +78,12 @@ function StreamOutlet({ children }: StreamOutletProps) {
     }
     initial.current = { owner, markers };
   }, [owner, loaded, error]);
-  return (
-    <>
-      <template ref={start} />
-      {children}
-      <template ref={end} />
-    </>
+  return createElement(
+    Fragment,
+    null,
+    createElement("template", { ref: start }),
+    children,
+    createElement("template", { ref: end }),
   );
 }
 
@@ -101,23 +104,30 @@ export function RouterApplication({
     [props.rootStore, initialRoot],
   );
   const root = useSyncExternalStore(rootStore.subscribe, rootStore.getSnapshot);
+  // Streamed Suspense fallbacks need these ancestor updates for Preact cleanup.
   const snapshot = useSyncExternalStore(
     props.router.subscribe,
     props.router.getSnapshot,
   );
-  const route = props.routes.find((item) => item.path === snapshot.path);
   const Root =
-    snapshot.error && (props.rootError || !route?.ErrorBoundary)
-      ? (props.rootModule?.ErrorBoundary ?? Outlet)
-      : (props.rootModule?.default ?? Outlet);
+    props.rootModule?.[
+      snapshot.error &&
+      (props.rootError ||
+        !props.routes.find((item) => item.path === snapshot.path)
+          ?.ErrorBoundary)
+        ? "ErrorBoundary"
+        : "default"
+    ] ?? Outlet;
   const Layout = props.rootModule?.Layout;
-  const children = <Root />;
-  return (
-    <RouterProvider router={props.router}>
-      <Application value={{ ...props, root }}>
-        {documentMode && Layout ? <Layout>{children}</Layout> : children}
-      </Application>
-    </RouterProvider>
+  const children = createElement(Root, null);
+  return createElement(
+    RouterProvider,
+    { router: props.router },
+    createElement(
+      Application,
+      { value: { ...props, root } },
+      documentMode && Layout ? createElement(Layout, { children }) : children,
+    ),
   );
 }
 

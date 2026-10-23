@@ -1,11 +1,11 @@
 import { safeWrapAsync } from "./errors.ts";
-import { matchRoutes } from "./match.ts";
+import { callRoute, matchRoutes } from "./match.ts";
 import { dataPrefetch } from "./prefetch.ts";
 import type {
-  DataFunction,
   NavigateOptions,
   Result,
   RevalidationArgs,
+  RevalidationContext,
   Route,
   Router,
   RouterOptions,
@@ -44,8 +44,32 @@ export function createDataRouter(
       state: "idle",
     }),
   };
-  const prefetched = dataPrefetch?.(routes, () => main.getSnapshot().url);
+  const prefetched =
+    typeof dataPrefetch === "function"
+      ? dataPrefetch(routes, () => main.getSnapshot().url)
+      : undefined;
   const revalidators = new Set<RevalidationTask>();
+  const refresh = (
+    reason: RevalidationArgs["reason"],
+    details: RevalidationContext,
+    targets?: readonly string[],
+    exclude?: RevalidationTask,
+  ) => {
+    const url = new URL(main.getSnapshot().url);
+    const args = {
+      ...details,
+      url,
+      currentUrl: url,
+      nextUrl: url,
+      defaultShouldRevalidate: true,
+      reason,
+    };
+    return Promise.all(
+      [...revalidators].map(
+        (task) => task !== exclude && task.revalidate(args, targets),
+      ),
+    );
+  };
   const channel = <S extends ChannelSnapshot>(initial: S, local?: boolean) => {
     let snapshot = initial;
     let loadedURL: string | undefined;
@@ -111,13 +135,12 @@ export function createDataRouter(
           }) === false
         )
           return previous.data;
-        const load = () => {
-          const fn =
-            match.route[body ? "clientAction" : "clientLoader"] ||
-            match.route[body ? "action" : "loader"];
-          if (!fn) return body && Error("No action");
-          return (fn as DataFunction)({
-            reason: body
+        const load = () =>
+          callRoute(
+            match,
+            url,
+            signal,
+            body
               ? "action"
               : navigation !== undefined
                 ? "navigation"
@@ -126,55 +149,51 @@ export function createDataRouter(
                   : previous.loaded
                     ? "revalidation"
                     : "initial",
-            request: new Request(url, {
-              signal,
-              method: body && method,
-              body,
-            }),
-            params: match.params,
-            signal,
-          });
-        };
-        if (prefetched && !body && navigation !== undefined)
-          return prefetched.navigate(url, signal, load);
+            body,
+            method,
+          );
+        if (
+          typeof dataPrefetch === "function" &&
+          !body &&
+          navigation !== undefined
+        )
+          return prefetched!.navigate(url, signal, load);
         return load();
       });
       if (signal.aborted) return result;
       const redirectTo =
         result.data instanceof Response && result.data.headers.get("Location");
       if (redirectTo && redirects) {
-        await main.load(
-          new URL(redirectTo, url!).href,
-          undefined,
-          { replace: true },
-          true,
-          redirects - 1,
-        );
-        if (body) {
-          const destination = new URL(main.getSnapshot().url);
-          const args: RevalidationArgs = {
-            url: destination,
-            currentUrl: destination,
-            nextUrl: destination,
-            defaultShouldRevalidate: true,
-            reason: "action",
-            formMethod: method,
-            formAction: url!.href,
-            formData: body,
-            actionResult: result.data,
-          };
-          // The destination loader just ran. Refresh root data and other fetchers
-          // without loading that page twice or replaying the mutation.
-          await Promise.all(
-            [...revalidators]
-              .filter((task) => task !== main)
-              .map((task) => task.revalidate(args)),
+        const { error } = await safeWrapAsync(async () => {
+          if (signal.aborted) return;
+          await main.load(
+            new URL(redirectTo, url!).href,
+            undefined,
+            { replace: true },
+            true,
+            redirects - 1,
           );
-        }
+          if (body) {
+            // The destination loader just ran. Refresh root data and other fetchers
+            // without loading that page twice or replaying the mutation.
+            await refresh(
+              "action",
+              {
+                formMethod: method,
+                formAction: url!.href,
+                formData: body,
+                actionResult: result.data,
+              },
+              undefined,
+              main,
+            );
+          }
+        });
         if (!signal.aborted) {
           submission = undefined;
           emit("idle");
         }
+        if (error) throw error.cause ?? error;
         return result;
       }
       if (redirectTo) result.error = Error("Redirect loop");
@@ -240,8 +259,8 @@ export function createDataRouter(
       },
       load: run,
       submit(href: string, body: FormData, options?: SubmitOptions) {
-        return prefetched
-          ? prefetched.submit(() => run(href, body, options))
+        return typeof dataPrefetch === "function"
+          ? prefetched!.submit(() => run(href, body, options))
           : run(href, body, options);
       },
       dispose() {
@@ -272,7 +291,7 @@ export function createDataRouter(
       await main.load(url, undefined, operation, true);
     },
     async revalidate(options = {}, context) {
-      prefetched?.clear();
+      if (typeof dataPrefetch === "function") prefetched!.clear();
       const {
         route,
         reason = "manual",
@@ -280,19 +299,8 @@ export function createDataRouter(
       } = typeof options === "string"
         ? { reason: options, ...context }
         : options;
-      const url = new URL(main.getSnapshot().url);
-      const args = {
-        ...details,
-        url,
-        currentUrl: url,
-        nextUrl: url,
-        defaultShouldRevalidate: true,
-        reason,
-      };
       const targets = typeof route === "string" ? [route] : route;
-      await Promise.all(
-        [...revalidators].map((refresh) => refresh.revalidate(args, targets)),
-      );
+      await refresh(reason, details, targets);
     },
     registerRevalidator(id, refresh) {
       const task = {
@@ -309,20 +317,19 @@ export function createDataRouter(
       };
     },
     prefetch(href) {
-      return (
-        prefetched?.load(href) ??
-        Promise.resolve({
-          error: new Error(
-            "Data prefetching was excluded from this build. Use router.prefetch or prefetchData in analyzed application source.",
-          ),
-        })
-      );
+      return typeof dataPrefetch === "function"
+        ? prefetched!.load(href)
+        : Promise.resolve({
+            error: new Error(
+              "Data prefetching was excluded from this build. Use router.prefetch or prefetchData in analyzed application source.",
+            ),
+          });
     },
     createFetcher() {
       return channel({ state: "idle" }, true);
     },
     dispose() {
-      prefetched?.clear();
+      if (typeof dataPrefetch === "function") prefetched!.clear();
       for (const refresh of revalidators) refresh.dispose?.();
       revalidators.clear();
       if (browser) removeEventListener("popstate", pop);

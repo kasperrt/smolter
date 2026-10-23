@@ -33,11 +33,12 @@ export function prepareRoutes(
       const handler = route[key] as DataFunction | undefined;
       if (!handler) continue;
       wrapped[key] = async (args) => {
-        const { data, error } = await safeWrapAsync(async () => ({
-          value: await handler(args),
-        }));
-        const value = await normalizeResult(
-          error ? error.cause : data!.value,
+        let value: unknown;
+        const { error } = await safeWrapAsync(async () => {
+          value = await handler(args);
+        });
+        value = await normalizeResult(
+          error ? error.cause : value,
           !preserveDeferred && key !== "clientLoader",
         );
         if (key === "clientLoader") observeDeferred(value);

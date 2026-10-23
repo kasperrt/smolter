@@ -1,10 +1,27 @@
 /** @jsxImportSource preact */
-import { safeWrapAsync } from "@smolter/core";
-import { useEffect, useState } from "preact/hooks";
-
+import { type Result, safeWrapAsync } from "@smolter/core";
+import { useState } from "preact/hooks";
 import type { AwaitProps } from "./await.tsx";
+import { useEffect } from "./runtime.ts";
 
-type Result<T> = { source: Promise<T> } & ({ value: T } | { error: unknown });
+type Resolution<T> = { source: Promise<T> } & Result<{ value: T }>;
+
+// Promise results are shared; each boundary retains its own rendering ownership.
+const resolutions = new WeakMap<
+  Promise<unknown>,
+  Promise<Result<{ value: unknown }>>
+>();
+
+export function resolveAwait<T>(resolve: Promise<T>) {
+  let pending = resolutions.get(resolve) as
+    | Promise<Result<{ value: T }>>
+    | undefined;
+  if (!pending) {
+    pending = safeWrapAsync(async () => ({ value: await resolve }));
+    resolutions.set(resolve, pending);
+  }
+  return pending;
+}
 
 export function AwaitFallback<T>({
   resolve,
@@ -12,19 +29,12 @@ export function AwaitFallback<T>({
   errorElement,
   children,
 }: AwaitProps<T> & { resolve: Promise<T> }) {
-  const [result, setResult] = useState<Result<T>>();
+  const [result, setResult] = useState<Resolution<T>>();
   useEffect(() => {
     let current = true;
     const observe = async () => {
-      const { data, error } = await safeWrapAsync(async () => ({
-        value: await resolve,
-      }));
-      if (current)
-        setResult(
-          error
-            ? { source: resolve, error: error.cause }
-            : { source: resolve, value: data!.value },
-        );
+      const result = await resolveAwait(resolve);
+      if (current) setResult({ source: resolve, ...result });
     };
     void observe();
     return () => {
@@ -32,7 +42,7 @@ export function AwaitFallback<T>({
     };
   }, [resolve]);
   if (!result || result.source !== resolve) return fallback;
-  if ("value" in result) return children(result.value as Awaited<T>);
+  if (!result.error) return children(result.data!.value as Awaited<T>);
   if (errorElement !== undefined) return errorElement;
-  throw result.error;
+  throw result.error.cause;
 }

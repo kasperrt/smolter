@@ -3,10 +3,11 @@ import type { Result } from "./types.ts";
 /** Resolve returned or rejected errors into Error values without losing their cause. */
 export async function safeWrapAsync<T>(
   work: () => T | Promise<T>,
+  immediate?: boolean,
 ): Promise<Result<T>> {
   const [result] = await Promise.allSettled([
     (async () => {
-      await undefined;
+      if (!immediate) await undefined;
       return work();
     })(),
   ]);

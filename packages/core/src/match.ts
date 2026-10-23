@@ -1,4 +1,11 @@
-import type { Match, Params, Route, RouteModule } from "./types.ts";
+import type {
+  DataArgs,
+  DataFunction,
+  Match,
+  Params,
+  Route,
+  RouteModule,
+} from "./types.ts";
 
 const patterns = new Map<string, string[]>();
 const MAX_PATTERNS = 256;
@@ -44,4 +51,25 @@ export function matchRoutes(
       });
     if (matched) return { route, params };
   }
+}
+
+// Page, fetcher and speculative reads share the same request contract.
+export function callRoute(
+  match: Match,
+  url: URL,
+  signal: AbortSignal,
+  reason: DataArgs["reason"],
+  body?: FormData,
+  method = "POST",
+): unknown {
+  const fn =
+    match.route[body ? "clientAction" : "clientLoader"] ||
+    match.route[body ? "action" : "loader"];
+  if (!fn) return body && Error("No action");
+  return (fn as DataFunction)({
+    reason,
+    request: new Request(url, { signal, method: body && method, body }),
+    params: match.params,
+    signal,
+  });
 }

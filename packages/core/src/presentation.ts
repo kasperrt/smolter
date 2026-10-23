@@ -1,5 +1,6 @@
 import { safeWrapAsync } from "./errors.ts";
 import type { NavigationRouter } from "./navigation-router.ts";
+import { createStore } from "./store.ts";
 import type { NavigateOptions, Route, Router, Snapshot } from "./types.ts";
 
 interface ResolvableRoute extends Route {
@@ -47,63 +48,53 @@ export function retainRoute(router: Router, commitView: CommitView) {
   let visible = read();
   let revision = 0;
   const listeners = new Set<() => void>();
-  const publish = () => {
-    for (const listener of listeners) listener();
-  };
+  const store = createStore(visible, listeners);
   const update = () => {
     const next = read();
     const current = ++revision;
     if (next.error && visible.loaded && view.hold?.()) return;
     if (next.state !== "idle" && visible.loaded) {
       visible = { ...visible, state: next.state };
-      publish();
+      store.update(visible);
       return;
     }
     const commit = () => {
       if (current !== revision) return;
       commitView(() => {
         visible = next;
-        publish();
+        store.update(visible);
       });
     };
-    const previousURL = new URL(visible.url);
-    const nextURL = new URL(next.url);
-    const changed =
-      previousURL.pathname + previousURL.search !==
-      nextURL.pathname + nextURL.search;
-    const component = (path: string | undefined) => {
-      const route = router.routes.find((item) => item.path === path) as
-        | ResolvableRoute
-        | undefined;
-      return route?.resolveComponent?.() ?? route?.default;
-    };
-    const previousComponent = component(visible.path);
-    const sharedView =
-      previousComponent && previousComponent === component(next.path);
-    const animate =
-      changed &&
+    if (
       visible.loaded &&
       viewTransition !== false &&
-      !sharedView &&
-      previousURL.pathname !== nextURL.pathname &&
       typeof document !== "undefined" &&
       typeof document.startViewTransition === "function" &&
-      !matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (animate) {
-      const transition = document.startViewTransition(commit);
-      void safeWrapAsync(() => transition.ready);
-      return;
+      !matchMedia("(prefers-reduced-motion: reduce)").matches &&
+      new URL(visible.url).pathname !== new URL(next.url).pathname
+    ) {
+      const component = (path: string | undefined) => {
+        const route = router.routes.find((item) => item.path === path) as
+          | ResolvableRoute
+          | undefined;
+        return route?.resolveComponent?.() ?? route?.default;
+      };
+      const previousComponent = component(visible.path);
+      const sharedView =
+        previousComponent && previousComponent === component(next.path);
+      if (!sharedView) {
+        const transition = document.startViewTransition(commit);
+        void safeWrapAsync(() => transition.ready);
+        return;
+      }
     }
     commit();
   };
   const view: Presentation = { read, update };
   pending.set(router, view);
   const unsubscribe = router.subscribe(update);
-  router.getSnapshot = () => visible;
-  router.subscribe = (listener) => {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-  };
+  router.getSnapshot = store.getSnapshot;
+  router.subscribe = store.subscribe;
   const dispose = router.dispose;
   router.dispose = () => {
     unsubscribe();

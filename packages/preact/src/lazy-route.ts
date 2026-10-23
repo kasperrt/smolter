@@ -10,11 +10,11 @@ import {
   type Router,
   safeWrapAsync,
 } from "@smolter/core";
-import { type ComponentType, createElement } from "preact";
+import { type ComponentType } from "preact";
 import { useRouter } from "./context.ts";
 import type { AppRoute } from "./route-types.ts";
 import type { ErrorProps } from "./routes.ts";
-import { useSyncExternalStore } from "./runtime.ts";
+import { createElement, useSyncExternalStore } from "./runtime.ts";
 
 /** Lazy route path, server transport endpoint and available handler capabilities. */
 export interface LazyRouteOptions {

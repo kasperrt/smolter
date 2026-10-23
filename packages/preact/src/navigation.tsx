@@ -1,16 +1,16 @@
-import type { NavigateOptions } from "@smolter/core";
+import type { NavigateOptions, Router } from "@smolter/core";
 import {
   handoffDocument,
   resolveApplicationURL,
 } from "@smolter/core/environment";
 import { intentPrefetch } from "@smolter/core/intent";
 import { type PrefetchMode, prefetchLink } from "@smolter/core/link-prefetch";
-import { navigationClick } from "@smolter/core/url";
+import { pendingLocation } from "@smolter/core/presentation";
+import { matchesLocation, navigationClick } from "@smolter/core/url";
 import { viewportPrefetch } from "@smolter/core/viewport";
 import type { TargetedMouseEvent } from "preact";
 import type { ComponentProps, ReactNode } from "preact/compat";
 import { useRouter, useSnapshot } from "./context.ts";
-import { useNavigation, useURLLocation } from "./route-hooks.tsx";
 import { createElement, useMemo } from "./runtime.ts";
 
 export type { NavigateOptions } from "@smolter/core";
@@ -89,13 +89,18 @@ export function Link(options: LinkProps): ReactNode {
   const forwarded = "ref" in props ? props.ref : undefined;
   const observe = useMemo(
     () =>
-      prefetch === "viewport"
-        ? viewportPrefetch?.(preload, forwarded)
+      prefetch === "viewport" && typeof viewportPrefetch === "function"
+        ? viewportPrefetch(preload, forwarded)
         : undefined,
     [router, destination.href, prefetchData, forwarded, prefetch],
   );
-  if (!reloadDocument && prefetch === "intent" && internal)
-    intentPrefetch?.(props, preload);
+  if (
+    !reloadDocument &&
+    prefetch === "intent" &&
+    internal &&
+    typeof intentPrefetch === "function"
+  )
+    intentPrefetch(props, preload);
   return createElement("a", {
     ...props,
     href: destination.href,
@@ -125,19 +130,11 @@ export function NavLink({
   children,
   ...props
 }: NavLinkProps): ReactNode {
-  const location = useURLLocation();
+  const router = useRouter<Router>();
+  const location = new URL(useSnapshot().url);
   const destination = resolveApplicationURL(new URL(to, location.href));
-  const target = destination.pathname;
-  const isActive =
-    destination.origin === location.origin &&
-    (location.pathname === target ||
-      (!end && target !== "/" && location.pathname.startsWith(`${target}/`)));
-  const pending = useNavigation().location;
-  const isPending =
-    !!pending &&
-    pending.origin === destination.origin &&
-    (pending.pathname === target ||
-      (!end && target !== "/" && pending.pathname.startsWith(`${target}/`)));
+  const isActive = matchesLocation(location, destination, end);
+  const isPending = matchesLocation(pendingLocation(router), destination, end);
   const state = { isActive, isPending };
   return createElement(Link, {
     ...props,

@@ -23,7 +23,7 @@ export function prefetchSelection() {
       if (!match) return;
       const name =
         match[1] === "prefetch" ? "data" : (match[1] as "intent" | "viewport");
-      const marker = `/*! @smolter/prefetch:${name} */`;
+      const marker = `@smolter/prefetch:${name}`;
       if (!code.includes(marker)) return;
       ids.add(id);
       selected ??= analyze();

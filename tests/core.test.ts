@@ -1041,6 +1041,105 @@ it("settles a fetcher after rejected revalidation and allows later refreshes", a
   expect(fetcher.getSnapshot().data).toBeTypeOf("number");
 });
 
+it("settles a redirected fetcher after root refresh rejects and allows later refreshes", async (context) => {
+  let reads = 0;
+  let mutations = 0;
+  const failure = Error("Redirect root refresh failed");
+  const router = createDataRouter([
+    defineRoute("/", { loader: () => ++reads }),
+    defineRoute("/save", {
+      action: () => {
+        mutations++;
+        return redirect("/done?created=1#saved");
+      },
+    }),
+    defineRoute("/done", { loader: () => "destination" }),
+  ]);
+  context.onTestFinished(router.dispose);
+  await router.navigate("/");
+  const fetcher = router.createFetcher();
+  await fetcher.load("/");
+  const unregister = router.registerRevalidator("root", () =>
+    Promise.reject(failure),
+  );
+  await expect(fetcher.submit("/save", body())).rejects.toBe(failure);
+  expect(fetcher.getSnapshot()).toMatchObject({ state: "idle", data: 2 });
+  expect(router.getSnapshot()).toMatchObject({
+    state: "idle",
+    url: "http://localhost/done?created=1#saved",
+    data: "destination",
+  });
+  expect(mutations).toBe(1);
+  unregister();
+  await router.revalidate();
+  expect(reads).toBe(3);
+  expect(fetcher.getSnapshot()).toMatchObject({ state: "idle", data: 3 });
+});
+
+it("keeps navigation started immediately after a submitted action as the current intent", async (context) => {
+  let mutations = 0;
+  let destinationLoads = 0;
+  const router = createDataRouter([
+    defineRoute("/", { loader: () => "home" }),
+    defineRoute("/save", {
+      action: () => {
+        mutations++;
+        return redirect("/redirect");
+      },
+    }),
+    defineRoute("/redirect", {
+      loader: () => {
+        destinationLoads++;
+        return "obsolete";
+      },
+    }),
+    defineRoute("/new", { loader: () => "current" }),
+  ]);
+  context.onTestFinished(router.dispose);
+  await router.navigate("/");
+  const submission = router.submit("/save", body());
+  const navigation = router.navigate("/new?latest=1#current");
+  await Promise.all([submission, navigation]);
+  expect(mutations).toBe(1);
+  expect(destinationLoads).toBe(0);
+  expect(router.getSnapshot()).toMatchObject({
+    url: "http://localhost/new?latest=1#current",
+    state: "idle",
+    data: "current",
+  });
+});
+
+it("keeps newer navigation during every redirect settlement microtask", async (context) => {
+  for (let offset = 0; offset < 12; offset++) {
+    const started = deferred<void>();
+    const action = deferred<Response>();
+    const router = createDataRouter([
+      defineRoute("/", { loader: () => "home" }),
+      defineRoute("/save", {
+        action: () => {
+          started.resolve();
+          return action.promise;
+        },
+      }),
+      defineRoute("/redirect", { loader: () => "obsolete" }),
+      defineRoute("/new", { loader: () => "current" }),
+    ]);
+    context.onTestFinished(router.dispose);
+    await router.navigate("/");
+    const submission = router.submit("/save", body());
+    await started.promise;
+    action.resolve(redirect("/redirect"));
+    for (let tick = 0; tick < offset; tick++) await Promise.resolve();
+    const navigation = router.navigate("/new?latest=1#current");
+    await Promise.all([submission, navigation]);
+    expect(router.getSnapshot()).toMatchObject({
+      url: "http://localhost/new?latest=1#current",
+      state: "idle",
+      data: "current",
+    });
+  }
+});
+
 it("does not reload initialized page data when starting after revalidation", async (context) => {
   let loads = 0;
   const router = createDataRouter([

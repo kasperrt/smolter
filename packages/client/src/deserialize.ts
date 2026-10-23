@@ -5,9 +5,8 @@ export function deserialize(json: string): Snapshot {
   const snapshot: Snapshot = JSON.parse(json);
   const error = snapshot.error;
   if (error) {
-    snapshot.error = Object.assign(new Error(error.message), {
-      name: error.name,
-    });
+    snapshot.error = new Error(error.message);
+    snapshot.error.name = error.name;
   }
   return snapshot;
 }

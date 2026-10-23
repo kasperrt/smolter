@@ -205,3 +205,17 @@ it("releases speculative-read protection after a synchronous submission failure"
   expect(loader).toHaveBeenCalledOnce();
   cache.clear();
 });
+
+it("preserves a failed action Result and allows later speculative reads", async () => {
+  const { dataPrefetch } = await import("@smolter/core/prefetch");
+  const loader = vi.fn(() => "fresh");
+  const cache = dataPrefetch(
+    [{ path: "/item", loader }],
+    () => "http://localhost/",
+  );
+  const result = { error: new Error("Action rejected") };
+  await expect(cache.submit(async () => result)).resolves.toBe(result);
+  await expect(cache.load("/item")).resolves.toEqual({ data: "fresh" });
+  expect(loader).toHaveBeenCalledOnce();
+  cache.clear();
+});

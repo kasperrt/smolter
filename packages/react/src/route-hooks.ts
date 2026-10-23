@@ -1,11 +1,10 @@
-import type { NavigateOptions, Router, SubmitOptions } from "@smolter/core";
+import type { NavigateOptions, Router } from "@smolter/core";
 import type { NavigationType } from "@smolter/core/navigation";
 import { pendingLocation } from "@smolter/core/presentation";
 import {
   type Submission,
   type SubmissionOptions,
-  submissionBody,
-  submissionSearch,
+  submitValue,
 } from "@smolter/core/submission";
 import { useRouter, useSnapshot } from "./context.ts";
 import type { NavigateFunction } from "./navigation.ts";
@@ -62,19 +61,8 @@ export function useSubmit(): (
 ) => Promise<void> | Promise<import("@smolter/core").Result<unknown>> {
   const router = useRouter<Router>();
   return useCallback(
-    (value: Submission, options: SubmissionOptions = {}) => {
-      const body = submissionBody(value, options.encType);
-      const method = options.method?.toUpperCase();
-      const target = options.action ?? router.getSnapshot().url;
-      if (method === "GET") {
-        const url = new URL(target, router.getSnapshot().url);
-        url.search = submissionSearch(body);
-        return router.navigate(url.href, options);
-      }
-      return router.submit(target, body, {
-        method: method as SubmitOptions["method"],
-      });
-    },
+    (value: Submission, options?: SubmissionOptions) =>
+      submitValue(router, value, options),
     [router],
   );
 }
@@ -121,7 +109,7 @@ export function useSearchParams(): [
     options?: NavigateOptions,
   ) => void,
 ] {
-  const location = useURLLocation();
+  const location = new URL(useSnapshot("url"));
   const navigate = useNavigate();
   const params = useMemo(
     () => new URLSearchParams(location.search),

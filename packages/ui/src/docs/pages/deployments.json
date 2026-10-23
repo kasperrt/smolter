@@ -36,7 +36,7 @@
     },
     {
       "title": "Fetcher mutation ownership",
-      "body": "Install watchDeployment before creating fetchers; mountApplication does this automatically. Independent fetcher submissions invalidate older recovery checks. While any tracked fetcher submission is pending, document recovery is suppressed and its marker remains unused. Ordinary client navigation can continue. A confirmed chunk failure for the current destination can recover after all tracked submissions settle; ordinary successful navigation is never reloaded merely because a submission finishes. A later eligible navigation can also recover. Fetchers created before watcher installation are not tracked.",
+      "body": "Install watchDeployment before creating fetchers; mountApplication does this automatically. Independent fetcher submissions invalidate older recovery checks. While any tracked fetcher submission is pending, document recovery is suppressed and its marker remains unused. Ordinary client navigation can continue. A confirmed chunk failure for the current destination can recover after all tracked submissions settle; ordinary successful navigation is never reloaded merely because a submission finishes. A later eligible navigation can also recover. Replacing a watcher preserves protection for its already tracked fetchers. When they settle, the current watcher can recover an eligible failed destination. Calling an old cleanup function cannot stop the replacement watcher. Fetchers created before the first watcher installation are not tracked.",
       "code": ""
     },
     {

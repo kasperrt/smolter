@@ -12,13 +12,11 @@ import {
   type Route as RouteDefinition,
   type RouteModule,
   type Router,
-  type SubmitOptions,
 } from "@smolter/core";
 import {
   type Submission,
   type SubmissionOptions,
-  submissionBody,
-  submissionSearch,
+  submitValue,
 } from "@smolter/core/submission";
 import { useRouter } from "./context.ts";
 import { Form, type FormProps } from "./form.ts";
@@ -71,19 +69,8 @@ export function useFetcher(route?: RouteDefinition): TypedFetcher<unknown> {
       Form: (props: FormProps) =>
         createElement(Form, { action: target(), ...props, fetcher: store }),
       load: (url?: string) => store.load(url ?? target()),
-      submit: (body: Submission, options: FetcherSubmitOptions = {}) => {
-        const action = options.action ?? target();
-        const data = submissionBody(body, options.encType);
-        const method = options.method?.toUpperCase();
-        if (method === "GET") {
-          const url = new URL(action, router.getSnapshot().url);
-          url.search = submissionSearch(data);
-          return store.load(url.href);
-        }
-        return store.submit(action, data, {
-          method: method as SubmitOptions["method"],
-        });
-      },
+      submit: (body: Submission, options?: FetcherSubmitOptions) =>
+        submitValue(router, body, options, store, target()),
     };
   }, [router, path]);
   useEffect(() => fetcher.dispose, [fetcher]);

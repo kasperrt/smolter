@@ -396,9 +396,19 @@ test("view transitions snapshot the old page and commit the ready destination", 
     }
   });
   const SharedView = () => null;
+  let resolutions = 0;
+  const watchRoute = {
+    path: "/watch",
+    loader: () => "watch",
+    default: SharedView,
+    resolveComponent() {
+      resolutions++;
+      return SharedView;
+    },
+  };
   const router = createDataRouter([
     { path: "/", loader: () => "home" },
-    { path: "/watch", loader: () => "watch", default: SharedView },
+    watchRoute,
     { path: "/music", loader: () => "music", default: SharedView },
   ]);
   await router.navigate("/");
@@ -414,15 +424,18 @@ test("view transitions snapshot the old page and commit the ready destination", 
     viewTransition: true,
   } as import("../packages/preact/src/navigation.tsx").NavigateOptions);
   assert.equal(transitions, 1);
+  assert.equal(resolutions, 0);
   await router.navigate("/");
   assert.equal(transitions, 2);
   update();
   assert.equal(router.getSnapshot().data, "home");
+  const beforeDisabled = resolutions;
   await router.navigate("/watch", {
     viewTransition: false,
   } as import("../packages/preact/src/navigation.tsx").NavigateOptions);
   assert.equal(transitions, 2);
   assert.equal(router.getSnapshot().data, "watch");
+  assert.equal(resolutions, beforeDisabled);
   await router.navigate("/music");
   assert.equal(transitions, 2);
   assert.equal(router.getSnapshot().data, "music");
@@ -558,6 +571,20 @@ test("Await renders its error element for a rejected deferred field", async () =
   );
   assert.match(html, /Temporarily unavailable/);
   assert.doesNotMatch(html, /Unexpected success/);
+});
+
+test("Await preserves resolved Error objects and empty values as data", async () => {
+  for (const value of [new Error("resolved data"), undefined, null, false, 0]) {
+    const html = await renderToStringAsync(
+      <Suspense fallback={<p>Pending</p>}>
+        <Await resolve={Promise.resolve(value)} errorElement="Rejected">
+          {(data) => <output>{String(data)}</output>}
+        </Await>
+      </Suspense>,
+    );
+    assert.match(html, new RegExp(`<output>${String(value)}</output>`));
+    assert.doesNotMatch(html, /Rejected/);
+  }
 });
 
 test("Await propagates rejection when no local error element exists", async () => {

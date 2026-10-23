@@ -1,5 +1,8 @@
 import { safeWrapAsync } from "@smolter/core";
 
+// Late stream failures have no matching server-rendered error content.
+export class HydrationError extends Error {}
+
 type Settlement = [number, unknown, string | null];
 
 interface PendingValue {
@@ -19,10 +22,12 @@ export function readHydration(json: string, timeout = 8_000) {
       "deferredTimeout must be an integer between 1 and 2147483647 ms",
     );
   const pending = new Map<number, PendingValue>();
+  let live = false;
   const queue = ((window as DeferredWindow).__smolterDeferred ??= []);
   function revive(_key: string, value: unknown): unknown {
     if (!value || typeof value !== "object") return value;
     if ("__smolterUndefined" in value) return undefined;
+    let promise: Promise<unknown>;
     if (
       "__smolterPending" in value &&
       typeof value.__smolterPending === "number"
@@ -32,48 +37,43 @@ export function readHydration(json: string, timeout = 8_000) {
       if (existing) return existing.promise;
       let resolve!: PendingValue["resolve"];
       let reject!: PendingValue["reject"];
-      const promise = new Promise((accept, fail) => {
+      promise = new Promise((accept, fail) => {
         resolve = accept;
         reject = fail;
       });
-      void safeWrapAsync(() => promise);
       pending.set(id, { promise, resolve, reject });
-      return promise;
-    }
-    if ("__smolterRejected" in value) {
+    } else if ("__smolterRejected" in value) {
       const failure = value.__smolterRejected as { message: string };
-      const rejected = Promise.reject(
+      promise = Promise.reject(
         Object.assign(new Error(failure.message), failure),
       );
-      void safeWrapAsync(() => rejected);
-      return rejected;
-    }
-    return value;
+    } else return value;
+    void safeWrapAsync(() => promise);
+    return promise;
   }
   const hydration = JSON.parse(json, revive);
   const dispose = () => {
     clearTimeout(deadline);
     window.removeEventListener("DOMContentLoaded", dispose);
     for (const target of pending.values())
-      target.reject(new Error("Hydration stream closed"));
+      target.reject(new HydrationError("Hydration stream closed"));
     pending.clear();
     queue.push = () => 0;
   };
   const deadline = pending.size
     ? setTimeout(() => {
         for (const target of pending.values())
-          target.reject(new Error("Hydration stream timed out"));
+          target.reject(new HydrationError("Hydration stream timed out"));
         dispose();
       }, timeout)
     : undefined;
-  const receive = (packet: Settlement) => {
-    const [id, value, error] = packet;
+  const receive = ([id, value, error]: Settlement) => {
     if (id === -1) return dispose();
     const target = pending.get(id);
     if (!target) return;
     if (error === null)
       target.resolve(JSON.parse(JSON.stringify(value), revive));
-    else target.reject(new Error(error));
+    else target.reject(new (live ? HydrationError : Error)(error));
   };
   const buffered = queue.splice(0);
   queue.push = (...packets) => {
@@ -82,6 +82,7 @@ export function readHydration(json: string, timeout = 8_000) {
   };
   window.addEventListener("DOMContentLoaded", dispose, { once: true });
   buffered.forEach(receive);
+  live = true;
   if (document.readyState !== "loading") dispose();
   return { hydration, dispose };
 }

@@ -1,5 +1,6 @@
-/*! @smolter/prefetch:intent */
-/** Attach intent handlers while preserving the consumer's existing callbacks. */
+/** Attach intent handlers while preserving the consumer's existing callbacks.
+ * @smolter/prefetch:intent
+ */
 export function intentPrefetch(
   props: Record<string, unknown>,
   load: () => void,

@@ -57,7 +57,7 @@
     "wouter-preact": "3.13.0",
     "typescript": "7.0.2"
   },
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "A tiny typed data router for React and Preact.",
   "sideEffects": false,
   "license": "MIT",
@@ -163,7 +163,7 @@
       "optional": true
     }
   },
-  "author": "Kasper Rynning-T\u00f8nnesen <kasperrt@users.noreply.github.com> (https://github.com/kasperrt)",
+  "author": "Kasper Rynning-Tønnesen <kasperrt@users.noreply.github.com> (https://github.com/kasperrt)",
   "homepage": "https://kasperrt.github.io/smolter/",
   "bugs": {
     "url": "https://github.com/kasperrt/smolter/issues"

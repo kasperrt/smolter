@@ -66,7 +66,9 @@ for (const failure of [false, true]) {
     ]);
     const input = container.querySelector("input");
     const rootMarker = document.createComment("$s:root");
+    const rootAfter = document.createComment("$s:after");
     container.querySelector("main")!.prepend(rootMarker);
+    container.querySelector("main")!.append(rootAfter);
     await router.navigate("/same");
     await expect.poll(() => router.getSnapshot().state).toBe("idle");
     expect(markers.every((marker) => marker.isConnected)).toBe(true);
@@ -82,11 +84,14 @@ for (const failure of [false, true]) {
     expect(nestedStart.isConnected).toBe(false);
     expect(nestedEnd.isConnected).toBe(false);
     expect(rootMarker.isConnected).toBe(true);
+    expect(rootAfter.isConnected).toBe(true);
+    expect(rootAfter.data).toBe("$s:after");
     expect(container.querySelector("input")).toBe(input);
     await router.navigate("/");
     await expect
       .poll(() => container.querySelector("p")?.textContent)
       .toBe("Home");
     expect(rootMarker.isConnected).toBe(true);
+    expect(rootAfter.isConnected).toBe(true);
   });
 }
