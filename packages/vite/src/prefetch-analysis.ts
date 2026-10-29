@@ -137,6 +137,7 @@ export function analyzePrefetch(
   const all = () => {
     result.intent = result.viewport = result.data = true;
   };
+  const complete = () => result.intent && result.viewport && result.data;
   function props(node: ts.Node, attributes?: ts.JsxAttributes) {
     let selected = new Set(["intent"]);
     let data = false;
@@ -206,8 +207,10 @@ export function analyzePrefetch(
       data && (selected.has("intent") || selected.has("viewport"));
   }
   for (const source of program.getSourceFiles()) {
+    // HMR must still track later dependencies after the capability set saturates.
     if (!source.fileName.includes("/node_modules/")) watch?.(source.fileName);
     if (
+      complete() ||
       source.isDeclarationFile ||
       /\/node_modules\/|\/(?:\.generated|dist|packages)\/(?:core|react|preact|client|server|vite)\//.test(
         source.fileName,
@@ -215,6 +218,7 @@ export function analyzePrefetch(
     )
       continue;
     const visit = (node: ts.Node) => {
+      if (complete()) return;
       if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
         if (isLink(node.tagName, checker)) props(node, node.attributes);
       }
@@ -246,13 +250,15 @@ export function analyzePrefetch(
       // keeps all capabilities. Ordinary JSX tags and createElement are handled above.
       if (
         ts.isIdentifier(node) &&
-        isLink(node, checker) &&
-        !adapterImport(node) &&
         !ts.isPropertyAccessExpression(node.parent) &&
         !ts.isJsxOpeningElement(node.parent) &&
         !ts.isJsxClosingElement(node.parent) &&
         !ts.isJsxSelfClosingElement(node.parent) &&
-        !(ts.isCallExpression(node.parent) && node.parent.arguments[0] === node)
+        !(
+          ts.isCallExpression(node.parent) && node.parent.arguments[0] === node
+        ) &&
+        !adapterImport(node) &&
+        isLink(node, checker)
       )
         all();
       ts.forEachChild(node, visit);

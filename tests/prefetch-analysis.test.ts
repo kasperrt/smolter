@@ -127,3 +127,116 @@ it("infers literals, imported spread types, unions and overriding attributes wit
     expect(analyzePrefetch(root), source).toEqual({ intent, viewport, data });
   }
 }, 60_000);
+
+for (const framework of ["react", "preact"] as const) {
+  it(`preserves resolved ${framework} aliases, re-exports and component wrappers`, async (context) => {
+    const root = await mkdtemp(join(tmpdir(), "smolter-prefetch-aliases-"));
+    context.onTestFinished(() => rm(root, { recursive: true, force: true }));
+    const adapter = `@kasperrt/smolter/${framework}`;
+    await mkdir(join(root, framework));
+    await writeFile(
+      join(root, "tsconfig.json"),
+      JSON.stringify({
+        compilerOptions: {
+          strict: true,
+          paths: { [adapter]: [`./${framework}/navigation.d.ts`] },
+        },
+      }),
+    );
+    await writeFile(
+      join(root, framework, "navigation.d.ts"),
+      'interface LinkProps { prefetch?: "none" | "intent" | "viewport"; prefetchData?: boolean; } export declare function Link(props: LinkProps): unknown; export declare function NavLink(props: LinkProps): unknown;',
+    );
+    await writeFile(
+      join(root, "links.d.ts"),
+      `import {Link} from "${adapter}"; export {Link as RouteLink, NavLink as RouteNavLink} from "${adapter}"; export declare const Wrapped: typeof Link;`,
+    );
+    const cases: [string, boolean, boolean, boolean][] = [
+      [
+        `import {Link as RouteLink} from "${adapter}"; export const page = <RouteLink prefetch="viewport" />;`,
+        false,
+        true,
+        false,
+      ],
+      [
+        `import {NavLink as RouteNavLink} from "${adapter}"; export const page = <RouteNavLink prefetch="intent" prefetchData />;`,
+        true,
+        false,
+        true,
+      ],
+      [
+        'import * as Routes from "./links"; export const page = <Routes.RouteLink prefetch="viewport" />;',
+        false,
+        true,
+        false,
+      ],
+      [
+        'import * as Routes from "./links"; export const page = h(Routes.RouteNavLink, {prefetch: "viewport" as const, prefetchData: true as const});',
+        false,
+        true,
+        true,
+      ],
+      [
+        'import * as Routes from "./links"; export const page = <Routes.Wrapped prefetch="viewport" prefetchData />;',
+        false,
+        true,
+        true,
+      ],
+      [
+        `import {Link} from "${adapter}"; const LocalLink = Link; export const page = <LocalLink prefetch="viewport" />;`,
+        true,
+        true,
+        true,
+      ],
+      [
+        `import {Link as RouteLink} from "${adapter}"; export const page = <Layout component={RouteLink} />;`,
+        true,
+        true,
+        true,
+      ],
+      [
+        "function Link() { return null; } const values = {Link}; export const page = <Link />; export const selected = values.Link; export const result = Object.keys(values);",
+        false,
+        false,
+        false,
+      ],
+    ];
+    for (const [source, intent, viewport, data] of cases) {
+      await writeFile(join(root, "entry.tsx"), source);
+      expect(analyzePrefetch(root), source).toEqual({ intent, viewport, data });
+    }
+  }, 60_000);
+}
+
+it("watches later source dependencies after every capability is retained", async (context) => {
+  const directory = await mkdtemp(join(tmpdir(), "smolter-prefetch-watch-"));
+  context.onTestFinished(() => rm(directory, { recursive: true, force: true }));
+  const root = join(directory, "app");
+  const shared = join(directory, "shared");
+  await mkdir(root);
+  await mkdir(shared);
+  const config = join(root, "tsconfig.json");
+  const entry = join(root, "a-entry.tsx");
+  const later = join(root, "z-entry.ts");
+  const modes = join(shared, "modes.ts");
+  await writeFile(config, '{"compilerOptions":{"strict":true}}');
+  await writeFile(
+    entry,
+    'import {Link} from "@kasperrt/smolter/preact"; declare const props: Record<string, unknown>; export const page = <Link {...props} />;',
+  );
+  await writeFile(
+    later,
+    'import type {Mode} from "../shared/modes"; export const mode = "viewport" satisfies Mode;',
+  );
+  await writeFile(modes, 'export type Mode = "intent" | "viewport";');
+  const watched: string[] = [];
+  expect(analyzePrefetch(root, (file) => watched.push(file))).toEqual({
+    intent: true,
+    viewport: true,
+    data: true,
+  });
+  expect(watched).toEqual(
+    expect.arrayContaining([config, entry, later, modes]),
+  );
+  expect(watched.indexOf(modes)).toBeGreaterThan(watched.indexOf(entry));
+});
