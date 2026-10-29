@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { expect, it, vi } from "vitest";
 import { viteFixture } from "./helpers/vite.ts";
@@ -64,6 +64,19 @@ it("updates inferred capabilities in client and SSR graphs without restarting Vi
   expect((await server.transformRequest(`/@fs/${viewport}`))?.code).toContain(
     "function viewportPrefetch",
   );
+  const data = resolve("packages/core/src/prefetch.ts");
+  expect((await server.transformRequest(`/@fs/${data}`))?.code).toContain(
+    "dataPrefetch = undefined",
+  );
+  const extra = join(root, "src/extra.tsx");
+  await writeFile(extra, source("viewport").replace(" />", " prefetchData />"));
+  await expect
+    .poll(async () => (await server.transformRequest(`/@fs/${data}`))?.code)
+    .toContain("function dataPrefetch");
+  await rm(extra);
+  await expect
+    .poll(async () => (await server.transformRequest(`/@fs/${data}`))?.code)
+    .toContain("dataPrefetch = undefined");
   send.mockClear();
   await writeFile(join(root, "tsconfig.json"), "{ invalid");
   server.watcher.emit("change", entry);

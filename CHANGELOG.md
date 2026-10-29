@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.9
+
+- Reduce prefetch capability analysis work during Vite builds. Reject irrelevant syntax before requesting TypeScript types and stop semantic traversal once every capability must be retained, while continuing to track source dependencies for HMR. Preserve aliased components, typed spreads and conservative handling of dynamic usage.
+- Add React/Preact regressions for resolved aliases, re-exports, typed wrappers and later watched dependencies, plus development capability updates when source files are added or removed. Public APIs, browser bundles and application configuration are unchanged.
+
 ## 0.4.8
 
 - Reduce duplicated prefetch, submission and adapter bookkeeping while preserving cancellation, consume-once reads, mutation invalidation and React/Preact behavior. Keep excluded prefetch capabilities removable from browser builds.
