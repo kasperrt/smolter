@@ -25,7 +25,11 @@ function adapterImport(node: ts.Node): boolean {
   return false;
 }
 
-function isLink(node: ts.Node, checker: ts.TypeChecker): boolean {
+function isLink(
+  node: ts.Node,
+  checker: ts.TypeChecker,
+  direct = false,
+): boolean {
   const symbol = checker.getSymbolAtLocation(node);
   const declarations = symbol?.declarations ?? [];
   if (
@@ -41,6 +45,7 @@ function isLink(node: ts.Node, checker: ts.TypeChecker): boolean {
     const namespace = checker.getSymbolAtLocation(node.expression);
     if (namespace?.declarations?.some(adapterImport)) return true;
   }
+  if (direct) return false;
   return checker
     .getTypeAtLocation(node)
     .getCallSignatures()
@@ -97,7 +102,8 @@ export function analyzePrefetch(
     );
   const parsed = ts.parseJsonConfigFileContent(
     config ? config.config : {},
-    ts.sys,
+    // Only options are used here; route sources are discovered below.
+    { ...ts.sys, readDirectory: () => [] },
     configPath ? dirname(configPath) : root,
   );
   const roots = ts.sys.readDirectory(
@@ -116,17 +122,23 @@ export function analyzePrefetch(
     ["**/*"],
   );
   if (!roots.length) return { intent: true, viewport: true, data: true };
+  const options: ts.CompilerOptions = {
+    ...parsed.options,
+    allowJs: true,
+    noEmit: true,
+    strictNullChecks: true,
+    jsx: ts.JsxEmit.Preserve,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    module: ts.ModuleKind.ESNext,
+  };
+  const host = ts.createCompilerHost(options);
+  // We need types, not documentation tags or diagnostics. JavaScript JSDoc
+  // still supplies types; TypeScript comments need no additional syntax trees.
+  host.jsDocParsingMode = ts.JSDocParsingMode.ParseForTypeInfo;
   const program = ts.createProgram(
     roots.map((file) => resolve(file)),
-    {
-      ...parsed.options,
-      allowJs: true,
-      noEmit: true,
-      strictNullChecks: true,
-      jsx: ts.JsxEmit.Preserve,
-      moduleResolution: ts.ModuleResolutionKind.Bundler,
-      module: ts.ModuleKind.ESNext,
-    },
+    options,
+    host,
   );
   const checker = program.getTypeChecker();
   const result: PrefetchCapabilities = {
@@ -206,21 +218,28 @@ export function analyzePrefetch(
     result.data ||=
       data && (selected.has("intent") || selected.has("viewport"));
   }
-  for (const source of program.getSourceFiles()) {
-    // HMR must still track later dependencies after the capability set saturates.
+  const sources = program.getSourceFiles().filter((source) => {
+    // HMR must still track every dependency before either pass can finish early.
     if (!source.fileName.includes("/node_modules/")) watch?.(source.fileName);
-    if (
-      complete() ||
-      source.isDeclarationFile ||
-      /\/node_modules\/|\/(?:\.generated|dist|packages)\/(?:core|react|preact|client|server|vite)\//.test(
+    return (
+      !source.isDeclarationFile &&
+      !/\/node_modules\/|\/(?:\.generated|dist|packages)\/(?:core|react|preact|client|server|vite)\//.test(
         source.fileName,
       )
-    )
-      continue;
+    );
+  });
+  // Direct JSX imports often retain every capability without inferring unrelated
+  // expressions. If they do not, the full pass still handles aliases and escapes.
+  for (const direct of [true, false]) {
+    if (complete()) break;
     const visit = (node: ts.Node) => {
       if (complete()) return;
       if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
-        if (isLink(node.tagName, checker)) props(node, node.attributes);
+        if (isLink(node.tagName, checker, direct)) props(node, node.attributes);
+      }
+      if (direct) {
+        ts.forEachChild(node, visit);
+        return;
       }
       if (
         ts.isPropertyAccessExpression(node) &&
@@ -263,7 +282,10 @@ export function analyzePrefetch(
         all();
       ts.forEachChild(node, visit);
     };
-    visit(source);
+    for (const source of sources) {
+      if (complete()) break;
+      visit(source);
+    }
   }
   return result;
 }

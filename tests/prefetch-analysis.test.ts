@@ -149,7 +149,7 @@ for (const framework of ["react", "preact"] as const) {
     );
     await writeFile(
       join(root, "links.d.ts"),
-      `import {Link} from "${adapter}"; export {Link as RouteLink, NavLink as RouteNavLink} from "${adapter}"; export declare const Wrapped: typeof Link;`,
+      `import {Link} from "${adapter}"; export {Link as RouteLink, NavLink as RouteNavLink} from "${adapter}"; export declare const Wrapped: typeof Link; export declare function getLink(): typeof Link; export declare function Layout(props: {component: typeof Link}): unknown;`,
     );
     const cases: [string, boolean, boolean, boolean][] = [
       [
@@ -183,6 +183,12 @@ for (const framework of ["react", "preact"] as const) {
         true,
       ],
       [
+        'import {getLink, Layout} from "./links"; export const page = <Layout component={getLink()} />;',
+        true,
+        true,
+        true,
+      ],
+      [
         `import {Link} from "${adapter}"; const LocalLink = Link; export const page = <LocalLink prefetch="viewport" />;`,
         true,
         true,
@@ -193,6 +199,24 @@ for (const framework of ["react", "preact"] as const) {
         true,
         true,
         true,
+      ],
+      [
+        `import {Link} from "${adapter}"; import * as Routes from "./links"; export const page = <Link prefetch="viewport" />; export const other = h(Routes.RouteLink, {prefetch: "intent" as const, prefetchData: true as const});`,
+        true,
+        true,
+        true,
+      ],
+      [
+        `import {Link} from "${adapter}"; declare const props: {prefetch: "intent" | "viewport", prefetchData: true}; export const page = <Link {...props} prefetch="none" prefetchData={false} />; export const other = <Link prefetch="viewport" />;`,
+        false,
+        true,
+        false,
+      ],
+      [
+        `import {Link} from "${adapter}"; export function Shadow(Link: (props: {prefetch: string, prefetchData: boolean}) => null) { return <Link prefetch="viewport" prefetchData />; } export const page = <Link prefetch="none" />;`,
+        false,
+        false,
+        false,
       ],
       [
         "function Link() { return null; } const values = {Link}; export const page = <Link />; export const selected = values.Link; export const result = Object.keys(values);",
@@ -240,3 +264,132 @@ it("watches later source dependencies after every capability is retained", async
   );
   expect(watched.indexOf(modes)).toBeGreaterThan(watched.indexOf(entry));
 });
+
+it("inherits compiler paths and library types without using tsconfig include lists as route roots", async (context) => {
+  const directory = await mkdtemp(join(tmpdir(), "smolter-prefetch-config-"));
+  context.onTestFinished(() => rm(directory, { recursive: true, force: true }));
+  const root = join(directory, "app");
+  const config = join(directory, "config");
+  const shared = join(directory, "shared");
+  await mkdir(root);
+  await mkdir(config);
+  await mkdir(shared);
+  await writeFile(
+    join(config, "base.json"),
+    JSON.stringify({
+      compilerOptions: {
+        strict: true,
+        paths: { "@options": ["../shared/options.ts"] },
+      },
+    }),
+  );
+  await writeFile(
+    join(root, "tsconfig.json"),
+    '{"extends":"../config/base.json","include":["other-directory"]}',
+  );
+  const types = join(shared, "options.ts");
+  await writeFile(
+    types,
+    'export type Props = Omit<{prefetch: "viewport", prefetchData: true, to: string}, "to">;',
+  );
+  for (const framework of ["react", "preact"] as const) {
+    await writeFile(
+      join(root, "entry.tsx"),
+      `import {Link} from "@kasperrt/smolter/${framework}"; import type {Props} from "@options"; declare const props: Props; export const page = <Link {...props} />;`,
+    );
+    const watched: string[] = [];
+    expect(analyzePrefetch(root, (file) => watched.push(file))).toEqual({
+      intent: false,
+      viewport: true,
+      data: true,
+    });
+    expect(watched).toContain(types);
+  }
+});
+
+for (const framework of ["react", "preact"] as const) {
+  it(`retains ${framework} JavaScript JSDoc types and watched imports`, async (context) => {
+    const directory = await mkdtemp(join(tmpdir(), "smolter-prefetch-jsdoc-"));
+    context.onTestFinished(() =>
+      rm(directory, { recursive: true, force: true }),
+    );
+    const root = join(directory, "app");
+    const shared = join(directory, "shared");
+    const adapter = `@kasperrt/smolter/${framework}`;
+    await mkdir(join(root, framework), { recursive: true });
+    await mkdir(shared);
+    await writeFile(
+      join(root, "tsconfig.json"),
+      JSON.stringify({
+        compilerOptions: {
+          strict: true,
+          paths: { [adapter]: [`./${framework}/navigation.d.ts`] },
+        },
+      }),
+    );
+    await writeFile(
+      join(root, framework, "navigation.d.ts"),
+      'export declare function Link(props: {prefetch?: "none" | "intent" | "viewport", prefetchData?: boolean}): unknown;',
+    );
+    const types = join(shared, "props.js");
+    await writeFile(
+      types,
+      '/** @typedef {{prefetch: "viewport", prefetchData: false}} Props */\nexport {};',
+    );
+    const entry = join(root, "entry.jsx");
+    const cases: [string, boolean, boolean, boolean][] = [
+      [
+        `import {Link} from "${adapter}";\n/** @type {import("../shared/props.js").Props} */\nconst props = {prefetch: "viewport", prefetchData: false}; export const page = <Link {...props} />;`,
+        false,
+        true,
+        false,
+      ],
+      [
+        `import {Link} from "${adapter}";\n/** @import {Props} from "../shared/props.js" */ /** @returns {Props} */\nfunction props() { return {prefetch: "viewport", prefetchData: false}; } export const page = <Link {...props()} />;`,
+        false,
+        true,
+        false,
+      ],
+      [
+        `import {Link} from "${adapter}";\n/** @type {{prefetch: "intent" | "viewport", prefetchData?: boolean}} */\nconst props = {prefetch: "intent"}; export const page = <Link {...props} />;`,
+        true,
+        true,
+        true,
+      ],
+      [
+        `import {Link} from "${adapter}";\n/** @type {{prefetch: "intent" | "viewport", prefetchData?: boolean}} */\nconst props = {prefetch: "intent"}; export const page = <Link {...props} prefetch="none" />;`,
+        false,
+        false,
+        false,
+      ],
+    ];
+    for (const [source, intent, viewport, data] of cases) {
+      await writeFile(entry, source);
+      const watched: string[] = [];
+      expect(
+        analyzePrefetch(root, (file) => watched.push(file)),
+        source,
+      ).toEqual({
+        intent,
+        viewport,
+        data,
+      });
+      expect(watched).toContain(entry);
+      if (source.includes("../shared/props.js"))
+        expect(watched).toContain(types);
+    }
+    await writeFile(
+      join(root, "factory.js"),
+      `/** @returns {typeof import("${adapter}").Link} */\nexport function getLink() { return globalThis.routeLink; }`,
+    );
+    await writeFile(
+      entry,
+      'import * as Factory from "./factory.js"; export const page = <Layout component={Factory.getLink()} />;',
+    );
+    expect(analyzePrefetch(root)).toEqual({
+      intent: true,
+      viewport: true,
+      data: true,
+    });
+  });
+}

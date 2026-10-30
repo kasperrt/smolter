@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.10
+
+- Inspect directly imported JSX links before expensive prefetch type inference. When those links already require every capability, skip the remaining expression analysis; otherwise retain the complete alias, wrapper and dynamic-spread checks. Continue watching all source dependencies for HMR. This build-only optimization changes no public API or browser runtime.
+- Avoid parsing documentation-only TypeScript comments and enumerating discarded tsconfig include lists during prefetch analysis. Preserve JavaScript JSDoc types, inherited compiler options, the complete type graph and watched dependencies. Add regressions for JSDoc imports and dynamically supplied Link components.
+
 ## 0.4.9
 
 - Reduce prefetch capability analysis work during Vite builds. Reject irrelevant syntax before requesting TypeScript types and stop semantic traversal once every capability must be retained, while continuing to track source dependencies for HMR. Preserve aliased components, typed spreads and conservative handling of dynamic usage.
