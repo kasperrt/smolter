@@ -43,5 +43,9 @@
   "compatibility": {
     "node": ">=22",
     "browser": true
+  },
+  "minimumDependencyAge": {
+    "age": "P1D",
+    "exclude": ["npm:preact"]
   }
 }

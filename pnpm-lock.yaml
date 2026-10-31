@@ -225,8 +225,8 @@ importers:
   packages/ui:
     dependencies:
       preact:
-        specifier: '>=11.0.1'
-        version: 11.0.1(preact-render-to-string@6.8.2)
+        specifier: 'catalog:'
+        version: 11.1.1(preact-render-to-string@6.8.2)
       react:
         specifier: '>=18'
         version: 19.3.1
@@ -1152,14 +1152,6 @@ packages:
     peerDependencies:
       preact: '>=10 || >= 11.0.0-0'
 
-  preact@11.0.1:
-    resolution: {integrity: sha512-TNNwEq++jYNHy747LziCjPRVgEwnLSOIOAw/oYcjI3Tdnubx2EXtt76I0an8PATvUWtx/DX1kFIg1eFN+O/fkw==}
-    peerDependencies:
-      preact-render-to-string: '>=6.7.0'
-    peerDependenciesMeta:
-      preact-render-to-string:
-        optional: true
-
   preact@11.1.1:
     resolution: {integrity: sha512-vpFVfai437pbuLri7XVeslCPfrEZX6Z1S2gV+MOFrA/kji+NKUXvH7y01EnVjA1guLigfkVp77Sqipd4SIllCg==}
     peerDependencies:
@@ -1987,18 +1979,9 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.2
 
-  preact-render-to-string@6.8.2(preact@11.0.1):
-    dependencies:
-      preact: 11.0.1(preact-render-to-string@6.8.2)
-    optional: true
-
   preact-render-to-string@6.8.2(preact@11.1.1):
     dependencies:
       preact: 11.1.1(preact-render-to-string@6.8.2)
-
-  preact@11.0.1(preact-render-to-string@6.8.2):
-    optionalDependencies:
-      preact-render-to-string: 6.8.2(preact@11.0.1)
 
   preact@11.1.1(preact-render-to-string@6.8.2):
     optionalDependencies:
