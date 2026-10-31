@@ -1,6 +1,6 @@
 {
   "name": "@kasperrt/smolter",
-  "version": "0.4.10",
+  "version": "0.4.11",
   "exports": {
     "./react": "./.generated/react/index.ts",
     "./preact": "./.generated/preact/index.ts",
@@ -19,11 +19,11 @@
   },
   "imports": {
     "react": "npm:react@19.3.1",
-    "preact/compat": "npm:preact@11.0.1/compat",
-    "preact": "npm:preact@11.0.1",
-    "preact/hooks": "npm:preact@11.0.1/hooks",
-    "preact/jsx-runtime": "npm:preact@11.0.1/jsx-runtime",
-    "preact-render-to-string": "npm:preact-render-to-string@6.8.1",
+    "preact/compat": "npm:preact@11.1.1/compat",
+    "preact": "npm:preact@11.1.1",
+    "preact/hooks": "npm:preact@11.1.1/hooks",
+    "preact/jsx-runtime": "npm:preact@11.1.1/jsx-runtime",
+    "preact-render-to-string": "npm:preact-render-to-string@6.8.2",
     "react/jsx-runtime": "npm:react@19.3.1/jsx-runtime",
     "react-dom": "npm:react-dom@19.3.1",
     "react-dom/client": "npm:react-dom@19.3.1/client",

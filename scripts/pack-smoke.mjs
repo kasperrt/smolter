@@ -25,6 +25,7 @@ const cases = [
   { framework: "react", version: "18.0.0" },
   { framework: "react", version: "19.3.1" },
   { framework: "preact", version: "11.0.1" },
+  { framework: "preact", version: "11.1.1" },
 ];
 
 for (const { framework, version } of cases) {
@@ -47,7 +48,10 @@ for (const { framework, version } of cases) {
           `react-dom@${version}`,
           `@types/react@${version.startsWith("18.") ? "18.3.27" : "19.3.0"}`,
         ]
-      : [`preact@${version}`, "preact-render-to-string@6.8.1"];
+      : [
+          `preact@${version}`,
+          `preact-render-to-string@${version === "11.0.1" ? "6.8.1" : "6.8.2"}`,
+        ];
   execFileSync(
     "npm",
     [
