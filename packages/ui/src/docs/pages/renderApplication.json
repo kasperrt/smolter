@@ -26,7 +26,7 @@
     },
     {
       "title": "Behavior and limits",
-      "body": "React application SSR requires React and React DOM 19+. Preact requires preact-render-to-string >=6.8.1. In React, render a stable deferred promise with use(promise) inside Suspense and an error boundary; in Preact, use Await with its fallback prop. By default, hydration waits for document completion. earlyHydration: true hydrates shell controls while deferred values stream. Errors after headers are sent cannot change HTTP status. Vite development HTML transformation buffers; production Node/Express hosting streams. Each request router is disposed on completion or cancellation.",
+      "body": "React application SSR requires React and React DOM 19+. Preact requires preact-render-to-string >=6.8.1. The documentation site and examples use Preact 11.1.1 with renderer 6.8.2; npm applications install these peer dependencies independently. In React, render a stable deferred promise with use(promise) inside Suspense and an error boundary; in Preact, use Await with its fallback prop. By default, hydration waits for document completion. earlyHydration: true hydrates shell controls while deferred values stream. Errors after headers are sent cannot change HTTP status. Vite development HTML transformation buffers; production Node/Express hosting streams. Each request router is disposed on completion or cancellation.",
       "code": ""
     }
   ]

@@ -57,6 +57,19 @@ for (const file of [
   cpSync(new URL(file, source), join(directory, file), { recursive: true });
 }
 
+execFileSync(
+  "pnpm",
+  [
+    "dlx",
+    "deno@2.9.6",
+    "install",
+    "--node-modules-dir=auto",
+    "--config",
+    join(directory, "jsr.json"),
+  ],
+  { cwd: directory, stdio: "inherit" },
+);
+
 // Check the same source documentation that JSR indexes, before either registry publishes.
 const manifest = JSON.parse(readFileSync(join(directory, "jsr.json"), "utf8"));
 const documentation = JSON.parse(
@@ -68,11 +81,19 @@ const documentation = JSON.parse(
       "doc",
       "--node-modules-dir=auto",
       "--json",
+      "--config",
+      join(directory, "jsr.json"),
       "--import-map",
       join(directory, "jsr.json"),
       ...Object.values(manifest.exports).map((entry) => join(directory, entry)),
     ],
-    { cwd: directory, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+    {
+      cwd: directory,
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+      // Deno doc ignores the config age exception; installation above enforces it.
+      env: { ...process.env, NPM_CONFIG_MIN_RELEASE_AGE: "0" },
+    },
   ),
 );
 const locationKey = (location) =>
@@ -116,6 +137,8 @@ execFileSync(
     "dlx",
     "deno@2.9.6",
     "publish",
+    "--config",
+    join(directory, "jsr.json"),
     ...(!publish ? ["--dry-run"] : []),
     "--allow-dirty",
     "--node-modules-dir=auto",

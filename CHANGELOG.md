@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.11
+
+- Update the documentation site, examples and development validation to Preact 11.1.1 and preact-render-to-string 6.8.2. Update JSR dependency imports to the same versions.
+- Validate packed consumers against both the existing minimum Preact 11.0.1 / renderer 6.8.1 and the new versions. npm peer minimums and public APIs remain unchanged; npm consumers select their Preact versions independently.
+
 ## 0.4.10
 
 - Inspect directly imported JSX links before expensive prefetch type inference. When those links already require every capability, skip the remaining expression analysis; otherwise retain the complete alias, wrapper and dynamic-spread checks. Continue watching all source dependencies for HMR. This build-only optimization changes no public API or browser runtime.

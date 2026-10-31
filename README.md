@@ -456,7 +456,7 @@ The SSR examples use the same server route definitions for HTML and data request
 
 ## Package entries
 
-Use `@kasperrt/smolter/react` for React 18+ and `@kasperrt/smolter/preact` for Preact 11.0.1+.
+Use `@kasperrt/smolter/react` for React 18+ and `@kasperrt/smolter/preact` for Preact 11.0.1+. The documentation site and examples use Preact 11.1.1 with preact-render-to-string 6.8.2; npm consumers install these peers independently.
 Choose one renderer for your application. Both expose the same routing API:
 
 | Purpose | React | Preact |
