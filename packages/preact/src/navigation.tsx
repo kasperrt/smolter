@@ -49,7 +49,6 @@ export interface LinkProps extends Omit<ComponentProps<"a">, "href" | "role"> {
   prefetchData?: boolean;
   state?: unknown;
   preventScrollReset?: boolean;
-  viewTransition?: boolean;
   reloadDocument?: boolean;
 }
 
@@ -74,7 +73,6 @@ export function Link(options: LinkProps): ReactNode {
     to = hrefProp ?? "/",
     replace,
     preventScrollReset,
-    viewTransition,
     prefetch = "intent",
     prefetchData = false,
     state,

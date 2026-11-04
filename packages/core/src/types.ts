@@ -116,7 +116,6 @@ export interface RouterOptions {
 /** Options for replacing rather than appending a browser history entry. */
 export interface NavigateOptions {
   state?: unknown;
-  viewTransition?: boolean;
   replace?: boolean;
   /** Preserve scroll in integrations that manage scroll restoration. */
   preventScrollReset?: boolean;

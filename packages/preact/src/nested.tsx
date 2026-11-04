@@ -49,7 +49,7 @@ export function createNestedRouter(
   options: NestedRouterOptions = {},
 ): Router {
   const router = createBranchRouter(routes, options);
-  retainRoute(router, flushSync, options.viewTransition ?? false);
+  retainRoute(router, flushSync);
   if (options.browser) connectNavigation(router);
   return router;
 }

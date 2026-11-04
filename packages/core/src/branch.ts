@@ -8,8 +8,6 @@ export function enableNestedCapability() {
 /** Optional application base path in addition to normal router options. */
 export interface NestedRouterOptions extends RouterOptions {
   basename?: string;
-  /** Opt into document view transitions for nested navigation. */
-  viewTransition?: boolean;
 }
 export function resolveBranchURL(url: URL, basename?: string) {
   const base = basename?.replace(/\/$/, "");

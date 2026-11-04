@@ -1,3 +1,4 @@
+import { configureApplication } from "@smolter/core/environment";
 import * as preact from "@smolter/preact/nested";
 import * as react from "@smolter/react/nested";
 import {
@@ -28,7 +29,7 @@ const frameworks = [
 ];
 for (const { name, api, h, mount, state } of frameworks) {
   for (const enabled of [false, true]) {
-    it(`${name} makes nested document transitions opt-in (${enabled})`, async (context) => {
+    it(`${name} lets consumers own route commits (${enabled})`, async (context) => {
       const transition = vi.spyOn(document, "startViewTransition");
       function One() {
         return h("h1", null, "One");
@@ -36,17 +37,25 @@ for (const { name, api, h, mount, state } of frameworks) {
       function Two() {
         return h("h1", null, "Two");
       }
-      const router = api.createNestedRouter(
-        [
-          { id: "one", path: "/one", default: One },
-          { id: "two", path: "/two", default: Two },
-        ],
-        enabled ? { viewTransition: true } : {},
-      );
+      const router = api.createNestedRouter([
+        { id: "one", path: "/one", default: One },
+        { id: "two", path: "/two", default: Two },
+      ]);
+      if (enabled)
+        configureApplication({
+          commitRoute(commit, previous, next) {
+            if (!previous.loaded || previous.url === next.url) {
+              commit();
+              return;
+            }
+            document.startViewTransition(commit);
+          },
+        });
       const container = document.createElement("div");
       document.body.append(container);
       const root = mount(container);
       context.onTestFinished(() => {
+        configureApplication({});
         transition.mockRestore();
         root.unmount();
         router.dispose();
@@ -59,7 +68,8 @@ for (const { name, api, h, mount, state } of frameworks) {
       await expect.poll(() => container.textContent).toBe("Two");
       expect(transition).toHaveBeenCalledTimes(enabled ? 1 : 0);
       transition.mockClear();
-      await router.navigate("/one", { viewTransition: false });
+      configureApplication({});
+      await router.navigate("/one");
       await expect.poll(() => container.textContent).toBe("One");
       expect(transition).not.toHaveBeenCalled();
     });
@@ -177,7 +187,7 @@ for (const { name, api, h, mount, state } of frameworks) {
     await expect
       .poll(() => container.querySelector("button")!.textContent)
       .toBe("1");
-    const navigation = router.navigate("/two", { viewTransition: false });
+    const navigation = router.navigate("/two");
     expect(container.querySelector("input")).toBe(input);
     pending.resolve("Two");
     await navigation;
@@ -324,15 +334,15 @@ for (const { name, api, h, mount, state } of frameworks) {
     container.querySelector<HTMLFormElement>("#parent-form")!.requestSubmit();
     await expect.poll(() => parentWrites).toBe(1);
     await expect.poll(() => router.getSnapshot().state).toBe("idle");
-    await router.navigate("/bad", { viewTransition: false });
+    await router.navigate("/bad");
     await expect
       .poll(() => container.querySelector("h2")?.textContent)
       .toBe("loader failure");
-    await router.navigate("/render", { viewTransition: false });
+    await router.navigate("/render");
     await expect
       .poll(() => container.querySelector("h2")?.textContent)
       .toBe("render failure");
-    await router.navigate("/item/42", { viewTransition: false });
+    await router.navigate("/item/42");
     await expect
       .poll(() => container.querySelector("#context")?.textContent)
       .toBe("shared");

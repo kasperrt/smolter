@@ -35,7 +35,7 @@
     "entries": ["react", "preact", "react/nested", "preact/nested"],
     "kind": "Types",
     "summary": "Application base URLs, navigation handoff and document-transition settings shared by browser integrations.",
-    "signature": "interface ApplicationEnvironment {\n  resolveURL?: (url: URL) => URL;\n  isDocumentHandoff?: (from: URL, to: URL) => boolean;\n  leaveDocument?: (destination: URL) => void;\n  entryScript?: string;\n}",
+    "signature": "interface ApplicationEnvironment {\n  resolveURL?: (url: URL) => URL;\n  isDocumentHandoff?: (from: URL, to: URL) => boolean;\n  leaveDocument?: (destination: URL) => void;\n  entryScript?: string;\n  /** Wrap a route-view DOM commit. Call commit once; stale or disposed commits are ignored. */\n  commitRoute?: (\n    commit: () => void,\n    previous: Snapshot,\n    next: Snapshot,\n  ) => void;\n}",
     "fields": [
       {
         "name": "resolveURL",
@@ -56,6 +56,11 @@
         "name": "entryScript",
         "signature": "entryScript?: string;",
         "summary": ""
+      },
+      {
+        "name": "commitRoute",
+        "signature": "commitRoute?: (\n    commit: () => void,\n    previous: Snapshot,\n    next: Snapshot,\n  ) => void;",
+        "summary": "Wrap a route-view DOM commit. Call commit once; stale or disposed commits are ignored."
       }
     ],
     "source": "packages/core/src/environment.ts"
@@ -678,16 +683,11 @@
     "entries": ["react", "preact", "react/nested", "preact/nested"],
     "kind": "Types",
     "summary": "Options for replacing rather than appending a browser history entry.",
-    "signature": "interface NavigateOptions {\n  state?: unknown;\n  viewTransition?: boolean;\n  replace?: boolean;\n  /** Preserve scroll in integrations that manage scroll restoration. */\n  preventScrollReset?: boolean;\n}",
+    "signature": "interface NavigateOptions {\n  state?: unknown;\n  replace?: boolean;\n  /** Preserve scroll in integrations that manage scroll restoration. */\n  preventScrollReset?: boolean;\n}",
     "fields": [
       {
         "name": "state",
         "signature": "state?: unknown;",
-        "summary": ""
-      },
-      {
-        "name": "viewTransition",
-        "signature": "viewTransition?: boolean;",
         "summary": ""
       },
       {
@@ -1159,7 +1159,7 @@
     "entries": ["react", "preact", "react/nested", "preact/nested"],
     "kind": "Types",
     "summary": "Anchor properties and router navigation options, including document reload and prefetch controls.",
-    "signature": "interface LinkProps\n  extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, \"href\"> {\n  to?: string;\n  href?: string;\n  replace?: boolean;\n  prefetch?: PrefetchMode;\n  /** Also prefetch loader data. Opt in only for safe, speculative GET reads. */\n  prefetchData?: boolean;\n  state?: unknown;\n  preventScrollReset?: boolean;\n  viewTransition?: boolean;\n  reloadDocument?: boolean;\n}",
+    "signature": "interface LinkProps\n  extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, \"href\"> {\n  to?: string;\n  href?: string;\n  replace?: boolean;\n  prefetch?: PrefetchMode;\n  /** Also prefetch loader data. Opt in only for safe, speculative GET reads. */\n  prefetchData?: boolean;\n  state?: unknown;\n  preventScrollReset?: boolean;\n  reloadDocument?: boolean;\n}",
     "fields": [
       {
         "name": "to",
@@ -1194,11 +1194,6 @@
       {
         "name": "preventScrollReset",
         "signature": "preventScrollReset?: boolean;",
-        "summary": ""
-      },
-      {
-        "name": "viewTransition",
-        "signature": "viewTransition?: boolean;",
         "summary": ""
       },
       {

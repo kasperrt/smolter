@@ -76,7 +76,7 @@
     },
     {
       "title": "Navigation options",
-      "body": "replace, state, preventScrollReset and viewTransition apply to GET navigation. Mutation submission currently forwards the action and method; those navigation options are not forwarded to the mutation. An action redirect chooses its destination through the router. A fetcher form remains on the current page unless its action redirects.",
+      "body": "replace, state and preventScrollReset apply to GET navigation. Mutation submission currently forwards the action and method; those navigation options are not forwarded to the mutation. An action redirect chooses its destination through the router. A fetcher form remains on the current page unless its action redirects.",
       "code": ""
     }
   ]

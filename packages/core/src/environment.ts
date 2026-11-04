@@ -1,9 +1,17 @@
+import type { Snapshot } from "./types.ts";
+
 /** Application base URLs, navigation handoff and document-transition settings shared by browser integrations. */
 export interface ApplicationEnvironment {
   resolveURL?: (url: URL) => URL;
   isDocumentHandoff?: (from: URL, to: URL) => boolean;
   leaveDocument?: (destination: URL) => void;
   entryScript?: string;
+  /** Wrap a route-view DOM commit. Call commit once; stale or disposed commits are ignored. */
+  commitRoute?: (
+    commit: () => void,
+    previous: Snapshot,
+    next: Snapshot,
+  ) => void;
 }
 
 // An absent configuration lets bundlers remove unused deployment callbacks.

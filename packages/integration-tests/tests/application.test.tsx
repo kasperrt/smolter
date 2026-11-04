@@ -4,6 +4,7 @@ import { afterEach, test, vi } from "vitest";
 
 afterEach(() => vi.restoreAllMocks());
 
+import { configureApplication } from "@smolter/core/environment";
 import { createDataRouter, Outlet, useActionData } from "@smolter/preact";
 import { flushSync, Suspense } from "preact/compat";
 import { renderToStringAsync } from "preact-render-to-string";
@@ -357,92 +358,44 @@ test("completed navigation publishes the destination and data together", async (
   router.dispose();
 });
 
-test("view transitions snapshot the old page and commit the ready destination", async (context) => {
-  const originalDocument = Object.getOwnPropertyDescriptor(
-    globalThis,
-    "document",
-  );
-  const originalMatchMedia = Object.getOwnPropertyDescriptor(
-    globalThis,
-    "matchMedia",
-  );
-  let update = () => {};
-  let transitions = 0;
-  Object.defineProperty(globalThis, "document", {
-    configurable: true,
-    value: {
-      startViewTransition(callback: () => void) {
-        transitions++;
-        update = callback;
-        return { ready: Promise.resolve() };
-      },
-    },
-  });
-  Object.defineProperty(globalThis, "matchMedia", {
-    configurable: true,
-    value: () => ({ matches: false }),
-  });
-  context.onTestFinished(() => {
-    for (const [name, descriptor] of [
-      ["document", originalDocument],
-      ["matchMedia", originalMatchMedia],
-    ] as const) {
-      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
-      else Reflect.deleteProperty(globalThis, name);
-    }
-  });
-  const SharedView = () => null;
-  let resolutions = 0;
-  const watchRoute = {
-    path: "/watch",
-    loader: () => "watch",
-    default: SharedView,
-    resolveComponent() {
-      resolutions++;
-      return SharedView;
-    },
-  };
+test("consumer commit callbacks own presentation and cannot apply obsolete or repeated updates", async (context) => {
   const router = createDataRouter([
     { path: "/", loader: () => "home" },
-    watchRoute,
-    { path: "/music", loader: () => "music", default: SharedView },
+    { path: "/watch", loader: () => "watch" },
+    { path: "/music", loader: () => "music" },
   ]);
   await router.navigate("/");
   retainRoute(router, flushSync);
-  await router.navigate("/watch", {
-    viewTransition: true,
-  } as import("../../preact/src/navigation.tsx").NavigateOptions);
-  assert.equal(transitions, 1);
-  assert.equal(router.getSnapshot().data, "home");
-  update();
-  assert.equal(router.getSnapshot().data, "watch");
-  await router.navigate("/watch#details", {
-    viewTransition: true,
-  } as import("../../preact/src/navigation.tsx").NavigateOptions);
-  assert.equal(transitions, 1);
-  assert.equal(resolutions, 0);
-  await router.navigate("/");
-  assert.equal(transitions, 2);
-  update();
-  assert.equal(router.getSnapshot().data, "home");
-  const beforeDisabled = resolutions;
-  await router.navigate("/watch", {
-    viewTransition: false,
-  } as import("../../preact/src/navigation.tsx").NavigateOptions);
-  assert.equal(transitions, 2);
-  assert.equal(router.getSnapshot().data, "watch");
-  assert.equal(resolutions, beforeDisabled);
-  await router.navigate("/music");
-  assert.equal(transitions, 2);
-  assert.equal(router.getSnapshot().data, "music");
-  Object.defineProperty(globalThis, "matchMedia", {
-    configurable: true,
-    value: () => ({ matches: true }),
+  const commits: (() => void)[] = [];
+  const destinations: string[] = [];
+  configureApplication({
+    commitRoute(commit, previous, next) {
+      assert.equal(previous.data, "home");
+      destinations.push(new URL(next.url).pathname);
+      commits.push(commit);
+    },
   });
-  await router.navigate("/");
-  assert.equal(transitions, 2);
+  context.onTestFinished(() => {
+    configureApplication({});
+    router.dispose();
+  });
+  await router.navigate("/watch");
   assert.equal(router.getSnapshot().data, "home");
+  await router.navigate("/music");
+  commits[0]();
+  assert.equal(router.getSnapshot().data, "home");
+  commits[1]();
+  assert.equal(router.getSnapshot().data, "music");
+  let notifications = 0;
+  router.subscribe(() => notifications++);
+  commits[1]();
+  assert.equal(notifications, 0);
+  assert.deepEqual(destinations, ["/watch", "/music"]);
+  configureApplication({ commitRoute: (commit) => commits.push(commit) });
+  await router.navigate("/watch");
   router.dispose();
+  commits[2]();
+  assert.equal(router.getSnapshot().data, "music");
 });
 
 test("hash navigation keeps loader data without another request", async () => {

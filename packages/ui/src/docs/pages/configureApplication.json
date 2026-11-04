@@ -1,7 +1,7 @@
 {
   "slug": "configureApplication",
   "title": "configureApplication",
-  "summary": "Configure deployment-specific URL and document navigation behavior before mounting a Preact application.",
+  "summary": "Configure URL handling and consumer-owned route presentation for React or Preact.",
   "kind": "API",
   "sections": [
     {
@@ -23,6 +23,11 @@
       "title": "Navigation and scripts",
       "body": "Without leaveDocument, a selected handoff uses location.assign. A custom leaveDocument callback must carry out navigation itself. Modified clicks, download links, and non-self targets retain browser behavior. entryScript is trusted executable source rendered by Scripts; it is not escaped as text or loaded as a URL.",
       "code": ""
+    },
+    {
+      "title": "Consumer-owned route commits",
+      "body": "commitRoute(commit, previous, next) receives the previous and next route snapshots and a synchronous DOM commit function. Without it, Smolter commits immediately. It applies to mountApplication and nested routers in both adapters, not a bare routing-only store. Initial loading, errors, and same-URL revalidation can also commit: the consumer chooses which updates to animate. Smolter does not call startViewTransition, inspect reduced-motion settings, compare components, or choose CSS/duration. Call commit once; callbacks superseded by newer work or disposal do nothing. The callback return value is not awaited. If you defer the call, you own completing it and handling your animation promises/errors. Recovery still owns withholding obsolete errors. Configuration is application-wide, not per navigation.",
+      "code": "import { configureApplication } from \"@kasperrt/smolter/preact/client\";\nimport { presentRoute } from \"./presentation\";\n\n// presentRoute is your own presentation function, not a Smolter helper.\nconfigureApplication({ commitRoute: presentRoute });\n\n// React uses @kasperrt/smolter/react/client."
     }
   ]
 }
