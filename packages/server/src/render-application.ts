@@ -1,7 +1,7 @@
 import type { DataArgs, Route, Router } from "@smolter/core";
 import { createDataRouter, matchRoutes, safeWrapAsync } from "@smolter/core";
 import { prepareRoutes } from "@smolter/core/prepare-routes";
-import { normalizeResult } from "@smolter/core/responses";
+import { type DataResponse, normalizeResult } from "@smolter/core/responses";
 import { loadRouter } from "@smolter/server";
 import { deferredHydration } from "./deferred-hydration.ts";
 import { dispatchRoute } from "./dispatch.ts";
@@ -62,6 +62,13 @@ export async function renderDocument(
       return actionResponse;
     actionData = await normalizeResult(await actionResponse.json());
   }
+  let routeResponse: ResponseInit | undefined;
+  let rootResponse: ResponseInit | undefined;
+  function responseMetadata(value: unknown): ResponseInit | undefined {
+    if (value instanceof Response) return value;
+    if (value && typeof value === "object" && "__routeData" in value)
+      return (value as DataResponse<unknown>).init;
+  }
   const rootResult = safeWrapAsync(async () => {
     const { data, error } = await safeWrapAsync(async () => ({
       value: await rootModule.loader?.({
@@ -70,6 +77,7 @@ export async function renderDocument(
         signal: request.signal,
       }),
     }));
+    rootResponse = responseMetadata(error ? error.cause : data!.value);
     if (!error) return normalizeResult(data!.value, false);
     const cause = error.cause;
     return cause instanceof Response
@@ -83,6 +91,18 @@ export async function renderDocument(
     routes.map((route) => ({
       ...route,
       ErrorBoundary: route.ErrorBoundary ?? rootModule.ErrorBoundary,
+      ...(route.loader && {
+        loader: async (args: DataArgs) => {
+          const result = await safeWrapAsync(async () => ({
+            value: await route.loader!(args),
+          }));
+          const value = result.error
+            ? (result.error.cause ?? result.error)
+            : result.data!.value;
+          routeResponse = responseMetadata(value);
+          return value;
+        },
+      }),
     })),
     true,
   ).map((route) => {
@@ -158,7 +178,13 @@ export async function renderDocument(
   }
   // The renderer reports the same rejection through its stream reader.
   void safeWrapAsync(() => stream!.allReady);
-  const headers = new Headers(actionResponse?.headers);
+  const headers = new Headers(rootResponse?.headers);
+  for (const metadata of [routeResponse, actionResponse]) {
+    new Headers(metadata?.headers).forEach((value, key) => {
+      if (key === "set-cookie") headers.append(key, value);
+      else headers.set(key, value);
+    });
+  }
   headers.delete("Content-Length");
   headers.delete("Content-Encoding");
   headers.set("Content-Type", "text/html; charset=utf-8");
@@ -178,7 +204,10 @@ export async function renderDocument(
     {
       status: snapshot.error
         ? Number("status" in snapshot.error ? snapshot.error.status : 500)
-        : (actionResponse?.status ?? 200),
+        : (actionResponse?.status ??
+          routeResponse?.status ??
+          rootResponse?.status ??
+          200),
       headers,
     },
   );

@@ -1,6 +1,6 @@
 {
   "name": "@kasperrt/smolter",
-  "version": "0.4.12-beta.1",
+  "version": "0.4.12-beta.2",
   "exports": {
     "./react": "./.generated/react/index.ts",
     "./preact": "./.generated/preact/index.ts",
@@ -15,7 +15,9 @@
     "./preact/lazy-route": "./.generated/preact/lazy-route.ts",
     "./preact/document": "./.generated/preact/document.tsx",
     "./react/document": "./.generated/react/document.tsx",
-    "./react/lazy-route": "./.generated/react/lazy-route.ts"
+    "./react/lazy-route": "./.generated/react/lazy-route.ts",
+    "./react/nested": "./.generated/react/nested.tsx",
+    "./preact/nested": "./.generated/preact/nested.tsx"
   },
   "imports": {
     "react": "npm:react@19.3.1",

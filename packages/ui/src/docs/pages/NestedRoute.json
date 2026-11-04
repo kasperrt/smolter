@@ -1,0 +1,14 @@
+{
+  "slug": "NestedRoute",
+  "title": "NestedRoute",
+  "kind": "Types",
+  "summary": "A route module with explicit layout ownership.",
+  "entries": ["react/nested", "preact/nested"],
+  "sections": [
+    {
+      "title": "Shape",
+      "body": "Use absolute path patterns, a unique id, and parentId for layout nesting. index disambiguates index actions with ?index; pathless identifies grouping layouts that do not own an explicit action URL. Browser route modules can be lazy.",
+      "code": "import type { NestedRoute } from \"@kasperrt/smolter/preact/nested\";\nconst route: NestedRoute = { id: \"profile\", parentId: \"account\", path: \"/account/profile\", lazy: () => import(\"./profile\") };"
+    }
+  ]
+}

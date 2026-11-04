@@ -10,7 +10,8 @@
     "./route-types": "./src/route-types.ts",
     "./client": "./src/client.tsx",
     "./document": "./src/document.tsx",
-    "./lazy-route": "./src/lazy-route.ts"
+    "./lazy-route": "./src/lazy-route.ts",
+    "./nested": "./src/nested.tsx"
   },
   "dependencies": {
     "@smolter/core": "workspace:*",

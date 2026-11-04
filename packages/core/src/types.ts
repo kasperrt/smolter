@@ -8,6 +8,8 @@ export type Params = Record<string, string>;
 
 /** Request, path parameters, and cancellation signal passed to a data handler. */
 export interface DataArgs {
+  /** Revalidation context supplied to composed layout loaders. */
+  revalidation?: RevalidationArgs;
   /** Why this handler ran; independent of when browser history is committed. */
   reason?:
     | "initial"
@@ -54,6 +56,8 @@ export interface RevalidationContext {
 
 /** Current URL, mutation result, and reason passed to shouldRevalidate. */
 export interface RevalidationArgs extends RevalidationContext {
+  /** Explicitly selected layout or route identities; omitted for a full refresh. */
+  targets?: readonly string[];
   currentUrl: URL;
   nextUrl: URL;
   defaultShouldRevalidate: boolean;
@@ -77,7 +81,10 @@ export interface RouteModule {
 }
 
 /** A route module associated with an explicit URL pattern. */
-export type Route<M extends RouteModule = RouteModule> = M & { path: string };
+export type Route<M extends RouteModule = RouteModule> = M & {
+  path: string;
+  revalidationIds?: readonly string[];
+};
 
 /** The first matching route and its decoded path parameters. */
 export interface Match {
@@ -93,6 +100,7 @@ export interface Snapshot {
   /** Whether this route has completed a loader, including an undefined result. */
   loaded?: boolean;
   actionData?: unknown;
+  formData?: FormData;
   error?: Error;
   state: "idle" | "loading" | "submitting";
 }
@@ -127,6 +135,7 @@ export interface Result<T = unknown> {
 
 /** Independent fetcher data, error, and pending state. */
 export interface FetcherSnapshot extends Result {
+  formData?: FormData;
   state: Snapshot["state"];
 }
 

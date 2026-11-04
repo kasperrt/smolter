@@ -25,6 +25,11 @@
       "code": "const revalidate = useRevalidator();\n\nawait revalidate({ route: \"/items/:id\" });\nawait revalidate({ route: [\"root\", \"/items/:id\"] });"
     },
     {
+      "title": "Nested layout isolation",
+      "body": "With the React or Preact nested adapter, target an active layout by its route ID to refresh only that layout. Ancestors, descendants and unrelated fetchers keep their existing data. An array selects several owners independently. Each selected layout still evaluates shouldRevalidate; returning false preserves its previous value, including after child actions. Initial loading is not revalidation and cannot be skipped this way. Prefer IDs when pathless or index routes share a URL pattern. Unknown or inactive targets do nothing.",
+      "code": "const revalidate = useRevalidator();\n\nawait revalidate({ route: \"account-layout\" });\nawait revalidate({ route: [\"root\", \"account-layout\"] });\n\n// In the layout module:\nexport function shouldRevalidate({ reason, actionResult }) {\n  if (reason === \"action\") return actionResult?.accountChanged === true;\n  return true;\n}"
+    },
+    {
       "title": "Root and layout data",
       "body": "The Preact root integration registers its root under root by default, or RootModule.id when provided. Set loaderPath to a registered data route when the root needs refreshing. Custom React or Preact layouts can register their own callback on the router and unregister it during cleanup. No endpoint name is assumed.",
       "code": "// Preact application entry\nmountApplication(routes, { ...root, loaderPath: \"/session\" });\n\n// Refresh only root data from a component\nconst revalidate = useRevalidator();\nawait revalidate({ route: \"root\" });\n\n// Custom layout integration\nconst unregister = router.registerRevalidator(\"account-layout\", refreshAccount);"

@@ -9,7 +9,8 @@
     "./router": "./src/router.tsx",
     "./route-types": "./src/route-types.ts",
     "./client": "./src/client.tsx",
-    "./document": "./src/document.tsx"
+    "./document": "./src/document.tsx",
+    "./nested": "./src/nested.tsx"
   },
   "dependencies": {
     "@smolter/core": "workspace:*",
