@@ -1,7 +1,12 @@
-import { readFile } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 import { flatRoutes } from "@smolter/files";
-import { type Plugin, transformWithOxc } from "vite";
+import {
+  isFileServingAllowed,
+  type Plugin,
+  transformWithOxc,
+  type ViteDevServer,
+} from "vite";
 import { prefetchSelection } from "./prefetch-plugin.ts";
 import { configureTransport } from "./transport.ts";
 
@@ -24,6 +29,8 @@ export function routerPlugin({
   const prefetch = prefetchSelection();
   let root: string;
   let projectRoot: string;
+  let devServer: ViteDevServer | undefined;
+  const clientFiles = new Set<string>();
   const publicId = "virtual:smolter/routes";
   const virtualId = `\0${publicId}`;
   const suffix = "?smolter-client";
@@ -52,8 +59,24 @@ export function routerPlugin({
     async load(id, options) {
       if (id.endsWith(suffix)) {
         const file = id.slice(0, -suffix.length);
+        if (!clientFiles.has(file)) {
+          const routes = await flatRoutes(root, true);
+          if (routes instanceof Error) return this.error(routes.message);
+          for (const route of routes) clientFiles.add(route.file);
+        }
+        if (!clientFiles.has(file))
+          return this.error("Forbidden client route module");
+        const canonical = await realpath(file);
+        const directory = await realpath(root);
+        const path = relative(directory, canonical);
+        if (
+          path.startsWith("..") ||
+          resolve(directory, path) !== canonical ||
+          (devServer && !isFileServingAllowed(canonical, devServer))
+        )
+          return this.error("Forbidden client route module");
         const transformed = await transformWithOxc(
-          await readFile(file, "utf8"),
+          await readFile(canonical, "utf8"),
           file,
         );
         const ast = this.parse(transformed.code);
@@ -130,6 +153,8 @@ export function routerPlugin({
         return this.error(
           "The .__smolter suffix is reserved for data transport.",
         );
+      clientFiles.clear();
+      for (const route of routes) clientFiles.add(route.file);
       const imports: string[] = [];
       const definitions: string[] = [];
       for (const [index, route] of routes.entries()) {
@@ -183,6 +208,7 @@ export function routerPlugin({
       return `${imports.join("\n")}\nexport default [${definitions.join(",\n")}];\n`;
     },
     configureServer(server) {
+      devServer = server;
       prefetch.watch(server);
       server.watcher.add(root);
       const refresh = (file: string) => {
@@ -190,6 +216,7 @@ export function routerPlugin({
         const path = relative(root, file).replaceAll("\\", "/");
         if (!/^(?:[^/]+\.[jt]sx?|[^/]+\/route\.[jt]sx?)$/.test(path)) return;
         if (path.endsWith(".d.ts")) return;
+        clientFiles.clear();
         for (const environment of Object.values(server.environments)) {
           const module = environment.moduleGraph.getModuleById(virtualId);
           if (module) environment.moduleGraph.invalidateModule(module);

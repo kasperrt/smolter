@@ -185,3 +185,51 @@ test("ends empty document responses without buffering a body", async () => {
   expect(response.status).toBe(204);
   expect(await response.text()).toBe("");
 });
+
+test("blocks cross-origin and unsupported HTTP mutations before custom builds", async () => {
+  const action = vi.fn(() => new Response("saved"));
+  const handler = createRequestHandler({
+    entry: "/entry.js",
+    dataEndpoint: "/_smolter",
+    build: { default: action, handleDataRequest: action },
+  });
+  const server = createServer((request, response) => {
+    void handler(request, response, () => {
+      response.statusCode = 500;
+      response.end();
+    });
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  onTestFinished(() => {
+    server.close();
+  });
+  const address = server.address() as AddressInfo;
+  const base = `http://127.0.0.1:${address.port}`;
+  for (const path of [
+    "/account",
+    "/account.__smolter",
+    "/_smolter?url=%2Faccount",
+  ]) {
+    const denied = await fetch(`${base}${path}`, {
+      method: "POST",
+      headers: {
+        Origin: "https://attacker.example",
+        Cookie: "session=synthetic",
+      },
+      body: "value=changed",
+    });
+    expect(denied.status).toBe(403);
+    expect((await fetch(`${base}${path}`, { method: "OPTIONS" })).status).toBe(
+      405,
+    );
+  }
+  expect(action).not.toHaveBeenCalled();
+  const allowed = await fetch(`${base}/account`, {
+    method: "POST",
+    headers: { Origin: base },
+    body: "value=changed",
+  });
+  expect(allowed.status).toBe(200);
+  expect(action).toHaveBeenCalledTimes(1);
+});

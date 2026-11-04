@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.2
+
+### Security
+
+- Restrict Vite client-route transforms to discovered route files and enforce canonical route-directory and Vite filesystem permissions. Crafted module queries can no longer read protected environment files or files outside the route directory through this transform. This fixes a development-server disclosure; production static hosting is not affected by this path.
+- Reject browser mutations whose Origin differs from the request URL origin, opaque/malformed origins, and requests marked cross-site. Apply the same policy to HTTP hosting, data dispatch and SSR document actions before application handlers run. Headerless non-browser clients remain supported; this does not replace authentication, authorization or application CSRF tokens. Reverse proxies must supply the correct public request URL through a trusted hosting configuration; forwarded headers are not trusted automatically.
+- Return 405 with Allow for unsupported action methods, including OPTIONS, instead of executing mutations. Normalize GET/HEAD as read operations across both data dispatchers; HEAD cannot reach an action.
+- Clarify that request-body size/time limits must be enforced by the hosting layer before Smolter reads the body; this release does not introduce a built-in upload limit.
+
 ## 0.5.1
 
 Stable release of the nested-layout and route-owned presentation work tested in 0.4.12-beta.1–beta.4, plus build-time removal of unused transition dispatch.

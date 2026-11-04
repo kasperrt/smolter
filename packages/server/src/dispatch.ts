@@ -5,12 +5,15 @@ import {
   resolveData,
 } from "@smolter/core/responses";
 import { privateResponse } from "./private-response.ts";
+import { requestPolicy } from "./request-policy.ts";
 
 async function dispatch(
   request: Request,
   routes: readonly (Route & { routePath?: string })[],
   document = false,
 ): Promise<Response> {
+  const denied = requestPolicy(request);
+  if (denied) return denied;
   const match = matchRoutes(
     routes.map((route) => ({ ...route, path: route.routePath ?? route.path })),
     new URL(request.url).pathname,

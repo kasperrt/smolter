@@ -5,6 +5,7 @@ import { type DataResponse, normalizeResult } from "@smolter/core/responses";
 import { loadRouter } from "@smolter/server";
 import { deferredHydration } from "./deferred-hydration.ts";
 import { dispatchRoute } from "./dispatch.ts";
+import { requestPolicy } from "./request-policy.ts";
 
 interface ServerRoot {
   loader?: (args: DataArgs) => unknown;
@@ -44,6 +45,8 @@ export async function renderDocument(
     | (ReadableStream<Uint8Array> & { allReady: Promise<unknown> })
     | Promise<ReadableStream<Uint8Array> & { allReady: Promise<unknown> }>,
 ): Promise<Response> {
+  const denied = requestPolicy(request);
+  if (denied) return denied;
   routes = routes.map((route) => ({
     ...route,
     path: route.routePath ?? route.path,

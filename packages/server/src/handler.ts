@@ -3,6 +3,7 @@ import { safeWrapAsync } from "@smolter/core";
 import { dataTarget } from "@smolter/core/transport";
 import { send, webRequest } from "./http.ts";
 import { privateResponse } from "./private-response.ts";
+import { requestPolicy } from "./request-policy.ts";
 
 /** Server module produced by an application's SSR entrypoint. */
 export interface ServerBuild {
@@ -56,6 +57,11 @@ export function createRequestHandler({
         return;
       }
       const request = await webRequest(incoming, outgoing, target ?? undefined);
+      const denied = requestPolicy(request);
+      if (denied) {
+        await send(denied, outgoing);
+        return;
+      }
       const response = dataRequest
         ? await build.handleDataRequest(request)
         : await build.default(request, entry);
