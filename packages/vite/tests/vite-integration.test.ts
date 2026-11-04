@@ -96,3 +96,26 @@ for (const source of [
     ).rejects.toThrow(/exports|Re-export|separate export/);
   });
 }
+
+for (const maxBodySize of [undefined, 16]) {
+  it(`limits development transport bodies (${maxBodySize ?? "default"})`, async (context) => {
+    const { server } = await viteFixture(
+      context,
+      'export { action } from "../../handlers.ts";',
+      { maxBodySize },
+    );
+    const endpoint = `${server.resolvedUrls!.local[0]}.__smolter`;
+    const oversized = await fetch(endpoint, {
+      method: "POST",
+      body: "x".repeat((maxBodySize ?? 1_048_576) + 1),
+    });
+    expect(oversized.status).toBe(413);
+    expect(await oversized.text()).toBe("Request body too large");
+    const accepted = await fetch(endpoint, {
+      method: "POST",
+      body: "x".repeat(16),
+    });
+    expect(accepted.status).toBe(200);
+    expect(await accepted.json()).toBe(2);
+  });
+}

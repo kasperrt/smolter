@@ -10,6 +10,8 @@ export interface ApplicationOptions {
   directory?: string;
   framework?: "react" | "preact";
   dataEndpoint?: string;
+  /** Maximum development request-body bytes. Defaults to 1 MiB. */
+  maxBodySize?: number;
   ssr?: boolean;
   splitRoutes?: boolean;
   resourceRequest?: (url: string) => boolean;
@@ -41,6 +43,7 @@ export function applicationPlugins({
   directory = "src/routes",
   framework = "preact",
   dataEndpoint,
+  maxBodySize,
   ssr = true,
   splitRoutes = true,
   resourceRequest,
@@ -86,7 +89,12 @@ export function applicationPlugins({
               new Response(target.message, { status: 400 }),
               outgoing,
             );
-          const request = await webRequest(incoming, outgoing, target);
+          const request = await webRequest(
+            incoming,
+            outgoing,
+            target,
+            maxBodySize,
+          );
           const [{ default: routes }, { dispatchRoute }] = await Promise.all([
             server.ssrLoadModule("virtual:smolter/routes"),
             server.ssrLoadModule(`@kasperrt/smolter/${framework}/server`),
@@ -94,7 +102,8 @@ export function applicationPlugins({
           await send(await dispatchRoute(request, routes), outgoing);
         };
         const { error } = await safeWrapAsync(run);
-        if (error) next(error);
+        if (error?.cause instanceof Response) await send(error.cause, outgoing);
+        else if (error) next(error);
       });
       if (!ssr) return;
       return () => {
@@ -106,7 +115,12 @@ export function applicationPlugins({
             return next();
           outgoing.setHeader("Cache-Control", "private, no-store");
           const run = async () => {
-            const request = await webRequest(incoming, outgoing);
+            const request = await webRequest(
+              incoming,
+              outgoing,
+              undefined,
+              maxBodySize,
+            );
             const entry = await server.ssrLoadModule("/src/entry.server.tsx");
             const response: Response = await entry.default(
               request,
@@ -127,7 +141,9 @@ export function applicationPlugins({
             );
           };
           const { error } = await safeWrapAsync(run);
-          if (error) next(error);
+          if (error?.cause instanceof Response)
+            await send(error.cause, outgoing);
+          else if (error) next(error);
         });
       };
     },
@@ -136,6 +152,6 @@ export function applicationPlugins({
     application,
     browserBoundary(),
     ...(splitRoutes ? [lazyFiles(directory, dataEndpoint, framework)] : []),
-    routerPlugin({ directory, framework, dataEndpoint }),
+    routerPlugin({ directory, framework, dataEndpoint, maxBodySize }),
   ];
 }

@@ -13,6 +13,8 @@ import { configureTransport } from "./transport.ts";
 export interface FileRouterOptions {
   directory?: string;
   dataEndpoint?: string;
+  /** Maximum development request-body bytes. Defaults to 1 MiB. */
+  maxBodySize?: number;
   clientRoutes?: string;
   serverRoutes?: string;
   framework?: "react" | "preact";
@@ -22,6 +24,7 @@ export interface FileRouterOptions {
 export function routerPlugin({
   directory = "src/routes",
   dataEndpoint,
+  maxBodySize,
   clientRoutes,
   serverRoutes,
   framework = "react",
@@ -231,7 +234,13 @@ export function routerPlugin({
         server.watcher.off("change", refresh);
         server.watcher.off("unlink", refresh);
       });
-      configureTransport(server, publicId, framework, dataEndpoint);
+      configureTransport(
+        server,
+        publicId,
+        framework,
+        dataEndpoint,
+        maxBodySize,
+      );
     },
   };
 }

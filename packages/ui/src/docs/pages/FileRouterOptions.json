@@ -13,6 +13,11 @@
       "title": "Application data endpoint",
       "body": "Data requests use the route pathname plus .__smolter by default, independently of the asset/CDN base. Explicit dataEndpoint retains the legacy ?url= transport and must agree across browser, Vite and production adapters. Reserve the suffix in host routing and apply authentication to document and data requests.",
       "code": ""
+    },
+    {
+      "title": "Request body limit (0.5.2)",
+      "body": "Node createRequestHandler and Vite applicationPlugins/routerPlugin default to maxBodySize: 1048576 (1 MiB). Oversized declared lengths are rejected before reading; chunked bodies are counted as received and return 413 before application handlers run. The limit includes multipart overhead and counts received bytes, not decompressed content. Configure the same finite, nonnegative integer in production and development for intentionally larger uploads; zero permits only empty bodies. Keep hosting timeouts, rate/concurrency limits and any decompression limits. Low-level webRequest accepts this limit as its fourth argument and throws a Response for policy or size rejection; the provided middleware sends it automatically.",
+      "code": "createRequestHandler({ build, entry, maxBodySize: 8 * 1024 * 1024 });\n// Match the production limit in Vite:\napplicationPlugins({ maxBodySize: 8 * 1024 * 1024 });"
     }
   ]
 }

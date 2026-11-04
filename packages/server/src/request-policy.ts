@@ -1,5 +1,7 @@
 /** Reject unsupported methods and browser mutations from another origin. */
-export function requestPolicy(request: Request): Response | undefined {
+export function requestPolicy(
+  request: Pick<Request, "method" | "url" | "headers">,
+): Response | undefined {
   if (request.method === "GET" || request.method === "HEAD") return;
   if (!["POST", "PUT", "PATCH", "DELETE"].includes(request.method))
     return new Response("Method not allowed", {

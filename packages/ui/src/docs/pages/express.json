@@ -31,8 +31,13 @@
     },
     {
       "title": "Request security",
-      "body": "Since 0.5.2, mutations accept POST, PUT, PATCH and DELETE only. Other unsafe methods return 405 before actions run. An Origin must exactly match the request URL origin; opaque or foreign origins and Sec-Fetch-Site: cross-site return 403. Headerless server clients remain supported. Authentication, authorization and CSRF tokens remain application responsibilities. Behind a reverse proxy, construct the Request with the public URL or configure Express protocol/trust proxy for your trusted proxy only. Smolter does not trust forwarded headers automatically. Enforce body-size and request-time limits before handing the raw stream to Smolter; do not consume it with a body parser.",
+      "body": "Since 0.5.2, mutations accept POST, PUT, PATCH and DELETE only. Other unsafe methods return 405 before actions run. An Origin must exactly match the request URL origin; opaque or foreign origins and Sec-Fetch-Site: cross-site return 403. Headerless server clients remain supported. Authentication, authorization and CSRF tokens remain application responsibilities. Behind a reverse proxy, construct the Request with the public URL or configure Express protocol/trust proxy for your trusted proxy only. Smolter does not trust forwarded headers automatically. The Node and Vite adapters cap request bodies at 1 MiB by default; configure maxBodySize for larger uploads. Direct Web Request integrations must enforce their own byte limit. Keep request-time, rate and concurrency limits in the hosting layer; do not consume the stream with a body parser.",
       "code": ""
+    },
+    {
+      "title": "Request body limit (0.5.2)",
+      "body": "Node createRequestHandler and Vite applicationPlugins/routerPlugin default to maxBodySize: 1048576 (1 MiB). Oversized declared lengths are rejected before reading; chunked bodies are counted as received and return 413 before application handlers run. The limit includes multipart overhead and counts received bytes, not decompressed content. Configure the same finite, nonnegative integer in production and development for intentionally larger uploads; zero permits only empty bodies. Keep hosting timeouts, rate/concurrency limits and any decompression limits. Low-level webRequest accepts this limit as its fourth argument and throws a Response for policy or size rejection; the provided middleware sends it automatically.",
+      "code": "createRequestHandler({ build, entry, maxBodySize: 8 * 1024 * 1024 });\n// Match the production limit in Vite:\napplicationPlugins({ maxBodySize: 8 * 1024 * 1024 });"
     }
   ]
 }
