@@ -11,6 +11,8 @@ const pages = new Map();
 for (const entry of [
   "react",
   "preact",
+  "react/nested",
+  "preact/nested",
   "react/client",
   "preact/client",
   "preact/document",
@@ -40,7 +42,7 @@ for (const entry of [
       ts.isTypeAliasDeclaration(declaration);
     // Type-only star re-exports do not make core values available at runtime.
     if (
-      ["react", "preact"].includes(entry) &&
+      ["react", "preact", "react/nested", "preact/nested"].includes(entry) &&
       !isType &&
       declaration.getSourceFile().fileName.includes("/core/") &&
       !["createRouter", "createDataRouter", "defineRoute"].includes(name)

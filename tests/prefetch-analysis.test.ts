@@ -393,3 +393,23 @@ for (const framework of ["react", "preact"] as const) {
     });
   });
 }
+
+it("recognizes nested adapter Link imports", async (context) => {
+  const root = await mkdtemp(join(tmpdir(), "smolter-nested-prefetch-"));
+  context.onTestFinished(() => rm(root, { recursive: true, force: true }));
+  await writeFile(
+    join(root, "tsconfig.json"),
+    '{"compilerOptions":{"strict":true}}',
+  );
+  for (const framework of ["react", "preact"]) {
+    await writeFile(
+      join(root, "entry.tsx"),
+      `import { Link } from "@kasperrt/smolter/${framework}/nested"; export const page = <Link to="/" prefetch="viewport" />;`,
+    );
+    expect(analyzePrefetch(root)).toEqual({
+      intent: false,
+      viewport: true,
+      data: false,
+    });
+  }
+});

@@ -1017,3 +1017,63 @@ test("renders Preact document content without an optional root module", async ()
   router.dispose();
   assert.match(html, /<main>Standalone route<\/main>/);
 });
+
+test("SSR preserves root and route response metadata without unsafe transport headers", async () => {
+  const response = await renderApplication(
+    new Request("http://local/"),
+    [
+      {
+        path: "/",
+        default: () => null,
+        loader: () =>
+          data(
+            { page: true },
+            {
+              status: 201,
+              headers: { "X-Page": "yes", "Content-Length": "999" },
+            },
+          ),
+      },
+    ],
+    {
+      ...root,
+      loader: () =>
+        data(
+          { account: true },
+          {
+            headers: {
+              "X-Root": "yes",
+              "Set-Cookie": "session=fixture; HttpOnly",
+            },
+          },
+        ),
+    },
+    "/entry.js",
+  );
+  assert.equal(response.status, 201);
+  assert.equal(response.headers.get("X-Root"), "yes");
+  assert.equal(response.headers.get("X-Page"), "yes");
+  assert.equal(response.headers.get("Content-Length"), null);
+  assert.match(response.headers.get("Set-Cookie") ?? "", /HttpOnly/);
+  await response.text();
+  const missing = await renderApplication(
+    new Request("http://local/"),
+    [
+      {
+        path: "/",
+        default: () => null,
+        loader: () => {
+          throw new Response("Missing", {
+            status: 404,
+            headers: { "X-Robots-Tag": "noindex" },
+          });
+        },
+      },
+    ],
+    root,
+    "/entry.js",
+  );
+  assert.equal(missing.status, 404);
+  assert.equal(missing.headers.get("X-Robots-Tag"), "noindex");
+  await missing.text();
+});

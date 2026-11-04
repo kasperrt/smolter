@@ -1,0 +1,29 @@
+{
+  "slug": "nested-layouts",
+  "title": "Nested layouts",
+  "summary": "Persistent client-side layouts with independently owned data.",
+  "kind": "Guides",
+  "entries": ["react/nested", "preact/nested"],
+  "sections": [
+    {
+      "title": "Choose the nested entry",
+      "body": "Import nested rendering and data hooks from the same nested adapter. This optional entry reuses the data router; flat imports do not retain its layout implementation. This release supports client-only route trees, not renderApplication/mountApplication nested SSR.",
+      "code": "import { createNestedRouter, NestedRoutes, RouterProvider, Outlet } from \"@kasperrt/smolter/preact/nested\";\n\nconst router = createNestedRouter([\n  { id: \"account\", path: \"/account\", default: AccountLayout, clientLoader: loadAccount },\n  { id: \"profile\", parentId: \"account\", path: \"/account/profile\", default: Profile, clientLoader: loadProfile },\n]);\n\n<RouterProvider router={router}><NestedRoutes /></RouterProvider>"
+    },
+    {
+      "title": "File layouts",
+      "body": "applicationPlugins({ ssr: false }) recognizes actual parent route modules. The virtual route module exports createRouter and Routes for the detected tree. Names such as _authorized.settings and _authorized.settings.profile establish ownership; filenames supply IDs and paths. Leading underscores are pathless and _index selects an index child. Optional layout code is absent when no parent modules exist.",
+      "code": "import routes, { createRouter, Routes } from \"virtual:smolter/routes\";\nconst router = createRouter(routes, { browser: true });"
+    },
+    {
+      "title": "Data and refresh ownership",
+      "body": "Each layout reads its own useLoaderData value. useRouteLoaderData reads an ancestor by ID. Target one or several layout IDs to refresh only those owners; untargeted ancestors and descendants keep their data. shouldRevalidate remains authoritative, including manual refresh. Initial loading cannot be vetoed.",
+      "code": "await router.revalidate({ route: \"account\" });\nawait router.revalidate({ route: [\"root\", \"account\"] });"
+    },
+    {
+      "title": "Forms and boundaries",
+      "body": "Forms and fetchers default to their owning route. Index submissions include ?index to distinguish them from their parent. Explicit actions and fetcher URLs respect basename. The nearest layout ErrorBoundary handles loader, action and render failures; navigating to a valid route clears its rendering error. Shared layout state remains mounted across children.",
+      "code": "const router = createNestedRouter(routes, { browser: true, basename: \"/platform\" });\n\nfunction AccountLayout() {\n  const account = useLoaderData();\n  return <section><h1>{account.name}</h1><Outlet context={account} /></section>;"
+    }
+  ]
+}

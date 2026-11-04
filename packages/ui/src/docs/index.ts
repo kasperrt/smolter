@@ -53,6 +53,7 @@ export const docs: DocPage[] = [
   ...[
     "getting-started",
     "routing",
+    "nested-layouts",
     "bundle-size",
     "data-flow",
     "loaders",

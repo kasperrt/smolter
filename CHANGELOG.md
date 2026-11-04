@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add optional React and Preact nested routing for client-only applications, using the existing data router. Preserve layout state and focus, scope forms/fetchers to their owning route, and support exclusive parent revalidation with per-layout shouldRevalidate vetoes.
+- Infer parent/index/pathless relationships from flat route filenames in the application Vite plugin. Keep flat builds on their existing entrypoints and recognize nested Link imports in prefetch analysis.
+- Preserve root and route HTTP response metadata during document rendering, including error response headers. Strip obsolete content lengths/encodings from rendered HTML.
+
 ## 0.4.11
 
 - Update the documentation site, examples and development validation to Preact 11.1.1 and preact-render-to-string 6.8.2. Update JSR dependency imports to the same versions.

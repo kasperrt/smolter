@@ -19,6 +19,7 @@
     "./prefetch": "./src/prefetch.ts",
     "./link-prefetch": "./src/link-prefetch.ts",
     "./intent": "./src/intent.ts",
-    "./transport": "./src/transport.ts"
+    "./transport": "./src/transport.ts",
+    "./nested": "./src/nested.ts"
   }
 }

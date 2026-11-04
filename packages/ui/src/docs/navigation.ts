@@ -4,7 +4,7 @@ const guideGroups = [
   {
     title: "Start here",
     description: "Install, choose an entry, add routes",
-    slugs: ["getting-started", "routing", "bundle-size"],
+    slugs: ["getting-started", "routing", "nested-layouts", "bundle-size"],
   },
   {
     title: "Data flow",

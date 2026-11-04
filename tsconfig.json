@@ -62,7 +62,9 @@
       "@kasperrt/smolter/react/document": ["./packages/react/src/document.tsx"],
       "@kasperrt/smolter/react/lazy-route": [
         "./packages/react/src/lazy-route.ts"
-      ]
+      ],
+      "@kasperrt/smolter/react/nested": ["./packages/react/src/nested.tsx"],
+      "@kasperrt/smolter/preact/nested": ["./packages/preact/src/nested.tsx"]
     },
     "types": ["node", "vite/client"]
   },

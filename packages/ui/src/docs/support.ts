@@ -80,6 +80,8 @@ export function pageSupport(page: DocPage): Support[] {
       );
     const clientOnly =
       entries.length > 0 && entries.every((entry) => entry.endsWith("/client"));
+    const nestedOnly =
+      entries.length > 0 && entries.every((entry) => entry.endsWith("/nested"));
     const partialSSR = available && clientOnly;
     return [
       {
@@ -106,7 +108,7 @@ export function pageSupport(page: DocPage): Support[] {
         short: `${short}S${alternative ? "*" : ""}`,
         level: alternative
           ? "alternative"
-          : !available
+          : !available || nestedOnly
             ? "no"
             : partialSSR
               ? "partial"
@@ -116,9 +118,11 @@ export function pageSupport(page: DocPage): Support[] {
           ? alternative.detail
           : !available
             ? unavailable
-            : clientOnly
-              ? "Client-side setup for an SSR application; do not execute on the server."
-              : "Available to this renderer's SSR integration; browser event handlers run after hydration.",
+            : nestedOnly
+              ? "Nested layouts currently support client-only applications. The SSR mount/render integration does not accept nested route trees."
+              : clientOnly
+                ? "Client-side setup for an SSR application; do not execute on the server."
+                : "Available to this renderer's SSR integration; browser event handlers run after hydration.",
       },
     ] as Support[];
   });

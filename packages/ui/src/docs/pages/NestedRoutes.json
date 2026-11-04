@@ -1,0 +1,29 @@
+{
+  "slug": "NestedRoutes",
+  "title": "NestedRoutes",
+  "kind": "API",
+  "summary": "Render matched layouts inside their shared RouterProvider.",
+  "entries": ["react/nested", "preact/nested"],
+  "sections": [
+    {
+      "title": "Render",
+      "body": "Mount once below the router provider. Each layout renders its child through Outlet.",
+      "code": "import { NestedRoutes, RouterProvider } from \"@kasperrt/smolter/preact/nested\";\n<RouterProvider router={router}><NestedRoutes /></RouterProvider>"
+    },
+    {
+      "title": "Persistence",
+      "body": "An unchanged layout identity retains component state and input when a child changes. Revalidation replaces only selected loader values.",
+      "code": "function Layout() { return <main><PersistentControls /><Outlet /></main>; }"
+    },
+    {
+      "title": "Failures",
+      "body": "The nearest ErrorBoundary handles loader/action failures and render errors. It can read the error using the nested useRouteError hook.",
+      "code": "function Boundary() { const error = useRouteError(); return <p>{error?.message}</p>; }"
+    },
+    {
+      "title": "Pending work",
+      "body": "The committed branch stays visible during navigation. Request pending matches when selecting destination-specific loading handles. Initial module fallbacks apply before loader data is available.",
+      "code": "const destination = useMatches({ pending: true });"
+    }
+  ]
+}

@@ -7,7 +7,8 @@ export interface PrefetchCapabilities {
   data: boolean;
 }
 
-const adapter = /^@(?:kasperrt\/smolter|smolter)\/(?:react|preact)$/;
+const adapter =
+  /^@(?:kasperrt\/smolter|smolter)\/(?:react|preact)(?:\/nested)?$/;
 const linkNames = new Set(["Link", "NavLink"]);
 
 function adapterImport(node: ts.Node): boolean {

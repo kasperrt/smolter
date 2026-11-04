@@ -200,3 +200,51 @@ it.for([false, true])(
     ).rejects.toThrow("suffix is reserved");
   },
 );
+
+it.for(["react", "preact"] as const)(
+  "%s selects the nested adapter only for real file layouts",
+  async (framework, context) => {
+    const root = await realpath(
+      await mkdtemp(join(tmpdir(), "smolter-nested-build-")),
+    );
+    context.onTestFinished(() => rm(root, { recursive: true, force: true }));
+    await mkdir(join(root, "src/routes"), { recursive: true });
+    await writeFile(
+      join(root, "entry.ts"),
+      'import routes, { createRouter, Routes } from "virtual:smolter/routes"; console.log(routes, createRouter, Routes);',
+    );
+    await writeFile(
+      join(root, "src/routes/_account.ts"),
+      'export default function Layout() { return "Layout"; } export const clientLoader = () => "session";',
+    );
+    await writeFile(
+      join(root, "src/routes/_account._index.ts"),
+      'export default function Page() { return "Page"; } export const clientAction = () => "saved";',
+    );
+    const result = await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [
+        lazyFiles("src/routes", undefined, framework),
+        fileRouter({ framework }),
+      ],
+      build: {
+        write: false,
+        rolldownOptions: {
+          input: join(root, "entry.ts"),
+          external: /^@kasperrt\/smolter\//,
+        },
+      },
+    });
+    if (!("output" in result)) throw new Error("Missing output");
+    const code = result.output
+      .filter((item) => item.type === "chunk")
+      .map((item) => item.code)
+      .join("\n");
+    expect(code).toContain(`${framework}/nested`);
+    expect(code).toContain("routes/_account");
+    expect(code).toContain("parentId");
+    expect(code).not.toContain("lazy-route");
+  },
+);
