@@ -1,4 +1,5 @@
 import { createDataRouter } from "@smolter/core";
+import { prepareRoutes } from "@smolter/core/prepare-routes";
 import { retainRoute } from "@smolter/core/presentation";
 import { type ErrorProps, RouterProvider, Routes } from "@smolter/react";
 import { createElement, useState } from "react";
@@ -80,4 +81,21 @@ it("retains local view state when lazy routes share a component", async (context
   expect(container.querySelector("button")).toBe(button);
   expect(container.textContent).toBe("1");
   expect(router.getSnapshot().data).toBe("/second");
+});
+
+it("uses a lazily loaded page transition after route preparation", async () => {
+  let calls = 0;
+  const route = lazyRoute({ path: "/page" }, async () => ({
+    clientLoader: () => "page",
+    viewTransition(commit) {
+      calls++;
+      commit();
+    },
+  }));
+  const router = createDataRouter(prepareRoutes([route]));
+  retainRoute(router, (commit) => commit());
+  await router.navigate("/page");
+  expect(calls).toBeGreaterThan(0);
+  expect(router.getSnapshot().data).toBe("page");
+  router.dispose();
 });

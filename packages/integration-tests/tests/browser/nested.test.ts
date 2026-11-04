@@ -1,4 +1,3 @@
-import { configureApplication } from "@smolter/core/environment";
 import * as preact from "@smolter/preact/nested";
 import * as react from "@smolter/react/nested";
 import {
@@ -39,23 +38,21 @@ for (const { name, api, h, mount, state } of frameworks) {
       }
       const router = api.createNestedRouter([
         { id: "one", path: "/one", default: One },
-        { id: "two", path: "/two", default: Two },
+        {
+          id: "two",
+          path: "/two",
+          default: Two,
+          ...(enabled && {
+            viewTransition: (commit: () => void) => {
+              document.startViewTransition(commit);
+            },
+          }),
+        },
       ]);
-      if (enabled)
-        configureApplication({
-          commitRoute(commit, previous, next) {
-            if (!previous.loaded || previous.url === next.url) {
-              commit();
-              return;
-            }
-            document.startViewTransition(commit);
-          },
-        });
       const container = document.createElement("div");
       document.body.append(container);
       const root = mount(container);
       context.onTestFinished(() => {
-        configureApplication({});
         transition.mockRestore();
         root.unmount();
         router.dispose();
@@ -68,12 +65,95 @@ for (const { name, api, h, mount, state } of frameworks) {
       await expect.poll(() => container.textContent).toBe("Two");
       expect(transition).toHaveBeenCalledTimes(enabled ? 1 : 0);
       transition.mockClear();
-      configureApplication({});
       await router.navigate("/one");
       await expect.poll(() => container.textContent).toBe("One");
       expect(transition).not.toHaveBeenCalled();
     });
   }
+  it(`${name} supports native shared-image transitions from a lazy page and inherits layout callbacks`, async (context) => {
+    const calls: string[] = [];
+    let transition: ViewTransition | undefined;
+    const src =
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='purple'/%3E%3C/svg%3E";
+    function Layout() {
+      return h("main", null, h("input"), h(api.Outlet));
+    }
+    function Small() {
+      return h("img", {
+        src,
+        alt: "Shared artwork",
+        width: 48,
+        height: 48,
+        style: { viewTransitionName: "artwork" },
+      });
+    }
+    function Large() {
+      return h("img", {
+        src,
+        alt: "Shared artwork",
+        width: 200,
+        height: 200,
+        style: { viewTransitionName: "artwork" },
+      });
+    }
+    const router = api.createNestedRouter([
+      {
+        id: "root",
+        path: "/",
+        default: Layout,
+        viewTransition: (commit) => {
+          calls.push("layout");
+          commit();
+        },
+      },
+      { id: "small", path: "/small", parentId: "root", default: Small },
+      {
+        id: "large",
+        path: "/large",
+        parentId: "root",
+        lazy: async () => ({
+          default: Large,
+          viewTransition(commit) {
+            calls.push("page");
+            transition = document.startViewTransition(commit);
+          },
+        }),
+      },
+    ]);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = mount(container);
+    context.onTestFinished(() => {
+      transition?.skipTransition();
+      root.unmount();
+      router.dispose();
+      container.remove();
+    });
+    await router.navigate("/small");
+    root.render(h(api.RouterProvider, { router }, h(api.NestedRoutes)));
+    await expect.poll(() => container.querySelector("img")?.width).toBe(48);
+    const input = container.querySelector("input")!;
+    input.value = "retained";
+    await container.querySelector("img")!.decode();
+    calls.length = 0;
+    await router.navigate("/large");
+    await transition!.ready;
+    expect(calls).toEqual(["page"]);
+    expect(container.querySelector("img")!.width).toBe(200);
+    expect(
+      getComputedStyle(
+        document.documentElement,
+        "::view-transition-group(artwork)",
+      ).animationName,
+    ).not.toBe("none");
+    expect(container.querySelector("input")).toBe(input);
+    expect(input.value).toBe("retained");
+    transition!.skipTransition();
+    await transition!.finished;
+    await router.navigate("/small");
+    await expect.poll(() => container.querySelector("img")?.width).toBe(48);
+    expect(calls).toEqual(["page", "layout"]);
+  });
   it(`${name} keeps loader-free layouts mounted around the pending child skeleton`, async (context) => {
     const pending = deferred<string>();
     function Layout() {

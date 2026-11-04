@@ -3,7 +3,7 @@
 ## 0.4.12-beta.4
 
 - Keep loader-free nested layouts mounted while children load, so child hydration skeletons are not hidden by an unrelated layout fallback. Preserve layout input and focus through settlement in React and Preact.
-- Remove automatic document transitions and the `viewTransition` boolean options from both adapters. Consumers can own presentation through `configureApplication({ commitRoute })`, which receives a guarded synchronous DOM commit and previous/next snapshots. Smolter no longer chooses animations, reduced-motion policy or component-based transition rules. Consumers using the boolean must move that policy into their own callback.
+- Remove automatic document transitions and the `viewTransition` boolean options from both adapters. Consumers own presentation through a route-module `viewTransition(commit, previous, next)` export. The destination page wins, falling back to its nearest nested layout. The synchronous commit ignores stale and repeated calls; lazy file routes retain the export. Smolter no longer chooses animations, reduced-motion policy or component-based transition rules. Consumers using the boolean must move that policy into their own callback.
 
 ## 0.4.12-beta.3
 

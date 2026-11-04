@@ -116,6 +116,7 @@ export function lazyFiles(
           "meta",
           "links",
           "handle",
+          "viewTransition",
           "HydrateFallback",
           "ErrorBoundary",
           "shouldRevalidate",

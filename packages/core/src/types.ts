@@ -67,6 +67,12 @@ export interface RevalidationArgs extends RevalidationContext {
 
 /** A route component and its optional server and client data handlers. */
 export interface RouteModule {
+  /** Consumer-owned route presentation. Call commit once; stale commits are ignored. */
+  viewTransition?: (
+    commit: () => void,
+    previous: Snapshot,
+    next: Snapshot,
+  ) => void;
   /** Stable identifier for targeted revalidation; defaults to the path. */
   id?: string;
   default?: unknown;

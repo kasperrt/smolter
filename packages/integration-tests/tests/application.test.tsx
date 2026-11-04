@@ -4,7 +4,6 @@ import { afterEach, test, vi } from "vitest";
 
 afterEach(() => vi.restoreAllMocks());
 
-import { configureApplication } from "@smolter/core/environment";
 import { createDataRouter, Outlet, useActionData } from "@smolter/preact";
 import { flushSync, Suspense } from "preact/compat";
 import { renderToStringAsync } from "preact-render-to-string";
@@ -368,17 +367,16 @@ test("consumer commit callbacks own presentation and cannot apply obsolete or re
   retainRoute(router, flushSync);
   const commits: (() => void)[] = [];
   const destinations: string[] = [];
-  configureApplication({
-    commitRoute(commit, previous, next) {
-      assert.equal(previous.data, "home");
-      destinations.push(new URL(next.url).pathname);
-      commits.push(commit);
-    },
-  });
-  context.onTestFinished(() => {
-    configureApplication({});
-    router.dispose();
-  });
+  const handler: NonNullable<
+    (typeof router.routes)[number]["viewTransition"]
+  > = (commit, previous, next) => {
+    assert.equal(previous.data, "home");
+    destinations.push(new URL(next.url).pathname);
+    commits.push(commit);
+  };
+  router.routes[1].viewTransition = handler;
+  router.routes[2].viewTransition = handler;
+  context.onTestFinished(() => router.dispose());
   await router.navigate("/watch");
   assert.equal(router.getSnapshot().data, "home");
   await router.navigate("/music");
@@ -391,7 +389,7 @@ test("consumer commit callbacks own presentation and cannot apply obsolete or re
   commits[1]();
   assert.equal(notifications, 0);
   assert.deepEqual(destinations, ["/watch", "/music"]);
-  configureApplication({ commitRoute: (commit) => commits.push(commit) });
+  router.routes[1].viewTransition = (commit) => commits.push(commit);
   await router.navigate("/watch");
   router.dispose();
   commits[2]();
