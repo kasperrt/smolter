@@ -1,5 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { fileRouter } from "@smolter/vite";
+import { build } from "vite";
 import { expect, it } from "vitest";
 import { viteFixture } from "../../integration-tests/tests/helpers/vite";
 
@@ -86,6 +88,13 @@ for (const source of [
   'export * from "../../handlers.ts";',
   "export function loader() { return 1; }",
   "export const action = () => 1;",
+  'export const [...loader] = ["SYNTHETIC_SERVER_SECRET"];',
+  'export const { loader } = { loader: () => "SYNTHETIC_SERVER_SECRET" };',
+  'export const { nested: { action } } = { nested: { action: () => "SYNTHETIC_SERVER_SECRET" } };',
+  'export const [loader] = [() => "SYNTHETIC_SERVER_SECRET"];',
+  'export const { value: loader = () => "SYNTHETIC_SERVER_SECRET" } = {};',
+  'export const { ...action } = { secret: "SYNTHETIC_SERVER_SECRET" };',
+  'export class loader { static secret = "SYNTHETIC_SERVER_SECRET"; }',
   "const loader = () => 1; export { loader };",
   'export { loader, view } from "../../handlers.ts";',
 ]) {
@@ -119,3 +128,41 @@ for (const maxBodySize of [undefined, 16]) {
     expect(await accepted.json()).toBe(2);
   });
 }
+
+it.for(["react", "preact"] as const)(
+  "%s production builds reject destructured server exports before emitting browser assets",
+  async (framework, context) => {
+    const { root } = await viteFixture(
+      context,
+      'export const { loader } = { loader: () => "SYNTHETIC_SERVER_SECRET" };',
+      { framework },
+    );
+    await expect(
+      build({
+        root,
+        configFile: false,
+        logLevel: "silent",
+        plugins: [fileRouter({ framework })],
+        build: {
+          write: false,
+          minify: true,
+          rollupOptions: {
+            input: join(root, "src/routes/_index.ts?smolter-client"),
+          },
+        },
+      }),
+    ).rejects.toThrow("Re-export loader/action");
+  },
+);
+
+it("allows destructured client exports without mistaking property names for server bindings", async (context) => {
+  const { server } = await viteFixture(
+    context,
+    'export const { loader: clientLoader, nested: { action: clientAction }, ...handle } = { loader: () => 1, nested: { action: () => 2 } }; export const [, label = "public", ...items] = []; export class View {}',
+  );
+  const result = await server.transformRequest(
+    "/src/routes/_index.ts?smolter-client",
+  );
+  expect(result?.code).toContain("clientLoader");
+  expect(result?.code).toContain("clientAction");
+});

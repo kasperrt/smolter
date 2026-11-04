@@ -21,7 +21,7 @@
     },
     {
       "title": "Behavior and edge cases",
-      "body": "Requires Vite 8 or newer. Import virtual:smolter/routes for the generated table. Server loader/action exports must be named re-exports from separate files. Export-star and inline server handlers are rejected in browser route modules. The plugin handles development requests; production still needs a server adapter.",
+      "body": "Requires Vite 8 or newer. Import virtual:smolter/routes for the generated table. Server loader/action exports must be named re-exports from separate files. Export-star and inline server handlers, including destructured bindings and class declarations named loader/action, are rejected in browser route modules. Keep secrets and server initialization in the separate server module; route modules run in the browser. The plugin handles development requests; production still needs a server adapter.",
       "code": ""
     },
     {

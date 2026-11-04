@@ -4,6 +4,8 @@
 
 ### Security
 
+- Close a Vite server-export boundary bypass: destructured bindings and class declarations named `loader`/`action` are now rejected alongside ordinary inline handlers. Previously these forms could leave server-only implementation or embedded credentials in served browser modules. Named re-exports from separate server files remain supported; client-only destructuring is unchanged. This is a conditional source-disclosure issue when applications use these export forms, not evidence of remote code execution.
+
 - Add blocking Semgrep code/workflow scans and a full-workspace pnpm audit to PR/main CI, with SARIF code-scanning results and retained audit artifacts. Pin GitHub Actions to commit SHAs and enable pnpm release-age, exotic-transitive-source and trust-downgrade protections. Scanners remain outside package dependencies.
 
 - **Cookie compatibility:** preserve `Secure` and all other `Set-Cookie` attributes verbatim in the Node adapter, regardless of `NODE_ENV`. Previously an unset or non-production environment silently removed `Secure`, making an HTTPS session cookie eligible for plain HTTP. Applications own local cookie configuration; use local HTTPS when testing secure sessions. A Chromium regression uses synthetic cookies and an intercepted HTTPS origin to verify HTTP exclusion.

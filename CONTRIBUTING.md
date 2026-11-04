@@ -79,14 +79,18 @@ Run the same checks locally from the repository root:
 pnpm audit --audit-level=low --json
 python3 -m venv /tmp/smolter-security-tools
 /tmp/smolter-security-tools/bin/pip install -r .github/semgrep-requirements.txt
-/tmp/smolter-security-tools/bin/semgrep scan --config p/ci --config p/javascript --metrics=off --disable-version-check --error --strict .
+/tmp/smolter-security-tools/bin/semgrep scan --config p/ci --config p/javascript --metrics=off --disable-version-check --error .
 ```
 
 Audit covers the whole workspace, including development and optional dependencies.
 Do not ignore registry errors or unfixable advisories to make CI green. Semgrep is
 pinned separately from npm dependencies, needs no account/token, and disables
 metrics. Its maintained registry rules cover JavaScript/TypeScript and CI security;
-rule updates may reveal new findings without a package change. No scanner enters
+rule updates may reveal new findings without a package change. Findings and fatal
+scan errors fail CI. Valid syntax unsupported by Semgrep produces parser warnings
+in SARIF rather than blocking the build: the current baseline has nine warnings
+and approximately 99.9% parsed lines. These partially analyzed files remain in
+scope; review the warnings and do not treat the scan as exhaustive. No scanner enters
 the published package or browser bundles.
 
 `.semgrepignore` excludes generated artifacts and installed dependencies, not

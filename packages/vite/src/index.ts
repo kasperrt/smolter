@@ -101,21 +101,41 @@ export function routerPlugin({
           if (!server.length) {
             const declaration = statement.declaration;
             const name =
-              declaration?.type === "FunctionDeclaration"
+              declaration?.type === "FunctionDeclaration" ||
+              declaration?.type === "ClassDeclaration"
                 ? declaration.id?.name
                 : undefined;
             const variables =
               declaration?.type === "VariableDeclaration"
                 ? declaration.declarations
                 : [];
+            type Binding = NonNullable<
+              Extract<
+                (typeof variables)[number]["id"],
+                { type: "ArrayPattern" }
+              >["elements"][number]
+            >;
+            function serverBinding(node: Binding): boolean {
+              if (node.type === "Identifier")
+                return node.name === "loader" || node.name === "action";
+              if (node.type === "AssignmentPattern")
+                return serverBinding(node.left);
+              if (node.type === "RestElement")
+                return serverBinding(node.argument);
+              if (node.type === "ArrayPattern")
+                return node.elements.some(
+                  (item) => item !== null && serverBinding(item),
+                );
+              return node.properties.some((item) =>
+                serverBinding(
+                  item.type === "RestElement" ? item.argument : item.value,
+                ),
+              );
+            }
             if (
               name === "loader" ||
               name === "action" ||
-              variables.some(
-                (item) =>
-                  item.id.type === "Identifier" &&
-                  ["loader", "action"].includes(item.id.name),
-              )
+              variables.some((item) => serverBinding(item.id))
             ) {
               return this.error(
                 `Re-export loader/action from separate files in ${file}; inline server handlers cannot enter a browser module.`,
