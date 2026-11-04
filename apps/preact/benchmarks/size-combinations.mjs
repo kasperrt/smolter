@@ -1,6 +1,8 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { brotliCompressSync, constants, gzipSync } from "node:zlib";
+import { promisify } from "node:util";
+import { brotliCompress, constants, gzipSync } from "node:zlib";
+import { safeWrapAsync } from "@smolter/core";
 import { build } from "vite";
 import { routerPlugin } from "../../../dist/vite/index.js";
 import { commonExports, routingExports } from "./measure.mjs";
@@ -13,6 +15,8 @@ await writeFile(
   '{"compilerOptions":{"strict":true}}',
 );
 const sizes = { react: {}, preact: {} };
+const compress = promisify(brotliCompress);
+const pending = [];
 for (const framework of ["react", "preact"]) {
   for (let mask = 0; mask < 64; mask++) {
     const data = Boolean(mask & 1);
@@ -71,16 +75,26 @@ ${recovery ? `export { watchDeployment, recoverDeployment } from "${entry}/clien
       .filter((item) => item.type === "chunk")
       .map((item) => item.code)
       .join("\n");
-    sizes[framework][mask] = [
-      Buffer.byteLength(code),
-      gzipSync(code, { level: 9 }).length,
-      brotliCompressSync(code, {
-        params: { [constants.BROTLI_PARAM_QUALITY]: 11 },
-      }).length,
-    ];
+    // Compress off-thread while the next combination builds; retain quality 11.
+    pending.push(
+      safeWrapAsync(async () => {
+        const brotli = await compress(code, {
+          params: { [constants.BROTLI_PARAM_QUALITY]: 11 },
+        });
+        sizes[framework][mask] = [
+          Buffer.byteLength(code),
+          gzipSync(code, { level: 9 }).length,
+          brotli.length,
+        ];
+      }),
+    );
   }
 }
+const compressed = await Promise.all(pending);
 await rm(root, { recursive: true, force: true });
+for (const { error } of compressed) {
+  if (error) throw error;
+}
 await writeFile(
   "packages/ui/src/size-combinations.json",
   `${JSON.stringify(sizes, null, 2).replace(/\[\s+(\d+),\s+(\d+),\s+(\d+)\s+\]/g, "[$1, $2, $3]")}\n`,

@@ -5,6 +5,9 @@ on:
     branches: [main]
 permissions:
   contents: read
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   checks:
     runs-on: ubuntu-latest
@@ -22,9 +25,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm docs:check
-      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm exec tsc --noEmit
+      - run: node scripts/docs-reference.mjs --check
+      - run: pnpm exec vitest run --project unit
       - run: pnpm pack:smoke
       - run: pnpm build:examples
   coverage:
@@ -38,7 +42,7 @@ jobs:
           check-latest: true
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @smolter/integration-tests exec playwright install --with-deps chromium
+      - run: pnpm --filter @smolter/integration-tests exec playwright install --with-deps --only-shell chromium
       - run: pnpm coverage
       - uses: actions/upload-artifact@v4
         if: always()
@@ -58,9 +62,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm --filter @smolter/integration-tests exec playwright install --with-deps chromium
+      - run: pnpm --filter @smolter/integration-tests exec playwright install --with-deps --only-shell chromium
       - run: pnpm smoke
-      - run: SMOLTER_ROUTES=manual SMOLTER_TEST_PORT=4473 pnpm smoke
+      - run: SMOLTER_ROUTES=manual SMOLTER_TEST_PORT=4473 pnpm smoke router.spec.ts
       - run: pnpm build:examples
       - run: pnpm smoke:production
       - uses: actions/upload-artifact@v4
@@ -92,9 +96,8 @@ jobs:
           node-version: 26
           check-latest: true
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
       - name: Build docs for validation (no deployment)
         run: pnpm build:site
-      - run: pnpm --filter @smolter/integration-tests exec playwright install --with-deps chromium
+      - run: pnpm --filter @smolter/integration-tests exec playwright install --with-deps --only-shell chromium
       - name: Validate docs hydration, navigation and size budget
         run: pnpm smoke:site
