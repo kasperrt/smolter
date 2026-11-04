@@ -1,3 +1,6 @@
+minimumReleaseAge: 10080
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
 packages:
   - packages/*
   - apps/*
@@ -34,3 +37,17 @@ minimumReleaseAgeExclude:
   - "@biomejs/cli-linux-x64@2.6.5"
   - "@biomejs/cli-win32-arm64@2.6.5"
   - "@biomejs/cli-win32-x64@2.6.5"
+  # Exact versions already validated in this lockfile before the seven-day policy.
+  - "@vitejs/plugin-react@6.2.1"
+  - "@vitest/browser-playwright@5.1.0"
+  - "@vitest/browser@5.1.0"
+  - "@vitest/coverage-v8@5.1.0"
+  - "@vitest/istanbul-lib-coverage@2.1.0"
+  - "@vitest/istanbul-lib-report@2.1.0"
+  - "@vitest/mocker@5.1.0"
+  - "@vitest/pretty-format@5.1.0"
+  - "@vitest/spy@5.1.0"
+  - "@vitest/ui@5.1.0"
+  - "@vitest/utils@5.1.0"
+  - "preact@11.1.1"
+  - "vitest@5.1.0"

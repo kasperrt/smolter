@@ -1,0 +1,10 @@
+# Generated output and installed dependencies only; source and tests stay scanned.
+node_modules/
+dist/
+.generated/
+coverage/
+site/
+test-results/
+playwright-report/
+.vitest/
+*.tgz

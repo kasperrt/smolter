@@ -24,6 +24,8 @@ function renderMeta(item: MetaDescriptor, index: number) {
       key: index,
       type: "application/ld+json",
       dangerouslySetInnerHTML: {
+        // JSON-LD uses serializeData, which escapes HTML script delimiters.
+        // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
         __html: serializeData(item["script:ld+json"]),
       },
     });

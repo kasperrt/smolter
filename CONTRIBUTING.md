@@ -65,3 +65,39 @@ routing subset under the same measurement settings. Full data and application
 entries are measured and reported separately. Moving code between files or
 packages does not exempt it from measurement. Preserve tree shaking and avoid
 adding runtime abstractions just to share source code between frameworks.
+
+## Security scans
+
+CI runs `audit` and `semgrep` once on every pull request and main push. Their
+failure fails CI, so the release workflow cannot publish from a failed scan.
+Semgrep SARIF is uploaded to GitHub code scanning and retained as an artifact;
+pnpm's JSON audit report is retained separately. Both jobs have ten-minute limits.
+
+Run the same checks locally from the repository root:
+
+```sh
+pnpm audit --audit-level=low --json
+python3 -m venv /tmp/smolter-security-tools
+/tmp/smolter-security-tools/bin/pip install -r .github/semgrep-requirements.txt
+/tmp/smolter-security-tools/bin/semgrep scan --config p/ci --config p/javascript --metrics=off --disable-version-check --error --strict .
+```
+
+Audit covers the whole workspace, including development and optional dependencies.
+Do not ignore registry errors or unfixable advisories to make CI green. Semgrep is
+pinned separately from npm dependencies, needs no account/token, and disables
+metrics. Its maintained registry rules cover JavaScript/TypeScript and CI security;
+rule updates may reveal new findings without a package change. No scanner enters
+the published package or browser bundles.
+
+`.semgrepignore` excludes generated artifacts and installed dependencies, not
+source or test directories. Four exact-rule annotations document reviewed false
+positives: JSON-LD uses `serializeData` (script escaping is browser-tested in both
+adapters), and the example SSR entry accepts a Request rather than an Express
+template path. Review these annotations whenever the associated code changes.
+Do not add blanket rule exclusions or unaudited `nosemgrep` annotations.
+
+GitHub Actions use full commit pins. pnpm enforces a seven-day minimum release age,
+blocks exotic transitive sources, and prevents trust downgrades. The exact-version
+age exceptions preserve the already validated lockfile; they do not exempt future
+versions. New exceptions require explicit review. These checks supplement manual
+security review and exploit regressions; a clean scan is not proof of safety.
