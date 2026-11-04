@@ -24,6 +24,25 @@ Both adapters expose navigation, submission, error, root-data and route-data hoo
 
 Integrated React documents use React DOM 19+ (`react/document`, `react/client`, `react/server`). React 18 remains supported for routing hooks and manual `loadRouter` SSR. Use React's `use(promise)` inside `Suspense` for deferred rendering. Preact uses `Await` with an explicit `fallback` for early hydration. These renderer choices share transport and data ownership, without loading the other framework.
 
+## Nested client layouts (0.4.12 beta)
+
+Install `@kasperrt/smolter@0.4.12-beta.2` to test nested layouts. Import
+`createNestedRouter`, `NestedRoutes`, `Outlet` and the scoped data hooks from
+`@kasperrt/smolter/preact/nested` or `@kasperrt/smolter/react/nested`.
+These optional entries reuse the existing data router and retain shared layouts
+while child routes change. The ordinary entries remain flat.
+
+File routing infers parents, index routes and pathless layouts. Manual nested
+routes use unique `id` values, `parentId` and absolute path patterns. Call
+`router.revalidate("parent-id")` to target a parent alone; its
+`shouldRevalidate` can still veto that refresh. Forms and fetchers default to
+their owning layout's action.
+
+Nested application integration currently supports client-only applications.
+Do not pass a nested tree to `renderApplication` or `mountApplication`; existing
+flat SSR remains supported. See the [nested layouts guide](https://kasperrt.github.io/smolter/docs/nested-layouts/)
+for the complete setup and revalidation examples.
+
 ## Contents
 
 - [Deployment updates](#deployment-updates)
