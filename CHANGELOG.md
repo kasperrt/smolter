@@ -4,6 +4,8 @@
 
 ### Security
 
+- Keep route-data and SSR responses private when application metadata includes targeted CDN caching headers. Override existing `*-Cache-Control` and `Surrogate-Control` directives alongside `Cache-Control`, preventing public/max-age metadata from taking precedence over the framework’s private/no-store policy. Regression coverage includes both data dispatchers and React/Preact SSR. This hardens conditional cache disclosure; CDN rules that deliberately override origin headers remain a hosting responsibility.
+
 - Prevent cross-origin form-field disclosure in browser data transport. Same-origin route URLs whose pathname starts with `//` now fail before fetch instead of being interpreted as another host. Transport requests also use `mode: "same-origin"`, preventing HTTP redirects from forwarding mutation bodies to another origin. React and Preact minified-browser regressions cover both paths, cross-origin redirects and successful local submissions. Explicit legacy data endpoints must stay on the page origin; use a same-origin proxy for remote APIs. This requires an application to accept an attacker-influenced matching route URL or an upstream cross-origin redirect; it is not evidence of server RCE.
 
 - Contain malformed-target parser crashes in Vite development hosting. Guard Connect's public request entrypoint before its middleware parser; malformed URLs now receive a generic, non-cacheable 400 with a closed connection instead of terminating the process. Applies through `routerPlugin`/`fileRouter` and `applicationPlugins`, including middleware mode and server restarts. Unexpected failures still reach the host callback or server logger with a generic 500 response; no global exception handler or dependency fork is introduced. This protects Smolter-integrated development servers, not standalone Vite or a parent host that parses requests before Vite.
@@ -32,6 +34,8 @@
 - **Upload compatibility:** bound Node and Vite request buffering to 1 MiB by default, including multipart overhead. Return 413 before application handlers run for oversized declared or chunked bodies; reject forbidden origins and methods before reading upload bytes. Set `maxBodySize` consistently on `createRequestHandler` and `applicationPlugins`/`routerPlugin` for intentionally larger uploads. Low-level `webRequest` accepts the limit as its fourth argument and throws a Response for rejection. Direct Web Request integrations and hosting still own request-time, rate, concurrency and decompression limits.
 
 ### Code maintenance
+
+- Unify the feature calculator and Smolter routing/data table rows around the same production Vite measurements. Optional features start unchecked; the default data selection matches the data row. Verify both frameworks against displayed table cells in the hosted-site browser check. Complete-entry bundles and competitor snapshots remain clearly labeled with their measurement methods.
 
 - Replace cross-package source-path imports in tests and streaming fixtures with declared workspace exports. Move the Vite browser-boundary unit test into its owning package. Keep React and Preact entrypoints separate; no new public npm exports or dependencies.
 

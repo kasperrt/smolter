@@ -73,14 +73,14 @@ export function createShell<N>(
         "Optional /client handles browser transport or hydration; /document and /lazy-route add application features. /server and /vite belong in server and build code, not the browser.",
       ),
       SizeTable(
-        "Same measurement tools · gzip bytes",
+        "Bundle sizes · gzip bytes",
         ["Selected API", "React", "Preact"],
         comparisonRows,
       ),
       h(
         "p",
         { className: "size-method" },
-        "Production ESM, esbuild + Terser, gzip level 9. Framework runtimes excluded; library dependencies included. Rows overlap and are not additive. API capabilities differ; React Router has no dedicated Preact entry.",
+        "Smolter rows use the selector’s production Vite measurements with optional features unchecked. Other routers are recorded esbuild/Terser reference measurements. Gzip level 9; framework runtimes excluded. Rows overlap and are not additive. API capabilities differ; React Router has no dedicated Preact entry.",
       ),
       renderLink(
         "/docs/bundle-size",

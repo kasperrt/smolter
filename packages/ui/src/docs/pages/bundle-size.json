@@ -6,7 +6,7 @@
   "sections": [
     {
       "title": "Choose your features",
-      "body": "The selector measures each valid combination as one production Vite bundle. Paths, links and history are always included. Server rendering requires data routing; speculative data requires data routing and a prefetch mode. Choose React or Preact to see gzip, Brotli and minified bytes. Framework runtimes and application code are excluded. Shared code means feature sizes cannot be added together. These Vite measurements differ from the esbuild/Terser comparison table below.",
+      "body": "The selector measures each valid combination as one production Vite bundle. Paths, links and history are always included. Server rendering requires data routing; speculative data requires data routing and a prefetch mode. Choose React or Preact to see gzip, Brotli and minified bytes. Framework runtimes and application code are excluded. Shared code means feature sizes cannot be added together. The Smolter routing-only and common routing/data table rows use these same measurements with every optional feature unchecked.",
       "code": ""
     },
     {
@@ -21,7 +21,7 @@
     },
     {
       "title": "Optional prefetch capabilities",
-      "body": "Smolter’s Vite plugin selects prefetch implementations from typed JSX, spreads and createElement calls. Intent-only applications omit the observer; viewport-only applications omit intent handlers; unused data prefetch omits its cache. Unions retain all possible modes. Plain Link means intent. Opaque inputs and component-value escapes retain capabilities conservatively. Source-level analysis can retain code from unused source files; it does not claim whole-program runtime inference. Without the plugin, all implementations remain available. Existing entrypoint tables use ordinary bundling without this Vite selection; the command below measures production Vite fixtures separately.",
+      "body": "Smolter’s Vite plugin selects prefetch implementations from typed JSX, spreads and createElement calls. Intent-only applications omit the observer; viewport-only applications omit intent handlers; unused data prefetch omits its cache. Unions retain all possible modes. Plain Link means intent. Opaque inputs and component-value escapes retain capabilities conservatively. Source-level analysis can retain code from unused source files; it does not claim whole-program runtime inference. Without the plugin, all implementations remain available. Complete-entry measurements retain every export through ordinary bundling. The routing-only and common routing/data rows use the same Vite selection as the calculator.",
       "code": "pnpm build\nnode scripts/prefetch-size.mjs"
     },
     {
@@ -36,12 +36,12 @@
     },
     {
       "title": "Comparison exports and versions",
-      "body": "Reference measurements recorded on 2026-11-04: wouter and wouter-preact 3.13.0, and react-router 8.5.1. React Router has no dedicated Preact export: its React API is measured here, not a Preact compatibility build. These APIs differ in capabilities; sizes are not claims of feature equivalence. These reference numbers are not regenerated on each build. The comparison uses esbuild 0.28.2, Terser 5.51.2 with three passes and gzip level 9, with framework runtimes excluded.",
+      "body": "Reference measurements recorded on 2026-11-04: wouter and wouter-preact 3.13.0, and react-router 8.5.1. React Router has no dedicated Preact export: its React API is measured here, not a Preact compatibility build. These APIs differ in capabilities; sizes are not claims of feature equivalence. These reference numbers are not regenerated on each build. Competitor snapshots use esbuild 0.28.2, Terser 5.51.2 with three passes and gzip level 9, with framework runtimes excluded.",
       "code": "// React Router declarative subset\nBrowserRouter, Routes, Route, Link, useParams, useLocation\n\n// React Router data subset\ncreateBrowserRouter, RouterProvider, Link, Form, useLoaderData,\nuseActionData, useParams, useLocation, useRevalidator, useFetcher\n\n// Smolter routing subset\ncreateRouter, defineRoute, RouterProvider, Routes, Link, useParams, useLocation\n\n// Smolter data subset\ncreateDataRouter, defineRoute, RouterProvider, Routes, Link, Form,\nuseRouter, useLoaderData, useActionData, useParams, useLocation,\nuseRevalidator, useFetcher"
     },
     {
       "title": "Reproduce",
-      "body": "pnpm size refreshes Smolter’s named-export measurements (esbuild, Terser, gzip level 9) and the feature selector (production Vite with Smolter’s plugin, gzip level 9, Brotli quality 11). Competitor figures remain labeled reference snapshots and require no installed competitor packages. React, React DOM and Preact are external. The selector builds every valid combination, including its small Link fixture, rather than adding separate compressed totals. Your application imports and build configuration can produce different results.",
+      "body": "pnpm size first measures the feature selector using production Vite with Smolter’s plugin, gzip level 9 and Brotli quality 11. Routing-only and common routing/data rows are derived from those exact combinations. Complete-entry measurements retain all exports using esbuild and Terser. Competitor figures remain labeled reference snapshots and require no installed competitor packages. React, React DOM and Preact are external. The selector builds every valid combination, including its small Link fixture, rather than adding separate compressed totals. Your application imports and build configuration can produce different results.",
       "code": "pnpm size\npnpm size -- --breakdown"
     }
   ]

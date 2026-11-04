@@ -346,28 +346,28 @@ const result = await safeWrapAsync(async () => {
   await page.clock.runFor(120);
   const rising = Number((await total.innerText()).replaceAll(",", ""));
   assert(
-    rising > combinations.preact[5][1] && rising < combinations.preact[7][1],
+    rising > combinations.preact[1][1] && rising < combinations.preact[3][1],
     "Total must count upward through intermediate values",
   );
   assert.equal(
     await selector.locator(".size-announcement").innerText(),
-    `${combinations.preact[7][1].toLocaleString("en-US")} bytes gzip`,
+    `${combinations.preact[3][1].toLocaleString("en-US")} bytes gzip`,
   );
   await serverPages.uncheck();
   await page.clock.runFor(120);
   const falling = Number((await total.innerText()).replaceAll(",", ""));
   assert(
-    falling < rising && falling > combinations.preact[5][1],
+    falling < rising && falling > combinations.preact[1][1],
     "Rapid changes must retarget downward from the displayed value",
   );
   await page.clock.runFor(400);
   assert.equal(
     await total.innerText(),
-    combinations.preact[5][1].toLocaleString("en-US"),
+    combinations.preact[1][1].toLocaleString("en-US"),
   );
   await page.clock.resume();
   await expect(total).toHaveText(
-    combinations.preact[5][1].toLocaleString("en-US"),
+    combinations.preact[1][1].toLocaleString("en-US"),
   );
   assert(
     await selector
@@ -439,11 +439,36 @@ const result = await safeWrapAsync(async () => {
     "Pages: selector keyboard, reduced motion, dependencies and measured totals passed",
   );
   const comparisons = page.getByRole("table", {
-    name: "Same measurement tools · gzip bytes",
+    name: "Bundle sizes · gzip bytes",
   });
   assert(
     (await comparisons.innerText()).includes(String(sizes.reactRouterData)),
   );
+  for (const framework of ["react", "preact"]) {
+    await selector
+      .getByRole("radio", {
+        name: framework === "react" ? "React" : "Preact",
+        exact: true,
+      })
+      .check();
+    await serverPages.uncheck();
+    for (const data of [false, true]) {
+      await selector
+        .getByRole("checkbox", { name: "Load and save data" })
+        .setChecked(data);
+      const row = comparisons.getByRole("row", {
+        name: data ? /smolter common routing/ : /smolter routing-only/,
+      });
+      const cell = row.getByRole("cell").nth(framework === "react" ? 0 : 1);
+      const expected = Number(await cell.innerText());
+      assert.equal(expected, combinations[framework][data ? 1 : 0][1]);
+      assert.equal(
+        expected,
+        sizes[`${framework}${data ? "Common" : "Routing"}`],
+      );
+      await expect(total).toHaveText(expected.toLocaleString("en-US"));
+    }
+  }
   await page.setViewportSize({ width: 390, height: 844 });
   assert(
     await page.evaluate(

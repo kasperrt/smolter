@@ -6,6 +6,7 @@ import { type DataResponse, normalizeResult } from "@smolter/core/responses";
 import { loadRouter } from "@smolter/server";
 import { deferredHydration } from "./deferred-hydration.ts";
 import { dispatchRoute } from "./dispatch.ts";
+import { privateHeaders } from "./private-response.ts";
 import { progressiveDocument } from "./progressive-document.ts";
 import { requestPolicy } from "./request-policy.ts";
 import { resolveHydration, streamDocument } from "./stream-document.ts";
@@ -190,7 +191,7 @@ export async function renderDocument(
   headers.delete("Content-Length");
   headers.delete("Content-Encoding");
   headers.set("Content-Type", "text/html; charset=utf-8");
-  headers.set("Cache-Control", "no-store");
+  privateHeaders(headers);
   return new Response(
     deferred
       ? progressiveDocument(stream!, deferred.stream, {
