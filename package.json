@@ -12,7 +12,7 @@
     "coverage": "pnpm build && vitest run --coverage",
     "smoke": "pnpm --filter @smolter/integration-tests smoke",
     "size": "pnpm build && node apps/preact/benchmarks/size.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "check": "pnpm lint && pnpm build && tsc --noEmit && vitest run --project unit",
     "version:patch": "node scripts/version.mjs patch",
     "version:minor": "node scripts/version.mjs minor",
     "version:release": "node scripts/version.mjs release",

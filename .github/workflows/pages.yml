@@ -46,7 +46,6 @@ jobs:
         run: node scripts/release.mjs verify
       - uses: pnpm/action-setup@v4
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
       - run: pnpm build:site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

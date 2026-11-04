@@ -17,6 +17,7 @@
 
 ## 0.4.12-beta.1
 
+- Reuse package builds within CI jobs, avoid repeating independent browser fixtures in manual-route checks, and overlap docs size compression without changing measurements.
 - Harden both example SSR asset servers against hidden files and symlink escapes; add raw-HTTP traversal and Vite secret-file regression tests. The core SSR adapter dispatches routes and does not serve arbitrary files.
 - Move package tests and framework development dependencies into their owning packages, with cross-package suites in a private integration-test workspace.
 - Update development tools to current compatible stable releases and refresh comparison measurements for React Router 8.5.1, wouter 3.13.0 and wouter-preact 3.13.0.
