@@ -11,6 +11,10 @@ import { safeWrapAsync } from "@smolter/core";
 export interface RouteFile {
   path: string;
   file: string;
+  id?: string;
+  parentId?: string;
+  index?: boolean;
+  pathless?: boolean;
 }
 
 const routeFile = /^route\.[jt]sx?$/;
@@ -19,6 +23,7 @@ const flatFile = /\.[jt]sx?$/;
 /** Read only flat files and immediate route folders. Colocated helpers are ignored. */
 export async function flatRoutes(
   directory: string,
+  nested = false,
 ): Promise<RouteFile[] | Error> {
   const result = await safeWrapAsync(async () => {
     const entries = await readdir(directory, { withFileTypes: true });
@@ -56,14 +61,58 @@ export async function flatRoutes(
         parts.push(part === "$" ? "*" : part.replace(/^\$/, ":"));
       }
       // Pathless grouping modules are not nested layouts in a flat router.
-      if (segments.at(-1)?.startsWith("_") && segments.at(-1) !== "_index")
+      if (
+        !nested &&
+        segments.at(-1)?.startsWith("_") &&
+        segments.at(-1) !== "_index"
+      )
         continue;
       const path = `/${parts.join("/")}`;
       const pattern = path.replace(/:[^/]+/g, ":");
-      if (patterns.has(pattern))
+      if (!nested && patterns.has(pattern))
         return new Error(`Conflicting flat route: ${path}`);
       patterns.add(pattern);
-      routes.push({ path, file });
+      routes.push({
+        path,
+        file,
+        ...(nested && {
+          id: `routes/${name}`,
+          index: segments.at(-1) === "_index",
+          pathless:
+            segments.at(-1)!.startsWith("_") && segments.at(-1) !== "_index",
+        }),
+      });
+    }
+    if (nested) {
+      const ids = new Set(routes.map((route) => route.id!));
+      for (const route of routes) {
+        const lastSeparator = route.id!.lastIndexOf(".");
+        if (lastSeparator < 0) continue;
+        let parent = route.id!.slice(0, lastSeparator);
+        while (parent.startsWith("routes/")) {
+          if (ids.has(parent)) {
+            route.parentId = parent;
+            break;
+          }
+          const separator = parent.lastIndexOf(".");
+          if (separator < 0) break;
+          parent = parent.slice(0, separator);
+        }
+      }
+    }
+    if (nested) {
+      const leaves = new Set<string>();
+      for (const route of routes) {
+        if (
+          route.pathless ||
+          routes.some((child) => child.parentId === route.id && child.index)
+        )
+          continue;
+        const pattern = route.path.replace(/:[^/]+/g, ":");
+        if (leaves.has(pattern))
+          return new Error(`Conflicting nested route: ${route.path}`);
+        leaves.add(pattern);
+      }
     }
     return routes.sort((a, b) => {
       const left = a.path.split("/");
@@ -84,7 +133,10 @@ export async function flatRoutes(
         const difference = rank(right[index]) - rank(left[index]);
         if (difference) return difference;
       }
-      return a.path.localeCompare(b.path);
+      return (
+        a.path.localeCompare(b.path) ||
+        Number(b.index ?? false) - Number(a.index ?? false)
+      );
     });
   });
   return result.error ?? result.data!;

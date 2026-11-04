@@ -1,3 +1,8 @@
+import {
+  type NestedRouterOptions,
+  nestedCapability,
+  resolveBranchURL,
+} from "./branch.ts";
 import { safeWrapAsync } from "./errors.ts";
 import { callRoute, matchRoutes } from "./match.ts";
 import { dataPrefetch } from "./prefetch.ts";
@@ -16,7 +21,9 @@ import { internalURL } from "./url.ts";
 
 type ChannelSnapshot = Partial<Snapshot> & Pick<Snapshot, "state">;
 
-interface OperationOptions extends SubmitOptions, NavigateOptions {}
+interface OperationOptions extends SubmitOptions, NavigateOptions {
+  revalidation?: RevalidationArgs;
+}
 
 interface RevalidationTask {
   revalidate: (
@@ -58,6 +65,7 @@ export function createDataRouter(
     const url = new URL(main.getSnapshot().url);
     const args = {
       ...details,
+      ...(nestedCapability && { targets }),
       url,
       currentUrl: url,
       nextUrl: url,
@@ -77,7 +85,14 @@ export function createDataRouter(
     let controller: AbortController | undefined;
     const listeners = new Set<() => void>();
     const emit = (state: Snapshot["state"], next?: Partial<Snapshot>) => {
-      snapshot = { ...snapshot, ...next, state };
+      snapshot = {
+        ...snapshot,
+        ...next,
+        state,
+        ...(nestedCapability &&
+          state === "idle" &&
+          snapshot.formData && { formData: undefined }),
+      };
       for (const listener of listeners) listener();
     };
     const run = async (
@@ -91,11 +106,15 @@ export function createDataRouter(
       controller?.abort();
       controller = new AbortController();
       const { signal } = controller;
+      if (nestedCapability && operation.revalidation)
+        nestedCapability.set(signal, operation.revalidation);
       const { method = "POST" } = operation;
       revalidators.add(task);
       submission = body;
       const previous = snapshot;
       const url = internalURL(main.getSnapshot().url, href);
+      if (nestedCapability && url)
+        resolveBranchURL(url, (options as NestedRouterOptions).basename);
       const match = url && matchRoutes(routes, url.pathname);
       const commit = () => {
         if (local || !url) return;
@@ -118,7 +137,10 @@ export function createDataRouter(
         };
       };
       if (!body) commit();
-      emit(body ? "submitting" : "loading", { error: undefined });
+      emit(body ? "submitting" : "loading", {
+        error: undefined,
+        ...(nestedCapability && body && { formData: body }),
+      });
       const result = await safeWrapAsync(() => {
         if (!match) return Error(url ? "No route" : "External URL");
         if (
@@ -236,7 +258,10 @@ export function createDataRouter(
           !route ||
           (targets &&
             !targets.includes(route.id!) &&
-            !targets.includes(route.path))
+            !targets.includes(route.path) &&
+            (!nestedCapability ||
+              local ||
+              !route.revalidationIds?.some((id) => targets.includes(id))))
         )
           return;
         if (
@@ -248,7 +273,9 @@ export function createDataRouter(
           }) === false
         )
           return;
-        return run(url.href);
+        return nestedCapability
+          ? run(url.href, undefined, { revalidation: args })
+          : run(url.href);
       },
       getSnapshot: () => snapshot,
       subscribe(listener: () => void) {

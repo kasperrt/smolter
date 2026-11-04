@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.12-beta.2
+
+- Add optional React and Preact nested routing for client-only applications, using the existing data router. Preserve layout state and focus, scope forms/fetchers to their owning route, and support exclusive parent revalidation with per-layout shouldRevalidate vetoes.
+- Infer parent/index/pathless relationships from flat route filenames in the application Vite plugin. Keep flat builds on their existing entrypoints and recognize nested Link imports in prefetch analysis.
+- Preserve root and route HTTP response metadata during document rendering, including error response headers. Strip obsolete content lengths/encodings from rendered HTML.
+
 ## 0.4.12-beta.1
 
 - Reuse package builds within CI jobs, avoid repeating independent browser fixtures in manual-route checks, and overlap docs size compression without changing measurements.

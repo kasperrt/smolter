@@ -51,7 +51,7 @@ export interface MetaArgs<T> {
 export type MetaFunction<T = unknown> = (args: MetaArgs<T>) => MetaDescriptor[];
 
 /** Return link descriptors rendered in the document head. */
-export type LinksFunction = () => Record<string, string>[];
+export type LinksFunction = () => Record<string, string | undefined>[];
 
 /** Data route with optional lazy component, preload and document metadata integration. */
 export interface AppRoute extends Route {

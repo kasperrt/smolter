@@ -34,7 +34,7 @@
     "vite": "catalog:",
     "vitest": "catalog:"
   },
-  "version": "0.4.12-beta.1",
+  "version": "0.4.12-beta.2",
   "description": "A tiny typed data router for React and Preact.",
   "sideEffects": false,
   "license": "MIT",
@@ -106,6 +106,14 @@
     "./react/lazy-route": {
       "types": "./dist/react/lazy-route.d.ts",
       "import": "./dist/react/lazy-route.js"
+    },
+    "./react/nested": {
+      "types": "./dist/react/nested.d.ts",
+      "import": "./dist/react/nested.js"
+    },
+    "./preact/nested": {
+      "types": "./dist/preact/nested.d.ts",
+      "import": "./dist/preact/nested.js"
     }
   },
   "files": [
@@ -140,7 +148,7 @@
       "optional": true
     }
   },
-  "author": "Kasper Rynning-Tønnesen <kasperrt@users.noreply.github.com> (https://github.com/kasperrt)",
+  "author": "Kasper Rynning-T\u00f8nnesen <kasperrt@users.noreply.github.com> (https://github.com/kasperrt)",
   "homepage": "https://kasperrt.github.io/smolter/",
   "bugs": {
     "url": "https://github.com/kasperrt/smolter/issues"

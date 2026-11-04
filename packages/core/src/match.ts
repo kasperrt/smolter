@@ -1,3 +1,4 @@
+import { nestedCapability } from "./branch.ts";
 import type {
   DataArgs,
   DataFunction,
@@ -68,6 +69,7 @@ export function callRoute(
   if (!fn) return body && Error("No action");
   return (fn as DataFunction)({
     reason,
+    ...(nestedCapability && { revalidation: nestedCapability.get(signal) }),
     request: new Request(url, { signal, method: body && method, body }),
     params: match.params,
     signal,

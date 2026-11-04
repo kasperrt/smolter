@@ -1,0 +1,29 @@
+{
+  "slug": "createNestedRouter",
+  "title": "createNestedRouter",
+  "kind": "API",
+  "summary": "Create a client-side router with persistent nested layouts.",
+  "entries": ["react/nested", "preact/nested"],
+  "sections": [
+    {
+      "title": "Create",
+      "body": "Use the same nested entry for the provider, outlet and layout data hooks. React uses the equivalent /react/nested import.",
+      "code": "import { createNestedRouter } from \"@kasperrt/smolter/preact/nested\";\nconst router = createNestedRouter(routes, { browser: true, basename: \"/platform\" });"
+    },
+    {
+      "title": "Route definitions",
+      "body": "Each route has an ID, absolute path pattern, optional parentId and route module exports. File routing infers these identities. Parent loaders run alongside child loaders. Layout state remains mounted across matching descendants.",
+      "code": "const routes = [\n  { id: \"layout\", path: \"/\", default: Layout, clientLoader: loadSession },\n  { id: \"home\", path: \"/\", index: true, parentId: \"layout\", default: Home },\n];"
+    },
+    {
+      "title": "Targeted refresh",
+      "body": "An explicit target does not cascade to ancestors or descendants. Each targeted module can veto refreshing its existing loader value with shouldRevalidate.",
+      "code": "await router.revalidate({ route: \"layout\" });"
+    },
+    {
+      "title": "Lifetime and scope",
+      "body": "Dispose the router on unmount. This optional adapter is for client-only applications; nested SSR transport and hydration integration are not provided. Existing flat routers remain unchanged.",
+      "code": "router.dispose();"
+    }
+  ]
+}

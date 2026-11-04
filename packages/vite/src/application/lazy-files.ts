@@ -57,7 +57,10 @@ export function lazyFiles(
     },
     async load(id, options) {
       if (id !== "\0virtual:smolter/routes" || options?.ssr) return;
-      const routes = await flatRoutes(root);
+      const discovered = await flatRoutes(root, true);
+      if (discovered instanceof Error) return this.error(discovered.message);
+      const nested = discovered.some((route) => route.parentId);
+      const routes = nested ? discovered : await flatRoutes(root);
       if (routes instanceof Error) return this.error(routes.message);
       if (routes.some((route) => route.path.endsWith(".__smolter")))
         return this.error(
@@ -132,6 +135,12 @@ export function lazyFiles(
             .filter((name) => name in fields)
             .map((name) => [name, fields[name]]),
         );
+        if (nested) {
+          definitions.push(
+            `{ path: ${JSON.stringify(route.path)}, id: ${JSON.stringify(route.id)}, parentId: ${JSON.stringify(route.parentId)}, index: ${Boolean(route.index)}, pathless: ${Boolean(route.pathless)}, lazy: async () => { const {${members}} = await import(${JSON.stringify(file)}); return {${members}}; } }`,
+          );
+          continue;
+        }
         definitions.push(
           `lazyRoute(${JSON.stringify(capabilities)}, async () => { const {${members}} = await import(${JSON.stringify(file)}); return {${members}}; })`,
         );
@@ -144,7 +153,9 @@ export function lazyFiles(
           })),
         },
         code: [
-          `import { lazyRoute } from "@kasperrt/smolter/${framework}/lazy-route";`,
+          nested
+            ? `export { createNestedRouter as createRouter, NestedRoutes as Routes } from "@kasperrt/smolter/${framework}/nested";`
+            : `import { lazyRoute } from "@kasperrt/smolter/${framework}/lazy-route"; export { createDataRouter as createRouter, Routes } from "@kasperrt/smolter/${framework}";`,
           `export default [${definitions.join(",\n")}];`,
         ].join("\n"),
       };

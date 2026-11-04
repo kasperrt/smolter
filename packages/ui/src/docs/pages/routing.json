@@ -11,7 +11,7 @@
     },
     {
       "title": "Flat files",
-      "body": "The Vite plugin discovers immediate route folders or flat module files. Dots create URL segments, $id creates a parameter, and a terminal $ creates a splat. _index is an index route. Leading underscore segments are pathless; trailing underscores are removed. These are URL conventions, not nested component layouts.",
+      "body": "The Vite plugin discovers immediate route folders or flat module files. Dots create URL segments, $id creates a parameter, and a terminal $ creates a splat. _index is an index route. Leading underscore segments are pathless; trailing underscores are removed. The standalone fileRouter keeps flat rendering. For client-only applicationPlugins builds, actual parent modules select the optional nested adapter; see Nested layouts.",
       "code": "src/routes/_index/route.ts          \u2192 /\nsrc/routes/tasks._index/route.ts    \u2192 /tasks\nsrc/routes/tasks.search/route.ts    \u2192 /tasks/search\nsrc/routes/tasks.$id/route.ts       \u2192 /tasks/:id\nsrc/routes/files.$/route.ts         \u2192 /files/*"
     },
     {
@@ -21,7 +21,7 @@
     },
     {
       "title": "Limits",
-      "body": "File routing does not support arbitrary directory nesting, optional segments, parentheses, bracket escapes, or nested layout rendering. Duplicate or ambiguous parameter patterns return an error. Manual ordering remains your responsibility; file discovery sorts static routes ahead of dynamic routes.",
+      "body": "File routing does not support arbitrary directory nesting, optional segments, parentheses, arbitrary bracket escapes. Duplicate or ambiguous parameter patterns return an error. Manual ordering remains your responsibility; file discovery sorts static routes ahead of dynamic routes.",
       "code": ""
     }
   ]

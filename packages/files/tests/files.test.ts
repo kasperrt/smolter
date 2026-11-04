@@ -106,3 +106,32 @@ it("preserves escaped dots in folders and flat files", async () => {
     "/sitemap.xml",
   ]);
 });
+
+it("discovers nested layout ownership and rejects ambiguous leaf paths", async () => {
+  const root = await fixture([
+    "_auth",
+    "_auth._index",
+    "_auth.settings",
+    "_auth.settings._index",
+    "_auth.settings.profile",
+    "_auth.absent.deep.page",
+    "other",
+  ]);
+  const routes = await flatRoutes(root, true);
+  expect(routes).not.toBeInstanceOf(Error);
+  if (routes instanceof Error) return;
+  expect(
+    routes.find((route) => route.id === "routes/_auth.settings.profile"),
+  ).toMatchObject({
+    parentId: "routes/_auth.settings",
+    path: "/settings/profile",
+  });
+  expect(
+    routes.find((route) => route.id === "routes/_auth.absent.deep.page"),
+  ).toMatchObject({ parentId: "routes/_auth" });
+  expect(routes.find((route) => route.id === "routes/_auth")).toMatchObject({
+    pathless: true,
+  });
+  const ambiguous = await fixture(["_auth.$id", "_public.$name"]);
+  expect(await flatRoutes(ambiguous, true)).toBeInstanceOf(Error);
+});
