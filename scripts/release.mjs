@@ -1,5 +1,7 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { withSizeBadges } from "./badges.mjs";
 
@@ -96,6 +98,9 @@ if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
     await setTimeout(5_000);
   }
   if (mode !== "publish-jsr" && !(await published(npmUrl))) {
+    const packedDirectory = mkdtempSync(join(tmpdir(), "smolter-release-"));
+    const tarball = join(packedDirectory, "package.tgz");
+    command("pnpm", ["pack", "--out", tarball], { cwd: directory });
     const env = { ...process.env };
     delete env.SMOLTER_NPM_BOOTSTRAP_TOKEN;
     delete env.NODE_AUTH_TOKEN;
@@ -103,6 +108,7 @@ if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
       "npm",
       [
         "publish",
+        tarball,
         "--access",
         "public",
         "--provenance",
@@ -118,6 +124,7 @@ if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
         env,
       },
     );
+    rmSync(packedDirectory, { recursive: true, force: true });
   }
   // Registries can accept a publication before their read endpoints expose it.
   const deadline = Date.now() + 15 * 60_000;

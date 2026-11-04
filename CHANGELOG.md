@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.12-beta.3
+
+- Publish the pnpm-packed npm artifact so workspace catalog dependencies resolve to installable versions. Beta.2 incorrectly published `typescript: "catalog:"`; consumers should use beta.3. Runtime behavior is unchanged.
+
 ## 0.4.12-beta.2
 
 - Add optional React and Preact nested routing for client-only applications, using the existing data router. Preserve layout state and focus, scope forms/fetchers to their owning route, and support exclusive parent revalidation with per-layout shouldRevalidate vetoes.
