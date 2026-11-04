@@ -1,10 +1,15 @@
 import type { DataArgs, Route, Router } from "@smolter/core";
 import { createDataRouter, matchRoutes, safeWrapAsync } from "@smolter/core";
+import { errorData } from "@smolter/core/errors";
 import { prepareRoutes } from "@smolter/core/prepare-routes";
 import { type DataResponse, normalizeResult } from "@smolter/core/responses";
 import { loadRouter } from "@smolter/server";
 import { deferredHydration } from "./deferred-hydration.ts";
 import { dispatchRoute } from "./dispatch.ts";
+import { privateHeaders } from "./private-response.ts";
+import { progressiveDocument } from "./progressive-document.ts";
+import { requestPolicy } from "./request-policy.ts";
+import { resolveHydration, streamDocument } from "./stream-document.ts";
 
 interface ServerRoot {
   loader?: (args: DataArgs) => unknown;
@@ -21,9 +26,6 @@ export interface RenderProps {
   initialData?: string;
   document: boolean;
 }
-
-import { progressiveDocument } from "./progressive-document.ts";
-import { resolveHydration, streamDocument } from "./stream-document.ts";
 
 /** SSR settings for CSP nonce and early deferred-data hydration. */
 export interface RenderApplicationOptions {
@@ -44,6 +46,8 @@ export async function renderDocument(
     | (ReadableStream<Uint8Array> & { allReady: Promise<unknown> })
     | Promise<ReadableStream<Uint8Array> & { allReady: Promise<unknown> }>,
 ): Promise<Response> {
+  const denied = requestPolicy(request);
+  if (denied) return denied;
   routes = routes.map((route) => ({
     ...route,
     path: route.routePath ?? route.path,
@@ -96,8 +100,11 @@ export async function renderDocument(
           const result = await safeWrapAsync(async () => ({
             value: await route.loader!(args),
           }));
+          const cause = result.error?.cause;
           const value = result.error
-            ? (result.error.cause ?? result.error)
+            ? cause instanceof Error || cause instanceof Response
+              ? cause
+              : result.error
             : result.data!.value;
           routeResponse = responseMetadata(value);
           return value;
@@ -148,11 +155,7 @@ export async function renderDocument(
     root,
     snapshot: {
       ...snapshot,
-      error: snapshot.error && {
-        ...snapshot.error,
-        name: snapshot.error.name,
-        message: snapshot.error.message,
-      },
+      error: snapshot.error && errorData(snapshot.error),
     },
     ...(rootError && { rootError: true }),
   };
@@ -188,7 +191,7 @@ export async function renderDocument(
   headers.delete("Content-Length");
   headers.delete("Content-Encoding");
   headers.set("Content-Type", "text/html; charset=utf-8");
-  headers.set("Cache-Control", "no-store");
+  privateHeaders(headers);
   return new Response(
     deferred
       ? progressiveDocument(stream!, deferred.stream, {

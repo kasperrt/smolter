@@ -64,6 +64,7 @@ for (const framework of ["react", "preact"] as const) {
       },
       plugins: applicationPlugins({
         framework,
+        maxBodySize: 16,
         dataEndpoint: "/app/_smolter",
         resourceRequest: (url) => url === "/robots.txt",
       }),
@@ -72,6 +73,15 @@ for (const framework of ["react", "preact"] as const) {
     context.onTestFinished(() => server.close());
     await server.listen();
     const origin = server.resolvedUrls!.local[0];
+    for (const path of ["/", "/app/_smolter?url=%2F"]) {
+      const oversized = await fetch(new URL(path, origin), {
+        method: "POST",
+        headers: { Accept: "text/html" },
+        body: "x".repeat(17),
+      });
+      expect(oversized.status).toBe(413);
+      expect(await oversized.text()).toBe("Request body too large");
+    }
     const response = await fetch(origin, { headers: { Accept: "text/html" } });
     const html = await response.text();
     expect(response.status).toBe(202);

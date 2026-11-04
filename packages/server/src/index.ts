@@ -1,4 +1,3 @@
-import { privateResponse } from "./private-response.ts";
 /**
  * Request-scoped server rendering and HTTP data dispatch.
  * @module
@@ -12,6 +11,9 @@ import {
   type Router,
   safeWrapAsync,
 } from "@smolter/core";
+import { privateResponse } from "./private-response.ts";
+import { requestPolicy } from "./request-policy.ts";
+
 /** Create one router per server request, await this, then render the provider. */
 export async function loadRouter(
   routes: readonly Route[],
@@ -61,11 +63,11 @@ async function dispatchRequest(
   routes: readonly Route[],
   request: Request,
 ): Promise<Response> {
+  const denied = requestPolicy(request);
+  if (denied) return denied;
   const match = matchRoutes(routes, new URL(request.url).pathname);
-  const reading = request.method === "GET";
+  const reading = request.method === "GET" || request.method === "HEAD";
   if (!match) return Response.json({ error: "No route" }, { status: 404 });
-  if (!reading && !["POST", "PUT", "PATCH", "DELETE"].includes(request.method))
-    return Response.json({ error: "Method not allowed" }, { status: 405 });
   const handler = reading ? match.route.loader : match.route.action;
   if (!handler)
     return Response.json(

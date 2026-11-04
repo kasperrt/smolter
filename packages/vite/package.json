@@ -5,7 +5,9 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./react": "./src/react.ts",
+    "./deployment": "./src/deployment.ts"
   },
   "dependencies": {
     "@smolter/files": "workspace:*",

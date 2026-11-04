@@ -50,7 +50,7 @@ export function createSizeSelector<N>(
   useRef: UseRef,
 ) {
   return function SizeSelector() {
-    const [selection, select] = useState(5);
+    const [selection, select] = useState(1);
     const [framework, setFramework] = useState<"react" | "preact">("preact");
     const table: Record<string, number[]> = measurements[framework];
     const target = table[selection];

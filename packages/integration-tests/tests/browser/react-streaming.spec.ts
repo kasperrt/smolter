@@ -8,8 +8,8 @@ import {
 } from "@kasperrt/smolter/react/server";
 import { expect, test } from "@playwright/test";
 import { safeWrapAsync } from "@smolter/core";
+import { send, webRequest } from "@smolter/server/http";
 import { build } from "vite";
-import { send, webRequest } from "../../../server/src/http.ts";
 import { Destination, Home, root } from "../fixtures/react-streaming-page.tsx";
 
 for (const navigate of [false, true]) {

@@ -63,3 +63,16 @@ it("propagates deferred and malformed JSON failures to the caller", async () => 
     SyntaxError,
   );
 });
+
+it("keeps untrusted error keys from replacing the Error prototype", async () => {
+  const payload = JSON.parse(
+    '{"__routeError":{"message":"Denied","status":403,"__proto__":{"admin":true},"constructor":{"prototype":{"admin":true}}}}',
+  );
+  const error = await normalizeResult(payload);
+  expect(error instanceof Error).toBe(true);
+  expect(Object.getPrototypeOf(error)).toBe(Error.prototype);
+  expect(isRouteErrorResponse(error)).toBe(true);
+  expect(error).toMatchObject({ message: "Denied", status: 403 });
+  expect(Reflect.get(error as object, "admin")).toBeUndefined();
+  expect(Reflect.get({}, "admin")).toBeUndefined();
+});

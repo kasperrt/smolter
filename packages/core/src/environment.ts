@@ -17,7 +17,7 @@ export function configureApplication(
 }
 
 export function resolveApplicationURL(url: URL): URL {
-  return applicationEnvironment?.resolveURL?.(url) ?? url;
+  return navigationTarget(applicationEnvironment?.resolveURL?.(url) ?? url);
 }
 
 export function handoffDocument(event: MouseEvent, destination: URL): void {
@@ -33,9 +33,16 @@ export function handoffDocument(event: MouseEvent, destination: URL): void {
 }
 
 export function leaveDocument(destination: URL): void {
+  navigationTarget(destination);
   if (applicationEnvironment?.leaveDocument) {
     applicationEnvironment.leaveDocument(destination);
     return;
   }
   location.assign(destination.href);
+}
+
+export function navigationTarget(url: URL): URL {
+  if (url.protocol === "javascript:")
+    throw new TypeError("JavaScript navigation is not allowed");
+  return url;
 }

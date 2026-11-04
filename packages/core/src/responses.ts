@@ -53,7 +53,10 @@ export async function normalizeResult(
       status?: number;
       statusText?: string;
     };
-    return Object.assign(Error(error.message), error);
+    return Object.defineProperties(
+      Error(error.message),
+      Object.getOwnPropertyDescriptors(error),
+    );
   }
   if (value instanceof Response) {
     if (value.headers.has("Location")) return value;

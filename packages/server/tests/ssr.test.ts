@@ -1,6 +1,8 @@
 import { deserialize } from "@smolter/client";
 import * as preact from "@smolter/preact";
+import { Scripts as PreactScripts } from "@smolter/preact/document";
 import * as react from "@smolter/react";
+import { Scripts as ReactScripts } from "@smolter/react/document";
 import { loadRouter, serialize } from "@smolter/server";
 import { h } from "preact";
 import { render } from "preact-render-to-string";
@@ -154,4 +156,44 @@ it("restores successful hydration snapshots", async () => {
   expect(snapshot).toEqual(server.getSnapshot());
   expect(snapshot.error).toBeUndefined();
   server.dispose();
+});
+
+it("React and Preact static Scripts omit private error metadata", async () => {
+  const failure = Object.assign(new Error("Public failure"), {
+    config: "SYNTHETIC_PRIVATE_CONFIG",
+    status: 503,
+    statusText: "Unavailable",
+  });
+  const routes = [{ path: "/", loader: () => failure }];
+  const router = await loadRouter(routes, "https://app.example/");
+  const reactHTML = renderToString(
+    createElement(react.RouterApplication, {
+      router,
+      routes,
+      root: null,
+      rootModule: {
+        default: () => null,
+        Layout: ({ children }) => createElement("div", null, children),
+        ErrorBoundary: () => createElement(ReactScripts, {}),
+      },
+    }),
+  );
+  const preactHTML = render(
+    h(preact.RouterApplication, {
+      router,
+      routes,
+      root: null,
+      rootModule: {
+        default: () => null,
+        Layout: ({ children }) => h("div", null, children),
+        ErrorBoundary: () => h(PreactScripts, { nonce: "test-nonce" }),
+      },
+    }),
+  );
+  for (const html of [reactHTML, preactHTML]) {
+    expect(html).toContain("Public failure");
+    expect(html).toContain('"status":503');
+    expect(html).not.toContain("SYNTHETIC_PRIVATE_CONFIG");
+  }
+  router.dispose();
 });

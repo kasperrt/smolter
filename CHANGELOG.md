@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.5.2
+
+### Security
+
+- Keep route-data and SSR responses private when application metadata includes targeted CDN caching headers. Override existing `*-Cache-Control` and `Surrogate-Control` directives alongside `Cache-Control`, preventing public/max-age metadata from taking precedence over the framework’s private/no-store policy. Regression coverage includes both data dispatchers and React/Preact SSR. This hardens conditional cache disclosure; CDN rules that deliberately override origin headers remain a hosting responsibility.
+
+- Prevent cross-origin form-field disclosure in browser data transport. Same-origin route URLs whose pathname starts with `//` now fail before fetch instead of being interpreted as another host. Transport requests also use `mode: "same-origin"`, preventing HTTP redirects from forwarding mutation bodies to another origin. React and Preact minified-browser regressions cover both paths, cross-origin redirects and successful local submissions. Explicit legacy data endpoints must stay on the page origin; use a same-origin proxy for remote APIs. This requires an application to accept an attacker-influenced matching route URL or an upstream cross-origin redirect; it is not evidence of server RCE.
+
+- Contain malformed-target parser crashes in Vite development hosting. Guard Connect's public request entrypoint before its middleware parser; malformed URLs now receive a generic, non-cacheable 400 with a closed connection instead of terminating the process. Applies through `routerPlugin`/`fileRouter` and `applicationPlugins`, including middleware mode and server restarts. Unexpected failures still reach the host callback or server logger with a generic 500 response; no global exception handler or dependency fork is introduced. This protects Smolter-integrated development servers, not standalone Vite or a parent host that parses requests before Vite.
+
+- Enforce the production browser boundary for `*.server.ts/js` modules outside `src/`, including raw imports. Previously a root-level or shared-directory server-marked module could be bundled into client JavaScript if accidentally imported. Both React and Preact application builds now reject it; SSR builds remain supported. This closes a conditional credential/source disclosure, not an arbitrary file-read or RCE exploit.
+
+- Preserve every `Set-Cookie` header in the standalone Vite data transport. Previously only the final cookie survived, so a session-revocation cookie could be dropped when a response also updated another cookie. Reuse the shared streaming response writer instead of buffering and rewriting responses independently. This affects development transport; production Node hosting already uses the shared writer.
+
+- Close a Vite server-export boundary bypass: destructured bindings and class declarations named `loader`/`action` are now rejected alongside ordinary inline handlers. Previously these forms could leave server-only implementation or embedded credentials in served browser modules. Named re-exports from separate server files remain supported; client-only destructuring is unchanged. This is a conditional source-disclosure issue when applications use these export forms, not evidence of remote code execution.
+
+- Add blocking Semgrep code/workflow scans and a full-workspace pnpm audit to PR/main CI, with SARIF code-scanning results and retained audit artifacts. Pin GitHub Actions to commit SHAs and enable pnpm release-age, exotic-transitive-source and trust-downgrade protections. Scanners remain outside package dependencies.
+
+- **Cookie compatibility:** preserve `Secure` and all other `Set-Cookie` attributes verbatim in the Node adapter, regardless of `NODE_ENV`. Previously an unset or non-production environment silently removed `Secure`, making an HTTPS session cookie eligible for plain HTTP. Applications own local cookie configuration; use local HTTPS when testing secure sessions. A Chromium regression uses synthetic cookies and an intercepted HTTPS origin to verify HTTP exclusion.
+
+- Parse deferred settlement payloads as JSON instead of evaluating them as JavaScript object literals. A `__proto__` data key can no longer alter a queued value’s prototype or disappear during hydration. Keep script-closing text escaped; existing nonce and streaming behavior remain supported. A minified Chromium regression covers the queue before hydration and the final resolved data.
+
+- Restore route and hydration errors without invoking property setters. A JSON `__proto__` key can no longer replace the revived Error prototype or bypass Error classification. Ordinary error data is retained. This is object-local prototype injection, not a demonstrated global prototype pollution or Critical exploit.
+
+- Stop copying arbitrary Error properties into route-data responses and hydration snapshots. Transported errors retain name/message and explicit HTTP status/statusText/data, while request configs, credentials, causes, stacks and custom serialization hooks are excluded. Covers root, route and action failures, early/deferred hydration, and React/Preact static Scripts. Thrown non-Error objects remain failures instead of becoming successful loader data. Error messages and explicit public response data remain application-controlled and must not contain secrets. Consumers that relied on custom Error properties in the browser should move intentionally public fields into explicit route-error data or a Response payload.
+
+- Anchor Node request targets to the HTTP request origin. Leading double slashes or backslashes cannot change the origin used for action authorization, closing a browser-reproduced bypass of the new mutation checks. Preserve route paths and queries.
+- Reject executable `javascript:` destinations after URL normalization and deployment URL mapping, before React/Preact link rendering, document handoff or recovery-marker consumption. Mixed-case and embedded-tab/newline variants are covered. Normal HTTP(S), mail and telephone links remain supported. This prevents script execution when an application passes untrusted navigation targets; applications must still validate redirect destinations.
+- Restrict Vite client-route transforms to discovered route files and enforce canonical route-directory and Vite filesystem permissions. Crafted module queries can no longer read protected environment files or files outside the route directory through this transform. This fixes a development-server disclosure; production static hosting is not affected by this path.
+- Reject browser mutations whose Origin differs from the request URL origin, opaque/malformed origins, and requests marked cross-site. Apply the same policy to HTTP hosting, data dispatch and SSR document actions before application handlers run. Headerless non-browser clients remain supported; this does not replace authentication, authorization or application CSRF tokens. Reverse proxies must supply the correct public request URL through a trusted hosting configuration; forwarded headers are not trusted automatically.
+- Return 405 with Allow for unsupported action methods, including OPTIONS, instead of executing mutations. Normalize GET/HEAD as read operations across both data dispatchers; HEAD cannot reach an action.
+- **Upload compatibility:** bound Node and Vite request buffering to 1 MiB by default, including multipart overhead. Return 413 before application handlers run for oversized declared or chunked bodies; reject forbidden origins and methods before reading upload bytes. Set `maxBodySize` consistently on `createRequestHandler` and `applicationPlugins`/`routerPlugin` for intentionally larger uploads. Low-level `webRequest` accepts the limit as its fourth argument and throws a Response for rejection. Direct Web Request integrations and hosting still own request-time, rate, concurrency and decompression limits.
+
+### Code maintenance
+
+- Unify the feature calculator and Smolter routing/data table rows around the same production Vite measurements. Optional features start unchecked; the default data selection matches the data row. Verify both frameworks against displayed table cells in the hosted-site browser check. Complete-entry bundles and competitor snapshots remain clearly labeled with their measurement methods.
+
+- Replace cross-package source-path imports in tests and streaming fixtures with declared workspace exports. Move the Vite browser-boundary unit test into its owning package. Keep React and Preact entrypoints separate; no new public npm exports or dependencies.
+
 ## 0.5.1
 
 Stable release of the nested-layout and route-owned presentation work tested in 0.4.12-beta.1–beta.4, plus build-time removal of unused transition dispatch.

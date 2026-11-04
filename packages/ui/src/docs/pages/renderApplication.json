@@ -28,6 +28,11 @@
       "title": "Behavior and limits",
       "body": "React application SSR requires React and React DOM 19+. Preact requires preact-render-to-string >=6.8.1. The documentation site and examples use Preact 11.1.1 with renderer 6.8.2; npm applications install these peer dependencies independently. In React, render a stable deferred promise with use(promise) inside Suspense and an error boundary; in Preact, use Await with its fallback prop. By default, hydration waits for document completion. earlyHydration: true hydrates shell controls while deferred values stream. Errors after headers are sent cannot change HTTP status. Vite development HTML transformation buffers; production Node/Express hosting streams. Each request router is disposed on completion or cancellation.",
       "code": ""
+    },
+    {
+      "title": "Deferred payload safety",
+      "body": "Since 0.5.2, streamed settlements are parsed as JSON, preserving keys such as __proto__ as data instead of changing object inheritance. Script-closing text remains escaped and CSP nonces still apply. No API change is required. This protects the transport representation; validate untrusted loader data before using it for application decisions.",
+      "code": ""
     }
   ]
 }

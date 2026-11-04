@@ -1,16 +1,20 @@
 import { matchRoutes, type Route, safeWrapAsync } from "@smolter/core";
+import { errorData } from "@smolter/core/errors";
 import {
   type DataResponse,
   normalizeResult,
   resolveData,
 } from "@smolter/core/responses";
 import { privateResponse } from "./private-response.ts";
+import { requestPolicy } from "./request-policy.ts";
 
 async function dispatch(
   request: Request,
   routes: readonly (Route & { routePath?: string })[],
   document = false,
 ): Promise<Response> {
+  const denied = requestPolicy(request);
+  if (denied) return denied;
   const match = matchRoutes(
     routes.map((route) => ({ ...route, path: route.routePath ?? route.path })),
     new URL(request.url).pathname,
@@ -28,7 +32,12 @@ async function dispatch(
       signal: request.signal,
     }),
   }));
-  const value = error ? error.cause : data!.value;
+  const cause = error?.cause;
+  const value = error
+    ? cause instanceof Error || cause instanceof Response
+      ? cause
+      : error
+    : data!.value;
   if (value instanceof Response) {
     const location = value.headers.get("Location");
     if (document) return value;
@@ -49,7 +58,7 @@ async function dispatch(
   }
   if (value instanceof Error)
     return Response.json({
-      __routeError: { ...value, message: value.message },
+      __routeError: errorData(value),
     });
   if (value && typeof value === "object" && "__routeData" in value) {
     const result = value as DataResponse<unknown>;

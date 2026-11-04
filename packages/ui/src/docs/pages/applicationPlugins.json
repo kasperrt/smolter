@@ -21,13 +21,23 @@
     },
     {
       "title": "Behavior and limits",
-      "body": "The default SSR integration loads src/entry.server.tsx and starts src/entry.client.tsx. ssr: false supports browser-only apps. See the virtual routes guide; these plugins do not create a production Express server.",
+      "body": "The default SSR integration loads src/entry.server.tsx and starts src/entry.client.tsx. ssr: false supports browser-only apps. Production browser builds reject imported *.server.ts/js modules anywhere in the project, including raw imports; SSR builds can use them. This guard does not replace keeping secrets out of ordinary browser modules or restricting development-server access. See the virtual routes guide; these plugins do not create a production Express server.",
       "code": ""
     },
     {
       "title": "Renderer selection",
       "body": "Import applicationPlugins from react/vite or preact/vite. The React entry selects React without compatibility aliases; the Preact entry retains its Preact configuration. Both support SSR middleware, app-scoped transport, lazy file routes and route changes during development.",
       "code": "import { applicationPlugins } from \"@kasperrt/smolter/react/vite\";\n\nexport default { plugins: applicationPlugins() };"
+    },
+    {
+      "title": "Request body limit (0.5.2)",
+      "body": "Node createRequestHandler and Vite applicationPlugins/routerPlugin default to maxBodySize: 1048576 (1 MiB). Oversized declared lengths are rejected before reading; chunked bodies are counted as received and return 413 before application handlers run. The limit includes multipart overhead and counts received bytes, not decompressed content. Configure the same finite, nonnegative integer in production and development for intentionally larger uploads; zero permits only empty bodies. Keep hosting timeouts, rate/concurrency limits and any decompression limits. Low-level webRequest accepts this limit as its fourth argument and throws a Response for policy or size rejection; the provided middleware sends it automatically.",
+      "code": "createRequestHandler({ build, entry, maxBodySize: 8 * 1024 * 1024 });\n// Match the production limit in Vite:\napplicationPlugins({ maxBodySize: 8 * 1024 * 1024 });"
+    },
+    {
+      "title": "Malformed development requests (0.5.2)",
+      "body": "The plugin guards Vite's Connect request entrypoint because URL parsing happens before middleware. Malformed targets receive a generic, non-cacheable 400 without terminating the server. The guard remains active after Vite restarts and in middleware mode; it is installed once per Connect instance. Unexpected failures still reach the hosting error callback or server logger. A parent host that parses requests before invoking Vite must handle its own parser errors. This does not modify standalone Vite or production hosting.",
+      "code": ""
     }
   ]
 }

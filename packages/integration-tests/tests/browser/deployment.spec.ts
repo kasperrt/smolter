@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 import { safeWrapAsync } from "@smolter/core";
+import { deploymentPlugin } from "@smolter/vite/deployment";
 import { build } from "vite";
-import { deploymentPlugin } from "../../../vite/src/deployment.ts";
 
 const cleanups: (() => Promise<unknown>)[] = [];
 test.afterEach(async () => {

@@ -1,6 +1,6 @@
+import { lazyRoute as preactLazy } from "@smolter/preact/lazy-route";
+import { lazyRoute as reactLazy } from "@smolter/react/lazy-route";
 import { expect, it, vi } from "vitest";
-import { lazyRoute as preactLazy } from "../../preact/src/lazy-route.ts";
-import { lazyRoute as reactLazy } from "../../react/src/lazy-route.ts";
 import { deferred } from "./helpers/deferred.ts";
 
 for (const [name, lazyRoute] of [

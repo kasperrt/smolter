@@ -1,12 +1,12 @@
 import * as utils from "@kasperrt/smolter/utils";
 import * as core from "@smolter/core";
 import * as preact from "@smolter/preact";
+import * as preactDocument from "@smolter/preact/document";
 import * as react from "@smolter/react";
+import * as reactDocument from "@smolter/react/document";
+import * as preactServer from "@smolter/server/preact";
+import * as reactServer from "@smolter/server/react";
 import { expect, it } from "vitest";
-import * as preactDocument from "../../preact/src/document.tsx";
-import * as reactDocument from "../../react/src/document.tsx";
-import * as preactServer from "../../server/src/preact.ts";
-import * as reactServer from "../../server/src/react.ts";
 
 it("keeps adapter implementation helpers out of public utilities", () => {
   expect(Object.keys(utils).sort()).toEqual([

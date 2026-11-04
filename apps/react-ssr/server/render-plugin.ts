@@ -31,6 +31,8 @@ export function serverRendering(): Plugin {
                 signal: controller.signal,
               },
             );
+            // This is our SSR entry accepting a Request, not Express template-name rendering.
+            // nosemgrep: javascript.express.security.audit.res-render-injection.res-render-injection
             const html = await entry.render(incoming, template);
             response.setHeader("Content-Type", "text/html; charset=utf-8");
             response.end(html);

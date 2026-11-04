@@ -1,3 +1,4 @@
+import { errorData } from "@smolter/core/errors";
 /**
  * React document metadata, resource links and hydration scripts.
  *
@@ -23,6 +24,8 @@ function renderMeta(item: MetaDescriptor, index: number) {
       key: index,
       type: "application/ld+json",
       dangerouslySetInnerHTML: {
+        // JSON-LD uses serializeData, which escapes HTML script delimiters.
+        // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
         __html: serializeData(item["script:ld+json"]),
       },
     });
@@ -82,11 +85,7 @@ export function Scripts({ nonce }: ScriptProps): import("react").ReactElement {
     const current = router.getSnapshot();
     const snapshot = {
       ...current,
-      error: current.error && {
-        ...current.error,
-        name: current.error.name,
-        message: current.error.message,
-      },
+      error: current.error && errorData(current.error),
     };
     return serializeData({ root, snapshot, ...(rootError && { rootError }) });
   });

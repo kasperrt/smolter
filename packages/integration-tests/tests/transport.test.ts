@@ -166,7 +166,7 @@ it("preserves Response results and rejects unsupported HTTP methods", async () =
     (
       await handleRequest(
         routes,
-        new Request("https://test.dev/", { method: "HEAD" }),
+        new Request("https://test.dev/", { method: "OPTIONS" }),
       )
     ).status,
   ).toBe(405);

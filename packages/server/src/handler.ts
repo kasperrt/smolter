@@ -17,6 +17,8 @@ export interface RequestHandlerOptions {
   entry: string;
   /** Must match the browser and Vite transport endpoint. */
   dataEndpoint?: string;
+  /** Maximum request-body bytes, including multipart overhead. Defaults to 1 MiB. */
+  maxBodySize?: number;
 }
 
 /** Node request with optional Express protocol and original URL information. */
@@ -34,6 +36,7 @@ export function createRequestHandler({
   build,
   entry,
   dataEndpoint,
+  maxBodySize,
 }: RequestHandlerOptions): (
   incoming: ServerIncomingMessage,
   outgoing: ServerResponse,
@@ -55,13 +58,19 @@ export function createRequestHandler({
         await send(new Response(target.message, { status: 400 }), outgoing);
         return;
       }
-      const request = await webRequest(incoming, outgoing, target ?? undefined);
+      const request = await webRequest(
+        incoming,
+        outgoing,
+        target ?? undefined,
+        maxBodySize,
+      );
       const response = dataRequest
         ? await build.handleDataRequest(request)
         : await build.default(request, entry);
       await send(dataRequest ? privateResponse(response) : response, outgoing);
     };
     const { error } = await safeWrapAsync(handle);
-    if (error) next(error);
+    if (error?.cause instanceof Response) await send(error.cause, outgoing);
+    else if (error) next(error);
   };
 }

@@ -2,8 +2,8 @@ import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
+import { fileRouter } from "@smolter/vite";
 import { createServer } from "vite";
-import { fileRouter } from "../../../vite/src/index.ts";
 
 const cleanups: (() => Promise<unknown>)[] = [];
 

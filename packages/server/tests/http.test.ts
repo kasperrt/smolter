@@ -58,7 +58,7 @@ test("hosts documents and route data under existing Node middleware", async () =
   }
 });
 
-test.each(["production", "development"])(
+test.each(["production", "development", "test", undefined])(
   "preserves separate response cookies in %s",
   async (mode) => {
     vi.stubEnv("NODE_ENV", mode);
@@ -73,6 +73,10 @@ test.each(["production", "development"])(
             headers: [
               ["Set-Cookie", "session=one; Secure; HttpOnly; SameSite=Lax"],
               ["Set-Cookie", "theme=dark; Secure; Path=/"],
+              [
+                "Set-Cookie",
+                "__Host-session=two; Secure; HttpOnly; Path=/; SameSite=None; Partitioned",
+              ],
             ],
           }),
         handleDataRequest: () => new Response(null),
@@ -88,10 +92,10 @@ test.each(["production", "development"])(
     await once(server, "listening");
     const address = server.address() as AddressInfo;
     const response = await fetch(`http://127.0.0.1:${address.port}/`);
-    const secure = mode === "production" ? "; Secure" : "";
     expect(response.headers.getSetCookie()).toEqual([
-      `session=one${secure}; HttpOnly; SameSite=Lax`,
-      `theme=dark${secure}; Path=/`,
+      "session=one; Secure; HttpOnly; SameSite=Lax",
+      "theme=dark; Secure; Path=/",
+      "__Host-session=two; Secure; HttpOnly; Path=/; SameSite=None; Partitioned",
     ]);
     expect(await response.text()).toBe("cookies");
   },
@@ -184,4 +188,87 @@ test("ends empty document responses without buffering a body", async () => {
   );
   expect(response.status).toBe(204);
   expect(await response.text()).toBe("");
+});
+
+test("blocks cross-origin and unsupported HTTP mutations before custom builds", async () => {
+  const action = vi.fn(() => new Response("saved"));
+  const handler = createRequestHandler({
+    entry: "/entry.js",
+    dataEndpoint: "/_smolter",
+    build: { default: action, handleDataRequest: action },
+  });
+  const server = createServer((request, response) => {
+    void handler(request, response, () => {
+      response.statusCode = 500;
+      response.end();
+    });
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  onTestFinished(() => {
+    server.close();
+  });
+  const address = server.address() as AddressInfo;
+  const base = `http://127.0.0.1:${address.port}`;
+  for (const path of [
+    "/account",
+    "/account.__smolter",
+    "/_smolter?url=%2Faccount",
+  ]) {
+    const denied = await fetch(`${base}${path}`, {
+      method: "POST",
+      headers: {
+        Origin: "https://attacker.example",
+        Cookie: "session=synthetic",
+      },
+      body: "value=changed",
+    });
+    expect(denied.status).toBe(403);
+    expect((await fetch(`${base}${path}`, { method: "OPTIONS" })).status).toBe(
+      405,
+    );
+  }
+  expect(action).not.toHaveBeenCalled();
+  const allowed = await fetch(`${base}/account`, {
+    method: "POST",
+    headers: { Origin: base },
+    body: "value=changed",
+  });
+  expect(allowed.status).toBe(200);
+  expect(action).toHaveBeenCalledTimes(1);
+});
+
+test("request-target slashes cannot replace the HTTP host used for origin checks", async () => {
+  const action = vi.fn((request: Request) => new Response(request.url));
+  const handler = createRequestHandler({
+    entry: "/entry.js",
+    build: { default: action, handleDataRequest: action },
+  });
+  const server = createServer((request, response) => {
+    void handler(request, response, () => {
+      response.statusCode = 500;
+      response.end();
+    });
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  onTestFinished(() => {
+    server.close();
+  });
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  for (const path of [
+    "//attacker.example/account",
+    "/%5cattacker.example/account",
+  ]) {
+    const denied = await fetch(base + path, {
+      method: "POST",
+      headers: { Origin: "http://attacker.example" },
+    });
+    expect(denied.status).toBe(403);
+  }
+  expect(action).not.toHaveBeenCalled();
+  const response = await fetch(`${base}//attacker.example/account?keep=1`);
+  expect(await response.text()).toBe(
+    `${base}//attacker.example/account?keep=1`,
+  );
 });

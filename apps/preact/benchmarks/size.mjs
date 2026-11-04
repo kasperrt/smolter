@@ -2,13 +2,13 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { commonExports, measure, measureAdapters } from "./measure.mjs";
 
 const path = new URL("../../../packages/ui/src/size.json", import.meta.url);
+await import("./size-combinations.mjs");
 const sizes = await measureAdapters();
 const json = `${JSON.stringify(sizes, null, 2)}\n`;
 
 if (readFileSync(path, "utf8") !== json) writeFileSync(path, json);
 
 if (!process.argv.includes("--write-only")) {
-  await import("./size-combinations.mjs");
   const references = JSON.parse(
     readFileSync(
       new URL(

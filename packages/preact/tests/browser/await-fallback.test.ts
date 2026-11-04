@@ -1,12 +1,9 @@
+import { type DeferredWindow, readHydration } from "@smolter/client/hydration";
 import { safeWrapAsync } from "@smolter/core";
 import { createElement, hydrate, render } from "preact";
 import { Suspense } from "preact/compat";
 import { useErrorBoundary } from "preact/hooks";
 import { expect, it, vi } from "vitest";
-import {
-  type DeferredWindow,
-  readHydration,
-} from "../../../client/src/hydration.ts";
 import { Await } from "../../src/await.tsx";
 
 it("keeps current values when an abandoned promise settles", async (context) => {

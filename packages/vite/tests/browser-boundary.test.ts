@@ -1,6 +1,6 @@
 import { build, type Plugin } from "vite";
 import { expect, it } from "vitest";
-import { browserBoundary } from "../../vite/src/application/browser-boundary.ts";
+import { browserBoundary } from "../src/application/browser-boundary.ts";
 
 interface FixtureOptions {
   moduleId?: string;

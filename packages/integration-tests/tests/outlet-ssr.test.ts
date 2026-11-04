@@ -54,3 +54,28 @@ it("renders Preact matches under a plain provider on the server", async () => {
   ).toBe("<p>shell:loaded</p>");
   router.dispose();
 });
+
+it("React and Preact links reject executable URLs before writing HTML", () => {
+  const router = createDataRouter([{ path: "/" }]);
+  for (const to of ["javascript:alert(1)", "java\nscript:alert(1)"]) {
+    expect(() =>
+      renderToString(
+        createElement(
+          react.RouterProvider,
+          { router },
+          createElement(react.Link, { to, reloadDocument: true }, "link"),
+        ),
+      ),
+    ).toThrow("JavaScript navigation");
+    expect(() =>
+      preactRender(
+        preactElement(
+          preact.RouterProvider,
+          { router },
+          preactElement(preact.Link, { to, reloadDocument: true }, "link"),
+        ),
+      ),
+    ).toThrow("JavaScript navigation");
+  }
+  router.dispose();
+});

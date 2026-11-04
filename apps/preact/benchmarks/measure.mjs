@@ -81,10 +81,6 @@ export async function measureAdapters() {
     reactLazyApplication,
     preactApplication,
     preactLazyApplication,
-    reactRouting,
-    preactRouting,
-    reactCommon,
-    preactCommon,
   ] = await Promise.all([
     measure("./dist/react/index.js"),
     measure("./dist/preact/index.js"),
@@ -112,11 +108,16 @@ export async function measureAdapters() {
       "./dist/preact/document.js",
       "./dist/preact/lazy-route.js",
     ]),
-    measure("./dist/react/index.js", routingExports),
-    measure("./dist/preact/index.js", routingExports),
-    measure("./dist/react/index.js", commonExports),
-    measure("./dist/preact/index.js", commonExports),
   ]);
+  const combinations = JSON.parse(
+    readFileSync(
+      new URL(
+        "../../../packages/ui/src/size-combinations.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
   return {
     react,
     preact,
@@ -126,10 +127,10 @@ export async function measureAdapters() {
     reactLazyApplication,
     preactApplication,
     preactLazyApplication,
-    reactRouting,
-    preactRouting,
-    reactCommon,
-    preactCommon,
+    reactRouting: combinations.react[0][1],
+    preactRouting: combinations.preact[0][1],
+    reactCommon: combinations.react[1][1],
+    preactCommon: combinations.preact[1][1],
     ...JSON.parse(
       readFileSync(
         new URL(

@@ -23,6 +23,11 @@
       "title": "Safeguards",
       "body": "Null metadata and server rendering are no-ops. Offline, invalid, unchanged or timed-out manifests never reload. A session marker prevents loops; blocked storage disables reload. The original entry script must still be available. Mutations are not replayed.",
       "code": ""
+    },
+    {
+      "title": "Navigation security",
+      "body": "Since 0.5.2, javascript: targets are rejected after URL parsing, including mixed-case and embedded-tab/newline forms. Link rendering and navigation reject them before handing control to the browser or a custom callback. Recovery refuses them without consuming a reload marker. Validate destinations from untrusted input and restrict allowed origins when your application requires it; ordinary external HTTP(S), mail and telephone links are still supported.",
+      "code": ""
     }
   ]
 }

@@ -1,8 +1,5 @@
+import { type DeferredWindow, readHydration } from "@smolter/client/hydration";
 import { expect, it, vi } from "vitest";
-import {
-  type DeferredWindow,
-  readHydration,
-} from "../../../client/src/hydration.ts";
 
 const deferredWindow = window as DeferredWindow;
 
@@ -214,4 +211,20 @@ it("bounds the default budget at eight seconds and honors a longer explicit budg
   );
   expect(await second.hydration.pending).toBe("slow success");
   expect(vi.getTimerCount()).toBe(0);
+});
+
+it("keeps rejected hydration data from replacing the Error prototype", async (context) => {
+  Reflect.deleteProperty(window, "__smolterDeferred");
+  const { hydration, dispose } = readHydration(
+    '{"value":{"__smolterRejected":{"message":"Denied","__proto__":{"admin":true}}}}',
+  );
+  context.onTestFinished(dispose);
+  const [result] = await Promise.allSettled([hydration.value]);
+  expect(result.status).toBe("rejected");
+  if (result.status !== "rejected") throw new Error("Expected rejection");
+  expect(result.reason instanceof Error).toBe(true);
+  expect(Object.getPrototypeOf(result.reason)).toBe(Error.prototype);
+  expect(result.reason.message).toBe("Denied");
+  expect(result.reason.admin).toBeUndefined();
+  expect(Reflect.get({}, "admin")).toBeUndefined();
 });

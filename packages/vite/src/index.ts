@@ -1,13 +1,20 @@
-import { readFile } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 import { flatRoutes } from "@smolter/files";
-import { type Plugin, transformWithOxc } from "vite";
+import {
+  isFileServingAllowed,
+  type Plugin,
+  transformWithOxc,
+  type ViteDevServer,
+} from "vite";
 import { prefetchSelection } from "./prefetch-plugin.ts";
 import { configureTransport } from "./transport.ts";
 
 export interface FileRouterOptions {
   directory?: string;
   dataEndpoint?: string;
+  /** Maximum development request-body bytes. Defaults to 1 MiB. */
+  maxBodySize?: number;
   clientRoutes?: string;
   serverRoutes?: string;
   framework?: "react" | "preact";
@@ -17,6 +24,7 @@ export interface FileRouterOptions {
 export function routerPlugin({
   directory = "src/routes",
   dataEndpoint,
+  maxBodySize,
   clientRoutes,
   serverRoutes,
   framework = "react",
@@ -24,6 +32,8 @@ export function routerPlugin({
   const prefetch = prefetchSelection();
   let root: string;
   let projectRoot: string;
+  let devServer: ViteDevServer | undefined;
+  const clientFiles = new Set<string>();
   const publicId = "virtual:smolter/routes";
   const virtualId = `\0${publicId}`;
   const suffix = "?smolter-client";
@@ -52,8 +62,24 @@ export function routerPlugin({
     async load(id, options) {
       if (id.endsWith(suffix)) {
         const file = id.slice(0, -suffix.length);
+        if (!clientFiles.has(file)) {
+          const routes = await flatRoutes(root, true);
+          if (routes instanceof Error) return this.error(routes.message);
+          for (const route of routes) clientFiles.add(route.file);
+        }
+        if (!clientFiles.has(file))
+          return this.error("Forbidden client route module");
+        const canonical = await realpath(file);
+        const directory = await realpath(root);
+        const path = relative(directory, canonical);
+        if (
+          path.startsWith("..") ||
+          resolve(directory, path) !== canonical ||
+          (devServer && !isFileServingAllowed(canonical, devServer))
+        )
+          return this.error("Forbidden client route module");
         const transformed = await transformWithOxc(
-          await readFile(file, "utf8"),
+          await readFile(canonical, "utf8"),
           file,
         );
         const ast = this.parse(transformed.code);
@@ -75,21 +101,41 @@ export function routerPlugin({
           if (!server.length) {
             const declaration = statement.declaration;
             const name =
-              declaration?.type === "FunctionDeclaration"
+              declaration?.type === "FunctionDeclaration" ||
+              declaration?.type === "ClassDeclaration"
                 ? declaration.id?.name
                 : undefined;
             const variables =
               declaration?.type === "VariableDeclaration"
                 ? declaration.declarations
                 : [];
+            type Binding = NonNullable<
+              Extract<
+                (typeof variables)[number]["id"],
+                { type: "ArrayPattern" }
+              >["elements"][number]
+            >;
+            function serverBinding(node: Binding): boolean {
+              if (node.type === "Identifier")
+                return node.name === "loader" || node.name === "action";
+              if (node.type === "AssignmentPattern")
+                return serverBinding(node.left);
+              if (node.type === "RestElement")
+                return serverBinding(node.argument);
+              if (node.type === "ArrayPattern")
+                return node.elements.some(
+                  (item) => item !== null && serverBinding(item),
+                );
+              return node.properties.some((item) =>
+                serverBinding(
+                  item.type === "RestElement" ? item.argument : item.value,
+                ),
+              );
+            }
             if (
               name === "loader" ||
               name === "action" ||
-              variables.some(
-                (item) =>
-                  item.id.type === "Identifier" &&
-                  ["loader", "action"].includes(item.id.name),
-              )
+              variables.some((item) => serverBinding(item.id))
             ) {
               return this.error(
                 `Re-export loader/action from separate files in ${file}; inline server handlers cannot enter a browser module.`,
@@ -130,6 +176,8 @@ export function routerPlugin({
         return this.error(
           "The .__smolter suffix is reserved for data transport.",
         );
+      clientFiles.clear();
+      for (const route of routes) clientFiles.add(route.file);
       const imports: string[] = [];
       const definitions: string[] = [];
       for (const [index, route] of routes.entries()) {
@@ -183,6 +231,7 @@ export function routerPlugin({
       return `${imports.join("\n")}\nexport default [${definitions.join(",\n")}];\n`;
     },
     configureServer(server) {
+      devServer = server;
       prefetch.watch(server);
       server.watcher.add(root);
       const refresh = (file: string) => {
@@ -190,6 +239,7 @@ export function routerPlugin({
         const path = relative(root, file).replaceAll("\\", "/");
         if (!/^(?:[^/]+\.[jt]sx?|[^/]+\/route\.[jt]sx?)$/.test(path)) return;
         if (path.endsWith(".d.ts")) return;
+        clientFiles.clear();
         for (const environment of Object.values(server.environments)) {
           const module = environment.moduleGraph.getModuleById(virtualId);
           if (module) environment.moduleGraph.invalidateModule(module);
@@ -204,7 +254,13 @@ export function routerPlugin({
         server.watcher.off("change", refresh);
         server.watcher.off("unlink", refresh);
       });
-      configureTransport(server, publicId, framework, dataEndpoint);
+      configureTransport(
+        server,
+        publicId,
+        framework,
+        dataEndpoint,
+        maxBodySize,
+      );
     },
   };
 }

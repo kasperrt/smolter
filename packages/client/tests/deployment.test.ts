@@ -959,3 +959,20 @@ it("waits for another tracked fetcher before recovering a failed action redirect
   );
   expect(storage.size).toBe(1);
 });
+
+it("never executes or claims a recovery marker for executable destinations", async () => {
+  const { options, reload, storage, location } = setup("new");
+  const { recoverDeployment } = await import("../src/deployment.ts");
+  for (const destination of ["javascript:alert(1)", "java\nscript:alert(1)"]) {
+    expect(await recoverDeployment(options, new URL(destination))).toBe(false);
+    expect(
+      await recoverDeployment(
+        { ...options, reload: undefined },
+        new URL(destination),
+      ),
+    ).toBe(false);
+  }
+  expect(reload).not.toHaveBeenCalled();
+  expect(location.assign).not.toHaveBeenCalled();
+  expect(storage.size).toBe(0);
+});

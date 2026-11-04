@@ -9,7 +9,7 @@ const forbiddenModules = [
   /\/smolter\/dist\/(?:internal\/)?(?:server|vite|files)\//,
   /\/smolter\/packages\/(?:server|vite)\/src\//,
   /\/vite\/dist\/node\//,
-  /\/src\/[^?]*\.server\.[cm]?[jt]sx?(?:\?|$)/,
+  /\/[^/?]*\.server\.[cm]?[jt]sx?(?:\?|$)/,
 ];
 
 /** Check emitted modules, after tree shaking, rather than import strings. */

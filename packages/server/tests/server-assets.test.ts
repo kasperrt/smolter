@@ -1,5 +1,5 @@
+import type { AppRoute } from "@smolter/preact/route-types";
 import { expect, it } from "vitest";
-import type { AppRoute } from "../../preact/src/route-types.ts";
 import { dispatchRoute, renderApplication } from "../src/application.tsx";
 import { routePreloads } from "../src/assets.ts";
 
