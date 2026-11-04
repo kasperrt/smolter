@@ -6,7 +6,9 @@ import { type DataResponse, normalizeResult } from "@smolter/core/responses";
 import { loadRouter } from "@smolter/server";
 import { deferredHydration } from "./deferred-hydration.ts";
 import { dispatchRoute } from "./dispatch.ts";
+import { progressiveDocument } from "./progressive-document.ts";
 import { requestPolicy } from "./request-policy.ts";
+import { resolveHydration, streamDocument } from "./stream-document.ts";
 
 interface ServerRoot {
   loader?: (args: DataArgs) => unknown;
@@ -23,9 +25,6 @@ export interface RenderProps {
   initialData?: string;
   document: boolean;
 }
-
-import { progressiveDocument } from "./progressive-document.ts";
-import { resolveHydration, streamDocument } from "./stream-document.ts";
 
 /** SSR settings for CSP nonce and early deferred-data hydration. */
 export interface RenderApplicationOptions {

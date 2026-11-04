@@ -166,3 +166,32 @@ it("allows destructured client exports without mistaking property names for serv
   expect(result?.code).toContain("clientLoader");
   expect(result?.code).toContain("clientAction");
 });
+
+it.for(["react", "preact"] as const)(
+  "preserves %s session revocation alongside other development response cookies",
+  async (framework, context) => {
+    const { root, server } = await viteFixture(
+      context,
+      'export { action } from "../../handlers.ts";',
+      { framework },
+    );
+    await writeFile(
+      join(root, "handlers.ts"),
+      `export function action() {
+    const headers = new Headers();
+    headers.append("Set-Cookie", "session=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax");
+    headers.append("Set-Cookie", "theme=dark; Path=/; SameSite=Lax");
+    return Response.json({ signedOut: true }, { headers });
+  }`,
+    );
+    const response = await fetch(`${server.resolvedUrls!.local[0]}.__smolter`, {
+      method: "POST",
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ signedOut: true });
+    expect(response.headers.getSetCookie()).toEqual([
+      "session=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax",
+      "theme=dark; Path=/; SameSite=Lax",
+    ]);
+  },
+);

@@ -1,5 +1,3 @@
-import { privateResponse } from "./private-response.ts";
-import { requestPolicy } from "./request-policy.ts";
 /**
  * Request-scoped server rendering and HTTP data dispatch.
  * @module
@@ -13,6 +11,9 @@ import {
   type Router,
   safeWrapAsync,
 } from "@smolter/core";
+import { privateResponse } from "./private-response.ts";
+import { requestPolicy } from "./request-policy.ts";
+
 /** Create one router per server request, await this, then render the provider. */
 export async function loadRouter(
   routes: readonly Route[],

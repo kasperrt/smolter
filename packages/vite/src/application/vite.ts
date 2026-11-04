@@ -77,13 +77,13 @@ export function applicationPlugins({
     configureServer(server) {
       // Own the HTTP adapter so redirects retain authentication cookies.
       server.middlewares.use(async (incoming, outgoing, next) => {
-        const target = dataTarget(
-          new URL(`http://local${incoming.url ?? "/"}`),
-          dataEndpoint,
-        );
-        if (target === undefined) return next();
-        outgoing.setHeader("Cache-Control", "private, no-store");
         const run = async () => {
+          const target = dataTarget(
+            new URL(`http://local${incoming.url ?? "/"}`),
+            dataEndpoint,
+          );
+          if (target === undefined) return next();
+          outgoing.setHeader("Cache-Control", "private, no-store");
           if (target instanceof Error)
             return send(
               new Response(target.message, { status: 400 }),

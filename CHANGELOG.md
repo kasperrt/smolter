@@ -4,6 +4,8 @@
 
 ### Security
 
+- Preserve every `Set-Cookie` header in the standalone Vite data transport. Previously only the final cookie survived, so a session-revocation cookie could be dropped when a response also updated another cookie. Reuse the shared streaming response writer instead of buffering and rewriting responses independently. This affects development transport; production Node hosting already uses the shared writer.
+
 - Close a Vite server-export boundary bypass: destructured bindings and class declarations named `loader`/`action` are now rejected alongside ordinary inline handlers. Previously these forms could leave server-only implementation or embedded credentials in served browser modules. Named re-exports from separate server files remain supported; client-only destructuring is unchanged. This is a conditional source-disclosure issue when applications use these export forms, not evidence of remote code execution.
 
 - Add blocking Semgrep code/workflow scans and a full-workspace pnpm audit to PR/main CI, with SARIF code-scanning results and retained audit artifacts. Pin GitHub Actions to commit SHAs and enable pnpm release-age, exotic-transitive-source and trust-downgrade protections. Scanners remain outside package dependencies.

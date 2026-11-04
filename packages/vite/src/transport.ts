@@ -11,13 +11,13 @@ export function configureTransport(
   maxBodySize?: number,
 ): void {
   server.middlewares.use(async (incoming, outgoing, next) => {
-    const target = dataTarget(
-      new URL(`http://local${incoming.url ?? "/"}`),
-      dataEndpoint,
-    );
-    if (target === undefined) return next();
-    outgoing.setHeader("Cache-Control", "private, no-store");
     const dispatch = async () => {
+      const target = dataTarget(
+        new URL(`http://local${incoming.url ?? "/"}`),
+        dataEndpoint,
+      );
+      if (target === undefined) return next();
+      outgoing.setHeader("Cache-Control", "private, no-store");
       if (target instanceof Error) {
         outgoing.statusCode = 400;
         outgoing.end(target.message);
@@ -29,11 +29,7 @@ export function configureTransport(
         server.ssrLoadModule(`@kasperrt/smolter/${framework}/server`),
       ]);
       const response: Response = await handleRequest(routes, request);
-      outgoing.statusCode = response.status;
-      response.headers.forEach((value, name) =>
-        outgoing.setHeader(name, value),
-      );
-      outgoing.end(new Uint8Array(await response.arrayBuffer()));
+      await send(response, outgoing);
     };
     const { error } = await safeWrapAsync(dispatch);
     if (error?.cause instanceof Response) await send(error.cause, outgoing);

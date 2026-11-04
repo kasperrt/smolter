@@ -33,14 +33,14 @@ export async function viteFixture(
     logLevel: "silent",
     plugins: [createPlugin(options)],
     resolve: {
-      alias: {
-        "@kasperrt/smolter/react/client": resolve(
-          "packages/client/src/index.ts",
+      alias: Object.fromEntries(
+        ["react", "preact"].flatMap((framework) =>
+          ["client", "server"].map((entry) => [
+            `@kasperrt/smolter/${framework}/${entry}`,
+            resolve(`packages/${entry}/src/index.ts`),
+          ]),
         ),
-        "@kasperrt/smolter/react/server": resolve(
-          "packages/server/src/index.ts",
-        ),
-      },
+      ),
     },
     // Keep separate edits outside the watcher's 100 ms change-event throttle.
     server: { port: 0, watch: { usePolling: true, interval: 150 } },
