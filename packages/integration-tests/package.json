@@ -1,0 +1,27 @@
+{
+  "name": "@smolter/integration-tests",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "preact": "catalog:",
+    "preact-render-to-string": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "esbuild": "catalog:",
+    "terser": "catalog:",
+    "vitest": "catalog:",
+    "vite": "catalog:",
+    "@playwright/test": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "@smolter/core": "workspace:*",
+    "@smolter/react": "workspace:*",
+    "@smolter/preact": "workspace:*",
+    "@smolter/server": "workspace:*",
+    "@smolter/client": "workspace:*",
+    "@smolter/vite": "workspace:*",
+    "@kasperrt/smolter": "workspace:*"
+  }
+}

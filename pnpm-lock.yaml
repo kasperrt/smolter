@@ -65,6 +65,18 @@ importers:
 
   .:
     dependencies:
+      preact:
+        specifier: '>=11.0.1'
+        version: 11.1.1(preact-render-to-string@6.8.2)
+      preact-render-to-string:
+        specifier: '>=6.8.1'
+        version: 6.8.2(preact@11.1.1)
+      react:
+        specifier: '>=18'
+        version: 19.3.1
+      react-dom:
+        specifier: '>=18'
+        version: 19.3.1(react@19.3.1)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -75,63 +87,21 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.64.1
-      '@smolter/client':
-        specifier: workspace:*
-        version: link:packages/client
       '@smolter/core':
         specifier: workspace:*
         version: link:packages/core
-      '@smolter/files':
-        specifier: workspace:*
-        version: link:packages/files
-      '@smolter/preact':
-        specifier: workspace:*
-        version: link:packages/preact
-      '@smolter/react':
-        specifier: workspace:*
-        version: link:packages/react
-      '@smolter/server':
-        specifier: workspace:*
-        version: link:packages/server
       '@smolter/ui':
         specifier: workspace:*
         version: link:packages/ui
-      '@smolter/vite':
-        specifier: workspace:*
-        version: link:packages/vite
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
-      '@types/react':
-        specifier: 'catalog:'
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: 'catalog:'
-        version: 19.3.0(@types/react@19.3.0)
       '@vitest/browser-playwright':
         specifier: 'catalog:'
         version: 5.1.0(playwright@1.64.1)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))(vitest@5.1.0)
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.1.0(@vitest/browser@5.1.0)(vitest@5.1.0)
-      esbuild:
-        specifier: 'catalog:'
-        version: 0.28.2
-      preact:
-        specifier: 'catalog:'
-        version: 11.1.1(preact-render-to-string@6.8.2)
-      preact-render-to-string:
-        specifier: 'catalog:'
-        version: 6.8.2(preact@11.1.1)
-      react:
-        specifier: 'catalog:'
-        version: 19.3.1
-      react-dom:
-        specifier: 'catalog:'
-        version: 19.3.1(react@19.3.1)
-      terser:
-        specifier: 'catalog:'
-        version: 5.51.2
       vite:
         specifier: 'catalog:'
         version: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1)
@@ -150,6 +120,13 @@ importers:
       preact:
         specifier: 'catalog:'
         version: 11.1.1(preact-render-to-string@6.8.2)
+    devDependencies:
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
+      terser:
+        specifier: 'catalog:'
+        version: 5.51.2
 
   apps/preact-ssr:
     dependencies:
@@ -181,6 +158,12 @@ importers:
         specifier: 'catalog:'
         version: 19.3.1(react@19.3.1)
     devDependencies:
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
       '@vitejs/plugin-react':
         specifier: 'catalog:'
         version: 6.2.1(oxc-transform-react@0.156.0)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))
@@ -203,6 +186,12 @@ importers:
         specifier: 'catalog:'
         version: 19.3.1(react@19.3.1)
     devDependencies:
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
       '@vitejs/plugin-react':
         specifier: 'catalog:'
         version: 6.2.1(oxc-transform-react@0.156.0)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))
@@ -215,14 +204,89 @@ importers:
       '@smolter/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))
 
-  packages/core: {}
+  packages/core:
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))
 
   packages/files:
     dependencies:
       '@smolter/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))
+
+  packages/integration-tests:
+    devDependencies:
+      '@kasperrt/smolter':
+        specifier: workspace:*
+        version: link:../..
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.64.1
+      '@smolter/client':
+        specifier: workspace:*
+        version: link:../client
+      '@smolter/core':
+        specifier: workspace:*
+        version: link:../core
+      '@smolter/preact':
+        specifier: workspace:*
+        version: link:../preact
+      '@smolter/react':
+        specifier: workspace:*
+        version: link:../react
+      '@smolter/server':
+        specifier: workspace:*
+        version: link:../server
+      '@smolter/vite':
+        specifier: workspace:*
+        version: link:../vite
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
+      preact:
+        specifier: 'catalog:'
+        version: 11.1.1(preact-render-to-string@6.8.2)
+      preact-render-to-string:
+        specifier: 'catalog:'
+        version: 6.8.2(preact@11.1.1)
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      terser:
+        specifier: 'catalog:'
+        version: 5.51.2
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))
 
   packages/preact:
     dependencies:
@@ -232,9 +296,13 @@ importers:
       '@smolter/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
       preact:
         specifier: 'catalog:'
         version: 11.1.1(preact-render-to-string@6.8.2)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))
 
   packages/react:
     dependencies:
@@ -244,12 +312,22 @@ importers:
       '@smolter/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
       react-dom:
         specifier: 'catalog:'
         version: 19.3.1(react@19.3.1)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))
 
   packages/server:
     dependencies:
@@ -262,19 +340,49 @@ importers:
       '@smolter/react':
         specifier: workspace:*
         version: link:../react
-
-  packages/ui:
-    dependencies:
+    devDependencies:
+      '@smolter/client':
+        specifier: workspace:*
+        version: link:../client
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
       preact:
         specifier: 'catalog:'
         version: 11.1.1(preact-render-to-string@6.8.2)
+      preact-render-to-string:
+        specifier: 'catalog:'
+        version: 6.8.2(preact@11.1.1)
       react:
-        specifier: '>=18'
+        specifier: 'catalog:'
         version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))
+
+  packages/ui:
     devDependencies:
       '@smolter/core':
         specifier: workspace:*
         version: link:../core
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      preact:
+        specifier: 'catalog:'
+        version: 11.1.1(preact-render-to-string@6.8.2)
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))
 
   packages/vite:
     dependencies:
@@ -293,6 +401,10 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1)
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(terser@5.51.2)(yaml@2.9.1))
 
 packages:
 

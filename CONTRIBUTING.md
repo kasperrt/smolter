@@ -49,6 +49,8 @@ changing subscriptions, including unmounts and server hydration.
 
 ## Validation
 
+Package tests live under `packages/*/tests`; cross-package suites and shared fixtures live in `packages/integration-tests/tests`. Framework development dependencies belong to their owning packages and apps, not the publishing root.
+
 - `pnpm fix` and `pnpm typecheck` check formatting and types.
 - `pnpm coverage` requires 100% line coverage per implementation file.
 - `pnpm smoke` exercises the four running examples in Chromium.

@@ -13,5 +13,8 @@
     "@smolter/server": "workspace:*",
     "typescript": "catalog:",
     "@smolter/core": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

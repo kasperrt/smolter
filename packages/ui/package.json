@@ -25,6 +25,10 @@
     }
   },
   "devDependencies": {
-    "@smolter/core": "workspace:*"
+    "@smolter/core": "workspace:*",
+    "react": "catalog:",
+    "preact": "catalog:",
+    "@types/react": "catalog:",
+    "vitest": "catalog:"
   }
 }

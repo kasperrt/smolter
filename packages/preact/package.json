@@ -17,5 +17,9 @@
   },
   "peerDependencies": {
     "preact": "catalog:"
+  },
+  "devDependencies": {
+    "preact": "catalog:",
+    "vitest": "catalog:"
   }
 }

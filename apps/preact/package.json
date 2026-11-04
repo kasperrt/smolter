@@ -10,5 +10,9 @@
     "@kasperrt/smolter": "workspace:*",
     "@smolter/ui": "workspace:*",
     "preact": "catalog:"
+  },
+  "devDependencies": {
+    "esbuild": "catalog:",
+    "terser": "catalog:"
   }
 }

@@ -63,7 +63,7 @@ function scan(directory) {
     } else if (/\.(?:tsx?|m?js)$/.test(path)) files.push(path);
   }
 }
-for (const directory of ["packages", "apps", "tests", "scripts", "tooling"])
+for (const directory of ["packages", "apps", "scripts", "tooling"])
   scan(directory);
 const api = new API({ cwd: process.cwd() });
 const snapshot = api.updateSnapshot({
