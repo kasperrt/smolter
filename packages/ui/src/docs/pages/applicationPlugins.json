@@ -21,7 +21,7 @@
     },
     {
       "title": "Behavior and limits",
-      "body": "The default SSR integration loads src/entry.server.tsx and starts src/entry.client.tsx. ssr: false supports browser-only apps. See the virtual routes guide; these plugins do not create a production Express server.",
+      "body": "The default SSR integration loads src/entry.server.tsx and starts src/entry.client.tsx. ssr: false supports browser-only apps. Production browser builds reject imported *.server.ts/js modules anywhere in the project, including raw imports; SSR builds can use them. This guard does not replace keeping secrets out of ordinary browser modules or restricting development-server access. See the virtual routes guide; these plugins do not create a production Express server.",
       "code": ""
     },
     {

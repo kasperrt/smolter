@@ -4,6 +4,8 @@
 
 ### Security
 
+- Enforce the production browser boundary for `*.server.ts/js` modules outside `src/`, including raw imports. Previously a root-level or shared-directory server-marked module could be bundled into client JavaScript if accidentally imported. Both React and Preact application builds now reject it; SSR builds remain supported. This closes a conditional credential/source disclosure, not an arbitrary file-read or RCE exploit.
+
 - Preserve every `Set-Cookie` header in the standalone Vite data transport. Previously only the final cookie survived, so a session-revocation cookie could be dropped when a response also updated another cookie. Reuse the shared streaming response writer instead of buffering and rewriting responses independently. This affects development transport; production Node hosting already uses the shared writer.
 
 - Close a Vite server-export boundary bypass: destructured bindings and class declarations named `loader`/`action` are now rejected alongside ordinary inline handlers. Previously these forms could leave server-only implementation or embedded credentials in served browser modules. Named re-exports from separate server files remain supported; client-only destructuring is unchanged. This is a conditional source-disclosure issue when applications use these export forms, not evidence of remote code execution.
