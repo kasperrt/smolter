@@ -23,6 +23,11 @@
       "title": "Restoration order",
       "body": "Waits for an idle snapshot with the committed history key, then schedules a frame so lazy views can finish mounting. A saved POP position takes precedence. Otherwise a hash target scrolls into view; without one, preventScrollReset preserves the current position, and ordinary navigation scrolls to [0, 0]. Positions are held in memory for this router rather than persisted across document reloads.",
       "code": ""
+    },
+    {
+      "title": "Page-owned scroll work",
+      "body": "Ordinary navigation resets scroll unless preventScrollReset is true. Back/Forward restores the saved position and hash links target anchors. A page-owned animation can override a correct reset if its passive effect cleanup runs after paint. Use useLayoutEffect for imperative scroll-controller lifetimes so teardown cancels animation frames/listeners during unmount. Do not fight the controller with repeated scroll resets.",
+      "code": "useLayoutEffect(() => startScrollController(element), [element]);\n// startScrollController returns cleanup that cancels its frames and listeners."
     }
   ]
 }

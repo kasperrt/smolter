@@ -25,6 +25,11 @@
       "code": "pnpm build\nnode scripts/prefetch-size.mjs"
     },
     {
+      "title": "Nested layouts and route transitions",
+      "body": "File routing selects the nested adapter only when real parent/child modules exist. Flat routes omit the nested engine. Transition dispatch is also removed from analyzed file-route applications without viewTransition exports. Manual route factories, opaque references and computed writes retain it conservatively; importing a full API or omitting the Vite plugin is not equivalent to eliminating an unused capability. Capability decisions refresh during development. See the nested-layout guide for page/layout export precedence and the client-only nesting limit.",
+      "code": ""
+    },
+    {
       "title": "Full applications",
       "body": "Full applications use createDataRouter. The SSR and file-router client helpers already select it. SSR applications additionally use /preact/client and /preact/document; lazy file routes use /preact/lazy-route. Server rendering and the Vite plugin stay in their dedicated subpaths. Complete client-entry measurements include the optional deployment watcher. Named imports that do not use watchDeployment remove it; the routing and data entrypoints do not import it.",
       "code": ""

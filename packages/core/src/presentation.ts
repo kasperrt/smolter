@@ -1,10 +1,7 @@
 import type { NavigationRouter } from "./navigation-router.ts";
 import { createStore } from "./store.ts";
-import type { Route, Router, Snapshot } from "./types.ts";
-
-interface PresentedRoute extends Route {
-  branch?: readonly Route[];
-}
+import type { Router, Snapshot } from "./types.ts";
+import { routeTransition } from "./view-transition.ts";
 
 type CommitView = (update: () => void) => void;
 
@@ -59,12 +56,7 @@ export function retainRoute(router: Router, commitView: CommitView) {
         store.update(visible);
       });
     };
-    const route = router.routes.find((item) => item.path === next.path) as
-      | PresentedRoute
-      | undefined;
-    let handler = route?.viewTransition;
-    for (const node of route?.branch ?? [])
-      if (node.viewTransition) handler = node.viewTransition;
+    const handler = routeTransition?.(router.routes, next.path);
     if (handler) {
       handler(commit, visible, next);
       return;

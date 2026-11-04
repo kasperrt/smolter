@@ -34,6 +34,11 @@
       "title": "Shared-image transitions",
       "body": "Your callback can pass commit to document.startViewTransition. Give the old and new image the same unique view-transition-name in consumer CSS. The browser captures the old image before the commit and the new image afterward, and animates between them. Keep image dimensions stable and prepare/decode the destination image before committing when necessary. A matching name must identify only one rendered element per state. Browser support, reduced motion, skipped/rejected transitions and animation styling remain consumer responsibilities. Smolter does not promise flash-free remote image loading or add a second animation system.",
       "code": "/* Apply this class to the corresponding image on both pages. */\n.shared-artwork { view-transition-name: artwork; }"
+    },
+    {
+      "title": "Unused capabilities",
+      "body": "Smolter’s Vite plugin keeps the nested engine out of flat file-route applications. It also removes transition dispatch when no analyzed route exports viewTransition and application construction uses the generated virtual routes. Manual factories, opaque references, namespace imports and computed writes retain transition support conservatively. Without the plugin, transition support remains available. Neither optimization disables route retention, recovery protection or scroll restoration. Nested routing remains client-only.",
+      "code": ""
     }
   ]
 }

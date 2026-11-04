@@ -77,6 +77,23 @@ it("updates inferred capabilities in client and SSR graphs without restarting Vi
   await expect
     .poll(async () => (await server.transformRequest(`/@fs/${data}`))?.code)
     .toContain("dataPrefetch = undefined");
+  const transition = resolve("packages/core/src/view-transition.ts");
+  const presentation = () => server.transformRequest(`/@fs/${transition}`);
+  expect((await presentation())?.code).toContain("routeTransition = undefined");
+  await writeFile(
+    extra,
+    "export function viewTransition(commit) { commit(); }",
+  );
+  await expect
+    .poll(async () => (await presentation())?.code)
+    .toContain("function routeTransition");
+  expect((await server.ssrLoadModule(transition)).routeTransition).toBeTypeOf(
+    "function",
+  );
+  await rm(extra);
+  await expect
+    .poll(async () => (await presentation())?.code)
+    .toContain("routeTransition = undefined");
   send.mockClear();
   await writeFile(join(root, "tsconfig.json"), "{ invalid");
   server.watcher.emit("change", entry);
