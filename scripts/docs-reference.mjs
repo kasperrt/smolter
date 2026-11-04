@@ -112,7 +112,8 @@ const saved = JSON.parse(readFileSync(output, "utf8"));
 // Keep the existing guide order when compiler export enumeration changes.
 const order = new Map(saved.map((page, index) => [page.slug, index]));
 const content = [...pages.values()].sort(
-  (a, b) => (order.get(a.slug) ?? saved.length) - (order.get(b.slug) ?? saved.length),
+  (a, b) =>
+    (order.get(a.slug) ?? saved.length) - (order.get(b.slug) ?? saved.length),
 );
 
 if (process.argv.includes("--check")) {
