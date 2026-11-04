@@ -4,6 +4,8 @@
 
 ### Security
 
+- Contain malformed-target parser crashes in Vite development hosting. Guard Connect's public request entrypoint before its middleware parser; malformed URLs now receive a generic, non-cacheable 400 with a closed connection instead of terminating the process. Applies through `routerPlugin`/`fileRouter` and `applicationPlugins`, including middleware mode and server restarts. Unexpected failures still reach the host callback or server logger with a generic 500 response; no global exception handler or dependency fork is introduced. This protects Smolter-integrated development servers, not standalone Vite or a parent host that parses requests before Vite.
+
 - Enforce the production browser boundary for `*.server.ts/js` modules outside `src/`, including raw imports. Previously a root-level or shared-directory server-marked module could be bundled into client JavaScript if accidentally imported. Both React and Preact application builds now reject it; SSR builds remain supported. This closes a conditional credential/source disclosure, not an arbitrary file-read or RCE exploit.
 
 - Preserve every `Set-Cookie` header in the standalone Vite data transport. Previously only the final cookie survived, so a session-revocation cookie could be dropped when a response also updated another cookie. Reuse the shared streaming response writer instead of buffering and rewriting responses independently. This affects development transport; production Node hosting already uses the shared writer.
