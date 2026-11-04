@@ -2,6 +2,7 @@
 
 ## 0.4.12-beta.1
 
+- Harden both example SSR asset servers against hidden files and symlink escapes; add raw-HTTP traversal and Vite secret-file regression tests. The core SSR adapter dispatches routes and does not serve arbitrary files.
 - Move package tests and framework development dependencies into their owning packages, with cross-package suites in a private integration-test workspace.
 - Update development tools to current compatible stable releases and refresh comparison measurements for React Router 8.5.1, wouter 3.13.0 and wouter-preact 3.13.0.
 - Replace the separate TypeScript 6 compiler alias with pinned TypeScript 7.0.2 native analysis. Retain typed prefetch selection, imported/JSDoc type tracking and HMR; close the compiler after each analysis. This explicitly uses TypeScript’s unstable API without adding compiler code to browser bundles.

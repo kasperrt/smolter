@@ -3,10 +3,11 @@ import { defineConfig } from "@playwright/test";
 const port = Number(process.env.SMOLTER_TEST_PORT ?? 4173);
 
 export default defineConfig({
-  testDir: "packages/integration-tests/tests/browser",
+  testDir: "tests/browser",
   testMatch: "**/*.spec.ts",
   use: { baseURL: `http://127.0.0.1:${port}` },
   webServer: {
+    cwd: new URL("../../", import.meta.url).pathname,
     command: `SMOLTER_PORT=${port} pnpm --parallel --filter "@smolter/example-*" dev`,
     url: `http://127.0.0.1:${port + 3}`,
     reuseExistingServer: !process.env.CI,

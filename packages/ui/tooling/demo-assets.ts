@@ -4,7 +4,7 @@ import type { Plugin } from "vite";
 
 /** Resolve shared CSS and fonts before JavaScript starts, in dev and builds. */
 export function demoAssets(): Plugin {
-  const directory = new URL("../../packages/ui/src", import.meta.url).pathname;
+  const directory = new URL("../src", import.meta.url).pathname;
   let base = "/";
   return {
     name: "shared-demo-assets",

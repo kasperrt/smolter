@@ -4,8 +4,7 @@ import { createServer, type Plugin } from "vite";
 
 /** Ship the navigation catalogue eagerly, and each article only when requested. */
 export function splitDocumentation(): Plugin {
-  const entry = new URL("../../packages/ui/src/docs/index.ts", import.meta.url)
-    .pathname;
+  const entry = new URL("../src/docs/index.ts", import.meta.url).pathname;
   const prefix = "\0smolter-doc:";
   let pages: DocPage[] = [];
   return {

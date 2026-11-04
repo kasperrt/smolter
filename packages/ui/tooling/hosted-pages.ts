@@ -24,7 +24,7 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
         build: {
           outDir: resolve(
             import.meta.dirname,
-            framework === "preact" ? "../../site" : "../../site/react",
+            framework === "preact" ? "../../../site" : "../../../site/react",
           ),
           emptyOutDir: true,
         },

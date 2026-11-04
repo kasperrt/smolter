@@ -12,6 +12,7 @@ export async function viteFixture(
   source: string,
   options: FileRouterOptions = {},
   createPlugin: RouterPluginFactory = fileRouter,
+  files: Record<string, string> = {},
 ) {
   const root = await realpath(await mkdtemp(join(tmpdir(), "smolter-vite-")));
   const directory = join(root, "src/routes");
@@ -23,6 +24,9 @@ export async function viteFixture(
     join(root, "handlers.ts"),
     "export const loader = () => 1; export const action = () => 2;",
   );
+  for (const [name, content] of Object.entries(files)) {
+    await writeFile(join(root, name), content);
+  }
   const server = await createServer({
     root,
     configFile: false,

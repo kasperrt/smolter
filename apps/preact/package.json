@@ -9,10 +9,12 @@
   "dependencies": {
     "@kasperrt/smolter": "workspace:*",
     "@smolter/ui": "workspace:*",
-    "preact": "catalog:"
+    "preact": "catalog:",
+    "@smolter/core": "workspace:*"
   },
   "devDependencies": {
     "esbuild": "catalog:",
-    "terser": "catalog:"
+    "terser": "catalog:",
+    "@playwright/test": "catalog:"
   }
 }

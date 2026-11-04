@@ -11,6 +11,7 @@
     "@kasperrt/smolter": "workspace:*",
     "@smolter/ui": "workspace:*",
     "preact": "catalog:",
-    "preact-render-to-string": "catalog:"
+    "preact-render-to-string": "catalog:",
+    "@smolter/core": "workspace:*"
   }
 }

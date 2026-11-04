@@ -1,7 +1,7 @@
 import { fileRouter } from "@kasperrt/smolter/react/vite";
+import { demoAssets } from "@smolter/ui/tooling/demo-assets";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { demoAssets } from "../../tooling/vite/demo-assets.ts";
 import { serverRendering } from "./server/render-plugin.ts";
 import { sessions } from "./server/session.ts";
 

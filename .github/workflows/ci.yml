@@ -38,7 +38,7 @@ jobs:
           check-latest: true
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm --filter @smolter/integration-tests exec playwright install --with-deps chromium
       - run: pnpm coverage
       - uses: actions/upload-artifact@v4
         if: always()
@@ -58,7 +58,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm --filter @smolter/integration-tests exec playwright install --with-deps chromium
       - run: pnpm smoke
       - run: SMOLTER_ROUTES=manual SMOLTER_TEST_PORT=4473 pnpm smoke
       - run: pnpm build:examples
@@ -95,6 +95,6 @@ jobs:
       - run: pnpm build
       - name: Build docs for validation (no deployment)
         run: pnpm build:site
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm --filter @smolter/integration-tests exec playwright install --with-deps chromium
       - name: Validate docs hydration, navigation and size budget
         run: pnpm smoke:site

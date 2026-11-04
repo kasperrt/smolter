@@ -8,7 +8,7 @@ The following sections are historical investigation notes, not current release s
 
 # 0.4.2 supported boundary contract
 
-The release uses the existing `Await` export with an explicit `fallback` prop. All thirteen Smolter ownership scenarios remain blocking production-browser assertions in `packages/integration-tests/tests/browser/owned-deferred.spec.ts`, using the unchanged shared assertion harness. The native Preact variant is preserved, not repaired: run `pnpm exec playwright test --config packages/integration-tests/tests/reproductions/playwright.config.ts` to reproduce it. That diagnostic is not a release claim about Smolter's component-owned path.
+The release uses the existing `Await` export with an explicit `fallback` prop. All thirteen Smolter ownership scenarios remain blocking production-browser assertions in `packages/integration-tests/tests/browser/owned-deferred.spec.ts`, using the unchanged shared assertion harness. The native Preact variant is preserved, not repaired: run `pnpm smoke --config packages/integration-tests/tests/reproductions/playwright.config.ts` to reproduce it. That diagnostic is not a release claim about Smolter's component-owned path.
 
 Early-hydration consumers must replace `<Suspense fallback={pending}><Await resolve={value}>…</Await></Suspense>` with `<Await resolve={value} fallback={pending}>…</Await>`, including persistent root sections. This is an additive API with a required markup migration for the corrected early-hydration contract. No changes to Preact, renderer hooks, dependency patches, application wrappers, extra DOM containers, polling, or external PRs are part of the release.
 

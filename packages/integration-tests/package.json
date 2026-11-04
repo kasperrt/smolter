@@ -23,5 +23,8 @@
     "@smolter/client": "workspace:*",
     "@smolter/vite": "workspace:*",
     "@kasperrt/smolter": "workspace:*"
+  },
+  "scripts": {
+    "smoke": "cd ../.. && playwright test --config packages/integration-tests/playwright.config.ts"
   }
 }
