@@ -10,14 +10,14 @@ export default defineConfig({
           name: "unit",
           testTimeout: 30_000,
           expect: { poll: { timeout: 10_000 } },
-          include: ["tests/**/*.test.{ts,tsx}"],
-          exclude: ["tests/browser/**"],
+          include: ["packages/*/tests/**/*.test.{ts,tsx}"],
+          exclude: ["packages/*/tests/browser/**"],
         },
       },
       {
         test: {
           name: "browser",
-          include: ["tests/browser/**/*.test.ts"],
+          include: ["packages/*/tests/browser/**/*.test.ts"],
           browser: {
             enabled: true,
             headless: true,

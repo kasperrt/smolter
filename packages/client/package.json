@@ -12,5 +12,8 @@
   },
   "dependencies": {
     "@smolter/core": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

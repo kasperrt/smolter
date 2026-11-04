@@ -20,5 +20,8 @@
     "./link-prefetch": "./src/link-prefetch.ts",
     "./intent": "./src/intent.ts",
     "./transport": "./src/transport.ts"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

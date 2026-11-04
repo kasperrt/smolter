@@ -11,12 +11,13 @@ export function prefetchSelection() {
   let watcher: ViteDevServer["watcher"] | undefined;
   const analyze = () => analyzePrefetch(root, (file) => watcher?.add(file));
   let selected: PrefetchCapabilities | undefined;
+  let pending: Promise<PrefetchCapabilities> | undefined;
   const ids = new Set<string>();
   return {
     configure(directory: string) {
       root = directory;
     },
-    transform(code: string, id: string): string | undefined {
+    async transform(code: string, id: string): Promise<string | undefined> {
       const match = /\/core\/(?:src\/)?(intent|viewport|prefetch)\.[jt]s$/.exec(
         id,
       );
@@ -26,7 +27,13 @@ export function prefetchSelection() {
       const marker = `@smolter/prefetch:${name}`;
       if (!code.includes(marker)) return;
       ids.add(id);
-      selected ??= analyze();
+      if (!selected) {
+        const task = (pending ??= analyze());
+        const { data, error } = await safeWrapAsync(() => task);
+        pending = undefined;
+        if (!data) throw error;
+        selected ??= data;
+      }
       if (selected[name]) return code.replace(marker, "");
       return `export const ${name}Prefetch = undefined;`;
     },

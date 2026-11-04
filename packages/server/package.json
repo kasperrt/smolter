@@ -12,5 +12,15 @@
     "@smolter/core": "workspace:*",
     "@smolter/preact": "workspace:*",
     "@smolter/react": "workspace:*"
+  },
+  "devDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "preact": "catalog:",
+    "preact-render-to-string": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "vitest": "catalog:",
+    "@smolter/client": "workspace:*"
   }
 }

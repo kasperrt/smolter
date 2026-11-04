@@ -62,7 +62,7 @@ for (const { framework, version } of cases) {
       "--no-fund",
       ...deps,
       "typescript@7.0.2",
-      "vite@8.3.4",
+      "vite@8.3.5",
     ],
     { cwd, stdio: "inherit" },
   );
@@ -74,7 +74,10 @@ for (const { framework, version } of cases) {
   );
   writeFileSync(
     join(cwd, "smoke.mjs"),
-    readFileSync(`tests/fixtures/${framework}-packed.mjs`, "utf8"),
+    readFileSync(
+      `packages/integration-tests/tests/fixtures/${framework}-packed.mjs`,
+      "utf8",
+    ),
   );
   execFileSync(process.execPath, [resolve(cwd, "smoke.mjs")], {
     cwd,
@@ -82,10 +85,10 @@ for (const { framework, version } of cases) {
   });
   writeFileSync(
     join(cwd, "consumer.ts"),
-    readFileSync("tests/fixtures/packed-types.ts", "utf8").replaceAll(
-      "@kasperrt/smolter/react",
-      `${manifest.name}/${framework}`,
-    ),
+    readFileSync(
+      "packages/integration-tests/tests/fixtures/packed-types.ts",
+      "utf8",
+    ).replaceAll("@kasperrt/smolter/react", `${manifest.name}/${framework}`),
   );
   execFileSync(
     process.execPath,
@@ -105,7 +108,10 @@ for (const { framework, version } of cases) {
   );
   writeFileSync(
     join(cwd, "prefetch.mjs"),
-    readFileSync("tests/fixtures/prefetch-packed.mjs", "utf8"),
+    readFileSync(
+      "packages/integration-tests/tests/fixtures/prefetch-packed.mjs",
+      "utf8",
+    ),
   );
   execFileSync(process.execPath, ["prefetch.mjs", framework], {
     cwd,

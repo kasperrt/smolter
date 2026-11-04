@@ -10,7 +10,10 @@
     "./style.css": "./src/style.css",
     "./docs": "./src/docs/index.ts",
     "./hosting": "./src/hosting.ts",
-    "./metadata": "./src/metadata.ts"
+    "./metadata": "./src/metadata.ts",
+    "./tooling/demo-assets": "./tooling/demo-assets.ts",
+    "./tooling/hosted-pages": "./tooling/hosted-pages.ts",
+    "./tooling/split-documentation": "./tooling/split-documentation.ts"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -25,6 +28,11 @@
     }
   },
   "devDependencies": {
-    "@smolter/core": "workspace:*"
+    "@smolter/core": "workspace:*",
+    "react": "catalog:",
+    "preact": "catalog:",
+    "@types/react": "catalog:",
+    "vitest": "catalog:",
+    "vite": "catalog:"
   }
 }
