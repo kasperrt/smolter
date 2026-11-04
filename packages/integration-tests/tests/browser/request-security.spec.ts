@@ -52,7 +52,12 @@ test("same-site foreign-origin forms cannot execute authenticated document or da
   await once(victim, "listening");
   const target = `http://127.0.0.1:${(victim.address() as AddressInfo).port}`;
   const attacker = createServer((request, response) => {
-    const path = request.url === "/data" ? "/account.__smolter" : "/account";
+    const path =
+      request.url === "/data"
+        ? "/account.__smolter"
+        : request.url === "/authority"
+          ? `//127.0.0.1:${(attacker.address() as AddressInfo).port}/account`
+          : "/account";
     response.setHeader("Content-Type", "text/html");
     response.end(
       `<form method="post" action="${target}${path}"><input name="value" value="changed"><button>Submit</button></form>`,
@@ -68,10 +73,10 @@ test("same-site foreign-origin forms cannot execute authenticated document or da
       (cookie) => cookie.name === "session",
     ),
   ).toBe(true);
-  for (const path of ["/document", "/data"]) {
+  for (const path of ["/document", "/data", "/authority"]) {
     await page.goto(source + path);
     const response = page.waitForResponse((response) =>
-      response.url().startsWith(`${target}/account`),
+      response.url().startsWith(`${target}/`),
     );
     await page.getByRole("button", { name: "Submit" }).click();
     expect((await response).status()).toBe(403);

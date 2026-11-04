@@ -23,6 +23,11 @@
       "title": "Navigation and scripts",
       "body": "Without leaveDocument, a selected handoff uses location.assign. A custom leaveDocument callback must carry out navigation itself. Modified clicks, download links, and non-self targets retain browser behavior. entryScript is trusted executable source rendered by Scripts; it is not escaped as text or loaded as a URL.",
       "code": ""
+    },
+    {
+      "title": "Navigation security",
+      "body": "Since 0.5.2, javascript: targets are rejected after URL parsing, including mixed-case and embedded-tab/newline forms. Link rendering and navigation reject them before handing control to the browser or a custom callback. Recovery refuses them without consuming a reload marker. Validate destinations from untrusted input and restrict allowed origins when your application requires it; ordinary external HTTP(S), mail and telephone links are still supported.",
+      "code": ""
     }
   ]
 }

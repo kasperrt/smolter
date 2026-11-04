@@ -1,4 +1,5 @@
 import { matchRoutes, safeWrapAsync } from "@smolter/core";
+import { navigationTarget } from "@smolter/core/environment";
 import type { DeploymentOptions } from "./deployment.ts";
 
 type Manifest = Pick<DeploymentOptions, "version" | "shared" | "routes">;
@@ -90,6 +91,7 @@ export function deploymentCheck(options: DeploymentOptions) {
     // Claim recovery only after checking ownership and active submissions.
     const { data } = await safeWrapAsync(() => {
       if (stopped || !current() || sessionStorage.getItem(key)) return false;
+      navigationTarget(target);
       sessionStorage.setItem(key, "1");
       if (options.reload) options.reload(target);
       else if (target.href === location.href) location.reload();

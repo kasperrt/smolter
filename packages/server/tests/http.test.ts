@@ -233,3 +233,38 @@ test("blocks cross-origin and unsupported HTTP mutations before custom builds", 
   expect(allowed.status).toBe(200);
   expect(action).toHaveBeenCalledTimes(1);
 });
+
+test("request-target slashes cannot replace the HTTP host used for origin checks", async () => {
+  const action = vi.fn((request: Request) => new Response(request.url));
+  const handler = createRequestHandler({
+    entry: "/entry.js",
+    build: { default: action, handleDataRequest: action },
+  });
+  const server = createServer((request, response) => {
+    void handler(request, response, () => {
+      response.statusCode = 500;
+      response.end();
+    });
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  onTestFinished(() => {
+    server.close();
+  });
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  for (const path of [
+    "//attacker.example/account",
+    "/%5cattacker.example/account",
+  ]) {
+    const denied = await fetch(base + path, {
+      method: "POST",
+      headers: { Origin: "http://attacker.example" },
+    });
+    expect(denied.status).toBe(403);
+  }
+  expect(action).not.toHaveBeenCalled();
+  const response = await fetch(`${base}//attacker.example/account?keep=1`);
+  expect(await response.text()).toBe(
+    `${base}//attacker.example/account?keep=1`,
+  );
+});

@@ -21,8 +21,12 @@ export async function webRequest(
   if (outgoing.destroyed || outgoing.writableEnded) controller.abort();
   const chunks: Uint8Array[] = [];
   for await (const chunk of incoming) chunks.push(chunk);
+  // Origin-form paths can start with //; never interpret them as a URL authority.
   return new Request(
-    new URL(target ?? incoming.originalUrl ?? incoming.url ?? "/", origin),
+    new URL(
+      `.${target ?? incoming.originalUrl ?? incoming.url ?? "/"}`,
+      `${origin}/`,
+    ),
     {
       method: incoming.method,
       headers,

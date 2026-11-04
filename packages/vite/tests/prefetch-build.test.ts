@@ -88,7 +88,9 @@ for (const framework of ["react", "preact"] as const) {
         const code = chunks.map((chunk) => chunk.code).join("\n");
         expect(code.includes("IntersectionObserver")).toBe(viewport);
         expect(code).not.toMatch(/typescript|node:|\.server\./);
+        // Reserve 100 gzip bytes for the shared executable-URL security guard.
         const budget =
+          100 +
           (viewport ? (intent ? 3_500 : 3_400) : intent ? 3_300 : 3_100) +
           (data ? 700 : 0);
         expect(gzipSync(code, { level: 9 }).length).toBeLessThan(budget);
