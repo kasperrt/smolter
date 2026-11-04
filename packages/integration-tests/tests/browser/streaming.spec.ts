@@ -4,9 +4,9 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 import { safeWrapAsync } from "@smolter/core";
+import { send } from "@smolter/server/http";
+import { renderApplication } from "@smolter/server/preact";
 import { build } from "vite";
-import { renderApplication } from "../../../server/src/application.tsx";
-import { send } from "../../../server/src/http.ts";
 import { StreamingPage, streamingRoot } from "../fixtures/streaming-page.tsx";
 
 for (const mode of ["values", "failures", "injected", "navigation", "csp"]) {

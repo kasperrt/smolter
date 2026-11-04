@@ -1,8 +1,5 @@
+import { type DeferredWindow, readHydration } from "@smolter/client/hydration";
 import { expect, it, vi } from "vitest";
-import {
-  type DeferredWindow,
-  readHydration,
-} from "../../../client/src/hydration.ts";
 
 const deferredWindow = window as DeferredWindow;
 

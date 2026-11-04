@@ -2,6 +2,7 @@ const suffix = ".__smolter";
 
 /** Internal transport encoding preserves the complete route pathname and query. */
 export function dataURL(url: URL, endpoint?: string): string {
+  if (url.pathname.startsWith("//")) throw new TypeError("Invalid route URL");
   return endpoint
     ? `${endpoint}?url=${encodeURIComponent(url.pathname + url.search)}`
     : `${url.pathname}${suffix}${url.search}`;

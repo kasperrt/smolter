@@ -4,25 +4,26 @@ import { afterEach, test, vi } from "vitest";
 
 afterEach(() => vi.restoreAllMocks());
 
-import { createDataRouter, Outlet, useActionData } from "@smolter/preact";
-import { flushSync, Suspense } from "preact/compat";
-import { renderToStringAsync } from "preact-render-to-string";
 import {
   connectNavigation,
   navigationStore,
   scrollPositions,
-} from "../../core/src/navigation.ts";
-import { retainRoute } from "../../core/src/presentation.ts";
-import { data, normalizeResult, redirect } from "../../core/src/responses.ts";
-import { Await } from "../../preact/src/await.tsx";
-import { Document, Scripts } from "../../preact/src/document.tsx";
-import { lazyRoute } from "../../preact/src/lazy-route.ts";
-import type { RootModule } from "../../preact/src/route-types.ts";
-import { prepareRoutes } from "../../preact/src/router.tsx";
+} from "@smolter/core/navigation";
+import { retainRoute } from "@smolter/core/presentation";
+import { data, normalizeResult, redirect } from "@smolter/core/responses";
 import {
-  dispatchRoute,
-  renderApplication,
-} from "../../server/src/application.tsx";
+  Await,
+  createDataRouter,
+  Outlet,
+  useActionData,
+} from "@smolter/preact";
+import { Document, Scripts } from "@smolter/preact/document";
+import { lazyRoute } from "@smolter/preact/lazy-route";
+import type { RootModule } from "@smolter/preact/route-types";
+import { prepareRoutes } from "@smolter/preact/router";
+import { dispatchRoute, renderApplication } from "@smolter/server/preact";
+import { flushSync, Suspense } from "preact/compat";
+import { renderToStringAsync } from "preact-render-to-string";
 
 const root: RootModule = {
   default: () => <main>Application</main>,

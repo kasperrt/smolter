@@ -6,7 +6,10 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
-    "./http": "./src/http.ts"
+    "./http": "./src/http.ts",
+    "./preact": "./src/preact.ts",
+    "./react": "./src/react.ts",
+    "./assets": "./src/assets.ts"
   },
   "dependencies": {
     "@smolter/core": "workspace:*",

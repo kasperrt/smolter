@@ -45,6 +45,7 @@ export function serverRoute<M extends RouteModule = RouteModule>(
     const url = new URL(request.url);
     const response = await fetch(dataURL(url, handlers.dataEndpoint), {
       method: request.method,
+      mode: "same-origin",
       signal,
       ...(request.method !== "GET" && { body: await request.formData() }),
     });

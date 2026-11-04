@@ -1,16 +1,12 @@
 /** @jsxImportSource preact */
 import { createDataRouter } from "@smolter/core";
-import { Outlet, useLoaderData, useRouteError } from "@smolter/preact";
+import { Await, Outlet, useLoaderData, useRouteError } from "@smolter/preact";
+import { Document, Scripts } from "@smolter/preact/document";
+import type { RootModule } from "@smolter/preact/route-types";
+import { handleRequest } from "@smolter/server";
+import { dispatchRoute, renderApplication } from "@smolter/server/preact";
 import { Suspense } from "preact/compat";
 import { expect, it } from "vitest";
-import { Await } from "../../preact/src/await.tsx";
-import { Document, Scripts } from "../../preact/src/document.tsx";
-import type { RootModule } from "../../preact/src/route-types.ts";
-import {
-  dispatchRoute,
-  renderApplication,
-} from "../../server/src/application.tsx";
-import { handleRequest } from "../../server/src/index.ts";
 import { deferred } from "./helpers/deferred.ts";
 
 const root: RootModule = {

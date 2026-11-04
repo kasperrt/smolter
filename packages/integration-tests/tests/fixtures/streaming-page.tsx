@@ -1,9 +1,14 @@
 /** @jsxImportSource preact */
-import { Link, Outlet, useFetcher, useLoaderData } from "@smolter/preact";
+import {
+  Await,
+  Link,
+  Outlet,
+  useFetcher,
+  useLoaderData,
+} from "@smolter/preact";
+import { Document, Scripts } from "@smolter/preact/document";
+import type { RootModule } from "@smolter/preact/route-types";
 import { useState } from "preact/compat";
-import { Await } from "../../../preact/src/await.tsx";
-import { Document, Scripts } from "../../../preact/src/document.tsx";
-import type { RootModule } from "../../../preact/src/route-types.ts";
 
 export function StreamingPage() {
   const data = useLoaderData<{

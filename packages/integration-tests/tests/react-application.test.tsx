@@ -7,11 +7,11 @@ import {
   useRootData,
   useRouteError,
 } from "@smolter/react";
+import { Document, Links, Meta, Scripts } from "@smolter/react/document";
+import { lazyRoute } from "@smolter/react/lazy-route";
+import { dispatchRoute, renderApplication } from "@smolter/server/react";
+import { applicationPlugins } from "@smolter/vite/react";
 import { expect, it, onTestFinished, vi } from "vitest";
-import { Document, Links, Meta, Scripts } from "../../react/src/document.tsx";
-import { lazyRoute } from "../../react/src/lazy-route.ts";
-import { dispatchRoute, renderApplication } from "../../server/src/react.ts";
-import { applicationPlugins } from "../../vite/src/react.ts";
 
 it("renders React root, metadata, route data, errors and hydration without a Preact renderer", async () => {
   function Page() {
