@@ -1,7 +1,7 @@
 {
   "slug": "configureApplication",
   "title": "configureApplication",
-  "summary": "Configure deployment-specific URL and document navigation behavior before mounting a Preact application.",
+  "summary": "Configure URL handling and document integration for React or Preact.",
   "kind": "API",
   "sections": [
     {

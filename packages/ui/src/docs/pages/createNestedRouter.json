@@ -24,6 +24,16 @@
       "title": "Lifetime and scope",
       "body": "Dispose the router on unmount. This optional adapter is for client-only applications; nested SSR transport and hydration integration are not provided. Existing flat routers remain unchanged.",
       "code": "router.dispose();"
+    },
+    {
+      "title": "Loading and transitions",
+      "body": "Layouts without loaders stay mounted while a child loader is pending. The loading child owns its HydrateFallback. Export viewTransition(commit, previous, next) from a page to own its presentation. The destination page wins; otherwise its nearest layout export is used. Without an export, Smolter commits immediately. Both adapters and flat mounted applications support the same callback. Smolter does not start animations or select CSS, duration or reduced-motion policy. Call commit once; stale and repeated calls are ignored. The callback return value is not awaited, so consumers own completing the commit and handling animation promises/errors. Initial loading, errors and same-URL updates can also commit: choose which updates to animate in your callback.",
+      "code": "// In a page route module, or a shared layout route module:\nimport type { RouteModule } from \"@kasperrt/smolter/preact\";\nimport { presentRoute } from \"./presentation\";\nexport const viewTransition: NonNullable<RouteModule[\"viewTransition\"]> =\n  (commit, previous, next) => presentRoute(commit, previous, next);\n// presentRoute is your own implementation, not a Smolter helper.\n// React uses the equivalent /react type import."
+    },
+    {
+      "title": "Shared-image transitions",
+      "body": "Your callback can pass commit to document.startViewTransition. Give the old and new image the same unique view-transition-name in consumer CSS. The browser captures the old image before the commit and the new image afterward, and animates between them. Keep image dimensions stable and prepare/decode the destination image before committing when necessary. A matching name must identify only one rendered element per state. Browser support, reduced motion, skipped/rejected transitions and animation styling remain consumer responsibilities. Smolter does not promise flash-free remote image loading or add a second animation system.",
+      "code": "/* Apply this class to the corresponding image on both pages. */\n.shared-artwork { view-transition-name: artwork; }"
     }
   ]
 }

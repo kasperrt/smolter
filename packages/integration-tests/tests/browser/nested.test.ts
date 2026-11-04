@@ -7,7 +7,7 @@ import {
 import { createRoot as preactRoot } from "preact/compat/client";
 import { createElement, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { deferred } from "../helpers/deferred";
 
 const frameworks = [
@@ -27,6 +27,178 @@ const frameworks = [
   },
 ];
 for (const { name, api, h, mount, state } of frameworks) {
+  for (const enabled of [false, true]) {
+    it(`${name} lets consumers own route commits (${enabled})`, async (context) => {
+      const transition = vi.spyOn(document, "startViewTransition");
+      function One() {
+        return h("h1", null, "One");
+      }
+      function Two() {
+        return h("h1", null, "Two");
+      }
+      const router = api.createNestedRouter([
+        { id: "one", path: "/one", default: One },
+        {
+          id: "two",
+          path: "/two",
+          default: Two,
+          ...(enabled && {
+            viewTransition: (commit: () => void) => {
+              document.startViewTransition(commit);
+            },
+          }),
+        },
+      ]);
+      const container = document.createElement("div");
+      document.body.append(container);
+      const root = mount(container);
+      context.onTestFinished(() => {
+        transition.mockRestore();
+        root.unmount();
+        router.dispose();
+        container.remove();
+      });
+      await router.navigate("/one");
+      root.render(h(api.RouterProvider, { router }, h(api.NestedRoutes)));
+      await expect.poll(() => container.textContent).toBe("One");
+      await router.navigate("/two");
+      await expect.poll(() => container.textContent).toBe("Two");
+      expect(transition).toHaveBeenCalledTimes(enabled ? 1 : 0);
+      transition.mockClear();
+      await router.navigate("/one");
+      await expect.poll(() => container.textContent).toBe("One");
+      expect(transition).not.toHaveBeenCalled();
+    });
+  }
+  it(`${name} supports native shared-image transitions from a lazy page and inherits layout callbacks`, async (context) => {
+    const calls: string[] = [];
+    let transition: ViewTransition | undefined;
+    const src =
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='purple'/%3E%3C/svg%3E";
+    function Layout() {
+      return h("main", null, h("input"), h(api.Outlet));
+    }
+    function Small() {
+      return h("img", {
+        src,
+        alt: "Shared artwork",
+        width: 48,
+        height: 48,
+        style: { viewTransitionName: "artwork" },
+      });
+    }
+    function Large() {
+      return h("img", {
+        src,
+        alt: "Shared artwork",
+        width: 200,
+        height: 200,
+        style: { viewTransitionName: "artwork" },
+      });
+    }
+    const router = api.createNestedRouter([
+      {
+        id: "root",
+        path: "/",
+        default: Layout,
+        viewTransition: (commit) => {
+          calls.push("layout");
+          commit();
+        },
+      },
+      { id: "small", path: "/small", parentId: "root", default: Small },
+      {
+        id: "large",
+        path: "/large",
+        parentId: "root",
+        lazy: async () => ({
+          default: Large,
+          viewTransition(commit) {
+            calls.push("page");
+            transition = document.startViewTransition(commit);
+          },
+        }),
+      },
+    ]);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = mount(container);
+    context.onTestFinished(() => {
+      transition?.skipTransition();
+      root.unmount();
+      router.dispose();
+      container.remove();
+    });
+    await router.navigate("/small");
+    root.render(h(api.RouterProvider, { router }, h(api.NestedRoutes)));
+    await expect.poll(() => container.querySelector("img")?.width).toBe(48);
+    const input = container.querySelector("input")!;
+    input.value = "retained";
+    await container.querySelector("img")!.decode();
+    calls.length = 0;
+    await router.navigate("/large");
+    await transition!.ready;
+    expect(calls).toEqual(["page"]);
+    expect(container.querySelector("img")!.width).toBe(200);
+    expect(
+      getComputedStyle(
+        document.documentElement,
+        "::view-transition-group(artwork)",
+      ).animationName,
+    ).not.toBe("none");
+    expect(container.querySelector("input")).toBe(input);
+    expect(input.value).toBe("retained");
+    transition!.skipTransition();
+    await transition!.finished;
+    await router.navigate("/small");
+    await expect.poll(() => container.querySelector("img")?.width).toBe(48);
+    expect(calls).toEqual(["page", "layout"]);
+  });
+  it(`${name} keeps loader-free layouts mounted around the pending child skeleton`, async (context) => {
+    const pending = deferred<string>();
+    function Layout() {
+      return h("main", null, h("input"), h(api.Outlet));
+    }
+    function Page() {
+      return h("h1", null, api.useLoaderData<string>());
+    }
+    const router = api.createNestedRouter([
+      {
+        id: "root",
+        path: "/",
+        default: Layout,
+        HydrateFallback: () => h("p", null, "Generic root loading"),
+      },
+      {
+        id: "page",
+        path: "/page",
+        parentId: "root",
+        default: Page,
+        clientLoader: () => pending.promise,
+        HydrateFallback: () => h("h1", null, "Page skeleton"),
+      },
+    ]);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = mount(container);
+    context.onTestFinished(() => {
+      root.unmount();
+      router.dispose();
+      container.remove();
+    });
+    const navigation = router.navigate("/page");
+    root.render(h(api.RouterProvider, { router }, h(api.NestedRoutes)));
+    await expect.poll(() => container.textContent).toBe("Page skeleton");
+    const input = container.querySelector("input")!;
+    input.value = "retained";
+    input.focus();
+    pending.resolve("Ready");
+    await navigation;
+    await expect.poll(() => container.textContent).toBe("Ready");
+    expect(container.querySelector("input")).toBe(input);
+    expect(input.value).toBe("retained");
+    expect(document.activeElement).toBe(input);
+  });
   it(`${name} retains layout state, focus and input across children and exclusive revalidation`, async (context) => {
     let reads = 0;
     let childReads = 0;
@@ -95,7 +267,7 @@ for (const { name, api, h, mount, state } of frameworks) {
     await expect
       .poll(() => container.querySelector("button")!.textContent)
       .toBe("1");
-    const navigation = router.navigate("/two", { viewTransition: false });
+    const navigation = router.navigate("/two");
     expect(container.querySelector("input")).toBe(input);
     pending.resolve("Two");
     await navigation;
@@ -242,15 +414,15 @@ for (const { name, api, h, mount, state } of frameworks) {
     container.querySelector<HTMLFormElement>("#parent-form")!.requestSubmit();
     await expect.poll(() => parentWrites).toBe(1);
     await expect.poll(() => router.getSnapshot().state).toBe("idle");
-    await router.navigate("/bad", { viewTransition: false });
+    await router.navigate("/bad");
     await expect
       .poll(() => container.querySelector("h2")?.textContent)
       .toBe("loader failure");
-    await router.navigate("/render", { viewTransition: false });
+    await router.navigate("/render");
     await expect
       .poll(() => container.querySelector("h2")?.textContent)
       .toBe("render failure");
-    await router.navigate("/item/42", { viewTransition: false });
+    await router.navigate("/item/42");
     await expect
       .poll(() => container.querySelector("#context")?.textContent)
       .toBe("shared");

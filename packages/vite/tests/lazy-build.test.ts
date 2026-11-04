@@ -38,6 +38,7 @@ it.for(["react", "preact"] as const)(
       export { loader } from "../../server.ts";
       export function clientLoader() { return { label, optional: () => import("../../optional.ts") }; }
       export default function Home() { return label; }
+      export function viewTransition(commit) { console.log("PAGE_TRANSITION"); commit(); }
       export function unusedDiagnostic() { return "UNUSED_ROUTE_DIAGNOSTIC".repeat(1000); }
     `,
       "src/routes/robots[.]txt.ts": `
@@ -99,6 +100,9 @@ it.for(["react", "preact"] as const)(
         ),
       ).toBe(true);
     }
+    expect(chunks.some((chunk) => chunk.code.includes("PAGE_TRANSITION"))).toBe(
+      true,
+    );
     const shared = routes[0].files.filter((file) =>
       routes[1].files.includes(file),
     );

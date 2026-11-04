@@ -97,6 +97,13 @@ export function lazyRoute(
     path: options.path,
     id: options.id,
     preload,
+    viewTransition(commit, previous, next) {
+      if (module?.viewTransition) {
+        module.viewTransition(commit, previous, next);
+        return;
+      }
+      commit();
+    },
     default: LazyView,
     resolveComponent: () => module?.default as ComponentType | undefined,
     clientLoader: (args) => run(args),

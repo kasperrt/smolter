@@ -1,10 +1,9 @@
-import { safeWrapAsync } from "./errors.ts";
 import type { NavigationRouter } from "./navigation-router.ts";
 import { createStore } from "./store.ts";
-import type { NavigateOptions, Route, Router, Snapshot } from "./types.ts";
+import type { Route, Router, Snapshot } from "./types.ts";
 
-interface ResolvableRoute extends Route {
-  resolveComponent?: () => unknown;
+interface PresentedRoute extends Route {
+  branch?: readonly Route[];
 }
 
 type CommitView = (update: () => void) => void;
@@ -39,12 +38,6 @@ export function pendingLocation(router: Router) {
 // The underlying router still owns cancellation, redirects and fetcher state.
 export function retainRoute(router: Router, commitView: CommitView) {
   const read = router.getSnapshot;
-  let viewTransition: boolean | undefined;
-  const navigate = router.navigate;
-  router.navigate = (href, options: NavigateOptions = {}) => {
-    viewTransition = options.viewTransition;
-    return navigate(href, options);
-  };
   let visible = read();
   let revision = 0;
   const listeners = new Set<() => void>();
@@ -60,33 +53,21 @@ export function retainRoute(router: Router, commitView: CommitView) {
     }
     const commit = () => {
       if (current !== revision) return;
+      revision++;
       commitView(() => {
         visible = next;
         store.update(visible);
       });
     };
-    if (
-      visible.loaded &&
-      viewTransition !== false &&
-      typeof document !== "undefined" &&
-      typeof document.startViewTransition === "function" &&
-      !matchMedia("(prefers-reduced-motion: reduce)").matches &&
-      new URL(visible.url).pathname !== new URL(next.url).pathname
-    ) {
-      const component = (path: string | undefined) => {
-        const route = router.routes.find((item) => item.path === path) as
-          | ResolvableRoute
-          | undefined;
-        return route?.resolveComponent?.() ?? route?.default;
-      };
-      const previousComponent = component(visible.path);
-      const sharedView =
-        previousComponent && previousComponent === component(next.path);
-      if (!sharedView) {
-        const transition = document.startViewTransition(commit);
-        void safeWrapAsync(() => transition.ready);
-        return;
-      }
+    const route = router.routes.find((item) => item.path === next.path) as
+      | PresentedRoute
+      | undefined;
+    let handler = route?.viewTransition;
+    for (const node of route?.branch ?? [])
+      if (node.viewTransition) handler = node.viewTransition;
+    if (handler) {
+      handler(commit, visible, next);
+      return;
     }
     commit();
   };
@@ -97,6 +78,7 @@ export function retainRoute(router: Router, commitView: CommitView) {
   router.subscribe = store.subscribe;
   const dispose = router.dispose;
   router.dispose = () => {
+    revision++;
     unsubscribe();
     pending.delete(router);
     listeners.clear();

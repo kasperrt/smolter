@@ -119,7 +119,9 @@ export function Outlet({ context }: OutletProps): ReactNode {
   const key =
     scope.boundary === depth
       ? "ErrorBoundary"
-      : !scope.data && scope.snapshot.state === "loading"
+      : !scope.data &&
+          scope.snapshot.state === "loading" &&
+          (node.clientLoader || node.loader)
         ? "HydrateFallback"
         : "default";
   const Component = node[key] as ComponentType<ErrorProps> | undefined;
