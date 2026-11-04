@@ -7,7 +7,7 @@
   "sections": [
     {
       "title": "Export presentation from the destination",
-      "body": "Export viewTransition(commit, previous, next) from a page route module. A destination page export wins; otherwise the nearest nested layout export applies. Both React and Preact support the same contract. Flat applications use mountApplication; nested routing is client-only. Without an export, the router commits normally. This replaces the prerelease boolean option.",
+      "body": "Export viewTransition(commit, previous, next) from a page route module. A destination page export wins; otherwise the nearest nested layout export applies. Both React and Preact support the same contract. Flat applications use mountApplication; nested routing is client-only. Without an export, the router commits normally. This replaces the previous NavigateOptions.viewTransition boolean, including the option in stable 0.4.11. Move that behavior into the route export.",
       "code": "import type { RouteModule } from \"@kasperrt/smolter/preact\";\nimport { presentRoute } from \"./presentation\";\nexport const viewTransition: NonNullable<RouteModule[\"viewTransition\"]> =\n  (commit, previous, next) => presentRoute(commit, previous, next);\n// React: use the equivalent @kasperrt/smolter/react type import."
     },
     {
