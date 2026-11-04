@@ -62,7 +62,7 @@ for (const { framework, version } of cases) {
       "--no-fund",
       ...deps,
       "typescript@7.0.2",
-      "vite@8.3.4",
+      "vite@8.3.5",
     ],
     { cwd, stdio: "inherit" },
   );

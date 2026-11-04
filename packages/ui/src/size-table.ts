@@ -48,13 +48,13 @@ export const comparisonRows: (string | number)[][] = [
     sizes.wouterPreactRouting,
   ],
   [
-    "React Router 8.4.0 declarative routing subset",
+    "React Router 8.5.1 declarative routing subset",
     sizes.reactRouterRouting,
     "React API",
   ],
   ["smolter common routing + data", sizes.reactCommon, sizes.preactCommon],
   [
-    "React Router 8.4.0 data routing subset",
+    "React Router 8.5.1 data routing subset",
     sizes.reactRouterData,
     "React API",
   ],

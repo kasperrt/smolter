@@ -20,40 +20,17 @@ all four standalone examples.
 Implementation packages are private workspace packages. Keep changes in their
 `src` directories. The publish build assembles portable source modules under
 the ignored `.generated/` directory and emits JavaScript and declarations into `dist`.
-Both directories are generated. The published package has no workspace dependencies.
-Its pinned TypeScript 7 compiler dependency uses the explicitly selected unstable native API only in Vite tooling; React and Preact
-remain consumer-selected peers. The native compiler requires the platform binary installed by TypeScript’s optional dependencies. Consumers continue to choose `@kasperrt/smolter/react` or `@kasperrt/smolter/preact`.
+Both directories are generated. The published package has no workspace dependencies;
+its TypeScript dependency is build tooling. Consumers continue to choose `@kasperrt/smolter/react` or `@kasperrt/smolter/preact`.
 
 Examples use the public imports to exercise the same API consumers install.
 Their workspace names are `@smolter/example-react`, `@smolter/example-preact`,
 `@smolter/example-react-ssr`, and `@smolter/example-preact-ssr`.
 
-## Development dependency ownership
-
-Pin external dependency versions in `pnpm-workspace.yaml` and use `catalog:`
-from workspace manifests. Keep public peer compatibility ranges in the publishing
-manifest. Put any necessary transitive security overrides in the workspace YAML
-rather than scattering pins across packages.
-
-Root development dependencies support the package build, repository-wide tests and
-typechecking. Shared third-party versions are pinned once in the workspace catalog;
-adapters declare their renderers as peers. React Compiler and its Vite plugin belong to the React examples.
-`apps/preact/benchmarks` generates size data only for the hosted documentation.
-The wouter, wouter-preact and React Router comparisons are recorded reference
-measurements with versions, date and method in `packages/ui/src/comparison-sizes.json`.
-These competitor packages are not installed. `pnpm size` measures Smolter and checks
-its budgets against those reference values; `pnpm build:site` runs it before the
-hosted build. Ordinary example builds do not run size tooling. Benchmark source
-is outside the published package's file list; local installs and generated output
-are ignored by Git.
-
-The dependency-submission workflow resolves every workspace from `pnpm-lock.yaml`
-and sends a snapshot to GitHub on dependency changes to main or manual dispatch.
-It includes transitive and optional dependencies, preserves npm alias identities,
-and distinguishes development dependencies from runtime dependencies. It installs
-with lifecycle scripts disabled; its write permission is limited to the submission
-job. GitHub can use this graph for Dependabot advisories even when manifests use
-catalog references. `yaml` is development tooling for this snapshot; it is not a published runtime dependency.
+External dependencies use exact versions from the `pnpm-workspace.yaml` catalog.
+Public peer declarations describe compatibility. Size tooling lives under
+`apps/preact/benchmarks` and runs for hosted docs; competitor sizes are versioned
+reference measurements, without installing the competitor packages.
 
 ## Rendering and compiler
 

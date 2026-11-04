@@ -1,6 +1,6 @@
 {
-  "measured": "2026-10-31",
-  "method": "esbuild 0.28.2 minification, Terser 5.44.1 (three passes), gzip level 9; React, React DOM and Preact external",
+  "measured": "2026-11-04",
+  "method": "Node 26.12.1, esbuild 0.28.2 minification, Terser 5.51.2 (three passes), gzip level 9; React, React DOM and Preact external",
   "packages": [
     {
       "name": "wouter",
@@ -14,15 +14,15 @@
     },
     {
       "name": "react-router",
-      "version": "8.4.0",
-      "bytes": 60994
+      "version": "8.5.1",
+      "bytes": 65264
     }
   ],
   "sizes": {
     "wouterRouting": 2854,
     "wouterPreactRouting": 2211,
-    "reactRouterRouting": 12882,
-    "reactRouterData": 29780,
-    "reactRouter": 60994
+    "reactRouterRouting": 13012,
+    "reactRouterData": 30841,
+    "reactRouter": 65264
   }
 }

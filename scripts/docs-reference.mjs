@@ -108,10 +108,14 @@ for (const entry of [
 
 api.close();
 const output = "packages/ui/src/docs/reference.json";
-const content = [...pages.values()];
+const saved = JSON.parse(readFileSync(output, "utf8"));
+// Keep the existing guide order when compiler export enumeration changes.
+const order = new Map(saved.map((page, index) => [page.slug, index]));
+const content = [...pages.values()].sort(
+  (a, b) => (order.get(a.slug) ?? saved.length) - (order.get(b.slug) ?? saved.length),
+);
 
 if (process.argv.includes("--check")) {
-  const saved = JSON.parse(readFileSync(output, "utf8"));
   if (JSON.stringify(saved) !== JSON.stringify(content)) {
     console.error(
       "Public API documentation is stale. Run pnpm docs:reference.",

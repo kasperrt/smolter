@@ -49,8 +49,7 @@
     "react-dom": "catalog:",
     "terser": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:",
-    "yaml": "catalog:"
+    "vitest": "catalog:"
   },
   "version": "0.4.12-beta.1",
   "description": "A tiny typed data router for React and Preact.",

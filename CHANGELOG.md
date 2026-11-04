@@ -2,9 +2,9 @@
 
 ## 0.4.12-beta.1
 
+- Update development tools to current compatible stable releases and refresh comparison measurements for React Router 8.5.1, wouter 3.13.0 and wouter-preact 3.13.0.
 - Replace the separate TypeScript 6 compiler alias with pinned TypeScript 7.0.2 native analysis. Retain typed prefetch selection, imported/JSDoc type tracking and HMR; close the compiler after each analysis. This explicitly uses TypeScript’s unstable API without adding compiler code to browser bundles.
 - Remove installed competitor routers and retain versioned reference size measurements for the documentation site. Run size generation only for hosted docs, keep React Compiler tooling in the React examples, centralize development versions and declare internal adapter renderers as peers. Preserve browser runtime dependencies and size gates.
-- Submit the resolved pnpm dependency graph to GitHub after dependency changes on main, including aliases, optional packages and transitive dependencies, so catalog-based declarations remain visible to security advisories.
 
 ## 0.4.11
 

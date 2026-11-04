@@ -31,7 +31,7 @@
     },
     {
       "title": "Comparison exports and versions",
-      "body": "Reference measurements recorded on 2026-10-31: wouter and wouter-preact 3.13.0, and react-router 8.4.0. React Router has no dedicated Preact export: its React API is measured here, not a Preact compatibility build. These APIs differ in capabilities; sizes are not claims of feature equivalence. These reference numbers are not regenerated on each build. The comparison uses esbuild 0.28.2, Terser 5.44.1 with three passes and gzip level 9, with framework runtimes excluded.",
+      "body": "Reference measurements recorded on 2026-11-04: wouter and wouter-preact 3.13.0, and react-router 8.5.1. React Router has no dedicated Preact export: its React API is measured here, not a Preact compatibility build. These APIs differ in capabilities; sizes are not claims of feature equivalence. These reference numbers are not regenerated on each build. The comparison uses esbuild 0.28.2, Terser 5.51.2 with three passes and gzip level 9, with framework runtimes excluded.",
       "code": "// React Router declarative subset\nBrowserRouter, Routes, Route, Link, useParams, useLocation\n\n// React Router data subset\ncreateBrowserRouter, RouterProvider, Link, Form, useLoaderData,\nuseActionData, useParams, useLocation, useRevalidator, useFetcher\n\n// Smolter routing subset\ncreateRouter, defineRoute, RouterProvider, Routes, Link, useParams, useLocation\n\n// Smolter data subset\ncreateDataRouter, defineRoute, RouterProvider, Routes, Link, Form,\nuseRouter, useLoaderData, useActionData, useParams, useLocation,\nuseRevalidator, useFetcher"
     },
     {
