@@ -78,15 +78,7 @@ export async function send(response: Response, outgoing: StreamingResponse) {
     if (name !== "set-cookie") outgoing.setHeader(name, value);
   });
   const cookies = response.headers.getSetCookie();
-  if (cookies.length)
-    outgoing.setHeader(
-      "set-cookie",
-      cookies.map((cookie) =>
-        process.env.NODE_ENV === "production"
-          ? cookie
-          : cookie.replace(/; Secure/gi, ""),
-      ),
-    );
+  if (cookies.length) outgoing.setHeader("set-cookie", cookies);
   if (!response.body) {
     outgoing.end();
     return;

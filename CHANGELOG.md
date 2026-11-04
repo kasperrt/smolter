@@ -4,6 +4,8 @@
 
 ### Security
 
+- **Cookie compatibility:** preserve `Secure` and all other `Set-Cookie` attributes verbatim in the Node adapter, regardless of `NODE_ENV`. Previously an unset or non-production environment silently removed `Secure`, making an HTTPS session cookie eligible for plain HTTP. Applications own local cookie configuration; use local HTTPS when testing secure sessions. A Chromium regression uses synthetic cookies and an intercepted HTTPS origin to verify HTTP exclusion.
+
 - Parse deferred settlement payloads as JSON instead of evaluating them as JavaScript object literals. A `__proto__` data key can no longer alter a queued value’s prototype or disappear during hydration. Keep script-closing text escaped; existing nonce and streaming behavior remain supported. A minified Chromium regression covers the queue before hydration and the final resolved data.
 
 - Restore route and hydration errors without invoking property setters. A JSON `__proto__` key can no longer replace the revived Error prototype or bypass Error classification. Ordinary error data is retained. This is object-local prototype injection, not a demonstrated global prototype pollution or Critical exploit.

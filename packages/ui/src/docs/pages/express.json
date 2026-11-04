@@ -16,7 +16,7 @@
     },
     {
       "title": "Requests, cookies and failures",
-      "body": "The adapter forwards methods, headers, bodies and abort signals; dispatches /path.__smolter to the data handler; and sends the Response status, headers and body. Invalid data targets return 400. Rejected handlers reach Express next(error). Express req.protocol is respected, so configure trust proxy according to your own ingress policy rather than blindly trusting forwarded headers. Multiple Set-Cookie headers are preserved. In development, the existing adapter removes Secure from outgoing cookies for local HTTP.",
+      "body": "The adapter forwards methods, headers, bodies and abort signals; dispatches /path.__smolter to the data handler; and sends the Response status, headers and body. Invalid data targets return 400. Rejected handlers reach Express next(error). Express req.protocol is respected, so configure trust proxy according to your own ingress policy rather than blindly trusting forwarded headers. Multiple Set-Cookie headers are preserved. Since 0.5.2, Secure and all other cookie attributes are preserved even when NODE_ENV is unset or non-production. Configure local development cookies explicitly in the application, or use local HTTPS for secure session testing.",
       "code": ""
     },
     {

@@ -58,7 +58,7 @@ test("hosts documents and route data under existing Node middleware", async () =
   }
 });
 
-test.each(["production", "development"])(
+test.each(["production", "development", "test", undefined])(
   "preserves separate response cookies in %s",
   async (mode) => {
     vi.stubEnv("NODE_ENV", mode);
@@ -73,6 +73,10 @@ test.each(["production", "development"])(
             headers: [
               ["Set-Cookie", "session=one; Secure; HttpOnly; SameSite=Lax"],
               ["Set-Cookie", "theme=dark; Secure; Path=/"],
+              [
+                "Set-Cookie",
+                "__Host-session=two; Secure; HttpOnly; Path=/; SameSite=None; Partitioned",
+              ],
             ],
           }),
         handleDataRequest: () => new Response(null),
@@ -88,10 +92,10 @@ test.each(["production", "development"])(
     await once(server, "listening");
     const address = server.address() as AddressInfo;
     const response = await fetch(`http://127.0.0.1:${address.port}/`);
-    const secure = mode === "production" ? "; Secure" : "";
     expect(response.headers.getSetCookie()).toEqual([
-      `session=one${secure}; HttpOnly; SameSite=Lax`,
-      `theme=dark${secure}; Path=/`,
+      "session=one; Secure; HttpOnly; SameSite=Lax",
+      "theme=dark; Secure; Path=/",
+      "__Host-session=two; Secure; HttpOnly; Path=/; SameSite=None; Partitioned",
     ]);
     expect(await response.text()).toBe("cookies");
   },
