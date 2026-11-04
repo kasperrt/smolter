@@ -1,4 +1,5 @@
 import { matchRoutes, type Route, safeWrapAsync } from "@smolter/core";
+import { errorData } from "@smolter/core/errors";
 import {
   type DataResponse,
   normalizeResult,
@@ -31,7 +32,12 @@ async function dispatch(
       signal: request.signal,
     }),
   }));
-  const value = error ? error.cause : data!.value;
+  const cause = error?.cause;
+  const value = error
+    ? cause instanceof Error || cause instanceof Response
+      ? cause
+      : error
+    : data!.value;
   if (value instanceof Response) {
     const location = value.headers.get("Location");
     if (document) return value;
@@ -52,7 +58,7 @@ async function dispatch(
   }
   if (value instanceof Error)
     return Response.json({
-      __routeError: { ...value, message: value.message },
+      __routeError: errorData(value),
     });
   if (value && typeof value === "object" && "__routeData" in value) {
     const result = value as DataResponse<unknown>;

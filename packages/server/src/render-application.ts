@@ -1,5 +1,6 @@
 import type { DataArgs, Route, Router } from "@smolter/core";
 import { createDataRouter, matchRoutes, safeWrapAsync } from "@smolter/core";
+import { errorData } from "@smolter/core/errors";
 import { prepareRoutes } from "@smolter/core/prepare-routes";
 import { type DataResponse, normalizeResult } from "@smolter/core/responses";
 import { loadRouter } from "@smolter/server";
@@ -99,8 +100,11 @@ export async function renderDocument(
           const result = await safeWrapAsync(async () => ({
             value: await route.loader!(args),
           }));
+          const cause = result.error?.cause;
           const value = result.error
-            ? (result.error.cause ?? result.error)
+            ? cause instanceof Error || cause instanceof Response
+              ? cause
+              : result.error
             : result.data!.value;
           routeResponse = responseMetadata(value);
           return value;
@@ -151,11 +155,7 @@ export async function renderDocument(
     root,
     snapshot: {
       ...snapshot,
-      error: snapshot.error && {
-        ...snapshot.error,
-        name: snapshot.error.name,
-        message: snapshot.error.message,
-      },
+      error: snapshot.error && errorData(snapshot.error),
     },
     ...(rootError && { rootError: true }),
   };

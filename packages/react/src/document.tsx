@@ -1,3 +1,4 @@
+import { errorData } from "@smolter/core/errors";
 /**
  * React document metadata, resource links and hydration scripts.
  *
@@ -82,11 +83,7 @@ export function Scripts({ nonce }: ScriptProps): import("react").ReactElement {
     const current = router.getSnapshot();
     const snapshot = {
       ...current,
-      error: current.error && {
-        ...current.error,
-        name: current.error.name,
-        message: current.error.message,
-      },
+      error: current.error && errorData(current.error),
     };
     return serializeData({ root, snapshot, ...(rootError && { rootError }) });
   });

@@ -1,6 +1,6 @@
 /** Framework-independent data routing. @module */
 
-export * from "./errors.ts";
+export { safeWrapAsync } from "./errors.ts";
 export { defineRoute, matchRoutes } from "./match.ts";
 export * from "./navigation-router.ts";
 export * from "./router.ts";

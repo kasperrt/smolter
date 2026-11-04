@@ -23,6 +23,11 @@
       "title": "Hydration contract",
       "body": "The payload is captured once for this mounted document and does not change after navigation or revalidation. It describes the initial SSR view. Error name and message are preserved with enumerable error fields; non-enumerable stack and cause are not copied. serializeData escapes characters that could break a script element. The application owns what data it makes available to the browser.",
       "code": ""
+    },
+    {
+      "title": "Public error data",
+      "body": "Since 0.5.2, Smolter transfers only an error’s name/message and explicit HTTP status, statusText and data. Arbitrary Error metadata, request configurations, causes, stacks and custom toJSON hooks are not copied into route-data responses or hydration snapshots. Treat error messages, explicit Response bodies and route-error data as public. Keep credentials and internal diagnostics in server-side logs, and do not render them from a custom error boundary. If browser code relied on custom Error properties, move intentionally public fields into explicit route-error data or a Response payload.",
+      "code": ""
     }
   ]
 }

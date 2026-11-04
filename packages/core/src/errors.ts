@@ -17,3 +17,20 @@ export async function safeWrapAsync<T>(
     ? { error: result.value }
     : { data: result.value };
 }
+
+// Only explicit route-error data is public; client-library config and causes are not.
+export function errorData(error: Error) {
+  return {
+    name: error.name,
+    message: error.message,
+    ...("status" in error &&
+      typeof error.status === "number" && {
+        status: error.status,
+        ...("statusText" in error &&
+          typeof error.statusText === "string" && {
+            statusText: error.statusText,
+          }),
+        ...("data" in error && { data: error.data }),
+      }),
+  };
+}

@@ -24,3 +24,16 @@ it("normalizes synchronous failures during immediate guarded work", async () => 
   }, true);
   expect((await pending).error?.cause).toBe(failure);
 });
+
+it("does not allow custom error serialization or malformed HTTP metadata to expose internals", async () => {
+  const { errorData } = await import("@smolter/core/errors");
+  const failure = Object.assign(new Error("Public message"), {
+    status: "500",
+    statusText: { secret: "PRIVATE" },
+    config: "PRIVATE",
+    toJSON: () => ({ secret: "PRIVATE" }),
+  });
+  expect(JSON.stringify(errorData(failure))).toBe(
+    '{"name":"Error","message":"Public message"}',
+  );
+});

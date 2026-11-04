@@ -1,3 +1,4 @@
+import { errorData } from "@smolter/core/errors";
 /**
  * Preact document metadata, resource links and hydration scripts.
  *
@@ -83,11 +84,7 @@ export function Scripts({ nonce }: ScriptProps): import("preact").JSX.Element {
     const current = router.getSnapshot();
     const snapshot = {
       ...current,
-      error: current.error && {
-        ...current.error,
-        name: current.error.name,
-        message: current.error.message,
-      },
+      error: current.error && errorData(current.error),
     };
     return serializeData({ root, snapshot, ...(rootError && { rootError }) });
   });
