@@ -9,22 +9,36 @@ import {
 export function prefetchSelection() {
   let root: string;
   let watcher: ViteDevServer["watcher"] | undefined;
-  const analyze = () => analyzePrefetch(root, (file) => watcher?.add(file));
-  let selected: PrefetchCapabilities | undefined;
-  let pending: Promise<PrefetchCapabilities> | undefined;
+  const analyze = async () => {
+    let transitions = true;
+    const capabilities = await analyzePrefetch(
+      root,
+      (file) => watcher?.add(file),
+      (enabled) => {
+        transitions = enabled;
+      },
+    );
+    return { ...capabilities, transitions };
+  };
+  let selected: (PrefetchCapabilities & { transitions: boolean }) | undefined;
+  let pending: ReturnType<typeof analyze> | undefined;
   const ids = new Set<string>();
   return {
     configure(directory: string) {
       root = directory;
     },
     async transform(code: string, id: string): Promise<string | undefined> {
-      const match = /\/core\/(?:src\/)?(intent|viewport|prefetch)\.[jt]s$/.exec(
-        id,
-      );
+      const match =
+        /\/core\/(?:src\/)?(intent|viewport|prefetch|view-transition)\.[jt]s$/.exec(
+          id,
+        );
       if (!match) return;
+      const transition = match[1] === "view-transition";
       const name =
         match[1] === "prefetch" ? "data" : (match[1] as "intent" | "viewport");
-      const marker = `@smolter/prefetch:${name}`;
+      const marker = transition
+        ? "@smolter/view-transition"
+        : `@smolter/prefetch:${name}`;
       if (!code.includes(marker)) return;
       ids.add(id);
       if (!selected) {
@@ -34,6 +48,10 @@ export function prefetchSelection() {
         if (!data) throw error;
         selected ??= data;
       }
+      if (transition)
+        return selected.transitions
+          ? code.replace(marker, "")
+          : "export const routeTransition = undefined; export const lazyTransition = undefined;";
       if (selected[name]) return code.replace(marker, "");
       return `export const ${name}Prefetch = undefined;`;
     },

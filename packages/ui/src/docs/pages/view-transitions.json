@@ -1,0 +1,29 @@
+{
+  "slug": "view-transitions",
+  "title": "View transitions",
+  "summary": "Page-owned transitions, without a router-selected animation.",
+  "kind": "Guides",
+  "entries": ["react/client", "preact/client", "react/nested", "preact/nested"],
+  "sections": [
+    {
+      "title": "Export presentation from the destination",
+      "body": "Export viewTransition(commit, previous, next) from a page route module. A destination page export wins; otherwise the nearest nested layout export applies. Both React and Preact support the same contract. Flat applications use mountApplication; nested routing is client-only. Without an export, the router commits normally. This replaces the prerelease boolean option.",
+      "code": "import type { RouteModule } from \"@kasperrt/smolter/preact\";\nimport { presentRoute } from \"./presentation\";\nexport const viewTransition: NonNullable<RouteModule[\"viewTransition\"]> =\n  (commit, previous, next) => presentRoute(commit, previous, next);\n// React: use the equivalent @kasperrt/smolter/react type import."
+    },
+    {
+      "title": "The consumer owns the browser transition",
+      "body": "Your presentRoute function decides whether to call commit immediately or pass it to document.startViewTransition. Check browser support and reduced-motion preference yourself. Initial loading, errors and same-URL updates can also reach the callback, so choose which updates should animate. The return value is not awaited. Call commit to complete presentation; stale and repeated calls are ignored. Handle the browser transition promises and errors in your application. Smolter supplies no animation defaults or automatic full-document fade.",
+      "code": ""
+    },
+    {
+      "title": "Move a shared image",
+      "body": "Give corresponding old/new images the same unique view-transition-name. Pass commit to the browser transition API so the old capture precedes the route change and the new capture follows it. Prepare destination images and reserve dimensions when necessary. A shared name cannot identify multiple rendered elements in the same state. Remote image loading and browser support still affect the result.",
+      "code": ".shared-artwork { view-transition-name: artwork; }"
+    },
+    {
+      "title": "Unused support and cleanup",
+      "body": "The Vite plugin removes transition dispatch for statically analyzed file-route applications that do not use viewTransition. Manual route factories, opaque references, namespace imports and computed writes retain support conservatively. HMR rechecks capability usage. Separate nested entrypoints keep layout code out of flat applications. Imperative page animation controllers that must stop before the next paint should use layout-effect cleanup; a passive effect may clean up after navigation has already reset scrolling.",
+      "code": ""
+    }
+  ]
+}

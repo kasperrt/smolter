@@ -10,6 +10,7 @@ import {
   type Type,
   TypeFlags,
 } from "typescript/unstable/sync";
+import { usesViewTransition } from "./transition-analysis.ts";
 
 export interface PrefetchCapabilities {
   intent: boolean;
@@ -112,6 +113,7 @@ function canBeTrue(type: Type | undefined): boolean {
 export async function analyzePrefetch(
   root: string,
   watch?: (file: string) => void,
+  transitions?: (enabled: boolean) => void,
 ): Promise<PrefetchCapabilities> {
   let directory = resolve(root);
   while (
@@ -266,6 +268,7 @@ export async function analyzePrefetch(
           )
         );
       });
+    transitions?.(usesViewTransition(sources, checker));
     // Direct JSX imports often retain every capability without inferring unrelated
     // expressions. If they do not, the full pass still handles aliases and escapes.
     for (const direct of [true, false]) {

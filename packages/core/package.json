@@ -20,7 +20,8 @@
     "./link-prefetch": "./src/link-prefetch.ts",
     "./intent": "./src/intent.ts",
     "./transport": "./src/transport.ts",
-    "./nested": "./src/nested.ts"
+    "./nested": "./src/nested.ts",
+    "./view-transition": "./src/view-transition.ts"
   },
   "devDependencies": {
     "vitest": "catalog:"

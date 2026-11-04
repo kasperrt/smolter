@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.5.1
+
+Stable release of the nested-layout and route-owned presentation work tested in 0.4.12-beta.1–beta.4, plus build-time removal of unused transition dispatch.
+
+### Routing and presentation
+
+- Add optional React and Preact nested client routing through `/react/nested` and `/preact/nested`. Shared layouts retain state and focus; loaders, actions, fetchers, errors and `shouldRevalidate` belong to their route. `router.revalidate({ route: id })` refreshes only the selected owner(s), while respecting their revalidation vetoes.
+- Infer nested ownership from file routes. The generated virtual module selects nested routing only when actual parent/child route modules exist; flat applications do not include the nested engine. Nested SSR is not supported by this release.
+- Keep loader-free parent layouts mounted while child loaders show their own `HydrateFallback`.
+- **Presentation compatibility:** replace the prerelease `viewTransition` boolean with a page or layout export, `viewTransition(commit, previous, next)`. The destination page takes precedence over its nearest layout. Smolter does not start browser transitions or select animations. Consumers own browser support, reduced motion, CSS, image readiness and animation errors. Call `commit()` to apply the destination; stale/repeated commits are ignored. The callback return value is not awaited.
+- Vite removes transition selection and lazy dispatch when analyzed file-route applications do not use them. Manual factories, opaque references and computed writes retain support conservatively. Builds without Smolter’s Vite plugin keep transition support. This does not remove route retention, recovery ownership or normal scroll restoration.
+- Add real-scroll React/Preact regressions alongside the existing hash and `preventScrollReset` checks. Page-owned scroll animations should clean up in a layout effect before paint; passive cleanup can run after a router reset. No router workaround for consumer animation lifetimes is introduced.
+
+### Tooling and serving
+
+- Preserve root/route response headers in SSR, including errors, while removing obsolete content length/encoding metadata.
+- Harden example static asset serving against hidden files and symlink escapes.
+- Remove the separate TypeScript 6 compiler alias; retain the TypeScript 7 analyzer introduced in beta.1. It uses TypeScript’s unstable build-only API and stays out of browser bundles.
+- Publish catalog-resolved packages and centralize development dependencies. Keep competitor measurements as labeled documentation snapshots rather than installed router dependencies.
+- Update guides, API references and generated size measurements. Reuse package builds in CI without weakening browser, package, coverage or size gates.
+
 ## 0.4.12-beta.4
 
 - Keep loader-free nested layouts mounted while children load, so child hydration skeletons are not hidden by an unrelated layout fallback. Preserve layout input and focus through settlement in React and Preact.

@@ -3,6 +3,7 @@
  *
  * @module
  */
+
 import { serverRoute } from "@smolter/client";
 import {
   type DataArgs,
@@ -10,6 +11,7 @@ import {
   type Router,
   safeWrapAsync,
 } from "@smolter/core";
+import { lazyTransition } from "@smolter/core/view-transition";
 import { useRouter } from "./context.ts";
 import type { AppRoute } from "./route-types.ts";
 import type { ErrorProps } from "./routes.ts";
@@ -97,13 +99,7 @@ export function lazyRoute(
     path: options.path,
     id: options.id,
     preload,
-    viewTransition(commit, previous, next) {
-      if (module?.viewTransition) {
-        module.viewTransition(commit, previous, next);
-        return;
-      }
-      commit();
-    },
+    ...(lazyTransition && { viewTransition: lazyTransition(() => module) }),
     default: LazyView,
     resolveComponent: () => module?.default as ComponentType | undefined,
     clientLoader: (args) => run(args),
