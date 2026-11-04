@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Isolate router-comparison dependencies and size tooling in a private benchmark workspace. Keep React Compiler tooling in the React examples, centralize shared development versions, and declare internal adapter renderers as peers. Preserve the public package dependencies and size gates.
+- Submit the resolved pnpm dependency graph to GitHub after dependency changes on main, including aliases, optional packages and transitive dependencies, so catalog-based declarations remain visible to security advisories.
+
 ## 0.4.11
 
 - Update the documentation site, examples and development validation to Preact 11.1.1 and preact-render-to-string 6.8.2. Update JSR dependency imports to the same versions.

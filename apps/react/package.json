@@ -11,5 +11,9 @@
     "@smolter/ui": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "catalog:",
+    "oxc-transform-react": "catalog:"
   }
 }

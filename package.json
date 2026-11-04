@@ -11,7 +11,7 @@
     "test": "pnpm build && vitest run --project unit",
     "coverage": "pnpm build && vitest run --coverage",
     "smoke": "playwright test",
-    "size": "pnpm build && node scripts/size.mjs",
+    "size": "pnpm build && node tooling/benchmarks/size.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size",
     "version:patch": "node scripts/version.mjs patch",
     "version:minor": "node scripts/version.mjs minor",
@@ -27,8 +27,8 @@
     "docs:check": "pnpm build && node scripts/docs-reference.mjs --check"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15",
-    "@playwright/test": "1.64.1",
+    "@biomejs/biome": "catalog:",
+    "@playwright/test": "catalog:",
     "@smolter/client": "workspace:*",
     "@smolter/core": "workspace:*",
     "@smolter/files": "workspace:*",
@@ -37,25 +37,21 @@
     "@smolter/server": "workspace:*",
     "@smolter/ui": "workspace:*",
     "@smolter/vite": "workspace:*",
-    "@types/node": "24.10.1",
-    "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0",
-    "@vitejs/plugin-react": "6.1.2",
-    "@vitest/browser-playwright": "5.0.5",
-    "@vitest/coverage-v8": "5.0.5",
-    "esbuild": "0.28.2",
-    "oxc-transform-react": "0.152.0",
-    "preact": "11.1.1",
-    "preact-render-to-string": "6.8.2",
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "react-router": "8.4.0",
-    "terser": "5.44.1",
-    "vite": "8.3.4",
-    "vitest": "5.0.5",
-    "wouter": "3.13.0",
-    "wouter-preact": "3.13.0",
-    "typescript": "7.0.2"
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "esbuild": "catalog:",
+    "preact": "catalog:",
+    "preact-render-to-string": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "terser": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "typescript": "catalog:",
+    "yaml": "catalog:"
   },
   "version": "0.4.11",
   "description": "A tiny typed data router for React and Preact.",
@@ -184,6 +180,6 @@
     "provenance": true
   },
   "dependencies": {
-    "typescript-compiler": "npm:typescript@6.0.3"
+    "typescript-compiler": "catalog:"
   }
 }

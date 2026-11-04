@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@smolter/core": "workspace:*",
-    "preact": "catalog:",
     "@smolter/client": "workspace:*"
+  },
+  "peerDependencies": {
+    "preact": "catalog:"
   }
 }

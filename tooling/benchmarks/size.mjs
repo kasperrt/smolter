@@ -1,7 +1,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { parse } from "yaml";
 import { commonExports, measure, measureAdapters } from "./measure.mjs";
 
-const path = new URL("../packages/ui/src/size.json", import.meta.url);
+const path = new URL("../../packages/ui/src/size.json", import.meta.url);
 const previous = JSON.parse(readFileSync(path, "utf8"));
 // Dependency comparisons are refreshed by pnpm size, not every example build.
 const sizes = await measureAdapters(
@@ -13,13 +14,16 @@ if (readFileSync(path, "utf8") !== json) writeFileSync(path, json);
 
 if (!process.argv.includes("--write-only")) {
   await import("./size-combinations.mjs");
-  const manifest = JSON.parse(
-    readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+  const lock = parse(
+    readFileSync(new URL("../../pnpm-lock.yaml", import.meta.url), "utf8"),
   );
   const references = await Promise.all(
     ["wouter", "wouter-preact", "react-router"].map(async (name) => ({
       name,
-      version: manifest.devDependencies[name],
+      version:
+        lock.importers["tooling/benchmarks"].devDependencies[
+          name
+        ].version.split("(")[0],
       bytes: await measure(name),
     })),
   );
@@ -73,7 +77,7 @@ if (!process.argv.includes("--write-only")) {
     "<!-- size-comparison:end -->",
   ].join("\n");
   for (const file of ["README.md"]) {
-    const url = new URL(`../${file}`, import.meta.url);
+    const url = new URL(`../../${file}`, import.meta.url);
     const source = readFileSync(url, "utf8");
     const updated = source.replace(
       /<!-- size-comparison:start -->[\s\S]*?<!-- size-comparison:end -->/,

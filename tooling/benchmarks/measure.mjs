@@ -1,16 +1,25 @@
+import { fileURLToPath } from "node:url";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 import { build } from "esbuild";
 import { minify } from "terser";
 
 export async function measure(entry, names, detailed = false) {
   const exports = names ? `{ ${names.join(", ")} }` : "*";
+  const paths = (Array.isArray(entry) ? entry : [entry]).map((path) =>
+    path.startsWith(".")
+      ? fileURLToPath(new URL(`../../${path}`, import.meta.url))
+      : path,
+  );
   const contents = Array.isArray(entry)
-    ? entry
+    ? paths
         .map((path) => `export ${exports} from ${JSON.stringify(path)};`)
         .join("\n")
-    : `export ${exports} from ${JSON.stringify(entry)};`;
+    : `export ${exports} from ${JSON.stringify(paths[0])};`;
   const result = await build({
-    stdin: { contents, resolveDir: new URL("..", import.meta.url).pathname },
+    stdin: {
+      contents,
+      resolveDir: fileURLToPath(new URL(".", import.meta.url)),
+    },
     bundle: true,
     minify: true,
     format: "esm",
@@ -120,8 +129,9 @@ export async function measureAdapters(previous = {}) {
     measure("./dist/preact/index.js", routingExports),
     measure("./dist/react/index.js", commonExports),
     measure("./dist/preact/index.js", commonExports),
-    measure("wouter", wouterRoutingExports),
-    measure("wouter-preact", wouterRoutingExports),
+    previous.wouterRouting ?? measure("wouter", wouterRoutingExports),
+    previous.wouterPreactRouting ??
+      measure("wouter-preact", wouterRoutingExports),
     previous.reactRouterRouting ??
       measure("react-router", [
         "BrowserRouter",

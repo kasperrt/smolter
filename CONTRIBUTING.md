@@ -20,12 +20,38 @@ all four standalone examples.
 Implementation packages are private workspace packages. Keep changes in their
 `src` directories. The publish build assembles portable source modules under
 the ignored `.generated/` directory and emits JavaScript and declarations into `dist`.
-Both directories are generated. The published package has no workspace or runtime
-dependencies, and consumers continue to choose `@kasperrt/smolter/react` or `@kasperrt/smolter/preact`.
+Both directories are generated. The published package has no workspace dependencies.
+Its TypeScript compiler dependency is used only by the Vite analyzer; React and Preact
+remain consumer-selected peers. Consumers continue to choose `@kasperrt/smolter/react` or `@kasperrt/smolter/preact`.
 
 Examples use the public imports to exercise the same API consumers install.
 Their workspace names are `@smolter/example-react`, `@smolter/example-preact`,
 `@smolter/example-react-ssr`, and `@smolter/example-preact-ssr`.
+
+## Development dependency ownership
+
+Pin external dependency versions in `pnpm-workspace.yaml` and use `catalog:`
+from workspace manifests. Keep public peer compatibility ranges in the publishing
+manifest. Put any necessary transitive security overrides in the workspace YAML
+rather than scattering pins across packages.
+
+Root development dependencies support the package build, repository-wide tests and
+typechecking. Shared third-party versions are pinned once in the workspace catalog;
+adapters declare their renderers as peers. React Compiler and its Vite plugin belong to the React examples.
+`tooling/benchmarks` owns the size-measurement scripts and pins `wouter`,
+`wouter-preact` and `react-router` solely for reproducible comparisons. These routers
+are not Smolter runtime dependencies and do not enter its published bundles.
+`pnpm size` refreshes comparisons and enforces the existing size gates; ordinary
+example builds reuse the saved comparison sizes.
+
+The dependency-submission workflow resolves every workspace from `pnpm-lock.yaml`
+and sends a snapshot to GitHub on dependency changes to main or manual dispatch.
+It includes transitive and optional dependencies, preserves npm alias identities,
+and distinguishes development dependencies from runtime dependencies. It installs
+with lifecycle scripts disabled; its write permission is limited to the submission
+job. GitHub can use this graph for Dependabot advisories even when manifests use
+catalog references. `yaml` is development tooling for this snapshot and the size
+report; it is not a published runtime dependency.
 
 ## Rendering and compiler
 

@@ -6,29 +6,89 @@ settings:
 
 catalogs:
   default:
+    '@biomejs/biome':
+      specifier: 2.5.15
+      version: 2.5.15
+    '@playwright/test':
+      specifier: 1.64.1
+      version: 1.64.1
+    '@types/node':
+      specifier: 24.10.1
+      version: 24.10.1
+    '@types/react':
+      specifier: 19.3.0
+      version: 19.3.0
+    '@types/react-dom':
+      specifier: 19.3.0
+      version: 19.3.0
+    '@vitejs/plugin-react':
+      specifier: 6.1.2
+      version: 6.1.2
+    '@vitest/browser-playwright':
+      specifier: 5.0.5
+      version: 5.0.5
+    '@vitest/coverage-v8':
+      specifier: 5.0.5
+      version: 5.0.5
+    esbuild:
+      specifier: 0.28.2
+      version: 0.28.2
+    oxc-transform-react:
+      specifier: 0.152.0
+      version: 0.152.0
     preact:
       specifier: 11.1.1
       version: 11.1.1
+    preact-render-to-string:
+      specifier: 6.8.2
+      version: 6.8.2
     react:
       specifier: 19.3.1
       version: 19.3.1
     react-dom:
       specifier: 19.3.1
       version: 19.3.1
+    react-router:
+      specifier: 8.4.0
+      version: 8.4.0
+    terser:
+      specifier: 5.44.1
+      version: 5.44.1
+    typescript:
+      specifier: 7.0.2
+      version: 7.0.2
+    typescript-compiler:
+      specifier: npm:typescript@6.0.3
+      version: 6.0.3
+    vite:
+      specifier: 8.3.4
+      version: 8.3.4
+    vitest:
+      specifier: 5.0.5
+      version: 5.0.5
+    wouter:
+      specifier: 3.13.0
+      version: 3.13.0
+    wouter-preact:
+      specifier: 3.13.0
+      version: 3.13.0
+    yaml:
+      specifier: 2.9.1
+      version: 2.9.1
 
 importers:
 
   .:
     dependencies:
       typescript-compiler:
-        specifier: npm:typescript@6.0.3
+        specifier: 'catalog:'
         version: typescript@6.0.3
     devDependencies:
       '@biomejs/biome':
-        specifier: 2.5.15
+        specifier: 'catalog:'
         version: 2.5.15
       '@playwright/test':
-        specifier: 1.64.1
+        specifier: 'catalog:'
         version: 1.64.1
       '@smolter/client':
         specifier: workspace:*
@@ -55,62 +115,50 @@ importers:
         specifier: workspace:*
         version: link:packages/vite
       '@types/node':
-        specifier: 24.10.1
+        specifier: 'catalog:'
         version: 24.10.1
       '@types/react':
-        specifier: 19.3.0
+        specifier: 'catalog:'
         version: 19.3.0
       '@types/react-dom':
-        specifier: 19.3.0
+        specifier: 'catalog:'
         version: 19.3.0(@types/react@19.3.0)
-      '@vitejs/plugin-react':
-        specifier: 6.1.2
-        version: 6.1.2(oxc-transform-react@0.152.0)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))
       '@vitest/browser-playwright':
-        specifier: 5.0.5
-        version: 5.0.5(playwright@1.64.1)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))(vitest@5.0.5)
+        specifier: 'catalog:'
+        version: 5.0.5(playwright@1.64.1)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))(vitest@5.0.5)
       '@vitest/coverage-v8':
-        specifier: 5.0.5
+        specifier: 'catalog:'
         version: 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
       esbuild:
-        specifier: 0.28.2
+        specifier: 'catalog:'
         version: 0.28.2
-      oxc-transform-react:
-        specifier: 0.152.0
-        version: 0.152.0
       preact:
-        specifier: 11.1.1
+        specifier: 'catalog:'
         version: 11.1.1(preact-render-to-string@6.8.2)
       preact-render-to-string:
-        specifier: 6.8.2
+        specifier: 'catalog:'
         version: 6.8.2(preact@11.1.1)
       react:
-        specifier: 19.3.1
+        specifier: 'catalog:'
         version: 19.3.1
       react-dom:
-        specifier: 19.3.1
+        specifier: 'catalog:'
         version: 19.3.1(react@19.3.1)
-      react-router:
-        specifier: 8.4.0
-        version: 8.4.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       terser:
-        specifier: 5.44.1
+        specifier: 'catalog:'
         version: 5.44.1
       typescript:
-        specifier: 7.0.2
+        specifier: 'catalog:'
         version: 7.0.2
       vite:
-        specifier: 8.3.4
-        version: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)
+        specifier: 'catalog:'
+        version: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1)
       vitest:
-        specifier: 5.0.5
-        version: 5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))
-      wouter:
-        specifier: 3.13.0
-        version: 3.13.0(react@19.3.1)
-      wouter-preact:
-        specifier: 3.13.0
-        version: 3.13.0(preact@11.1.1)
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))
+      yaml:
+        specifier: 'catalog:'
+        version: 2.9.1
 
   apps/preact:
     dependencies:
@@ -136,7 +184,7 @@ importers:
         specifier: 'catalog:'
         version: 11.1.1(preact-render-to-string@6.8.2)
       preact-render-to-string:
-        specifier: 6.8.2
+        specifier: 'catalog:'
         version: 6.8.2(preact@11.1.1)
 
   apps/react:
@@ -153,6 +201,13 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.3.1(react@19.3.1)
+    devDependencies:
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 6.1.2(oxc-transform-react@0.152.0)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))
+      oxc-transform-react:
+        specifier: 'catalog:'
+        version: 0.152.0
 
   apps/react-ssr:
     dependencies:
@@ -168,6 +223,13 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.3.1(react@19.3.1)
+    devDependencies:
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 6.1.2(oxc-transform-react@0.152.0)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))
+      oxc-transform-react:
+        specifier: 'catalog:'
+        version: 0.152.0
 
   packages/client:
     dependencies:
@@ -244,11 +306,35 @@ importers:
         specifier: workspace:*
         version: link:../server
       typescript-compiler:
-        specifier: npm:typescript@6.0.3
+        specifier: 'catalog:'
         version: typescript@6.0.3
       vite:
-        specifier: 8.3.4
-        version: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)
+        specifier: 'catalog:'
+        version: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1)
+
+  tooling/benchmarks:
+    devDependencies:
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
+      react-router:
+        specifier: 'catalog:'
+        version: 8.4.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      terser:
+        specifier: 'catalog:'
+        version: 5.44.1
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1)
+      wouter:
+        specifier: 'catalog:'
+        version: 3.13.0(react@19.3.1)
+      wouter-preact:
+        specifier: 'catalog:'
+        version: 3.13.0(preact@11.1.1)
+      yaml:
+        specifier: 'catalog:'
+        version: 2.9.1
 
 packages:
 
@@ -1363,6 +1449,11 @@ packages:
       utf-8-validate:
         optional: true
 
+  yaml@2.9.1:
+    resolution: {integrity: sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
 snapshots:
 
   '@babel/helper-string-parser@7.29.7': {}
@@ -1709,37 +1800,37 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
-  '@vitejs/plugin-react@6.1.2(oxc-transform-react@0.152.0)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))':
+  '@vitejs/plugin-react@6.1.2(oxc-transform-react@0.152.0)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
-      vite: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)
+      vite: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1)
     optionalDependencies:
       oxc-transform-react: 0.152.0
 
-  '@vitest/browser-playwright@5.0.5(playwright@1.64.1)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))(vitest@5.0.5)':
+  '@vitest/browser-playwright@5.0.5(playwright@1.64.1)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))(vitest@5.0.5)':
     dependencies:
-      '@vitest/browser': 5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))(vitest@5.0.5)
-      '@vitest/mocker': 5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))
+      '@vitest/browser': 5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))(vitest@5.0.5)
+      '@vitest/mocker': 5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))
       playwright: 1.64.1
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))
+      vitest: 5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))
     transitivePeerDependencies:
       - bufferutil
       - msw
       - utf-8-validate
       - vite
 
-  '@vitest/browser@5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))(vitest@5.0.5)':
+  '@vitest/browser@5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))(vitest@5.0.5)':
     dependencies:
       '@blazediff/core': 1.10.0
-      '@vitest/mocker': 5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))
+      '@vitest/mocker': 5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))
       '@vitest/ui': 5.0.5(vitest@5.0.5)
       '@vitest/utils': 5.0.5
       magic-string: 1.4.3
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))
+      vitest: 5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))
       ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
@@ -1757,9 +1848,9 @@ snapshots:
       obug: 3.0.0
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))
+      vitest: 5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))
     optionalDependencies:
-      '@vitest/browser': 5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))(vitest@5.0.5)
+      '@vitest/browser': 5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))(vitest@5.0.5)
 
   '@vitest/istanbul-lib-coverage@1.0.2': {}
 
@@ -1767,14 +1858,14 @@ snapshots:
     dependencies:
       '@vitest/istanbul-lib-coverage': 1.0.2
 
-  '@vitest/mocker@5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))':
+  '@vitest/mocker@5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       '@vitest/spy': 5.0.5
       estree-walker: 3.0.3
       magic-string: 1.4.3
     optionalDependencies:
-      vite: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)
+      vite: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1)
 
   '@vitest/pretty-format@5.0.5':
     dependencies:
@@ -1790,7 +1881,7 @@ snapshots:
       pathe: 2.0.3
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))
+      vitest: 5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))
 
   '@vitest/utils@5.0.5':
     dependencies:
@@ -2095,7 +2186,7 @@ snapshots:
     dependencies:
       react: 19.3.1
 
-  vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1):
+  vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -2107,11 +2198,12 @@ snapshots:
       esbuild: 0.28.2
       fsevents: 2.3.3
       terser: 5.44.1
+      yaml: 2.9.1
 
-  vitest@5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)):
+  vitest@5.0.5(@types/node@24.10.1)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
-      '@vitest/mocker': 5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))
+      '@vitest/mocker': 5.0.5(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))
       chai: 6.3.0
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
@@ -2122,11 +2214,11 @@ snapshots:
       tinybench: 6.2.2
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
-      vite: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)
+      vite: 8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1)
       why-is-node-running: 3.2.1
     optionalDependencies:
       '@types/node': 24.10.1
-      '@vitest/browser-playwright': 5.0.5(playwright@1.64.1)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1))(vitest@5.0.5)
+      '@vitest/browser-playwright': 5.0.5(playwright@1.64.1)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(terser@5.44.1)(yaml@2.9.1))(vitest@5.0.5)
       '@vitest/coverage-v8': 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
       '@vitest/ui': 5.0.5(vitest@5.0.5)
     transitivePeerDependencies:
@@ -2146,3 +2238,5 @@ snapshots:
       use-sync-external-store: 1.7.0(react@19.3.1)
 
   ws@8.22.0: {}
+
+  yaml@2.9.1: {}

@@ -14,8 +14,10 @@
   },
   "dependencies": {
     "@smolter/core": "workspace:*",
+    "@smolter/client": "workspace:*"
+  },
+  "peerDependencies": {
     "react": "catalog:",
-    "@smolter/client": "workspace:*",
     "react-dom": "catalog:"
   }
 }

@@ -8,7 +8,7 @@ export function measuredSize(): Plugin {
   const update = () => {
     execFileSync(
       process.execPath,
-      [resolve(root, "scripts/size.mjs"), "--write-only"],
+      [resolve(root, "tooling/benchmarks/size.mjs"), "--write-only"],
       { cwd: root },
     );
   };
