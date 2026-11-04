@@ -26,7 +26,11 @@ const packedManifest = JSON.parse(
     encoding: "utf8",
   }),
 );
-for (const field of ["dependencies", "optionalDependencies", "peerDependencies"])
+for (const field of [
+  "dependencies",
+  "optionalDependencies",
+  "peerDependencies",
+])
   for (const version of Object.values(packedManifest[field] || {}))
     assert.doesNotMatch(version, /^(catalog|workspace|file|link):/);
 
