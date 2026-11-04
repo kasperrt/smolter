@@ -906,7 +906,7 @@ test("early hydration includes pending references and an async entry in the init
   const html = await response.text();
   assert.match(html, /__smolterPending/);
   assert.match(html, /type="module" async/);
-  assert.match(html, /\[0,"ready",null\]/);
+  assert.ok(html.includes(JSON.stringify('[0,"ready",null]')));
   assert.match(html, /nonce="test-nonce"/);
 });
 

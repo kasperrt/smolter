@@ -1,7 +1,16 @@
+import { runInNewContext } from "node:vm";
 import { expect, it, vi } from "vitest";
 import { deferred } from "../../integration-tests/tests/helpers/deferred.ts";
 import { deferredHydration } from "../src/deferred-hydration.ts";
 import { progressiveDocument } from "../src/progressive-document.ts";
+
+function packets(html: string): unknown[] {
+  const window = { __smolterDeferred: [] };
+  const document = { currentScript: { remove() {} } };
+  for (const script of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))
+    runInNewContext(script[1], { window, document });
+  return window.__smolterDeferred;
+}
 
 it("streams each deferred value independently, preserving shared and nested promise references", async () => {
   const slow = deferred<string>();
@@ -19,16 +28,18 @@ it("streams each deferred value independently, preserving shared and nested prom
   fast.resolve({ nested: nested.promise });
   const decode = new TextDecoder();
   const first = decode.decode((await reader.read()).value);
-  expect(first).toContain('[1,{"nested":{"__smolterPending":2}},null]');
+  expect(packets(first)).toEqual([
+    [1, { nested: { __smolterPending: 2 } }, null],
+  ]);
   expect(first).toContain('nonce="nonce&quot;&lt;&amp;"');
   nested.resolve("</script>safe");
-  expect(decode.decode((await reader.read()).value)).toContain(
-    "\\u003c/script>safe",
-  );
+  expect(packets(decode.decode((await reader.read()).value))).toEqual([
+    [2, "</script>safe", null],
+  ]);
   slow.resolve("last");
-  expect(decode.decode((await reader.read()).value)).toContain(
-    '[0,"last",null]',
-  );
+  expect(packets(decode.decode((await reader.read()).value))).toEqual([
+    [0, "last", null],
+  ]);
   expect(decode.decode((await reader.read()).value)).toContain(
     "[-1,null,null]",
   );
@@ -41,8 +52,11 @@ it("serializes deferred errors and closes streams without pending data", async (
     Promise.reject("Other"),
   ]);
   const text = await new Response(payload.stream).text();
-  expect(text).toContain('[0,null,"Unavailable"]');
-  expect(text).toContain('[1,null,"Other"]');
+  expect(packets(text)).toEqual([
+    [0, null, "Unavailable"],
+    [1, null, "Other"],
+    [-1, null, null],
+  ]);
   expect(
     await new Response(deferredHydration({ value: 1 }).stream).text(),
   ).toBe("");
@@ -80,9 +94,7 @@ it("interleaves data before document closing tags and retains the streaming cont
   expect(result).toMatch(/^<!doctype html><html><body>shell/);
   expect(result).toContain("<div hidden data-smolter-stream>");
   expect(result).toMatch(/<\/body><\/html>$/);
-  expect(result.indexOf('[0,"data",null]')).toBeLessThan(
-    result.indexOf("</body>"),
-  );
+  expect(result.indexOf("JSON.parse(")).toBeLessThan(result.indexOf("</body>"));
   expect(dispose).toHaveBeenCalledOnce();
 });
 
@@ -141,6 +153,9 @@ it("distinguishes undefined deferred values from null", async () => {
     Promise.resolve(null),
   ]);
   const result = await new Response(payload.stream).text();
-  expect(result).toContain('[0,{"__smolterUndefined":true},null]');
-  expect(result).toContain("[1,null,null]");
+  expect(packets(result)).toEqual([
+    [0, { __smolterUndefined: true }, null],
+    [1, null, null],
+    [-1, null, null],
+  ]);
 });

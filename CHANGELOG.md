@@ -4,6 +4,8 @@
 
 ### Security
 
+- Parse deferred settlement payloads as JSON instead of evaluating them as JavaScript object literals. A `__proto__` data key can no longer alter a queued value’s prototype or disappear during hydration. Keep script-closing text escaped; existing nonce and streaming behavior remain supported. A minified Chromium regression covers the queue before hydration and the final resolved data.
+
 - Restore route and hydration errors without invoking property setters. A JSON `__proto__` key can no longer replace the revived Error prototype or bypass Error classification. Ordinary error data is retained. This is object-local prototype injection, not a demonstrated global prototype pollution or Critical exploit.
 
 - Stop copying arbitrary Error properties into route-data responses and hydration snapshots. Transported errors retain name/message and explicit HTTP status/statusText/data, while request configs, credentials, causes, stacks and custom serialization hooks are excluded. Covers root, route and action failures, early/deferred hydration, and React/Preact static Scripts. Thrown non-Error objects remain failures instead of becoming successful loader data. Error messages and explicit public response data remain application-controlled and must not contain secrets. Consumers that relied on custom Error properties in the browser should move intentionally public fields into explicit route-error data or a Response payload.
