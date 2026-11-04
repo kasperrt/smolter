@@ -24,6 +24,11 @@
       "title": "Forms and boundaries",
       "body": "Forms and fetchers default to their owning route. Index submissions include ?index to distinguish them from their parent. Explicit actions and fetcher URLs respect basename. The nearest layout ErrorBoundary handles loader, action and render failures; navigating to a valid route clears its rendering error. Shared layout state remains mounted across children.",
       "code": "const router = createNestedRouter(routes, { browser: true, basename: \"/platform\" });\n\nfunction AccountLayout() {\n  const account = useLoaderData();\n  return <section><h1>{account.name}</h1><Outlet context={account} /></section>;"
+    },
+    {
+      "title": "Loading and transitions",
+      "body": "Layouts without loaders stay mounted while a child loader is pending. The loading child owns its HydrateFallback. Nested document view transitions are off by default; enable them for the router or an individual navigation. A navigation-level false disables an enabled router default. Flat router defaults are unchanged.",
+      "code": "const router = createNestedRouter(routes, { viewTransition: true });\nawait router.navigate(\"/account/profile\", { viewTransition: false });"
     }
   ]
 }

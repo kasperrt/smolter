@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.12-beta.4
+
+- Keep loader-free nested layouts mounted while children load, so child hydration skeletons are not hidden by an unrelated layout fallback. Preserve layout input and focus through settlement in React and Preact.
+- Make nested document view transitions opt-in. Enable them with `createNestedRouter(routes, { viewTransition: true })` or an individual navigation option; flat-router behavior is unchanged.
+
 ## 0.4.12-beta.3
 
 - Publish the pnpm-packed npm artifact so workspace catalog dependencies resolve to installable versions. Beta.2 incorrectly published `typescript: "catalog:"`; consumers should use beta.3. Runtime behavior is unchanged.

@@ -37,12 +37,16 @@ export function pendingLocation(router: Router) {
 
 // Keep the committed route's view and data together while navigation loads.
 // The underlying router still owns cancellation, redirects and fetcher state.
-export function retainRoute(router: Router, commitView: CommitView) {
+export function retainRoute(
+  router: Router,
+  commitView: CommitView,
+  defaultTransition = true,
+) {
   const read = router.getSnapshot;
-  let viewTransition: boolean | undefined;
+  let viewTransition = defaultTransition;
   const navigate = router.navigate;
   router.navigate = (href, options: NavigateOptions = {}) => {
-    viewTransition = options.viewTransition;
+    viewTransition = options.viewTransition ?? defaultTransition;
     return navigate(href, options);
   };
   let visible = read();
