@@ -661,14 +661,14 @@ a claim of identical features.
 | `React Router 8.5.1: data routing subset` | 30841 |
 | `React: routing-only named exports` | 1878 |
 | `Preact: routing-only named exports` | 1858 |
-| `@kasperrt/smolter/react` | 5671 |
-| `@kasperrt/smolter/preact` | 6281 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 7391 |
-| `@kasperrt/smolter/preact + server transport` | 8005 |
-| `@kasperrt/smolter/react + client + document (application)` | 10458 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 10789 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11104 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11429 |
+| `@kasperrt/smolter/react` | 5697 |
+| `@kasperrt/smolter/preact` | 6306 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7415 |
+| `@kasperrt/smolter/preact + server transport` | 8032 |
+| `@kasperrt/smolter/react + client + document (application)` | 10485 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 10817 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11132 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11460 |
 | `React: common routing/data exports` | 4017 |
 | `Preact: common routing/data exports` | 3995 |
 | `wouter 3.13.0: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |

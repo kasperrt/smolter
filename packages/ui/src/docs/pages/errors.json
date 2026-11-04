@@ -18,6 +18,11 @@
       "title": "Returned errors and Responses",
       "body": "Return an Error for failure or allow a rejected promise to be normalized. A Response carrying Location redirects internally. Other Response values are passed through; the client server transport expects JSON response bodies.",
       "code": ""
+    },
+    {
+      "title": "Transported error safety",
+      "body": "Since 0.5.2, serialized route and rejected hydration errors retain their Error prototype even when JSON contains a __proto__ key. Data keys cannot change the revived error’s inheritance. This does not make arbitrary error payloads trustworthy: keep secrets out of error messages and explicitly public response data, and enforce authorization on the server.",
+      "code": ""
     }
   ]
 }

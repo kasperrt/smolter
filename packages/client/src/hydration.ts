@@ -45,7 +45,10 @@ export function readHydration(json: string, timeout = 8_000) {
     } else if ("__smolterRejected" in value) {
       const failure = value.__smolterRejected as { message: string };
       promise = Promise.reject(
-        Object.assign(new Error(failure.message), failure),
+        Object.defineProperties(
+          new Error(failure.message),
+          Object.getOwnPropertyDescriptors(failure),
+        ),
       );
     } else return value;
     void safeWrapAsync(() => promise);
