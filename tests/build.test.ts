@@ -2,7 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { build as bundleBrowser } from "esbuild";
 import { minify } from "terser";
-import ts from "typescript-compiler";
+import * as ts from "typescript/unstable/ast";
+import { API } from "typescript/unstable/sync";
 import { build } from "vite";
 import { expect, it } from "vitest";
 
@@ -217,7 +218,13 @@ it("keeps both adapters isolated from server and build code", async () => {
   }
 });
 
-it("keeps workspace source imports behind package exports", () => {
+it("keeps workspace source imports behind package exports", (context) => {
+  const api = new API({ cwd: process.cwd() });
+  context.onTestFinished(() => api.close());
+  const snapshot = api.updateSnapshot({
+    openProjects: [resolve("tsconfig.json")],
+  });
+  const program = snapshot.getProjects()[0].program;
   for (const name of [
     "core",
     "react",
@@ -232,12 +239,8 @@ it("keeps workspace source imports behind package exports", () => {
     for (const file of files.filter((file) => /\.tsx?$/.test(file))) {
       const filename = resolve(source, file);
       const content = readFileSync(filename, "utf8");
-      const module = ts.createSourceFile(
-        filename,
-        content,
-        ts.ScriptTarget.Latest,
-        true,
-      );
+      const module = program.getSourceFile(filename);
+      if (!module) throw new Error(`Missing source: ${filename}`);
       for (const statement of module.statements) {
         if (
           !ts.isImportDeclaration(statement) &&

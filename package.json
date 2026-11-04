@@ -11,8 +11,8 @@
     "test": "pnpm build && vitest run --project unit",
     "coverage": "pnpm build && vitest run --coverage",
     "smoke": "playwright test",
-    "size": "pnpm build && node tooling/benchmarks/size.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size",
+    "size": "pnpm build && node apps/preact/benchmarks/size.mjs",
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
     "version:patch": "node scripts/version.mjs patch",
     "version:minor": "node scripts/version.mjs minor",
     "version:release": "node scripts/version.mjs release",
@@ -20,7 +20,7 @@
     "build:examples": "pnpm --filter \"@smolter/example-*\" build",
     "smoke:production": "node scripts/production-smoke.mjs",
     "jsr:check": "node scripts/jsr.mjs",
-    "build:site": "pnpm --filter @smolter/example-preact build --mode hosted",
+    "build:site": "pnpm size && pnpm --filter @smolter/example-preact build --mode hosted",
     "smoke:site": "node scripts/site-smoke.mjs",
     "docs:badges": "node scripts/readme-badges.mjs",
     "docs:reference": "pnpm build && node scripts/docs-reference.mjs",
@@ -50,10 +50,9 @@
     "terser": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
-    "typescript": "catalog:",
     "yaml": "catalog:"
   },
-  "version": "0.4.11",
+  "version": "0.4.12-beta.1",
   "description": "A tiny typed data router for React and Preact.",
   "sideEffects": false,
   "license": "MIT",
@@ -180,6 +179,6 @@
     "provenance": true
   },
   "dependencies": {
-    "typescript-compiler": "catalog:"
+    "typescript": "catalog:"
   }
 }

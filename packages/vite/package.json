@@ -11,6 +11,7 @@
     "@smolter/files": "workspace:*",
     "vite": "catalog:",
     "@smolter/server": "workspace:*",
-    "typescript-compiler": "catalog:"
+    "typescript": "catalog:",
+    "@smolter/core": "workspace:*"
   }
 }

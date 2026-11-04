@@ -2,7 +2,7 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 import { build } from "vite";
-import { routerPlugin } from "../../dist/vite/index.js";
+import { routerPlugin } from "../../../dist/vite/index.js";
 import { commonExports, routingExports } from "./measure.mjs";
 
 // Measure complete combinations, never sums of separately compressed features.

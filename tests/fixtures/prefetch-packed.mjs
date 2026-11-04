@@ -11,10 +11,9 @@ assert.equal(ts.createProgram, undefined);
 const framework = process.argv[2];
 const tooling = `@kasperrt/smolter/${framework}/vite`;
 const compiler = createRequire(import.meta.resolve(tooling))(
-  "typescript-compiler",
+  "typescript/unstable/sync",
 );
-assert.equal(compiler.version, "6.0.3");
-assert.equal(typeof compiler.createProgram, "function");
+assert.equal(typeof compiler.API, "function");
 const { fileRouter } = await import(tooling);
 mkdirSync("build-fixture/src", { recursive: true });
 writeFileSync(

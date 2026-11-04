@@ -1,11 +1,15 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { relative } from "node:path";
-import ts from "typescript-compiler";
+import { relative, resolve } from "node:path";
+import * as ts from "typescript/unstable/ast";
+import { API, SymbolFlags } from "typescript/unstable/sync";
 
-const config = ts.readConfigFile("tsconfig.json", ts.sys.readFile);
-const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, ".");
-const program = ts.createProgram(parsed.fileNames, parsed.options);
-const checker = program.getTypeChecker();
+const api = new API({ cwd: process.cwd() });
+const snapshot = api.updateSnapshot({
+  openProjects: [resolve("tsconfig.json")],
+});
+const { program, checker, compilerOptions } = snapshot.getProjects()[0];
+// The native API accepts TypeFormatFlags but does not export their enum.
+const noTruncation = 1;
 const pages = new Map();
 
 for (const entry of [
@@ -22,18 +26,18 @@ for (const entry of [
   "utils",
   "utils/http",
 ]) {
-  const filename = parsed.options.paths[
+  const filename = compilerOptions.paths[
     `@kasperrt/smolter/${entry}`
   ][0].replace(/^\.\//, "");
-  const source = program.getSourceFile(filename);
+  const source = program.getSourceFile(resolve(filename));
   const module = checker.getSymbolAtLocation(source);
   for (const exported of checker.getExportsOfModule(module)) {
     const name = exported.name;
     const symbol =
-      exported.flags & ts.SymbolFlags.Alias
+      exported.flags & SymbolFlags.Alias
         ? checker.getAliasedSymbol(exported)
         : exported;
-    const declaration = symbol.declarations?.[0];
+    const declaration = symbol.declarations[0]?.resolve();
     if (!declaration) continue;
     const isType =
       ts.isInterfaceDeclaration(declaration) ||
@@ -53,7 +57,9 @@ for (const entry of [
     }
     const file = declaration.getSourceFile();
     const type = checker.getTypeOfSymbolAtLocation(symbol, declaration);
-    const functions = symbol.declarations.filter(ts.isFunctionDeclaration);
+    const functions = symbol.declarations
+      .map((handle) => handle.resolve())
+      .filter((node) => node && ts.isFunctionDeclaration(node));
     const overloads = functions.some((item) => !item.body)
       ? functions.filter((item) => !item.body)
       : functions;
@@ -70,20 +76,17 @@ for (const entry of [
           )
           .join("\n\n")
       : ts.isVariableDeclaration(declaration)
-        ? `const ${name}: ${checker.typeToString(type, declaration, ts.TypeFormatFlags.NoTruncation)};`
+        ? `const ${name}: ${checker.typeToString(type, declaration, noTruncation)};`
         : declaration.getText(file).replace(/^export /, "");
-    const summary = ts.displayPartsToString(
-      symbol.getDocumentationComment(checker),
-    );
+    const summary = symbol.getDocumentationComment(checker);
     const fields = ts.isInterfaceDeclaration(declaration)
       ? declaration.members.map((member) => ({
           name: member.name?.getText(file) ?? "index",
           signature: member.getText(file),
-          summary: ts.displayPartsToString(
+          summary:
             checker
               .getSymbolAtLocation(member.name)
-              ?.getDocumentationComment(checker) ?? [],
-          ),
+              ?.getDocumentationComment(checker) ?? "",
         }))
       : [];
     pages.set(name, {
@@ -103,6 +106,7 @@ for (const entry of [
   }
 }
 
+api.close();
 const output = "packages/ui/src/docs/reference.json";
 const content = [...pages.values()];
 

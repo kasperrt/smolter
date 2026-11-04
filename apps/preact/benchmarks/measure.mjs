@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 import { build } from "esbuild";
@@ -7,7 +8,7 @@ export async function measure(entry, names, detailed = false) {
   const exports = names ? `{ ${names.join(", ")} }` : "*";
   const paths = (Array.isArray(entry) ? entry : [entry]).map((path) =>
     path.startsWith(".")
-      ? fileURLToPath(new URL(`../../${path}`, import.meta.url))
+      ? fileURLToPath(new URL(`../../../${path}`, import.meta.url))
       : path,
   );
   const contents = Array.isArray(entry)
@@ -70,16 +71,7 @@ export const commonExports = [
   "useFetcher",
 ];
 
-export const wouterRoutingExports = [
-  "Router",
-  "Route",
-  "Switch",
-  "Link",
-  "useParams",
-  "useLocation",
-];
-
-export async function measureAdapters(previous = {}) {
+export async function measureAdapters() {
   const [
     react,
     preact,
@@ -93,11 +85,6 @@ export async function measureAdapters(previous = {}) {
     preactRouting,
     reactCommon,
     preactCommon,
-    wouterRouting,
-    wouterPreactRouting,
-    reactRouterRouting,
-    reactRouterData,
-    reactRouter,
   ] = await Promise.all([
     measure("./dist/react/index.js"),
     measure("./dist/preact/index.js"),
@@ -129,32 +116,6 @@ export async function measureAdapters(previous = {}) {
     measure("./dist/preact/index.js", routingExports),
     measure("./dist/react/index.js", commonExports),
     measure("./dist/preact/index.js", commonExports),
-    previous.wouterRouting ?? measure("wouter", wouterRoutingExports),
-    previous.wouterPreactRouting ??
-      measure("wouter-preact", wouterRoutingExports),
-    previous.reactRouterRouting ??
-      measure("react-router", [
-        "BrowserRouter",
-        "Routes",
-        "Route",
-        "Link",
-        "useParams",
-        "useLocation",
-      ]),
-    previous.reactRouterData ??
-      measure("react-router", [
-        "createBrowserRouter",
-        "RouterProvider",
-        "Link",
-        "Form",
-        "useLoaderData",
-        "useActionData",
-        "useParams",
-        "useLocation",
-        "useRevalidator",
-        "useFetcher",
-      ]),
-    previous.reactRouter ?? measure("react-router"),
   ]);
   return {
     react,
@@ -169,10 +130,14 @@ export async function measureAdapters(previous = {}) {
     preactRouting,
     reactCommon,
     preactCommon,
-    wouterRouting,
-    wouterPreactRouting,
-    reactRouterRouting,
-    reactRouterData,
-    reactRouter,
+    ...JSON.parse(
+      readFileSync(
+        new URL(
+          "../../../packages/ui/src/comparison-sizes.json",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    ).sizes,
   };
 }

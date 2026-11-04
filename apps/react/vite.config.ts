@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { demoAssets } from "../../tooling/vite/demo-assets.ts";
 import { hostedPages } from "../../tooling/vite/hosted-pages.ts";
-import { measuredSize } from "../../tooling/vite/size-plugin.ts";
 import { splitDocumentation } from "../../tooling/vite/split-documentation.ts";
 
 const routing =
@@ -33,6 +32,5 @@ export default defineConfig(({ mode }) => ({
           }
         : routing,
     ),
-    measuredSize(),
   ],
 }));

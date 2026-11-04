@@ -27,7 +27,6 @@ jobs:
       - run: pnpm test
       - run: pnpm pack:smoke
       - run: pnpm build:examples
-      - run: pnpm size
   coverage:
     runs-on: ubuntu-latest
     steps:

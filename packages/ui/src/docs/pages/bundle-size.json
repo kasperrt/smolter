@@ -16,7 +16,7 @@
     },
     {
       "title": "Measured tiers",
-      "body": "Sizes below are generated from the current build. Routing-only uses createRouter; common routing/data uses createDataRouter. Complete entries retain both factories and every other export. The comparable wouter subset retains Router, Route, Switch, Link, useParams and useLocation. Framework runtimes are excluded. Shared code makes rows non-additive.",
+      "body": "Smolter sizes below are generated from the current build; competitor figures are recorded reference measurements. Routing-only uses createRouter; common routing/data uses createDataRouter. Complete entries retain both factories and every other export. The comparable wouter subset retains Router, Route, Switch, Link, useParams and useLocation. Framework runtimes are excluded. Shared code makes rows non-additive.",
       "code": ""
     },
     {
@@ -31,12 +31,12 @@
     },
     {
       "title": "Comparison exports and versions",
-      "body": "Measured against wouter and wouter-preact 3.13.0, and react-router 8.4.0. React Router has no dedicated Preact export: its React API is measured here, not a Preact compatibility build. These APIs differ in capabilities; sizes are not claims of feature equivalence. All measurements use the same production minification and gzip settings.",
+      "body": "Reference measurements recorded on 2026-10-31: wouter and wouter-preact 3.13.0, and react-router 8.4.0. React Router has no dedicated Preact export: its React API is measured here, not a Preact compatibility build. These APIs differ in capabilities; sizes are not claims of feature equivalence. These reference numbers are not regenerated on each build. The comparison uses esbuild 0.28.2, Terser 5.44.1 with three passes and gzip level 9, with framework runtimes excluded.",
       "code": "// React Router declarative subset\nBrowserRouter, Routes, Route, Link, useParams, useLocation\n\n// React Router data subset\ncreateBrowserRouter, RouterProvider, Link, Form, useLoaderData,\nuseActionData, useParams, useLocation, useRevalidator, useFetcher\n\n// Smolter routing subset\ncreateRouter, defineRoute, RouterProvider, Routes, Link, useParams, useLocation\n\n// Smolter data subset\ncreateDataRouter, defineRoute, RouterProvider, Routes, Link, Form,\nuseRouter, useLoaderData, useActionData, useParams, useLocation,\nuseRevalidator, useFetcher"
     },
     {
       "title": "Reproduce",
-      "body": "pnpm size refreshes both the named-export comparison table (esbuild, Terser, gzip level 9) and the feature selector (production Vite with Smolter’s plugin, gzip level 9, Brotli quality 11). React, React DOM and Preact are external. The selector builds every valid combination, including its small Link fixture, rather than adding separate compressed totals. Your application imports and build configuration can produce different results.",
+      "body": "pnpm size refreshes Smolter’s named-export measurements (esbuild, Terser, gzip level 9) and the feature selector (production Vite with Smolter’s plugin, gzip level 9, Brotli quality 11). Competitor figures remain labeled reference snapshots and require no installed competitor packages. React, React DOM and Preact are external. The selector builds every valid combination, including its small Link fixture, rather than adding separate compressed totals. Your application imports and build configuration can produce different results.",
       "code": "pnpm size\npnpm size -- --breakdown"
     }
   ]

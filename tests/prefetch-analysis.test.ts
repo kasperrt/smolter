@@ -1,13 +1,14 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, it } from "vitest";
+import { API, Snapshot } from "typescript/unstable/sync";
+import { expect, it, vi } from "vitest";
 import { analyzePrefetch } from "../packages/vite/src/prefetch-analysis.ts";
 
 it("infers literals, imported spread types, unions and overriding attributes without changing runtime semantics", async (context) => {
   const root = await mkdtemp(join(tmpdir(), "smolter-prefetch-types-"));
   context.onTestFinished(() => rm(root, { recursive: true, force: true }));
-  expect(analyzePrefetch(root)).toEqual({
+  expect(await analyzePrefetch(root)).toEqual({
     intent: true,
     viewport: true,
     data: true,
@@ -124,7 +125,11 @@ it("infers literals, imported spread types, unions and overriding attributes wit
       join(root, "src/entry.tsx"),
       `import {Link} from "@kasperrt/smolter/preact"; import * as Adapter from "@kasperrt/smolter/preact"; import type {Modes} from "./types"; ${source}`,
     );
-    expect(analyzePrefetch(root), source).toEqual({ intent, viewport, data });
+    expect(await analyzePrefetch(root), source).toEqual({
+      intent,
+      viewport,
+      data,
+    });
   }
 }, 60_000);
 
@@ -227,7 +232,11 @@ for (const framework of ["react", "preact"] as const) {
     ];
     for (const [source, intent, viewport, data] of cases) {
       await writeFile(join(root, "entry.tsx"), source);
-      expect(analyzePrefetch(root), source).toEqual({ intent, viewport, data });
+      expect(await analyzePrefetch(root), source).toEqual({
+        intent,
+        viewport,
+        data,
+      });
     }
   }, 60_000);
 }
@@ -254,7 +263,7 @@ it("watches later source dependencies after every capability is retained", async
   );
   await writeFile(modes, 'export type Mode = "intent" | "viewport";');
   const watched: string[] = [];
-  expect(analyzePrefetch(root, (file) => watched.push(file))).toEqual({
+  expect(await analyzePrefetch(root, (file) => watched.push(file))).toEqual({
     intent: true,
     viewport: true,
     data: true,
@@ -262,7 +271,7 @@ it("watches later source dependencies after every capability is retained", async
   expect(watched).toEqual(
     expect.arrayContaining([config, entry, later, modes]),
   );
-  expect(watched.indexOf(modes)).toBeGreaterThan(watched.indexOf(entry));
+  expect(new Set(watched)).toEqual(new Set([config, entry, later, modes]));
 });
 
 it("inherits compiler paths and library types without using tsconfig include lists as route roots", async (context) => {
@@ -298,7 +307,7 @@ it("inherits compiler paths and library types without using tsconfig include lis
       `import {Link} from "@kasperrt/smolter/${framework}"; import type {Props} from "@options"; declare const props: Props; export const page = <Link {...props} />;`,
     );
     const watched: string[] = [];
-    expect(analyzePrefetch(root, (file) => watched.push(file))).toEqual({
+    expect(await analyzePrefetch(root, (file) => watched.push(file))).toEqual({
       intent: false,
       viewport: true,
       data: true,
@@ -367,7 +376,7 @@ for (const framework of ["react", "preact"] as const) {
       await writeFile(entry, source);
       const watched: string[] = [];
       expect(
-        analyzePrefetch(root, (file) => watched.push(file)),
+        await analyzePrefetch(root, (file) => watched.push(file)),
         source,
       ).toEqual({
         intent,
@@ -386,10 +395,36 @@ for (const framework of ["react", "preact"] as const) {
       entry,
       'import * as Factory from "./factory.js"; export const page = <Layout component={Factory.getLink()} />;',
     );
-    expect(analyzePrefetch(root)).toEqual({
+    expect(await analyzePrefetch(root)).toEqual({
       intent: true,
       viewport: true,
       data: true,
     });
   });
 }
+
+it("closes the native compiler after a failed project and permits a fresh analysis", async (context) => {
+  const root = await mkdtemp(join(tmpdir(), "smolter-prefetch-native-"));
+  context.onTestFinished(() => rm(root, { recursive: true, force: true }));
+  const close = vi.spyOn(API.prototype, "close");
+  const project = vi.spyOn(Snapshot.prototype, "getProject");
+  context.onTestFinished(() => {
+    close.mockRestore();
+    project.mockRestore();
+  });
+  await writeFile(
+    join(root, "entry.tsx"),
+    'import {Link} from "@kasperrt/smolter/preact"; export const page = <Link prefetch="viewport" />;',
+  );
+  project.mockReturnValueOnce(undefined);
+  await expect(analyzePrefetch(root)).rejects.toThrow(
+    "TypeScript did not open the prefetch analysis project",
+  );
+  expect(close).toHaveBeenCalledTimes(1);
+  expect(await analyzePrefetch(root)).toEqual({
+    intent: false,
+    viewport: true,
+    data: false,
+  });
+  expect(close).toHaveBeenCalledTimes(2);
+});
