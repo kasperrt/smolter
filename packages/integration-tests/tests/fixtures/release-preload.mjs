@@ -17,6 +17,7 @@ fs.readFileSync = (file, ...args) => {
 };
 
 let publications = 0;
+let packedTarball;
 let jsrPublications = 0;
 let jsrVisible = false;
 let waits = 0;
@@ -61,10 +62,18 @@ childProcess.execFileSync = (binary, args, options) => {
       throw new Error("JSR rejected publication");
     return "";
   }
+  if (binary === "pnpm") {
+    assert.deepEqual(args.slice(0, 2), ["pack", "--out"]);
+    assert.ok(args[2].endsWith("/package.tgz"));
+    packedTarball = args[2];
+    return "";
+  }
   if (!npmOnly) assert.ok(jsrVisible, "combined publishing verifies JSR");
   assert.equal(binary, "npm");
+  assert.ok(packedTarball, "npm must publish the pnpm-packed artifact");
   assert.deepEqual(args, [
     "publish",
+    packedTarball,
     "--access",
     "public",
     "--provenance",

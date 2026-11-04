@@ -21,6 +21,15 @@ const tarball = join(
   `${manifest.name.replace(/^@/, "").replace("/", "-")}-${manifest.version}.tgz`,
 );
 
+const packedManifest = JSON.parse(
+  execFileSync("tar", ["-xOf", tarball, "package/package.json"], {
+    encoding: "utf8",
+  }),
+);
+for (const field of ["dependencies", "optionalDependencies", "peerDependencies"])
+  for (const version of Object.values(packedManifest[field] || {}))
+    assert.doesNotMatch(version, /^(catalog|workspace|file|link):/);
+
 const cases = [
   { framework: "react", version: "18.0.0" },
   { framework: "react", version: "19.3.1" },
