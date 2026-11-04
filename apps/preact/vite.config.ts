@@ -1,9 +1,8 @@
 import { fileRouter } from "@kasperrt/smolter/preact/vite";
+import { demoAssets } from "@smolter/ui/tooling/demo-assets";
+import { hostedPages } from "@smolter/ui/tooling/hosted-pages";
+import { splitDocumentation } from "@smolter/ui/tooling/split-documentation";
 import { defineConfig } from "vite";
-import { demoAssets } from "../../tooling/vite/demo-assets.ts";
-import { hostedPages } from "../../tooling/vite/hosted-pages.ts";
-import { measuredSize } from "../../tooling/vite/size-plugin.ts";
-import { splitDocumentation } from "../../tooling/vite/split-documentation.ts";
 
 const routing =
   process.env.SMOLTER_ROUTES === "manual"
@@ -29,6 +28,5 @@ export default defineConfig(({ mode }) => ({
           }
         : routing,
     ),
-    measuredSize(),
   ],
 }));

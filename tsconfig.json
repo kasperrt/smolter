@@ -68,6 +68,6 @@
     },
     "types": ["node", "vite/client"]
   },
-  "include": ["packages", "apps", "tests", "tooling", "*.ts"],
+  "include": ["packages", "apps", "tooling", "*.ts"],
   "exclude": [".generated", "dist"]
 }

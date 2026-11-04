@@ -42,12 +42,20 @@ export function createSizeTable<N>(h: ElementFactory<N>) {
 
 export const comparisonRows: (string | number)[][] = [
   ["smolter routing-only", sizes.reactRouting, sizes.preactRouting],
-  ["wouter routing subset", sizes.wouterRouting, sizes.wouterPreactRouting],
   [
-    "React Router declarative routing subset",
+    "wouter / wouter-preact 3.13.0 routing subset",
+    sizes.wouterRouting,
+    sizes.wouterPreactRouting,
+  ],
+  [
+    "React Router 8.5.1 declarative routing subset",
     sizes.reactRouterRouting,
     "React API",
   ],
   ["smolter common routing + data", sizes.reactCommon, sizes.preactCommon],
-  ["React Router data routing subset", sizes.reactRouterData, "React API"],
+  [
+    "React Router 8.5.1 data routing subset",
+    sizes.reactRouterData,
+    "React API",
+  ],
 ];

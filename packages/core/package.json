@@ -21,5 +21,8 @@
     "./intent": "./src/intent.ts",
     "./transport": "./src/transport.ts",
     "./nested": "./src/nested.ts"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

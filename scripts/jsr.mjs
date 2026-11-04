@@ -8,8 +8,9 @@ import {
   rmSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
-import ts from "typescript-compiler";
+import { join, resolve } from "node:path";
+import * as ts from "typescript/unstable/ast";
+import { API } from "typescript/unstable/sync";
 
 const publish = process.argv.includes("--publish");
 
@@ -22,16 +23,18 @@ execFileSync("pnpm", ["build"], { stdio: "inherit" });
 
 const source = new URL("../", import.meta.url);
 // JSR's hosted validation rejects global augmentation even when Deno's dry run passes.
-for (const file of readdirSync(new URL(".generated/", source), {
+const files = readdirSync(new URL(".generated/", source), {
   recursive: true,
-})) {
-  if (!/\.tsx?$/.test(file)) continue;
-  const tree = ts.createSourceFile(
-    file,
-    readFileSync(new URL(`.generated/${file}`, source), "utf8"),
-    ts.ScriptTarget.Latest,
-    true,
-  );
+}).filter((file) => /\.tsx?$/.test(file));
+const api = new API({ cwd: process.cwd() });
+const snapshot = api.updateSnapshot({
+  openFiles: files.map((file) => resolve(".generated", file)),
+});
+for (const file of files) {
+  const filename = resolve(".generated", file);
+  const tree = snapshot
+    .getDefaultProjectForFile(filename)
+    .program.getSourceFile(filename);
   const inspect = (node) => {
     if (
       ts.isModuleDeclaration(node) &&
@@ -40,11 +43,12 @@ for (const file of readdirSync(new URL(".generated/", source), {
       console.error(`JSR forbids global type augmentation: ${file}`);
       process.exit(1);
     }
-    ts.forEachChild(node, inspect);
+    node.forEachChild(inspect);
   };
   inspect(tree);
 }
 
+api.close();
 const directory = realpathSync(mkdtempSync(join(tmpdir(), "smolter-jsr-")));
 
 for (const file of [

@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import { createServer } from "node:http";
 import { extname, resolve } from "node:path";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
 import { safeWrapAsync } from "@smolter/core";
 import { data, render } from "../dist/server/server.js";
 
-const root = resolve(import.meta.dirname, "../dist");
+const root = await realpath(resolve(import.meta.dirname, "../dist"));
 const template = await readFile(resolve(root, "index.html"), "utf8");
 const types = {
   ".js": "text/javascript",
@@ -30,16 +30,33 @@ createServer(async (incoming, outgoing) => {
     const origin = `http://${incoming.headers.host}`;
     const url = new URL(incoming.url, origin);
     if (url.pathname.startsWith("/assets/")) {
-      const file = resolve(root, `.${url.pathname}`);
-      if (!file.startsWith(`${root}/assets/`)) {
+      const asset = await safeWrapAsync(async () => {
+        const path = decodeURIComponent(url.pathname);
+        if (
+          /[\\\u0000]/.test(path) ||
+          path.split("/").some((part) => part.startsWith("."))
+        )
+          return;
+        const file = await realpath(resolve(root, `.${path}`));
+        if (
+          !file.startsWith(`${root}/assets/`) ||
+          file
+            .slice(root.length + 1)
+            .split("/")
+            .some((part) => part.startsWith("."))
+        )
+          return;
+        return { file, body: await readFile(file) };
+      });
+      if (!asset.data) {
         outgoing.writeHead(404).end();
         return;
       }
       outgoing.setHeader(
         "Content-Type",
-        types[extname(file)] ?? "application/octet-stream",
+        types[extname(asset.data.file)] ?? "application/octet-stream",
       );
-      outgoing.end(await readFile(file));
+      outgoing.end(asset.data.body);
       return;
     }
     if (!/(?:^|; )smolter-session=/.test(incoming.headers.cookie ?? "")) {

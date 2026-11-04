@@ -20,12 +20,17 @@ all four standalone examples.
 Implementation packages are private workspace packages. Keep changes in their
 `src` directories. The publish build assembles portable source modules under
 the ignored `.generated/` directory and emits JavaScript and declarations into `dist`.
-Both directories are generated. The published package has no workspace or runtime
-dependencies, and consumers continue to choose `@kasperrt/smolter/react` or `@kasperrt/smolter/preact`.
+Both directories are generated. The published package has no workspace dependencies;
+its TypeScript dependency is build tooling. Consumers continue to choose `@kasperrt/smolter/react` or `@kasperrt/smolter/preact`.
 
 Examples use the public imports to exercise the same API consumers install.
 Their workspace names are `@smolter/example-react`, `@smolter/example-preact`,
 `@smolter/example-react-ssr`, and `@smolter/example-preact-ssr`.
+
+External dependencies use exact versions from the `pnpm-workspace.yaml` catalog.
+Public peer declarations describe compatibility. Size tooling lives under
+`apps/preact/benchmarks` and runs for hosted docs; competitor sizes are versioned
+reference measurements, without installing the competitor packages.
 
 ## Rendering and compiler
 
@@ -43,6 +48,8 @@ They do not mirror router state into component state. Keep cleanup intact when
 changing subscriptions, including unmounts and server hydration.
 
 ## Validation
+
+Package tests live under `packages/*/tests`; cross-package suites and shared fixtures live in `packages/integration-tests/tests`. Framework development dependencies belong to their owning packages and apps, not the publishing root.
 
 - `pnpm fix` and `pnpm typecheck` check formatting and types.
 - `pnpm coverage` requires 100% line coverage per implementation file.

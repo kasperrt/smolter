@@ -9,8 +9,12 @@
   },
   "dependencies": {
     "@smolter/files": "workspace:*",
-    "vite": "8.3.4",
+    "vite": "catalog:",
     "@smolter/server": "workspace:*",
-    "typescript-compiler": "npm:typescript@6.0.3"
+    "typescript": "catalog:",
+    "@smolter/core": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@kasperrt/smolter",
-  "version": "0.4.11",
+  "version": "0.4.12-beta.2",
   "exports": {
     "./react": "./.generated/react/index.ts",
     "./preact": "./.generated/preact/index.ts",

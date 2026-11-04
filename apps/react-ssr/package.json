@@ -11,6 +11,13 @@
     "@kasperrt/smolter": "workspace:*",
     "@smolter/ui": "workspace:*",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "@smolter/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "catalog:",
+    "oxc-transform-react": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:"
   }
 }
