@@ -6,7 +6,7 @@ import { type DataResponse, normalizeResult } from "@smolter/core/responses";
 import { loadRouter } from "@smolter/server";
 import { deferredHydration } from "./deferred-hydration.ts";
 import { dispatchRoute } from "./dispatch.ts";
-import { privateHeaders } from "./private-response.ts";
+import { privateHeaders, privateResponse } from "./private-response.ts";
 import { progressiveDocument } from "./progressive-document.ts";
 import { requestPolicy } from "./request-policy.ts";
 import { resolveHydration, streamDocument } from "./stream-document.ts";
@@ -63,7 +63,7 @@ export async function renderDocument(
       actionResponse.headers.has("Location") ||
       !actionResponse.headers.get("Content-Type")?.includes("application/json")
     )
-      return actionResponse;
+      return privateResponse(actionResponse);
     actionData = await normalizeResult(await actionResponse.json());
   }
   let routeResponse: ResponseInit | undefined;
@@ -134,11 +134,11 @@ export async function renderDocument(
   const root = rootError ? undefined : rootState.data;
   if (root instanceof Response && root.headers.has("Location")) {
     router.dispose();
-    return root;
+    return privateResponse(root);
   }
   if (redirectResponse) {
     router.dispose();
-    return redirectResponse;
+    return privateResponse(redirectResponse);
   }
   if (actionResponse || rootError) {
     const hydrationData = {

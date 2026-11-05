@@ -3,6 +3,7 @@ import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { safeWrapAsync } from "@smolter/core";
 import type { ServerIncomingMessage } from "./handler.ts";
+import { cacheHeader } from "./private-response.ts";
 import { requestPolicy } from "./request-policy.ts";
 
 /** Convert a Node request with cancellation and an optional route target. Enforce mutation policy and a 1 MiB body limit; rejected requests throw a Response. */
@@ -73,10 +74,18 @@ export async function send(response: Response, outgoing: StreamingResponse) {
     await response.body?.cancel();
     return;
   }
+  const privateCache =
+    outgoing.getHeader("Cache-Control") === "private, no-store" ||
+    response.headers.get("Cache-Control") === "private, no-store";
   outgoing.statusCode = response.status;
   response.headers.forEach((value, name) => {
     if (name !== "set-cookie") outgoing.setHeader(name, value);
   });
+  if (privateCache) {
+    for (const name of outgoing.getHeaderNames()) {
+      if (cacheHeader.test(name)) outgoing.setHeader(name, "private, no-store");
+    }
+  }
   const cookies = response.headers.getSetCookie();
   if (cookies.length) outgoing.setHeader("set-cookie", cookies);
   if (!response.body) {

@@ -272,3 +272,45 @@ test("request-target slashes cannot replace the HTTP host used for origin checks
     `${base}//attacker.example/account?keep=1`,
   );
 });
+
+test.each([false, true])(
+  "keeps data responses private with inherited CDN headers (thrown: %s)",
+  async (thrown) => {
+    const handler = createRequestHandler({
+      entry: "",
+      build: {
+        default: () => new Response("document"),
+        handleDataRequest: () => {
+          const response = new Response("SYNTHETIC_PRIVATE_ACCOUNT", {
+            status: thrown ? 403 : 200,
+            headers: {
+              "Cache-Control": "public, max-age=3600",
+              "Surrogate-Control": "max-age=3600",
+            },
+          });
+          if (thrown) throw response;
+          return response;
+        },
+      },
+    });
+    const server = createServer((request, response) => {
+      response.setHeader("Vercel-CDN-Cache-Control", "public, max-age=3600");
+      void handler(request, response, () => response.writeHead(500).end());
+    });
+    server.listen(0, "127.0.0.1");
+    await once(server, "listening");
+    onTestFinished(() => {
+      server.close();
+    });
+    const { port } = server.address() as AddressInfo;
+    const response = await fetch(`http://127.0.0.1:${port}/account.__smolter`);
+    expect(response.status).toBe(thrown ? 403 : 200);
+    for (const name of [
+      "Cache-Control",
+      "Surrogate-Control",
+      "Vercel-CDN-Cache-Control",
+    ])
+      expect.soft(response.headers.get(name), name).toBe("private, no-store");
+    expect(await response.text()).toBe("SYNTHETIC_PRIVATE_ACCOUNT");
+  },
+);

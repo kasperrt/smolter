@@ -1,4 +1,3 @@
-import { errorData } from "@smolter/core/errors";
 /**
  * React document metadata, resource links and hydration scripts.
  *
@@ -6,6 +5,7 @@ import { errorData } from "@smolter/core/errors";
  */
 
 import { applicationEnvironment } from "@smolter/core/environment";
+import { errorData } from "@smolter/core/errors";
 import { scrollPositions } from "@smolter/core/navigation";
 import { serializeData } from "@smolter/core/serialize";
 import type { ComponentProps } from "react";

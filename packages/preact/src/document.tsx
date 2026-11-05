@@ -1,4 +1,3 @@
-import { errorData } from "@smolter/core/errors";
 /**
  * Preact document metadata, resource links and hydration scripts.
  *
@@ -6,6 +5,7 @@ import { errorData } from "@smolter/core/errors";
  */
 
 import { applicationEnvironment } from "@smolter/core/environment";
+import { errorData } from "@smolter/core/errors";
 import { scrollPositions } from "@smolter/core/navigation";
 import { serializeData } from "@smolter/core/serialize";
 import { Fragment } from "preact";

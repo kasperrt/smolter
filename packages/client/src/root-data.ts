@@ -1,4 +1,5 @@
 import type { RevalidationArgs, Router } from "@smolter/core";
+import { createStore } from "@smolter/core/store";
 
 interface RootModule {
   default?: unknown;
@@ -9,8 +10,6 @@ interface RootModule {
 }
 
 export { createStore as createRootStore } from "@smolter/core/store";
-
-import { createStore } from "@smolter/core/store";
 
 export function attachRootData(
   router: Router,

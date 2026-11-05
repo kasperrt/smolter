@@ -1,4 +1,5 @@
 import { createNestedRouter } from "@smolter/core/nested";
+import { resolveData } from "@smolter/core/responses";
 import { describe, expect, it } from "vitest";
 
 describe("nested routing", () => {
@@ -372,5 +373,23 @@ it("retains already-prefixed redirect destinations", async () => {
   expect(router.getSnapshot().url).toBe(
     "http://localhost/platform/end?done=1#scope",
   );
+  router.dispose();
+});
+
+it("keeps prototype-named route data as an own property", async () => {
+  const data = { admin: true, optional: Promise.resolve("resolved") };
+  const router = createNestedRouter([
+    { id: "__proto__", path: "/", clientLoader: () => data },
+  ]);
+  await router.navigate("/");
+  const branch = router.getSnapshot().data as {
+    values: Record<string, unknown>;
+  };
+  expect(Object.hasOwn(branch.values, "__proto__")).toBe(true);
+  expect(Object.getPrototypeOf(branch.values)).not.toBe(data);
+  expect(branch.values.admin).toBeUndefined();
+  expect(await resolveData(branch.values)).toEqual({
+    ["__proto__"]: { admin: true, optional: "resolved" },
+  });
   router.dispose();
 });

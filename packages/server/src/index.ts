@@ -77,8 +77,8 @@ async function dispatchRequest(
   const result = await safeWrapAsync(() =>
     handler({ request, params: match.params, signal: request.signal }),
   );
-  const error = result.error ?? (result.data instanceof Error && result.data);
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (result.error)
+    return Response.json({ error: result.error.message }, { status: 500 });
   if (result.data instanceof Response) {
     const location = result.data.headers.get("Location");
     if (location) {

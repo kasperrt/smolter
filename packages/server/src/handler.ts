@@ -70,7 +70,7 @@ export function createRequestHandler({
       await send(dataRequest ? privateResponse(response) : response, outgoing);
     };
     const { error } = await safeWrapAsync(handle);
-    if (error?.cause instanceof Response) await send(error.cause, outgoing);
-    else if (error) next(error);
+    if (error?.cause instanceof Response) return send(error.cause, outgoing);
+    if (error) next(error);
   };
 }

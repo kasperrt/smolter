@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.3
+
+### Security
+
+- Preserve private/no-store caching on SSR root, route and action redirects, and when data handlers throw Responses. Prevent inherited Node/CDN cache directives from overriding the transport policy. Redirect destinations and cookies are preserved; explicit resource-route responses retain their caching contract.
+- Define nested loader values as own data properties so a configured `__proto__` route ID cannot replace the value map’s prototype or introduce inherited values. This is local dictionary pollution, not global prototype pollution or demonstrated RCE.
+
+### Maintenance
+
+- Simplify HTTP error paths with early returns, remove redundant error normalization, and group document/root-data imports consistently.
+
 ## 0.5.2
 
 ### Security
