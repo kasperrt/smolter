@@ -11,6 +11,8 @@ for (const framework of ["react", "preact"] as const) {
     "lib/auth.server.js",
     "src/auth.server.ts",
     "lib/auth.server.ts?raw",
+    "lib/auth.server.ts?url",
+    "lib/auth.server.ts?raw&inline",
   ])(
     `${framework} rejects server-marked browser imports: %s`,
     async (specifier, context) => {

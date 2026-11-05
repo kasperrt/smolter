@@ -102,8 +102,9 @@ export function applicationPlugins({
           await send(await dispatchRoute(request, routes), outgoing);
         };
         const { error } = await safeWrapAsync(run);
-        if (error?.cause instanceof Response) await send(error.cause, outgoing);
-        else if (error) next(error);
+        if (error?.cause instanceof Response)
+          return send(error.cause, outgoing);
+        if (error) next(error);
       });
       if (!ssr) return;
       return () => {
@@ -142,8 +143,8 @@ export function applicationPlugins({
           };
           const { error } = await safeWrapAsync(run);
           if (error?.cause instanceof Response)
-            await send(error.cause, outgoing);
-          else if (error) next(error);
+            return send(error.cause, outgoing);
+          if (error) next(error);
         });
       };
     },

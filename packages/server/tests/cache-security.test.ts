@@ -88,3 +88,72 @@ for (const render of [renderReact, renderPreact]) {
     await response.text();
   });
 }
+
+for (const render of [renderReact, renderPreact]) {
+  it.each(["root", "loader", "action"])(
+    "keeps %s SSR redirects private",
+    async (source) => {
+      const redirect = () =>
+        new Response(null, {
+          status: 302,
+          headers: {
+            Location: "/account?ticket=SYNTHETIC_PRIVATE_VALUE",
+            "Cache-Control": "public, max-age=3600",
+            "CDN-Cache-Control": "public, max-age=3600",
+            "Set-Cookie": "session=SYNTHETIC; Secure; HttpOnly",
+          },
+        });
+      const response = await render(
+        new Request("https://app.example/login", {
+          method: source === "action" ? "POST" : "GET",
+        }),
+        [
+          {
+            path: "/login",
+            default: () => null,
+            loader: source === "loader" ? redirect : undefined,
+            action: redirect,
+          },
+        ],
+        {
+          Layout: () => null,
+          default: () => null,
+          loader: source === "root" ? redirect : undefined,
+        },
+        "/entry.js",
+      );
+      expect(response.status).toBe(302);
+      expect(response.headers.get("Location")).toBe(
+        "/account?ticket=SYNTHETIC_PRIVATE_VALUE",
+      );
+      expect(response.headers.get("Set-Cookie")).toBe(
+        "session=SYNTHETIC; Secure; HttpOnly",
+      );
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+      expect(response.headers.get("CDN-Cache-Control")).toBe(
+        "private, no-store",
+      );
+    },
+  );
+}
+
+for (const render of [renderReact, renderPreact]) {
+  it("retains explicit resource-only document caching", async () => {
+    const response = await render(
+      new Request("https://app.example/feed"),
+      [
+        {
+          path: "/feed",
+          loader: () =>
+            new Response("public feed", {
+              headers: { "Cache-Control": "public, max-age=60" },
+            }),
+        },
+      ],
+      { Layout: () => null, default: () => null },
+      "/entry.js",
+    );
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=60");
+    expect(await response.text()).toBe("public feed");
+  });
+}

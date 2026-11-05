@@ -21,7 +21,7 @@
     },
     {
       "title": "Page actions and hydration",
-      "body": "For a page POST, PUT, PATCH, or DELETE, the server runs the action once before loading the page data. JSON action results become snapshot.actionData, so useActionData reads the same result during server rendering and after hydration. A data(value, { status, headers }) result preserves its status and response headers in the HTML response, including validation statuses and cookies. Returned action errors populate snapshot.error for the route boundary. Redirects and non-JSON HTTP responses are returned directly without rendering a document.",
+      "body": "For a page POST, PUT, PATCH, or DELETE, the server runs the action once before loading the page data. JSON action results become snapshot.actionData, so useActionData reads the same result during server rendering and after hydration. A data(value, { status, headers }) result preserves its status and response headers in the HTML response, including validation statuses and cookies. Returned action errors populate snapshot.error for the route boundary. Redirects and non-JSON HTTP responses are returned directly without rendering a document. Page action responses and root/route redirects enforce private, no-store while retaining status, destination and cookies. Resource-only routes retain their explicit cache policy.",
       "code": ""
     },
     {

@@ -65,7 +65,7 @@ export function configureTransport(
       await send(response, outgoing);
     };
     const { error } = await safeWrapAsync(dispatch);
-    if (error?.cause instanceof Response) await send(error.cause, outgoing);
-    else if (error) next(error);
+    if (error?.cause instanceof Response) return send(error.cause, outgoing);
+    if (error) next(error);
   });
 }

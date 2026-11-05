@@ -194,7 +194,12 @@ export function createNestedRouter(
             result.data.headers.has("Location")
           )
             return redirectResult(result.data, args.request.url);
-          branch.values[result.id] = result.data;
+          Object.defineProperty(branch.values, result.id, {
+            value: result.data,
+            enumerable: true,
+            writable: true,
+            configurable: true,
+          });
         }
         return branch;
       };
