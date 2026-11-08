@@ -9,8 +9,6 @@ interface RootModule {
   shouldRevalidate?: (args: RevalidationArgs) => boolean;
 }
 
-export { createStore as createRootStore } from "@smolter/core/store";
-
 export function attachRootData(
   router: Router,
   initial: unknown,

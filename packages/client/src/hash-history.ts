@@ -1,17 +1,20 @@
 import type { Router } from "@smolter/core";
 
+const hashFor = (url: string, base: string) => {
+  const target = new URL(url, base);
+  return `#${target.pathname}${target.search}${target.hash}`;
+};
+
 export function connectHashHistory(router: Router) {
   const read = router.getSnapshot;
   const navigate = router.navigate;
   router.navigate = async (url, options) => {
-    const target = new URL(url, router.getSnapshot().url);
-    const hash = `#${target.pathname}${target.search}${target.hash}`;
+    const hash = hashFor(url, router.getSnapshot().url);
     history[options?.replace ? "replaceState" : "pushState"](null, "", hash);
     await navigate(url, options);
   };
   const unsubscribe = router.subscribe(() => {
-    const target = new URL(read().url);
-    const hash = `#${target.pathname}${target.search}${target.hash}`;
+    const hash = hashFor(read().url, read().url);
     // Redirects commit inside the router rather than through navigate().
     if (location.hash !== hash) history.replaceState(history.state, "", hash);
   });

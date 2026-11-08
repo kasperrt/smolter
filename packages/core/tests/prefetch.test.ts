@@ -27,7 +27,7 @@ it("deduplicates reads, reuses navigation data once, and preserves query/hash wi
     url: "http://localhost/item?q=1#target",
   });
   expect(loader).toHaveBeenCalledTimes(1);
-  await router.navigate("/item?q=1");
+  await router.navigate("/item?q=1#target");
   expect(loader).toHaveBeenCalledTimes(2);
   router.dispose();
 });

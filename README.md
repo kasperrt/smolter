@@ -373,6 +373,9 @@ and params still update. Compare `currentUrl` with `nextUrl` before skipping a r
 when the destination needs different data. First visits, retries after loader errors,
 and explicit `fetcher.load()` calls always load their destination.
 
+Navigation that changes only the hash keeps an already-loaded route's data without
+calling its loader or `shouldRevalidate`. Navigating to the same URL still loads.
+
 This controls loader refreshes; it does not rerun actions or reload the document.
 Existing page data stays visible during manual and post-action refreshes.
 
@@ -661,16 +664,16 @@ a claim of identical features.
 | `React Router 8.5.1: data routing subset` | 30841 |
 | `React: routing-only named exports` | 1895 |
 | `Preact: routing-only named exports` | 1882 |
-| `@kasperrt/smolter/react` | 5697 |
-| `@kasperrt/smolter/preact` | 6306 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 7450 |
-| `@kasperrt/smolter/preact + server transport` | 8065 |
-| `@kasperrt/smolter/react + client + document (application)` | 10519 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 10852 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11165 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11494 |
-| `React: common routing/data exports` | 4020 |
-| `Preact: common routing/data exports` | 4004 |
+| `@kasperrt/smolter/react` | 5721 |
+| `@kasperrt/smolter/preact` | 6332 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7479 |
+| `@kasperrt/smolter/preact + server transport` | 8090 |
+| `@kasperrt/smolter/react + client + document (application)` | 10481 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 10817 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11125 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11456 |
+| `React: common routing/data exports` | 4044 |
+| `Preact: common routing/data exports` | 4028 |
 | `wouter 3.13.0: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact 3.13.0: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |

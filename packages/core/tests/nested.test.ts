@@ -186,6 +186,37 @@ describe("nested routing", () => {
     expect(router.getSnapshot().url).toBe("http://localhost/platform/login");
     router.dispose();
   });
+  it("reuses layout data across hash-only navigation, including after a failure", async () => {
+    let parents = 0;
+    let children = 0;
+    let fail = false;
+    const router = createNestedRouter([
+      { id: "parent", path: "/", clientLoader: () => ++parents },
+      {
+        id: "child",
+        path: "/child",
+        parentId: "parent",
+        clientLoader: () => {
+          if (fail) throw Error("child failed");
+          return ++children;
+        },
+      },
+    ]);
+    await router.navigate("/child");
+    await router.navigate("/child#one");
+    expect([parents, children]).toEqual([1, 1]);
+    fail = true;
+    await router.navigate("/child?retry=1");
+    expect(router.getSnapshot().error?.message).toBe("child failed");
+    expect([parents, children]).toEqual([2, 1]);
+    await router.navigate("/child#two");
+    expect([parents, children]).toEqual([2, 1]);
+    expect(router.getSnapshot()).toMatchObject({
+      error: undefined,
+      data: { matches: ["parent", "child"], values: { parent: 1, child: 1 } },
+    });
+    router.dispose();
+  });
   it("keeps ancestor data when a child loader fails", async () => {
     const router = createNestedRouter([
       { id: "shell", path: "/", clientLoader: () => "account" },

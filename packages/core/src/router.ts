@@ -148,13 +148,16 @@ export function createDataRouter(
           previous.loaded &&
           !previous.error &&
           previous.path === match.route.path &&
-          match.route.shouldRevalidate?.({
-            url,
-            currentUrl: new URL(previous.url!),
-            nextUrl: url,
-            defaultShouldRevalidate: true,
-            reason: "navigation",
-          }) === false
+          // A hash-only change keeps the loaded page data.
+          ((url.href !== previous.url &&
+            url.href === new URL(url.hash, previous.url).href) ||
+            match.route.shouldRevalidate?.({
+              url,
+              currentUrl: new URL(previous.url!),
+              nextUrl: url,
+              defaultShouldRevalidate: true,
+              reason: "navigation",
+            }) === false)
         )
           return previous.data;
         const load = () =>
