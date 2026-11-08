@@ -12,17 +12,6 @@ export function prepareRoutes(
     const wrapped: AppRoute = {
       ...route,
       path: route.routePath ?? route.path,
-      shouldRevalidate: (args) => {
-        const { currentUrl, nextUrl } = args;
-        if (
-          args.reason === "navigation" &&
-          currentUrl.pathname === nextUrl.pathname &&
-          currentUrl.search === nextUrl.search &&
-          currentUrl.hash !== nextUrl.hash
-        )
-          return false;
-        return route.shouldRevalidate?.(args) ?? args.defaultShouldRevalidate;
-      },
     };
     for (const key of [
       "loader",

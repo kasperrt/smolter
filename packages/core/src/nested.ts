@@ -158,19 +158,24 @@ export function createNestedRouter(
                 !revalidation.targets.includes(node.path)
               )
                 return previous!.values[node.id];
+              const changed =
+                currentUrl.pathname !== nextUrl.pathname ||
+                currentUrl.search !== nextUrl.search;
               if (
                 reusable &&
-                module.shouldRevalidate?.(
-                  revalidation ?? {
-                    currentUrl,
-                    nextUrl,
-                    url: nextUrl,
-                    reason: "navigation",
-                    defaultShouldRevalidate:
-                      currentUrl.pathname !== nextUrl.pathname ||
-                      currentUrl.search !== nextUrl.search,
-                  },
-                ) === false
+                // A hash-only navigation reuses loaded layout data.
+                ((!revalidation &&
+                  !changed &&
+                  currentUrl.hash !== nextUrl.hash) ||
+                  module.shouldRevalidate?.(
+                    revalidation ?? {
+                      currentUrl,
+                      nextUrl,
+                      url: nextUrl,
+                      reason: "navigation",
+                      defaultShouldRevalidate: changed,
+                    },
+                  ) === false)
               )
                 return previous!.values[node.id];
               const handler = module.clientLoader ?? module.loader;

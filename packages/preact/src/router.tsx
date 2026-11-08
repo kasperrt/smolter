@@ -1,4 +1,4 @@
-import { createRootStore } from "@smolter/client/root-data";
+import { createStore } from "@smolter/core/store";
 import { Fragment } from "preact";
 import type { ReactNode } from "preact/compat";
 import { useLayoutEffect, useRef } from "preact/hooks";
@@ -90,7 +90,7 @@ function StreamOutlet({ children }: StreamOutletProps) {
 /** Root data, document components and request-scoped router for an application. */
 export interface ApplicationProps extends ApplicationContext {
   document?: boolean;
-  rootStore?: ReturnType<typeof createRootStore>;
+  rootStore?: ReturnType<typeof createStore>;
 }
 
 /** Render a Preact root document and active route with shared root data and application context. */
@@ -100,7 +100,7 @@ export function RouterApplication({
   ...props
 }: ApplicationProps): import("preact").JSX.Element {
   const rootStore = useMemo(
-    () => props.rootStore ?? createRootStore(initialRoot),
+    () => props.rootStore ?? createStore(initialRoot),
     [props.rootStore, initialRoot],
   );
   const root = useSyncExternalStore(rootStore.subscribe, rootStore.getSnapshot);

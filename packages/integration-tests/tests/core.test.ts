@@ -1222,3 +1222,23 @@ it("keeps modules and request parameters separate when path patterns are reused 
     params: { id: "three" },
   });
 });
+
+it("keeps page data across hash-only navigation and reloads the same URL", async () => {
+  let calls = 0;
+  const router = createDataRouter([{ path: "/guide", loader: () => ++calls }]);
+  await router.navigate("/guide");
+  await router.navigate("/guide#install");
+  await router.navigate("/guide#usage");
+  await router.navigate("/guide");
+  expect(calls).toBe(1);
+  expect(router.getSnapshot()).toMatchObject({
+    data: 1,
+    state: "idle",
+    url: "http://localhost/guide",
+  });
+  await router.navigate("/guide");
+  await router.navigate("/guide?page=2#usage");
+  await router.navigate("/guide?page=2#usage");
+  expect(calls).toBe(4);
+  router.dispose();
+});

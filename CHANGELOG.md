@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.5.4
+
+### Fixes
+
+- Keep loaded page data on hash-only navigation in manually defined routers. Adding, changing or removing only the URL hash no longer reruns the page loader, matching file-routed and application routers. Navigating to the same URL, or to a new path or query, still loads. Nested layouts keep their existing hash-only reuse, now checked in the nested router itself.
+
+### Performance
+
+- Move hash-only revalidation handling out of the per-route `prepareRoutes` wrapper into the core router, so application routes no longer each carry a `shouldRevalidate` wrapper. Matched gzip sizes: React application −38 B, React lazy application −35 B, Preact application −40 B, Preact file-routed application −38 B. Adapter-only entries grow by 24–29 B for the manual-router hash fix; routing-only and common data subsets are unchanged.
+- Share hash-history destination formatting between programmatic navigation and router updates.
+
+### Maintenance
+
+- Import `createStore` directly in the Preact router and remove the internal `createRootStore` alias, matching the React router.
+- Build the prefetch-mode size fixtures with production JSX so measurements no longer include development source paths that varied between runs. Budgets are lowered by 50 B, the smallest removed JSX overhead.
+
 ## 0.5.3
 
 ### Security
