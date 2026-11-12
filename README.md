@@ -668,10 +668,10 @@ a claim of identical features.
 | `@kasperrt/smolter/preact` | 6332 |
 | `@kasperrt/smolter/react + server transport (named client exports)` | 7479 |
 | `@kasperrt/smolter/preact + server transport` | 8090 |
-| `@kasperrt/smolter/react + client + document (application)` | 10481 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 10817 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11125 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11456 |
+| `@kasperrt/smolter/react + client + document (application)` | 10565 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 10901 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11205 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11535 |
 | `React: common routing/data exports` | 4044 |
 | `Preact: common routing/data exports` | 4028 |
 | `wouter 3.13.0: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |

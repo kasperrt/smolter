@@ -16,7 +16,7 @@
     },
     {
       "title": "Default behavior",
-      "body": "With no configuration, URLs are unchanged. Ordinary external links keep browser handling. A configured document handoff prevents the anchor default and calls leaveDocument. These callbacks do not declare routes or install a server endpoint.",
+      "body": "With no configuration, URLs are unchanged. Ordinary external links keep browser handling. A configured document handoff prevents the anchor default, lets the current page or nearest layout viewTransition present the departure, and then calls leaveDocument. These callbacks do not declare routes or install a server endpoint.",
       "code": ""
     }
   ]

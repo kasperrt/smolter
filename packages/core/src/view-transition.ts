@@ -1,3 +1,4 @@
+import type { NavigationRouter } from "./navigation-router.ts";
 import type { Route, RouteModule } from "./types.ts";
 
 interface PresentedRoute extends Route {
@@ -26,4 +27,28 @@ export function lazyTransition(
     if (handler) handler(commit, previous, next);
     else commit();
   };
+}
+
+// The leaving route presents departures; commit performs the document navigation once.
+export function leaveTransition(
+  router: NavigationRouter,
+  destination: URL,
+  leave: () => void,
+): boolean {
+  const previous = router.getSnapshot();
+  const handler = routeTransition(router.routes, previous.path);
+  if (!handler) return false;
+  let left = false;
+  const commit = () => {
+    if (left) return;
+    left = true;
+    leave();
+  };
+  handler(commit, previous, {
+    url: destination.href,
+    params: {},
+    state: "loading",
+    leaving: true,
+  });
+  return true;
 }

@@ -1,7 +1,7 @@
 {
   "slug": "view-transitions",
   "title": "View transitions",
-  "summary": "Page-owned transitions, without a router-selected animation.",
+  "summary": "Page-owned transitions into and out of routes, without a router-selected animation.",
   "kind": "Guides",
   "entries": ["react/client", "preact/client", "react/nested", "preact/nested"],
   "sections": [
@@ -14,6 +14,11 @@
       "title": "The consumer owns the browser transition",
       "body": "Your presentRoute function decides whether to call commit immediately or pass it to document.startViewTransition. Check browser support and reduced-motion preference yourself. Initial loading, errors and same-URL updates can also reach the callback, so choose which updates should animate. The return value is not awaited. Call commit to complete presentation; stale and repeated calls are ignored. Handle the browser transition promises and errors in your application. Smolter supplies no animation defaults or automatic full-document fade.",
       "code": ""
+    },
+    {
+      "title": "Leave the document from the current page",
+      "body": "When navigation leaves the document — a configured document handoff, a cross-origin router.navigate, or a Link to another application — Smolter calls the current page's viewTransition, falling back to its nearest nested layout. next.leaving is true, next.url is the destination and next.path is absent. Calling commit performs the departure through leaveDocument, or location.assign without one, once. Animate the outgoing page first, then call commit. Pages without an export leave immediately, so departures stay per-page rather than global. Ordinary external anchors that are not handoffs keep browser handling. The destination document presents its own entry: its first commit reaches viewTransition with previous.loaded false.",
+      "code": "export const viewTransition: NonNullable<RouteModule[\"viewTransition\"]> =\n  async (commit, previous, next) => {\n    if (!next.leaving || !document.startViewTransition) return commit();\n    const transition = document.startViewTransition(showDepartureState);\n    await transition.finished;\n    commit();\n  };"
     },
     {
       "title": "Move a shared image",

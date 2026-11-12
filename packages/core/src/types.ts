@@ -67,7 +67,7 @@ export interface RevalidationArgs extends RevalidationContext {
 
 /** A route component and its optional server and client data handlers. */
 export interface RouteModule {
-  /** Consumer-owned route presentation. Call commit once; stale commits are ignored. */
+  /** Consumer-owned route presentation, entering or leaving the document. Call commit once; stale commits are ignored. */
   viewTransition?: (
     commit: () => void,
     previous: Snapshot,
@@ -109,6 +109,8 @@ export interface Snapshot {
   formData?: FormData;
   error?: Error;
   state: "idle" | "loading" | "submitting";
+  /** Set on viewTransition's next snapshot when navigation leaves this document; commit performs the browser navigation. */
+  leaving?: true;
 }
 
 /** Initial URL, browser history, and hydration configuration. */

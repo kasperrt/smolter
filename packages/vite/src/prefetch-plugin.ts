@@ -51,7 +51,7 @@ export function prefetchSelection() {
       if (transition)
         return selected.transitions
           ? code.replace(marker, "")
-          : "export const routeTransition = undefined; export const lazyTransition = undefined;";
+          : "export const routeTransition = undefined; export const lazyTransition = undefined; export const leaveTransition = undefined;";
       if (selected[name]) return code.replace(marker, "");
       return `export const ${name}Prefetch = undefined;`;
     },

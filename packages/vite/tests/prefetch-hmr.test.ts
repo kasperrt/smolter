@@ -80,6 +80,7 @@ it("updates inferred capabilities in client and SSR graphs without restarting Vi
   const transition = resolve("packages/core/src/view-transition.ts");
   const presentation = () => server.transformRequest(`/@fs/${transition}`);
   expect((await presentation())?.code).toContain("routeTransition = undefined");
+  expect((await presentation())?.code).toContain("leaveTransition = undefined");
   await writeFile(
     extra,
     "export function viewTransition(commit) { commit(); }",
@@ -87,6 +88,7 @@ it("updates inferred capabilities in client and SSR graphs without restarting Vi
   await expect
     .poll(async () => (await presentation())?.code)
     .toContain("function routeTransition");
+  expect((await presentation())?.code).toContain("function leaveTransition");
   expect((await server.ssrLoadModule(transition)).routeTransition).toBeTypeOf(
     "function",
   );

@@ -21,7 +21,7 @@
     },
     {
       "title": "Navigation and scripts",
-      "body": "Without leaveDocument, a selected handoff uses location.assign. A custom leaveDocument callback must carry out navigation itself. Modified clicks, download links, and non-self targets retain browser behavior. entryScript is trusted executable source rendered by Scripts; it is not escaped as text or loaded as a URL.",
+      "body": "Without leaveDocument, a selected handoff uses location.assign. A custom leaveDocument callback must carry out navigation itself. When the current page or its nearest layout exports viewTransition, the departure waits for that callback to call commit. Modified clicks, download links, and non-self targets retain browser behavior. entryScript is trusted executable source rendered by Scripts; it is not escaped as text or loaded as a URL.",
       "code": ""
     },
     {
