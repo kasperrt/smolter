@@ -71,7 +71,7 @@ export function connectNavigation(router: Router) {
       new URL(href, router.getSnapshot().url),
     );
     if (destination.origin !== location.origin) {
-      leaveDocument(destination);
+      leaveDocument(destination, router);
       return;
     }
     rememberScroll();
@@ -106,7 +106,7 @@ export function connectNavigation(router: Router) {
     )
       return;
     const target = resolveApplicationURL(new URL(anchor.href));
-    handoffDocument(event, target);
+    handoffDocument(event, target, router);
   };
   if (typeof document !== "undefined")
     document.addEventListener("click", handoff);

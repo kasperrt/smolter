@@ -1,3 +1,6 @@
+import type { NavigationRouter } from "./navigation-router.ts";
+import { leaveTransition } from "./view-transition.ts";
+
 /** Application base URLs, navigation handoff and document-transition settings shared by browser integrations. */
 export interface ApplicationEnvironment {
   resolveURL?: (url: URL) => URL;
@@ -20,7 +23,11 @@ export function resolveApplicationURL(url: URL): URL {
   return navigationTarget(applicationEnvironment?.resolveURL?.(url) ?? url);
 }
 
-export function handoffDocument(event: MouseEvent, destination: URL): void {
+export function handoffDocument(
+  event: MouseEvent,
+  destination: URL,
+  router?: NavigationRouter,
+): void {
   if (
     !applicationEnvironment?.isDocumentHandoff?.(
       new URL(location.href),
@@ -29,16 +36,24 @@ export function handoffDocument(event: MouseEvent, destination: URL): void {
   )
     return;
   event.preventDefault();
-  leaveDocument(destination);
+  leaveDocument(destination, router);
 }
 
-export function leaveDocument(destination: URL): void {
+// With a router, the current route's viewTransition presents the departure.
+export function leaveDocument(
+  destination: URL,
+  router?: NavigationRouter,
+): void {
   navigationTarget(destination);
-  if (applicationEnvironment?.leaveDocument) {
-    applicationEnvironment.leaveDocument(destination);
-    return;
-  }
-  location.assign(destination.href);
+  const leave = () => {
+    if (applicationEnvironment?.leaveDocument) {
+      applicationEnvironment.leaveDocument(destination);
+      return;
+    }
+    location.assign(destination.href);
+  };
+  if (router && leaveTransition?.(router, destination, leave)) return;
+  leave();
 }
 
 export function navigationTarget(url: URL): URL {

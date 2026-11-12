@@ -94,7 +94,7 @@ export function Link(options: LinkProps): ReactNode {
       if (reloadDocument || !navigationClick(event, event.currentTarget))
         return;
       if (!internal) {
-        handoffDocument(event.nativeEvent, destination);
+        handoffDocument(event.nativeEvent, destination, router);
         return;
       }
       event.preventDefault();

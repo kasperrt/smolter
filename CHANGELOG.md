@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.5
+
+### Features
+
+- Route `viewTransition` exports now also present departures from the document, not only arrivals. When navigation leaves the document — a configured `isDocumentHandoff`, a cross-origin `router.navigate`, or a `Link` to another application — Smolter calls the current page's `viewTransition`, falling back to its nearest nested layout. The new `next.leaving` flag is `true`, `next.url` is the destination and `next.path` is absent. `commit` performs the departure once, through `leaveDocument` when configured and `location.assign` otherwise. Pages without an export leave immediately, so exit transitions stay per-page. The destination document keeps presenting its entry through its first commit, where `previous.loaded` is `false`.
+
+### Behavior changes
+
+- Existing `viewTransition` handlers on the leaving page now also run for document departures and must call `commit`, or navigation does not happen. Handlers that only animate in-app navigation can check `next.leaving` and call `commit()` immediately. Ordinary external anchors that are not configured handoffs keep browser handling and do not reach the callback.
+
+### Size
+
+- Application bundles that use view transitions grow for the departure dispatch. Matched gzip sizes: React application +84 B, React lazy application +84 B, Preact application +80 B, Preact file-routed application +79 B. Routing-only and common data subsets are unchanged. File-route applications without `viewTransition` exports still remove transition dispatch at build time, including departures.
+
 ## 0.5.4
 
 ### Fixes

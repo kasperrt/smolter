@@ -4,6 +4,9 @@ import {
   leaveDocument,
   resolveApplicationURL,
 } from "../src/environment.ts";
+import { defineRoute } from "../src/match.ts";
+import { createDataRouter } from "../src/router.ts";
+import type { Snapshot } from "../src/types.ts";
 
 afterEach(() => {
   configureApplication({});
@@ -58,4 +61,59 @@ it.each([
   "tel:+4712345678",
 ])("preserves non-executable external targets: %s", (href) => {
   expect(resolveApplicationURL(new URL(href)).href).toBe(href);
+});
+
+it("lets the leaving route present a document departure before navigating once", async () => {
+  const assign = vi.fn();
+  vi.stubGlobal("location", { assign });
+  const destination = new URL("https://remote.example/join");
+  const commits: (() => void)[] = [];
+  const presented: Snapshot[][] = [];
+  const router = createDataRouter(
+    [
+      defineRoute("/", {}),
+      defineRoute("/about", {
+        viewTransition: (commit, previous, next) => {
+          commits.push(commit);
+          presented.push([previous, next]);
+        },
+      }),
+    ],
+    { url: "https://app.example/about" },
+  );
+  await router.navigate("https://app.example/about");
+  leaveDocument(destination, router);
+  expect(assign).not.toHaveBeenCalled();
+  expect(presented).toEqual([
+    [
+      router.getSnapshot(),
+      { url: destination.href, params: {}, state: "loading", leaving: true },
+    ],
+  ]);
+  commits[0]();
+  commits[0]();
+  expect(assign).toHaveBeenCalledExactlyOnceWith(destination.href);
+  router.dispose();
+});
+
+it("leaves immediately when the current route has no presentation", async () => {
+  const assign = vi.fn();
+  const handoff = vi.fn();
+  const presented = vi.fn();
+  vi.stubGlobal("location", { assign });
+  configureApplication({ leaveDocument: handoff });
+  const destination = new URL("https://remote.example/join");
+  const router = createDataRouter(
+    [
+      defineRoute("/", { viewTransition: presented }),
+      defineRoute("/about", {}),
+    ],
+    { url: "https://app.example/about" },
+  );
+  await router.navigate("https://app.example/about");
+  leaveDocument(destination, router);
+  expect(handoff).toHaveBeenCalledExactlyOnceWith(destination);
+  expect(assign).not.toHaveBeenCalled();
+  expect(presented).not.toHaveBeenCalled();
+  router.dispose();
 });
