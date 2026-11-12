@@ -509,11 +509,11 @@
     "entries": ["react", "preact", "react/nested", "preact/nested"],
     "kind": "Types",
     "summary": "A route component and its optional server and client data handlers.",
-    "signature": "interface RouteModule {\n  /** Consumer-owned route presentation, entering or leaving the document. Call commit once; stale commits are ignored. */\n  viewTransition?: (\n    commit: () => void,\n    previous: Snapshot,\n    next: Snapshot,\n  ) => void;\n  /** Stable identifier for targeted revalidation; defaults to the path. */\n  id?: string;\n  default?: unknown;\n  HydrateFallback?: unknown;\n  ErrorBoundary?: unknown;\n  loader?: DataFunction;\n  action?: DataFunction;\n  /** Browser read: await the top-level result, retaining nested promises for deferred UI. */\n  clientLoader?(args: ClientLoaderArgs): unknown;\n  clientAction?(args: ClientActionArgs): unknown;\n  shouldRevalidate?: (args: RevalidationArgs) => boolean;\n}",
+    "signature": "interface RouteModule {\n  /** Consumer-owned route presentation, entering or leaving the document. Call commit once; stale commits are ignored. */\n  viewTransition?: (\n    commit: (options?: CommitOptions) => void,\n    previous: Snapshot,\n    next: Snapshot,\n  ) => void;\n  /** Stable identifier for targeted revalidation; defaults to the path. */\n  id?: string;\n  default?: unknown;\n  HydrateFallback?: unknown;\n  ErrorBoundary?: unknown;\n  loader?: DataFunction;\n  action?: DataFunction;\n  /** Browser read: await the top-level result, retaining nested promises for deferred UI. */\n  clientLoader?(args: ClientLoaderArgs): unknown;\n  clientAction?(args: ClientActionArgs): unknown;\n  shouldRevalidate?: (args: RevalidationArgs) => boolean;\n}",
     "fields": [
       {
         "name": "viewTransition",
-        "signature": "viewTransition?: (\n    commit: () => void,\n    previous: Snapshot,\n    next: Snapshot,\n  ) => void;",
+        "signature": "viewTransition?: (\n    commit: (options?: CommitOptions) => void,\n    previous: Snapshot,\n    next: Snapshot,\n  ) => void;",
         "summary": "Consumer-owned route presentation, entering or leaving the document. Call commit once; stale commits are ignored."
       },
       {
@@ -2400,5 +2400,21 @@
     "signature": "function send(response: Response, outgoing: StreamingResponse);",
     "fields": [],
     "source": "packages/server/src/http.ts"
+  },
+  {
+    "slug": "CommitOptions",
+    "title": "CommitOptions",
+    "entries": ["react", "preact", "react/nested", "preact/nested"],
+    "kind": "Types",
+    "summary": "Departure options for viewTransition's commit; in-document commits ignore them.",
+    "signature": "interface CommitOptions {\n  /** Keep the browser's cross-document view transition into the destination, with these types on the leaving document; [] adds none. */\n  crossDocument?: readonly string[];\n}",
+    "fields": [
+      {
+        "name": "crossDocument",
+        "signature": "crossDocument?: readonly string[];",
+        "summary": "Keep the browser's cross-document view transition into the destination, with these types on the leaving document; [] adds none."
+      }
+    ],
+    "source": "packages/core/src/types.ts"
   }
 ]

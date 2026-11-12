@@ -65,11 +65,17 @@ export interface RevalidationArgs extends RevalidationContext {
   reason: "manual" | "action" | "navigation";
 }
 
+/** Departure options for viewTransition's commit; in-document commits ignore them. */
+export interface CommitOptions {
+  /** Keep the browser's cross-document view transition into the destination, with these types on the leaving document; [] adds none. */
+  crossDocument?: readonly string[];
+}
+
 /** A route component and its optional server and client data handlers. */
 export interface RouteModule {
   /** Consumer-owned route presentation, entering or leaving the document. Call commit once; stale commits are ignored. */
   viewTransition?: (
-    commit: () => void,
+    commit: (options?: CommitOptions) => void,
     previous: Snapshot,
     next: Snapshot,
   ) => void;

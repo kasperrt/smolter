@@ -1,5 +1,5 @@
 import type { NavigationRouter } from "./navigation-router.ts";
-import type { Route, RouteModule } from "./types.ts";
+import type { CommitOptions, Route, RouteModule } from "./types.ts";
 
 interface PresentedRoute extends Route {
   branch?: readonly Route[];
@@ -39,9 +39,15 @@ export function leaveTransition(
   const handler = routeTransition(router.routes, previous.path);
   if (!handler) return false;
   let left = false;
-  const commit = () => {
+  const commit = (options?: CommitOptions) => {
     if (left) return;
     left = true;
+    crossDocumentTransition(options?.crossDocument);
+    // Let the opt-in reach style resolution after a same-document transition.
+    if (options?.crossDocument) {
+      requestAnimationFrame(leave);
+      return;
+    }
     leave();
   };
   handler(commit, previous, {
@@ -51,4 +57,20 @@ export function leaveTransition(
     leaving: true,
   });
   return true;
+}
+
+// A departure owns its cross-document transition: keep it only when commit asks.
+function crossDocumentTransition(types?: readonly string[]) {
+  const optIn =
+    types && document.head.appendChild(document.createElement("style"));
+  if (optIn) optIn.textContent = "@view-transition{navigation:auto}";
+  addEventListener(
+    "pageswap",
+    ({ viewTransition }) => {
+      optIn?.remove();
+      if (!types) viewTransition?.skipTransition();
+      for (const type of types ?? []) viewTransition?.types.add(type);
+    },
+    { once: true },
+  );
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.6
+
+### Features
+
+- Departure handlers can call `commit({ crossDocument: ["handoff"] })` to opt the leaving document into a browser cross-document view transition. Smolter sets the outgoing transition types, removes the temporary opt-in on departure, and waits one animation frame so opt-in also works after a same-document fade finishes. `commit()` skips a browser transition; an empty array opts in without adding types. The destination must opt in through its initial HTML/CSS and configure its own incoming types. React and Preact share the implementation.
+
 ## 0.5.5
 
 ### Features
