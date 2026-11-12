@@ -1,0 +1,13 @@
+{
+  "slug": "CommitOptions",
+  "title": "CommitOptions",
+  "summary": "Keep a browser cross-document view transition when a route's viewTransition commits a departure.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "Pass to commit when next.leaving is true. crossDocument keeps the browser's cross-document transition into a same-origin destination and adds its types, possibly none, to the leaving document's transition. Smolter opts the leaving document in for that departure only. A plain commit skips the transition. In-document commits ignore the options. The destination opts in with its own @view-transition rule.",
+      "code": "import type { RouteModule } from \"@kasperrt/smolter/preact\";\n\nexport const viewTransition: NonNullable<RouteModule[\"viewTransition\"]> =\n  (commit, _previous, next) => {\n    if (!next.leaving) return commit();\n    commit({ crossDocument: [\"handoff\"] });\n  };"
+    }
+  ]
+}

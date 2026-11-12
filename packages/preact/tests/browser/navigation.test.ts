@@ -1,4 +1,8 @@
-import { createDataRouter, type Snapshot } from "@smolter/core";
+import {
+  type CommitOptions,
+  createDataRouter,
+  type Snapshot,
+} from "@smolter/core";
 import { configureApplication } from "@smolter/core/environment";
 import { connectNavigation } from "@smolter/core/navigation";
 import { Link, RouterProvider } from "@smolter/preact";
@@ -126,13 +130,18 @@ it("delegates ordinary nested anchor clicks and releases the handoff listener on
 
 it("presents a handoff through the leaving page's viewTransition before leaving the document", async (context) => {
   const handoffs: string[] = [];
-  const commits: (() => void)[] = [];
+  const commits: ((options?: CommitOptions) => void)[] = [];
   const leaving: (true | undefined)[] = [];
+  const optedIn: boolean[] = [];
   const router = createDataRouter(
     [
       {
         path: location.pathname,
-        viewTransition: (commit: () => void, _: Snapshot, next: Snapshot) => {
+        viewTransition: (
+          commit: (options?: CommitOptions) => void,
+          _: Snapshot,
+          next: Snapshot,
+        ) => {
           commits.push(commit);
           leaving.push(next.leaving);
         },
@@ -147,6 +156,11 @@ it("presents a handoff through the leaving page's viewTransition before leaving 
       destination.origin === "https://remote.example",
     leaveDocument: (destination) => {
       handoffs.push(destination.href);
+      optedIn.push(
+        [...document.head.querySelectorAll("style")].some((style) =>
+          style.textContent?.includes("@view-transition"),
+        ),
+      );
     },
   });
   document.body.append(container);
@@ -155,6 +169,8 @@ it("presents a handoff through the leaving page's viewTransition before leaving 
     router.dispose();
     container.remove();
     configureApplication({});
+    for (const style of document.head.querySelectorAll("style"))
+      if (style.textContent?.includes("@view-transition")) style.remove();
   });
   await router.navigate(location.href);
   root.render(
@@ -170,7 +186,8 @@ it("presents a handoff through the leaving page's viewTransition before leaving 
   expect(event.defaultPrevented).toBe(true);
   expect(leaving).toEqual([true]);
   expect(handoffs).toEqual([]);
+  commits[0]({ crossDocument: ["handoff"] });
   commits[0]();
-  commits[0]();
-  expect(handoffs).toEqual(["https://remote.example/join"]);
+  await expect.poll(() => handoffs).toEqual(["https://remote.example/join"]);
+  expect(optedIn).toEqual([true]);
 });
