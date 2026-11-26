@@ -79,10 +79,14 @@ it("renders React root, metadata, route data, errors and hydration without a Pre
   expect(await data.json()).toEqual({ value: 1 });
 });
 
+interface ApplicationConfig {
+  resolve: { dedupe: string[] };
+}
+
 it("selects React application tooling without Preact aliases", async () => {
   const plugins = applicationPlugins();
   const app = plugins.find((plugin) => plugin.name === "smolter-application")!;
-  const config = app.config as () => { resolve: { dedupe: string[] } };
+  const config = app.config as () => ApplicationConfig;
   expect(config().resolve.dedupe).toContain("react");
   expect(JSON.stringify(config())).not.toContain("preact");
   expect(plugins.some((plugin) => plugin.name === "smolter-lazy-routes")).toBe(

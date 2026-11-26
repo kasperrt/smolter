@@ -6,7 +6,11 @@ type UseEffect = (
   effect: () => (() => void) | undefined,
   dependencies: readonly unknown[],
 ) => void;
-type UseRef = <T>(initial: T) => { current: T };
+interface MutableRef<T> {
+  current: T;
+}
+
+type UseRef = <T>(initial: T) => MutableRef<T>;
 const features = [
   {
     bit: 1,

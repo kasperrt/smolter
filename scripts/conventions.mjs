@@ -23,7 +23,8 @@ function check(path) {
     if (
       ts.isTypeLiteralNode(node) &&
       (ts.isParameterDeclaration(node.parent) ||
-        (ts.isFunctionLikeDeclaration(node.parent) &&
+        ((ts.isFunctionLikeDeclaration(node.parent) ||
+          ts.isFunctionTypeNode(node.parent)) &&
           node.parent.type === node))
     )
       report(
