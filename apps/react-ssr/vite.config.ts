@@ -1,5 +1,6 @@
 import { fileRouter } from "@kasperrt/smolter/react/vite";
 import { demoAssets } from "@smolter/ui/tooling/demo-assets";
+import { splitDocumentation } from "@smolter/ui/tooling/split-documentation";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { serverRendering } from "./server/render-plugin.ts";
@@ -25,6 +26,7 @@ export default defineConfig({
       compiler: true,
       include: /\/apps\/react(?:-ssr)?\/src\/.*\.[jt]sx?(?:\?.*)?$/,
     }),
+    splitDocumentation(),
     demoAssets(),
     sessions(namespace),
     fileRouter({ ...routing, namespace }),

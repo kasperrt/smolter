@@ -106,7 +106,8 @@ export function readHydration(json: string, timeout = 8_000) {
     void safeWrapAsync(() => promise);
     return promise;
   }
-  const hydration = JSON.parse(json, revive);
+  // An encoded key may spell a hydration tag with Unicode escapes.
+  const hydration = JSON.parse(json, /"__|\\u/.test(json) ? revive : undefined);
   const dispose = () => {
     clearTimeout(deadline);
     window.removeEventListener("DOMContentLoaded", dispose);

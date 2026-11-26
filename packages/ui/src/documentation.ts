@@ -26,15 +26,14 @@ export function createDocumentation<N>(
   }: DocumentationProps<N>) {
     const sectionId = (title: string) =>
       title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const exampleCode = [
+      page.signature,
+      ...page.sections.map((section) => section.code),
+    ].join("\n");
     const related = pages.filter(
       (item) =>
         item.slug !== page.slug &&
-        new RegExp(`\\b${item.slug}\\b`).test(
-          [
-            page.signature,
-            ...page.sections.map((section) => section.code),
-          ].join("\n"),
-        ),
+        new RegExp(`\\b${item.slug}\\b`).test(exampleCode),
     );
     return h(
       "div",

@@ -14,7 +14,7 @@ export function demoAssets(): Plugin {
     generateBundle: {
       order: "post",
       handler(_options, bundle) {
-        for (const file of ["fonts/pixelify-sans-500.ttf", "favicon.svg"]) {
+        for (const file of ["fonts/pixelify-sans-500.woff2", "favicon.svg"]) {
           const asset = this.emitFile({
             type: "asset",
             name: basename(file),

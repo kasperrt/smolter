@@ -8,6 +8,11 @@
 - `deploymentPlugin({ manifestFile })` sets the emitted manifest name independently; the default `manifestURL` follows it.
 - `createRequestHandler({ namespace })` matches the Vite namespace when the handler is imported outside the Vite build, and `namespace` from `@kasperrt/smolter/utils` exposes the compiled value for application-owned names. The SSR examples derive their session cookie, hydration script and data suffix from one `namespace` constant in `vite.config.ts`.
 
+### Performance
+
+- The production React and Preact SSR examples ship documentation navigation in the browser entry and load article content through the route loader. This removes about 332 kB of JavaScript from the initial counter page in each example. The shared font now transfers as a 14,932-byte WOFF2.
+- Document hydration skips the per-property JSON reviver for snapshots without potential protocol tags or Unicode escapes. The application bundles grow by 16–18 bytes gzip.
+
 ### Security
 
 - The React and Preact SSR examples send `Cache-Control: private, no-store` on session-specific HTML in development and production.

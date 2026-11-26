@@ -14,7 +14,7 @@ it("bounds unfinished streams without retrying or waiting for document completio
   });
   Reflect.deleteProperty(window, "__smolterDeferred");
   const { hydration, dispose } = readHydration(
-    '{"pending":{"__smolterPending":0}}',
+    String.raw`{"pending":{"\u005f\u005fsmolterPending":0}}`,
     100,
   );
   const rejected = expect(hydration.pending).rejects.toThrow(
