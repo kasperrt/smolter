@@ -3,6 +3,8 @@ import { namespace } from "@smolter/core/namespace";
 import { serializeData } from "@smolter/core/serialize";
 import { escapeHydrationObject } from "./deferred-hydration.ts";
 
+const encoder = new TextEncoder();
+
 // Deferred failures must remain rejected promises after hydration so Await's
 // errorElement has the same behavior on the server and in the browser.
 export async function resolveHydration(value: unknown): Promise<unknown> {
@@ -48,7 +50,6 @@ export function streamDocument(
   options: StreamDocumentOptions,
 ): ReadableStream<Uint8Array> {
   const reader = source.getReader();
-  const encoder = new TextEncoder();
   const decoder = new TextDecoder();
   let suffix = "";
   let first = true;

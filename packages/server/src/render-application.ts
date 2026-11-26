@@ -2,7 +2,6 @@ import type { DataArgs, Route, Router } from "@smolter/core";
 import { createDataRouter, matchRoutes, safeWrapAsync } from "@smolter/core";
 import { errorData } from "@smolter/core/errors";
 import { namespace } from "@smolter/core/namespace";
-import { prepareRoutes } from "@smolter/core/prepare-routes";
 import { type DataResponse, normalizeResult } from "@smolter/core/responses";
 import { loadRouter } from "@smolter/server";
 import { deferredHydration } from "./deferred-hydration.ts";
@@ -83,60 +82,55 @@ export async function renderDocument(
     if (value instanceof Response) return value;
     if (isRouteData(value)) return value.init;
   }
-  const rootResult = safeWrapAsync(async () => {
-    const { data, error } = await safeWrapAsync(async () => ({
-      value: await rootModule.loader?.({
-        request,
-        params: {},
-        signal: request.signal,
-      }),
-    }));
-    rootResponse = responseMetadata(error ? error.cause : data!.value);
-    if (!error) return normalizeResult(data!.value, false);
-    const cause = error.cause;
-    return cause instanceof Response
-      ? normalizeResult(cause, false)
-      : cause instanceof Error
-        ? cause
-        : new Error(String(cause), { cause });
-  });
+  const rootResult = rootModule.loader
+    ? safeWrapAsync(async () => {
+        const { data, error } = await safeWrapAsync(async () => ({
+          value: await rootModule.loader!({
+            request,
+            params: {},
+            signal: request.signal,
+          }),
+        }));
+        rootResponse = responseMetadata(error ? error.cause : data!.value);
+        if (!error) return normalizeResult(data!.value, false);
+        const cause = error.cause;
+        return cause instanceof Response
+          ? normalizeResult(cause, false)
+          : cause instanceof Error
+            ? cause
+            : new Error(String(cause), { cause });
+      })
+    : Promise.resolve({ data: undefined, error: undefined });
   let redirectResponse: Response | undefined;
-  const prepared = prepareRoutes(
-    routes.map((route) => ({
-      ...route,
-      ErrorBoundary: route.ErrorBoundary ?? rootModule.ErrorBoundary,
-      ...(route.loader && {
+  const prepared = routes.slice();
+  if (match) {
+    const matchIndex = routes.indexOf(match.route);
+    const matchLoader = match.route.loader;
+    prepared[matchIndex] = {
+      ...match.route,
+      ErrorBoundary: match.route.ErrorBoundary ?? rootModule.ErrorBoundary,
+      ...(matchLoader && {
         loader: async (args: DataArgs) => {
           const result = await safeWrapAsync(async () => ({
-            value: await route.loader!(args),
+            value: await matchLoader(args),
           }));
           const cause = result.error?.cause;
-          const value = result.error
+          const raw = result.error
             ? cause instanceof Error || cause instanceof Response
               ? cause
               : result.error
             : result.data!.value;
-          routeResponse = responseMetadata(value);
+          routeResponse = responseMetadata(raw);
+          const value = await normalizeResult(raw, false);
+          if (value instanceof Response && value.headers.has("Location")) {
+            redirectResponse = value;
+            return undefined;
+          }
           return value;
         },
       }),
-    })),
-    true,
-  ).map((route) => {
-    if (!route.loader) return route;
-    const loader = route.loader;
-    return {
-      ...route,
-      loader: async (args: Parameters<typeof loader>[0]) => {
-        const value = await loader(args);
-        if (value instanceof Response && value.headers.has("Location")) {
-          redirectResponse = value;
-          return undefined;
-        }
-        return value;
-      },
     };
-  });
+  }
   const [rootState, loadedRouter] = await Promise.all([
     rootResult,
     loadRouter(prepared, request),

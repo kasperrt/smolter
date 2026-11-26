@@ -49,3 +49,35 @@ it("replaces a named element that shadows the deferred settlement queue", async 
   expect(await hydration.pending).toBe("Settled");
   dispose();
 });
+
+it("revives nested objects, arrays, literals and undefined in deferred settlements", async (context) => {
+  const state = vi
+    .spyOn(document, "readyState", "get")
+    .mockReturnValue("loading");
+  Reflect.deleteProperty(window, "__smolterDeferred");
+  context.onTestFinished(() => {
+    state.mockRestore();
+    Reflect.deleteProperty(window, "__smolterDeferred");
+  });
+  const { hydration, dispose } = readHydration(
+    '{"a":{"__smolterPending":0},"b":{"__smolterPending":1}}',
+  );
+  const queue = (window as DeferredWindow).__smolterDeferred;
+  queue?.push([
+    0,
+    [
+      "text",
+      {
+        nested: { __smolterLiteral: ["__smolterPending", 9] },
+      },
+    ],
+    null,
+  ]);
+  queue?.push([1, { __smolterUndefined: true }, null]);
+  expect(await hydration.a).toEqual([
+    "text",
+    { nested: { __smolterPending: 9 } },
+  ]);
+  expect(await hydration.b).toBeUndefined();
+  dispose();
+});

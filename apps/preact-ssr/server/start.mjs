@@ -22,20 +22,21 @@ const immutable = "public, max-age=31536000, immutable";
 const compressible = new Set([".js", ".css", ".svg", ".json"]);
 const brotli = promisify(brotliCompress);
 const gzipped = promisify(gzip);
-// Compress once at startup at maximum ratio instead of per request.
-const encoded = new Map();
+// Cache all build assets in memory and precompress text assets at startup.
+const assets = new Map();
 const listing = await safeWrapAsync(() =>
   readdir(resolve(root, "assets"), { withFileTypes: true }),
 );
 for (const entry of listing.data ?? []) {
-  if (
-    !entry.isFile() ||
-    entry.name.startsWith(".") ||
-    !compressible.has(extname(entry.name))
-  )
-    continue;
+  if (!entry.isFile() || entry.name.startsWith(".")) continue;
   const file = resolve(root, "assets", entry.name);
   const body = await readFile(file);
+  const ext = extname(entry.name);
+  const type = types[ext] ?? "application/octet-stream";
+  if (!compressible.has(ext)) {
+    assets.set(file, { body, type });
+    continue;
+  }
   const [br, gz] = await Promise.all([
     brotli(body, {
       params: {
@@ -45,8 +46,19 @@ for (const entry of listing.data ?? []) {
     }),
     gzipped(body, { level: constants.Z_BEST_COMPRESSION }),
   ]);
-  encoded.set(file, { body, br, gzip: gz });
+  assets.set(file, { body, br, gzip: gz, type });
 }
+// Inline the small shared stylesheet into SSR HTML to eliminate a render-blocking RTT.
+const styleMatch = template.match(
+  /<link\s+rel="stylesheet"[^>]+href="([^"]+)"[^>]*>/,
+);
+const styleAsset = styleMatch && assets.get(resolve(root, `.${styleMatch[1]}`));
+const documentTemplate = styleAsset
+  ? template.replace(
+      styleMatch[0],
+      () => `<style>${styleAsset.body.toString("utf8")}</style>`,
+    )
+  : template;
 
 function acceptedEncoding(header = "") {
   const weights = new Map(
@@ -67,13 +79,34 @@ const application = createRequestHandler({
   namespace,
   entry: "",
   build: {
-    default: async (request) =>
-      new Response(await render(request, template), {
+    default: async (request) => {
+      const html = await render(request, documentTemplate);
+      const body = Buffer.from(html);
+      const encoding =
+        body.length >= 1024
+          ? acceptedEncoding(request.headers.get("accept-encoding") ?? "")
+          : undefined;
+      const payload =
+        encoding === "br"
+          ? await brotli(body, {
+              params: {
+                [constants.BROTLI_PARAM_MODE]: constants.BROTLI_MODE_TEXT,
+                [constants.BROTLI_PARAM_QUALITY]: 4,
+                [constants.BROTLI_PARAM_SIZE_HINT]: body.length,
+              },
+            })
+          : encoding === "gzip"
+            ? await gzipped(body, { level: 4 })
+            : body;
+      return new Response(payload, {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
           "Cache-Control": "private, no-store",
+          Vary: "Accept-Encoding",
+          ...(encoding && { "Content-Encoding": encoding }),
         },
-      }),
+      });
+    },
     handleDataRequest: data,
   },
 });
@@ -101,7 +134,7 @@ createServer(async (incoming, outgoing) => {
           path.split("/").some((part) => part.startsWith("."))
         )
           return;
-        const file = await realpath(resolve(root, `.${path}`));
+        const file = resolve(root, `.${path}`);
         if (
           !file.startsWith(`${root}/assets/`) ||
           file
@@ -110,26 +143,20 @@ createServer(async (incoming, outgoing) => {
             .some((part) => part.startsWith("."))
         )
           return;
-        return {
-          file,
-          body: encoded.get(file)?.body ?? (await readFile(file)),
-        };
+        return assets.get(file);
       });
       if (!asset.data) {
         outgoing.writeHead(404).end();
         return;
       }
-      const variants = encoded.get(asset.data.file);
+      const hasEncoded = Boolean(asset.data.br);
       const encoding =
-        variants && acceptedEncoding(incoming.headers["accept-encoding"]);
-      outgoing.setHeader(
-        "Content-Type",
-        types[extname(asset.data.file)] ?? "application/octet-stream",
-      );
+        hasEncoded && acceptedEncoding(incoming.headers["accept-encoding"]);
+      outgoing.setHeader("Content-Type", asset.data.type);
       outgoing.setHeader("Cache-Control", immutable);
-      if (variants) outgoing.setHeader("Vary", "Accept-Encoding");
+      if (hasEncoded) outgoing.setHeader("Vary", "Accept-Encoding");
       if (encoding) outgoing.setHeader("Content-Encoding", encoding);
-      outgoing.end(encoding ? variants[encoding] : asset.data.body);
+      outgoing.end(encoding ? asset.data[encoding] : asset.data.body);
       return;
     }
     const cookieHeader = incoming.headers.cookie ?? "";

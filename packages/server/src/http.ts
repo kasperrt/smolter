@@ -178,16 +178,19 @@ export async function send(response: Response, outgoing: StreamingResponse) {
       !outgoing.writableFinished && !source.errored && !outgoing.errored;
   };
   outgoing.once("close", close);
-  const transfer = pipeline(
-    source,
-    new Transform({
-      transform(chunk, _encoding, done) {
-        done(null, chunk);
-        outgoing.flush?.();
-      },
-    }),
-    outgoing,
-  );
+  const transfer =
+    typeof outgoing.flush === "function"
+      ? pipeline(
+          source,
+          new Transform({
+            transform(chunk, _encoding, done) {
+              done(null, chunk);
+              outgoing.flush?.();
+            },
+          }),
+          outgoing,
+        )
+      : pipeline(source, outgoing);
   const { error } = await safeWrapAsync(() => transfer);
   outgoing.off("close", close);
   if (error && !disconnected)

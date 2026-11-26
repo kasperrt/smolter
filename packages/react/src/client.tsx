@@ -54,12 +54,15 @@ export async function mountApplication(
   const initialRoute = matchRoutes(routes, initialURL.pathname)?.route as
     | AppRoute
     | undefined;
-  const { error: preloadError } = await safeWrapAsync(() =>
-    initialRoute?.preload?.(),
-  );
-  if (preloadError) {
-    await recoverDeployment(deployment, initialURL);
-    throw preloadError.cause ?? preloadError;
+  if (initialRoute?.preload) {
+    const { error: preloadError } = await safeWrapAsync(
+      () => initialRoute.preload!(),
+      true,
+    );
+    if (preloadError) {
+      await recoverDeployment(deployment, initialURL);
+      throw preloadError.cause ?? preloadError;
+    }
   }
   routes = prepareRoutes(routes);
   const payload = hydrationPayload();

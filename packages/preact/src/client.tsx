@@ -54,12 +54,15 @@ export async function mountApplication(
   const initialRoute = matchRoutes(routes, initialURL.pathname)?.route as
     | AppRoute
     | undefined;
-  const { error: preloadError } = await safeWrapAsync(() =>
-    initialRoute?.preload?.(),
-  );
-  if (preloadError) {
-    await recoverDeployment(deployment, initialURL);
-    throw preloadError.cause ?? preloadError;
+  if (initialRoute?.preload) {
+    const { error: preloadError } = await safeWrapAsync(
+      () => initialRoute.preload!(),
+      true,
+    );
+    if (preloadError) {
+      await recoverDeployment(deployment, initialURL);
+      throw preloadError.cause ?? preloadError;
+    }
   }
   routes = prepareRoutes(routes);
   const payload = hydrationPayload();
@@ -102,11 +105,13 @@ export async function mountApplication(
       (node) => ({ node, next: node.nextSibling, parent: node.parentNode! }),
     );
     for (const { node } of preserved) node.remove();
-    const { error } = await safeWrapAsync(() =>
-      hydrate(
-        createElement(RouterApplication, { ...props, document: true }),
-        document,
-      ),
+    const { error } = await safeWrapAsync(
+      () =>
+        hydrate(
+          createElement(RouterApplication, { ...props, document: true }),
+          document,
+        ),
+      true,
     );
     for (const { node, next, parent } of preserved.reverse())
       parent.insertBefore(node, next?.parentNode === parent ? next : null);

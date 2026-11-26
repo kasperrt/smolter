@@ -123,12 +123,19 @@ export function readHydration(json: string, timeout = 8_000) {
         dispose();
       }, timeout)
     : undefined;
+  function reviveValue(value: unknown): unknown {
+    if (!value || typeof value !== "object") return value;
+    if (Array.isArray(value)) return value.map(reviveValue);
+    const record = value as Record<string, unknown>;
+    for (const key of Object.keys(record))
+      record[key] = reviveValue(record[key]);
+    return revive("", record);
+  }
   const receive = ([id, value, error]: Settlement) => {
     if (id === -1) return dispose();
     const target = pending.get(id);
     if (!target) return;
-    if (error === null)
-      target.resolve(JSON.parse(JSON.stringify(value), revive));
+    if (error === null) target.resolve(reviveValue(value));
     else target.reject(new (live ? HydrationError : Error)(error));
   };
   const buffered = queue.splice(0);

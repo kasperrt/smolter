@@ -314,3 +314,37 @@ test.each([false, true])(
     expect(await response.text()).toBe("SYNTHETIC_PRIVATE_ACCOUNT");
   },
 );
+
+test("flushes streamed chunks when response middleware exposes flush()", async () => {
+  const flush = vi.fn();
+  const encoder = new TextEncoder();
+  const handler = createRequestHandler({
+    entry: "/entry.js",
+    build: {
+      default: () =>
+        new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(encoder.encode("first"));
+              controller.enqueue(encoder.encode("second"));
+              controller.close();
+            },
+          }),
+        ),
+      handleDataRequest: () => new Response(null),
+    },
+  });
+  const server = createServer((request, response) => {
+    Object.assign(response, { flush });
+    void handler(request, response, () => response.writeHead(500).end());
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  onTestFinished(() => {
+    server.close();
+  });
+  const { port } = server.address() as AddressInfo;
+  const response = await fetch(`http://127.0.0.1:${port}/`);
+  expect(await response.text()).toBe("firstsecond");
+  expect(flush).toHaveBeenCalled();
+});

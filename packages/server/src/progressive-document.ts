@@ -1,6 +1,8 @@
 import { safeWrapAsync } from "@smolter/core";
 import { namespace } from "@smolter/core/namespace";
 
+const encoder = new TextEncoder();
+
 interface ProgressiveDocumentOptions {
   signal: AbortSignal;
   dispose: () => void;
@@ -14,7 +16,6 @@ export function progressiveDocument(
 ): ReadableStream<Uint8Array> {
   const html = source.getReader();
   const data = settlements.getReader();
-  const encoder = new TextEncoder();
   const decoder = new TextDecoder();
   let stopped = false;
   let cancelled = false;

@@ -2,6 +2,7 @@ import { safeWrapAsync } from "@smolter/core";
 import { namespace } from "@smolter/core/namespace";
 import { serializeData } from "@smolter/core/serialize";
 
+const encoder = new TextEncoder();
 const hydrationSentinel = new RegExp(
   `^__${namespace}(?:Pending|Rejected|Undefined|Literal)$`,
 );
@@ -23,7 +24,6 @@ export function deferredHydration(value: unknown, nonce?: string) {
   let pending = 0;
   let closed = false;
   let controller!: ReadableStreamDefaultController<Uint8Array>;
-  const encoder = new TextEncoder();
   const attribute = nonce
     ? ` nonce="${nonce.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;")}"`
     : "";

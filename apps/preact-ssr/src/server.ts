@@ -14,6 +14,7 @@ export async function render(request: Request, template: string) {
   const router = await loadRouter(routes, request);
   const html = renderToString(app(router));
   const data = serialize(router.getSnapshot());
+  router.dispose();
   return template
     .replace("<!--app-->", () => html)
     .replace(

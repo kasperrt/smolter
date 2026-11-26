@@ -29,6 +29,15 @@ export function demoAssets(): Plugin {
             );
           }
         }
+        // Place the render-blocking stylesheet before the module script so CSS fetches first.
+        for (const output of Object.values(bundle)) {
+          if (output.type !== "asset" || !output.fileName.endsWith(".html"))
+            continue;
+          output.source = String(output.source).replace(
+            /(<script\s+type="module"[^>]*><\/script>(?:\s*<link\s+rel="modulepreload"[^>]*>)*)(\s*)(<link\s+rel="stylesheet"[^>]*>)/,
+            "$3$2$1",
+          );
+        }
       },
     },
     transformIndexHtml(html, context) {
