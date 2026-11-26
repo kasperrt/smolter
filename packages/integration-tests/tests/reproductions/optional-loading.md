@@ -84,9 +84,11 @@ From the repository, install the locked dependencies and build, then run:
 
 ```sh
 pnpm build
-pnpm exec playwright test packages/integration-tests/tests/browser/optional-loading.spec.ts --workers=1
-pnpm exec playwright test packages/integration-tests/tests/browser/optional-performance.spec.ts --workers=1
+pnpm smoke optional-loading.spec.ts --maxWorkers=1
+pnpm smoke optional-performance.spec.ts --maxWorkers=1
 ```
+
+Each strategy writes its measurements to `test-results/optional-performance/<strategy>/measurements.json`.
 
 The production-minified client mounts public server routes with deployment watching, while the public request adapter normalizes transport URLs. The root contains Settings, a profile fetcher form, mode/navigation controls and Outlet. The server resolves essential data immediately. `/stats?mode=music` or `watch` is held by explicit test gates. `/profile` increments a mutation counter. The manifest reports the current fixture build. No production services are contacted.
 

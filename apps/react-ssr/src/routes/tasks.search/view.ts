@@ -9,7 +9,7 @@ export default function SearchTasks() {
   return ui.TaskSearch({
     query: data?.query ?? "",
     tasks: data?.tasks ?? [],
-    link: (href, children) => h(Link, { href: href }, children),
+    link: (href, children) => h(Link, { href }, children),
     form: (children) =>
       h(Form, { action: "/tasks/search", method: "get" }, ...children),
   });

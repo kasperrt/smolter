@@ -9,7 +9,7 @@ import {
   renderApplication,
 } from "@kasperrt/smolter/preact/server";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { type Router, safeWrapAsync } from "@smolter/core";
 import { createElement } from "preact";
 import { renderToReadableStream } from "preact-render-to-string/stream";
@@ -17,6 +17,7 @@ import { build } from "vite";
 import * as explicit from "../fixtures/owned-ownership-page.tsx";
 import * as original from "../fixtures/ownership-page.tsx";
 import { PreactRoot } from "../fixtures/preact-ownership.tsx";
+import { test } from "../helpers/browser.ts";
 import { deferred } from "../helpers/deferred.ts";
 
 export function ownershipCases(owned = false, selected?: string[]) {
@@ -46,6 +47,7 @@ export function ownershipCases(owned = false, selected?: string[]) {
     const disconnect = mode.startsWith("disconnect");
     test(`${owned ? "explicit deferred fallback ownership" : "retains only owned streaming content"}: ${mode}`, async ({
       page,
+      annotate,
     }) => {
       const output = await mkdtemp(join(tmpdir(), "smolter-ownership-"));
       const result = await build({
@@ -302,14 +304,16 @@ export function ownershipCases(owned = false, selected?: string[]) {
           await expect.poll(() => aborted).toBe(1);
           await expect.poll(() => failedRequests.length).toBeGreaterThan(0);
           if (mode === "disconnect") await page.clock.runFor(2001);
-          await test.info().attach("interrupted-document", {
-            body: JSON.stringify({
-              failedRequests,
-              browser: await page.evaluate(() => ({
-                readyState: document.readyState,
-                main: document.querySelector("main")?.outerHTML,
-              })),
-            }),
+          await annotate("interrupted-document", {
+            body: Buffer.from(
+              JSON.stringify({
+                failedRequests,
+                browser: await page.evaluate(() => ({
+                  readyState: document.readyState,
+                  main: document.querySelector("main")?.outerHTML,
+                })),
+              }),
+            ),
             contentType: "application/json",
           });
           if (mode === "disconnect-default") {

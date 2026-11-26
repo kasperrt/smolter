@@ -454,8 +454,9 @@ test("history commits once after loading and captures the departing scroll posit
   context.onTestFinished(() => {
     names.forEach((name, index) => {
       const descriptor = originals[index];
-      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
-      else Reflect.deleteProperty(globalThis, name);
+      if (descriptor)
+        return Object.defineProperty(globalThis, name, descriptor);
+      Reflect.deleteProperty(globalThis, name);
     });
   });
   let resolve = (_value: string) => {};

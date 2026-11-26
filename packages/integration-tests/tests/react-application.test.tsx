@@ -11,6 +11,7 @@ import { Document, Links, Meta, Scripts } from "@smolter/react/document";
 import { lazyRoute } from "@smolter/react/lazy-route";
 import { dispatchRoute, renderApplication } from "@smolter/server/react";
 import { applicationPlugins } from "@smolter/vite/react";
+import type { PropsWithChildren } from "react";
 import { expect, it, onTestFinished, vi } from "vitest";
 
 it("renders React root, metadata, route data, errors and hydration without a Preact renderer", async () => {
@@ -33,7 +34,7 @@ it("renders React root, metadata, route data, errors and hydration without a Pre
       { name: "description", content: "React" },
     ],
     links: () => [{ rel: "author", href: "/author" }],
-    Layout: ({ children }: { children: import("react").ReactNode }) => (
+    Layout: ({ children }: PropsWithChildren) => (
       <Document>
         <head>
           <Meta />

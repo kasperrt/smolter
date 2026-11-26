@@ -177,7 +177,11 @@ export async function analyzePrefetch(
       result.intent = result.viewport = result.data = true;
     };
     const complete = () => result.intent && result.viewport && result.data;
-    function props(node: ts.Node, attributes?: ts.JsxAttributes) {
+    function props(node?: ts.Node, attributes?: ts.JsxAttributes) {
+      if (!node) {
+        result.intent = true;
+        return;
+      }
       let selected = new Set(["intent"]);
       let data = false;
       const spread = (expression: ts.Node) => {
@@ -195,24 +199,25 @@ export async function analyzePrefetch(
             alternative.flags & (TypeFlags.Any | TypeFlags.Unknown) ||
             checker.getIndexInfosOfType(alternative).length
           ) {
-            branch = new Set(["intent", "viewport"]);
-            branchData = true;
-          } else
-            for (const name of ["prefetch", "prefetchData"]) {
-              const property = checker.getPropertyOfType(alternative, name);
-              if (!property) continue;
-              const value = checker.getTypeOfSymbolAtLocation(
-                property,
-                expression,
-              );
-              const optional = Boolean(property.flags & SymbolFlags.Optional);
-              if (name === "prefetch")
-                branch = new Set([
-                  ...(optional ? branch : []),
-                  ...modes(value),
-                ]);
-              else branchData = (optional && branchData) || canBeTrue(value);
+            combined.add("intent");
+            combined.add("viewport");
+            combinedData = true;
+            continue;
+          }
+          for (const name of ["prefetch", "prefetchData"]) {
+            const property = checker.getPropertyOfType(alternative, name);
+            if (!property) continue;
+            const value = checker.getTypeOfSymbolAtLocation(
+              property,
+              expression,
+            );
+            const optional = Boolean(property.flags & SymbolFlags.Optional);
+            if (name === "prefetchData") {
+              branchData = (optional && branchData) || canBeTrue(value);
+              continue;
             }
+            branch = new Set([...(optional ? branch : []), ...modes(value)]);
+          }
           for (const mode of branch) combined.add(mode);
           combinedData ||= branchData;
         }
@@ -220,32 +225,32 @@ export async function analyzePrefetch(
         data = combinedData;
       };
       if (!attributes) spread(node);
-      else
-        for (const attribute of attributes.properties) {
-          if (ts.isJsxSpreadAttribute(attribute)) {
-            spread(attribute.expression);
-            continue;
-          }
-          const name = attribute.name.getText();
-          if (name !== "prefetch" && name !== "prefetchData") continue;
-          const initializer = attribute.initializer;
-          const expression =
-            initializer &&
-            (ts.isJsxExpression(initializer)
-              ? initializer.expression
-              : initializer);
-          if (name === "prefetch")
-            selected = expression
-              ? ts.isStringLiteral(expression)
-                ? new Set([expression.text])
-                : modes(checker.getTypeAtLocation(expression))
-              : new Set(["intent", "viewport"]);
-          else
-            data =
-              !expression ||
-              (expression.kind !== ts.SyntaxKind.FalseKeyword &&
-                canBeTrue(checker.getTypeAtLocation(expression)));
+      for (const attribute of attributes?.properties ?? []) {
+        if (ts.isJsxSpreadAttribute(attribute)) {
+          spread(attribute.expression);
+          continue;
         }
+        const name = attribute.name.getText();
+        if (name !== "prefetch" && name !== "prefetchData") continue;
+        const initializer = attribute.initializer;
+        const expression =
+          initializer &&
+          (ts.isJsxExpression(initializer)
+            ? initializer.expression
+            : initializer);
+        if (name === "prefetchData") {
+          data =
+            !expression ||
+            (expression.kind !== ts.SyntaxKind.FalseKeyword &&
+              canBeTrue(checker.getTypeAtLocation(expression)));
+          continue;
+        }
+        selected = expression
+          ? ts.isStringLiteral(expression)
+            ? new Set([expression.text])
+            : modes(checker.getTypeAtLocation(expression))
+          : new Set(["intent", "viewport"]);
+      }
       result.intent ||= selected.has("intent");
       result.viewport ||= selected.has("viewport");
       result.data ||=
@@ -307,8 +312,7 @@ export async function analyzePrefetch(
           )
             result.data = true;
           if (node.arguments[0] && isLink(node.arguments[0], checker)) {
-            if (node.arguments[1]) props(node.arguments[1]);
-            else result.intent = true;
+            props(node.arguments[1]);
           }
         }
         // Passing Link as an uninspectable value (for example a component prop)

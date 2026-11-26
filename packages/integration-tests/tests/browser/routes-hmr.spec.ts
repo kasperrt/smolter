@@ -1,13 +1,15 @@
 import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { fileRouter } from "@smolter/vite";
 import { createServer } from "vite";
+import { afterEach } from "vitest";
+import { test } from "../helpers/browser.ts";
 
 const cleanups: (() => Promise<unknown>)[] = [];
 
-test.afterEach(async () => {
+afterEach(async () => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
 });
 

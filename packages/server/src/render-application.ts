@@ -1,11 +1,11 @@
-import type { DataArgs, Route, Router } from "@smolter/core";
+import type { DataArgs, Router } from "@smolter/core";
 import { createDataRouter, matchRoutes, safeWrapAsync } from "@smolter/core";
 import { errorData } from "@smolter/core/errors";
 import { namespace } from "@smolter/core/namespace";
 import { type DataResponse, normalizeResult } from "@smolter/core/responses";
 import { loadRouter } from "@smolter/server";
 import { deferredHydration } from "./deferred-hydration.ts";
-import { dispatchRoute } from "./dispatch.ts";
+import { dispatchRoute, type ServerRoute } from "./dispatch.ts";
 import { privateHeaders, privateResponse } from "./private-response.ts";
 import { progressiveDocument } from "./progressive-document.ts";
 import { requestPolicy } from "./request-policy.ts";
@@ -28,7 +28,7 @@ interface ServerRoot {
 
 export interface RenderProps {
   router: Router;
-  routes: (Route & { routePath?: string })[];
+  routes: ServerRoute[];
   root: unknown;
   entry: string;
   rootError: boolean;
@@ -43,18 +43,22 @@ export interface RenderApplicationOptions {
   earlyHydration?: boolean;
 }
 
+interface RendererStream extends ReadableStream<Uint8Array> {
+  allReady: Promise<unknown>;
+}
+
+type RenderDocumentStream = (
+  props: RenderProps,
+) => RendererStream | Promise<RendererStream>;
+
 /** Render a Preact application response with root and route data, streaming deferred content when enabled. */
 export async function renderDocument(
   request: Request,
-  routes: (Route & { routePath?: string })[],
+  routes: ServerRoute[],
   rootModule: ServerRoot,
   entry: string,
   options: RenderApplicationOptions,
-  render: (
-    props: RenderProps,
-  ) =>
-    | (ReadableStream<Uint8Array> & { allReady: Promise<unknown> })
-    | Promise<ReadableStream<Uint8Array> & { allReady: Promise<unknown> }>,
+  render: RenderDocumentStream,
 ): Promise<Response> {
   const denied = requestPolicy(request);
   if (denied) return denied;
@@ -190,8 +194,8 @@ export async function renderDocument(
   const headers = new Headers(rootResponse?.headers);
   for (const metadata of [routeResponse, actionResponse]) {
     new Headers(metadata?.headers).forEach((value, key) => {
-      if (key === "set-cookie") headers.append(key, value);
-      else headers.set(key, value);
+      if (key === "set-cookie") return headers.append(key, value);
+      headers.set(key, value);
     });
   }
   headers.delete("Content-Length");

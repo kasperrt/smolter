@@ -67,7 +67,7 @@ export function readHydration(json: string, timeout = 8_000) {
         });
     }
     if (tag === undefinedTag && field === true) return undefined;
-    let promise: Promise<unknown>;
+    let promise: Promise<unknown> | undefined;
     if (
       tag === pendingTag &&
       typeof field === "number" &&
@@ -84,7 +84,8 @@ export function readHydration(json: string, timeout = 8_000) {
         reject = fail;
       });
       pending.set(id, { promise, resolve, reject });
-    } else if (
+    }
+    if (
       tag === rejectedTag &&
       field &&
       typeof field === "object" &&
@@ -102,7 +103,8 @@ export function readHydration(json: string, timeout = 8_000) {
           ...(Object.hasOwn(failure, "data") && { data: failure.data }),
         });
       promise = Promise.reject(error);
-    } else return value;
+    }
+    if (!promise) return value;
     void safeWrapAsync(() => promise);
     return promise;
   }
@@ -135,8 +137,8 @@ export function readHydration(json: string, timeout = 8_000) {
     if (id === -1) return dispose();
     const target = pending.get(id);
     if (!target) return;
-    if (error === null) target.resolve(reviveValue(value));
-    else target.reject(new (live ? HydrationError : Error)(error));
+    if (error === null) return target.resolve(reviveValue(value));
+    target.reject(new (live ? HydrationError : Error)(error));
   };
   const buffered = queue.splice(0);
   queue.push = (...packets) => {

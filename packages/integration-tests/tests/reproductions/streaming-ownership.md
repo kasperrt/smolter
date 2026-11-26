@@ -8,7 +8,7 @@ The following sections are historical investigation notes, not current release s
 
 # 0.4.2 supported boundary contract
 
-The release uses the existing `Await` export with an explicit `fallback` prop. All thirteen Smolter ownership scenarios remain blocking production-browser assertions in `packages/integration-tests/tests/browser/owned-deferred.spec.ts`, using the unchanged shared assertion harness. The native Preact variant is preserved, not repaired: run `pnpm smoke --config packages/integration-tests/tests/reproductions/playwright.config.ts` to reproduce it. That diagnostic is not a release claim about Smolter's component-owned path.
+The release uses the existing `Await` export with an explicit `fallback` prop. All thirteen Smolter ownership scenarios remain blocking production-browser assertions in `packages/integration-tests/tests/browser/owned-deferred.spec.ts`, using the unchanged shared assertion harness. The native Preact variant is preserved, not repaired: run `pnpm exec vitest run --config vitest.smoke.config.ts --project diagnosis` to reproduce it. That diagnostic is not a release claim about Smolter's component-owned path.
 
 Early-hydration consumers must replace `<Suspense fallback={pending}><Await resolve={value}>…</Await></Suspense>` with `<Await resolve={value} fallback={pending}>…</Await>`, including persistent root sections. This is an additive API with a required markup migration for the corrected early-hydration contract. No changes to Preact, renderer hooks, dependency patches, application wrappers, extra DOM containers, polling, or external PRs are part of the release.
 
@@ -48,7 +48,7 @@ Page and fetcher submits now share the pending count and ownership invalidation.
 
 ## Reproductions
 
-Run pnpm build, then pnpm exec playwright test packages/integration-tests/tests/browser/ownership.spec.ts. The ten production cases are intentionally ordinary failing assertions, not skipped tests or expected failures. The Preact-only case is part of that suite.
+Build with `pnpm build`. Run the native renderer reproduction with `pnpm exec vitest run --config vitest.smoke.config.ts --project diagnosis` and the supported path with `pnpm smoke owned-deferred.spec.ts`.
 
 Minimal application shape:
 

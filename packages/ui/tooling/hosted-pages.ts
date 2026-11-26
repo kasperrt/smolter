@@ -87,13 +87,15 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
               () =>
                 `<script id="smolter-data" type="application/json">${data}</script>`,
             );
-          if (!route) index.source = source;
-          else
-            this.emitFile({
-              type: "asset",
-              fileName: `${route}/index.html`,
-              source,
-            });
+          if (!route) {
+            index.source = source;
+            continue;
+          }
+          this.emitFile({
+            type: "asset",
+            fileName: `${route}/index.html`,
+            source,
+          });
         }
       });
       await server.close();

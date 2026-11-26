@@ -111,7 +111,7 @@ for (const failure of ["packet", "interruption"]) {
     expect(container.textContent).toBe("pending");
     if (failure === "packet")
       (window as DeferredWindow).__smolterDeferred!.push([0, null, "failed"]);
-    else initial.dispose();
+    if (failure === "interruption") initial.dispose();
     await expect
       .poll(() => container.querySelector("[role=alert]")?.textContent)
       .toBe("failed");

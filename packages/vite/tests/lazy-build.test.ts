@@ -8,6 +8,12 @@ import { lazyFiles } from "../src/application/lazy-files.ts";
 import { deploymentPlugin } from "../src/deployment.ts";
 import { fileRouter } from "../src/index.ts";
 
+interface DeploymentManifest {
+  version: string;
+  shared: string;
+  routes: { path: string; fingerprint: string }[];
+}
+
 interface RouteAssets {
   path: string;
   files: string[];
@@ -122,7 +128,7 @@ it.for(["react", "preact"] as const)(
             expect(route.files).toContain(dependency);
       }
     }
-    const deploymentManifest = (output: typeof result) => {
+    const deploymentManifest = (output: typeof result): DeploymentManifest => {
       const file = output.output.find(
         (item) => item.fileName === "smolter-manifest.json",
       );
@@ -131,7 +137,7 @@ it.for(["react", "preact"] as const)(
       return JSON.parse(String(file.source));
     };
     const before = deploymentManifest(result);
-    expect(before.routes.map((route: { path: string }) => route.path)).toEqual([
+    expect(before.routes.map((route) => route.path)).toEqual([
       "/",
       "/data",
       "/robots.txt",
@@ -143,12 +149,8 @@ it.for(["react", "preact"] as const)(
     expect(after.version).not.toBe(before.version);
     expect(after.shared).toBe(before.shared);
     expect(
-      after.routes.find((route: { path: string }) => route.path === "/")
-        .fingerprint,
-    ).not.toBe(
-      before.routes.find((route: { path: string }) => route.path === "/")
-        .fingerprint,
-    );
+      after.routes.find((route) => route.path === "/")!.fingerprint,
+    ).not.toBe(before.routes.find((route) => route.path === "/")!.fingerprint);
     expect(shared).toHaveLength(1);
     expect(entry?.dynamicImports).toHaveLength(3);
     expect(entry?.code).not.toContain("/not-the-filename");

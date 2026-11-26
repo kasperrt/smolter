@@ -44,7 +44,5 @@ if (import.meta.env.VITE_HOSTED) {
 retainRoute(router, flushSync);
 watchMetadata(router);
 
-if (root) {
-  if (hydrationData) hydrate(app(router), root);
-  else render(app(router), root);
-}
+const mount = hydrationData ? hydrate : render;
+if (root) mount(app(router), root);

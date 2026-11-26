@@ -16,7 +16,11 @@ import {
 } from "@kasperrt/smolter/react/document";
 import { Suspense, use, useState } from "react";
 
-function Optional({ value }: { value: Promise<string> }) {
+interface OptionalProps {
+  value: Promise<string>;
+}
+
+function Optional({ value }: OptionalProps) {
   return <p>{use(value)}</p>;
 }
 export function Home() {

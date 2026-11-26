@@ -14,7 +14,6 @@ const entries = Object.fromEntries(
     )
       ? ".tsx"
       : ".ts";
-
     return [name, resolve(source, name + extension)];
   }),
 );

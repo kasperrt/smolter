@@ -3,10 +3,12 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { dispatchRoute } from "@kasperrt/smolter/preact/server";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { afterEach } from "vitest";
+import { test } from "../helpers/browser.ts";
 
 const servers: Server[] = [];
-test.afterEach(() => {
+afterEach(() => {
   for (const server of servers.splice(0)) {
     server.closeAllConnections();
     server.close();

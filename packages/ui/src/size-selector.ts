@@ -76,8 +76,11 @@ export function createSizeSelector<N>(
         setValues(current.current);
         if (progress < 1) frame = requestAnimationFrame(tick);
       };
-      if (motion.matches) finish();
-      else frame = requestAnimationFrame(tick);
+      if (motion.matches) {
+        finish();
+        return;
+      }
+      frame = requestAnimationFrame(tick);
       motion.addEventListener("change", finish);
       return () => {
         cancelAnimationFrame(frame);
@@ -87,8 +90,7 @@ export function createSizeSelector<N>(
     const [raw, gzip, brotli] = values;
     const toggle = (bit: number) => {
       let next = selection ^ bit;
-      if (next & 2) next |= 1;
-      else next &= ~32;
+      next = next & 2 ? next | 1 : next & ~32;
       if (!(next & 1) || !(next & 12)) next &= ~16;
       select(next);
     };

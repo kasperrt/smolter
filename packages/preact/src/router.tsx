@@ -71,13 +71,14 @@ function StreamOutlet({ children }: StreamOutletProps) {
       if (node.nodeType === 8 && /^\/?\$s:/.test((node as Comment).data))
         markers.push(node as Comment);
     }
-    if (initial.current) {
+    const previous = initial.current;
+    initial.current = { owner, markers };
+    if (previous) {
       for (const marker of markers) marker.remove();
       markers.length = 0;
-    } else {
-      for (const marker of markers) marker.data += `:${namespace}`;
+      return;
     }
-    initial.current = { owner, markers };
+    for (const marker of markers) marker.data += `:${namespace}`;
   }, [owner, loaded, error]);
   return createElement(
     Fragment,

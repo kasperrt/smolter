@@ -101,9 +101,15 @@ export function deploymentCheck(options: DeploymentOptions) {
         return false;
       navigationTarget(target);
       sessionStorage.setItem(key, "1");
-      if (options.reload) options.reload(target);
-      else if (target.href === location.href) location.reload();
-      else location.assign(target.href);
+      if (options.reload) {
+        options.reload(target);
+        return true;
+      }
+      if (target.href === location.href) {
+        location.reload();
+        return true;
+      }
+      location.assign(target.href);
       return true;
     });
     return data ?? false;

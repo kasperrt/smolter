@@ -6,11 +6,12 @@ import {
   dispatchRoute,
   renderApplication,
 } from "@kasperrt/smolter/react/server";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { safeWrapAsync } from "@smolter/core";
 import { send, webRequest } from "@smolter/server/http";
 import { build } from "vite";
 import { Destination, Home, root } from "../fixtures/react-streaming-page.tsx";
+import { test } from "../helpers/browser.ts";
 
 for (const navigate of [false, true]) {
   test(`React production SSR retains shell through ${navigate ? "abandoned" : "settled"} deferred content`, async ({

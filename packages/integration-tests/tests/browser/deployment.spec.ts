@@ -2,13 +2,15 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer, type RequestListener } from "node:http";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { safeWrapAsync } from "@smolter/core";
 import { deploymentPlugin } from "@smolter/vite/deployment";
 import { build } from "vite";
+import { afterEach } from "vitest";
+import { test } from "../helpers/browser.ts";
 
 const cleanups: (() => Promise<unknown>)[] = [];
-test.afterEach(async () => {
+afterEach(async () => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
 });
 for (const [mode, base] of [
@@ -230,15 +232,15 @@ for (const [mode, base] of [
       await page.route("**/smolter-manifest.json", async (route) => {
         requested();
         await held;
-        if (mode === "presentation-offline") await route.abort();
-        else if (mode === "presentation-failed")
-          await route.fulfill({ status: 503, body: "Unavailable" });
-        else if (mode === "presentation-unchanged")
-          await route.fulfill({
+        if (mode === "presentation-offline") return route.abort();
+        if (mode === "presentation-failed")
+          return route.fulfill({ status: 503, body: "Unavailable" });
+        if (mode === "presentation-unchanged")
+          return route.fulfill({
             contentType: "application/json",
             body: oldManifest,
           });
-        else await route.continue();
+        await route.continue();
       });
       await page
         .getByRole("textbox", { name: "Persistent note" })
@@ -358,6 +360,8 @@ for (const [mode, base] of [
         return;
       }
     }
+    if (!mode.startsWith("redirect-"))
+      await page.getByRole("button", { name: "Next" }).click();
     if (mode.startsWith("redirect-")) {
       let releaseManifest!: () => void;
       const manifestPending = new Promise<void>((resolve) => {
@@ -384,14 +388,13 @@ for (const [mode, base] of [
           ),
         ).toEqual([]);
         finishRoot();
-      } else {
+      }
+      if (mode === "redirect-delayed") {
         const refreshed = page.waitForResponse("**/root-refresh");
         finishRoot();
         await (await refreshed).finished();
         releaseManifest();
       }
-    } else {
-      await page.getByRole("button", { name: "Next" }).click();
     }
     await expect(page.locator("h1")).toHaveText("b document");
     await expect(page.locator("output")).toHaveText("b route");

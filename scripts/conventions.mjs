@@ -4,7 +4,10 @@ import * as ts from "typescript/unstable/ast";
 import { API } from "typescript/unstable/sync";
 
 const errors = [];
-const files = [];
+const sourceFile = /\.(?:tsx?|m?js)$/;
+const files = readdirSync(".", { withFileTypes: true })
+  .filter((entry) => entry.isFile() && sourceFile.test(entry.name))
+  .map((entry) => entry.name);
 function check(path) {
   const text = readFileSync(path, "utf8");
   const source = snapshot
@@ -17,6 +20,21 @@ function check(path) {
     errors.push(`${path}:${line + 1}: ${message}`);
   };
   function visit(node) {
+    if (
+      ts.isTypeLiteralNode(node) &&
+      (ts.isParameterDeclaration(node.parent) ||
+        (ts.isFunctionLikeDeclaration(node.parent) &&
+          node.parent.type === node))
+    )
+      report(
+        node.getStart(source),
+        "Name object types used in function signatures.",
+      );
+    if (ts.isIfStatement(node) && node.elseStatement)
+      report(
+        node.elseStatement.getStart(source),
+        "Use a guard or early return instead of else.",
+      );
     if (ts.isTryStatement(node))
       report(
         node.getStart(source),
@@ -60,7 +78,9 @@ function scan(directory) {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) {
       if (!["node_modules", "dist"].includes(entry.name)) scan(path);
-    } else if (/\.(?:tsx?|m?js)$/.test(path)) files.push(path);
+      continue;
+    }
+    if (sourceFile.test(path)) files.push(path);
   }
 }
 for (const directory of ["packages", "apps", "scripts", "tooling"])

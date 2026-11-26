@@ -23,12 +23,14 @@ export function resolveAwait<T>(resolve: Promise<T>) {
   return pending;
 }
 
+type PendingAwaitProps<T> = AwaitProps<T> & { resolve: Promise<T> };
+
 export function AwaitFallback<T>({
   resolve,
   fallback,
   errorElement,
   children,
-}: AwaitProps<T> & { resolve: Promise<T> }) {
+}: PendingAwaitProps<T>) {
   const [result, setResult] = useState<Resolution<T>>();
   useEffect(() => {
     let current = true;

@@ -3,7 +3,10 @@
  * @module
  */
 import { matchRoutes, type Router, type Snapshot } from "@smolter/core";
-import { connectNavigation } from "@smolter/core/navigation";
+import {
+  connectNavigation,
+  type LayoutMatchData,
+} from "@smolter/core/navigation";
 import {
   type BranchData,
   type BranchError,
@@ -168,12 +171,7 @@ interface MatchesOptions {
   pending?: boolean;
 }
 /** Read active layouts, or the pending destination's handles while loading. */
-export function useMatches(options: MatchesOptions = {}): {
-  id: string;
-  data: unknown;
-  params: import("@smolter/core").Params;
-  handle: unknown;
-}[] {
+export function useMatches(options: MatchesOptions = {}): LayoutMatchData[] {
   const scope = useContext(Context)!;
   const router = useRouter<Router>();
   useSnapshot();

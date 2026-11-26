@@ -148,7 +148,7 @@ test.each(["closed", "ended"])(
     incoming.push(null);
     const outgoing = new ServerResponse(incoming);
     if (state === "closed") outgoing.destroy();
-    else outgoing.end();
+    if (state === "ended") outgoing.end();
     const cancel = vi.fn();
     const headers = vi.spyOn(outgoing, "setHeader");
     const request = await webRequest(incoming, outgoing);
@@ -201,8 +201,9 @@ test.each(["source", "destination", "destroy"])(
     const reader = response.body!.getReader();
     expect(new TextDecoder().decode((await reader.read()).value)).toBe("Shell");
     if (owner === "source") source.error(failure);
-    else if (owner === "destroy") (await fixture.connected).destroy(failure);
-    else (await fixture.connected).emit("error", failure);
+    if (owner === "destroy") (await fixture.connected).destroy(failure);
+    if (owner === "destination")
+      (await fixture.connected).emit("error", failure);
     await fixture.complete;
     expect(fixture.next).toHaveBeenCalledOnce();
     expect(fixture.next.mock.calls[0][0].cause).toBe(failure);

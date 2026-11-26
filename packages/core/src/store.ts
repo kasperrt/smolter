@@ -1,12 +1,14 @@
+export interface Store<T> {
+  getSnapshot: () => T;
+  subscribe(listener: () => void): () => void;
+  update(next: T): void;
+}
+
 /** Small observable value shared by layout data and navigation state. */
 export function createStore<T>(
   initial: T,
   listeners: Set<() => void> = new Set(),
-): {
-  getSnapshot: () => T;
-  subscribe(listener: () => void): () => void;
-  update(next: T): void;
-} {
+): Store<T> {
   let value = initial;
   return {
     getSnapshot: () => value,

@@ -157,7 +157,9 @@ it.for([
       expect(callback).toHaveBeenCalledWith(failure);
       expect(logger).not.toHaveBeenCalled();
       expect(write).not.toHaveBeenCalled();
-    } else if (variant === "malformed" || variant === "response") {
+      return;
+    }
+    if (variant === "malformed" || variant === "response") {
       expect(outgoing.statusCode).toBe(variant === "malformed" ? 400 : 500);
       expect(write).toHaveBeenCalledWith(
         outgoing.statusCode,
@@ -169,11 +171,11 @@ it.for([
       expect(end).toHaveBeenCalledWith(
         variant === "malformed" ? "Bad request" : "Request failed",
       );
-    } else {
-      expect(write).not.toHaveBeenCalled();
-      expect(end).not.toHaveBeenCalled();
-      if (variant === "headers") expect(outgoing.destroyed).toBe(true);
+      return;
     }
+    expect(write).not.toHaveBeenCalled();
+    expect(end).not.toHaveBeenCalled();
+    if (variant === "headers") expect(outgoing.destroyed).toBe(true);
   },
 );
 

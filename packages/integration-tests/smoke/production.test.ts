@@ -1,23 +1,28 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { chromium } from "@playwright/test";
+import { once } from "node:events";
 import { safeWrapAsync } from "@smolter/core";
+import { test } from "../tests/helpers/browser.ts";
 
 const examples = [
   { name: "react-ssr", port: 4375 },
   { name: "preact-ssr", port: 4376 },
 ];
-const servers = examples.map(({ name, port }) =>
-  spawn(process.execPath, [`apps/${name}/server/start.mjs`], {
-    env: { ...process.env, PORT: String(port) },
-    stdio: "inherit",
-  }),
-);
-let browser;
-
-async function verify() {
-  browser = await chromium.launch();
-  for (const { name, port } of examples) {
+for (const { name, port } of examples) {
+  test(`${name} supports production hydration, fetchers and mutations`, async ({
+    page,
+    onTestFinished,
+  }) => {
+    const server = spawn(process.execPath, [`apps/${name}/server/start.mjs`], {
+      env: { ...process.env, PORT: String(port) },
+      stdio: "inherit",
+    });
+    onTestFinished(async () => {
+      if (server.exitCode !== null || server.signalCode !== null) return;
+      const exited = once(server, "exit");
+      server.kill("SIGTERM");
+      await exited;
+    });
     const origin = `http://127.0.0.1:${port}`;
     let ready = false;
     for (let attempt = 0; attempt < 50; attempt++) {
@@ -29,13 +34,13 @@ async function verify() {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
     assert.ok(ready, `${name} did not start`);
-    const page = await browser.newPage();
-    const errors = [];
+    const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("console", (message) => {
       if (message.type() === "error") errors.push(message.text());
     });
     const response = await page.goto(`${origin}/examples/counter`);
+    assert.ok(response);
     assert.equal(
       await response.headerValue("cache-control"),
       "private, no-store",
@@ -67,12 +72,13 @@ async function verify() {
     await page.getByLabel("Title", { exact: true }).fill("Production action");
     await page.getByRole("button", { name: "Save task" }).click();
     await page.getByText("Task saved.", { exact: true }).waitFor();
-    const hydrationRequests = [];
+    const hydrationRequests: string[] = [];
     page.on("request", (request) => {
       if (new URL(request.url()).pathname.endsWith(".__smolter"))
         hydrationRequests.push(request.url());
     });
     const failed = await page.goto(`${origin}/tasks/missing`);
+    assert.ok(failed);
     assert.equal(
       await failed.headerValue("cache-control"),
       "private, no-store",
@@ -90,14 +96,5 @@ async function verify() {
       0,
     );
     assert.deepEqual(errors, []);
-    await page.close();
-    console.log(
-      `${name}: production SSR, success/error hydration, fetcher read, POST and PATCH passed`,
-    );
-  }
+  });
 }
-
-const { error } = await safeWrapAsync(verify);
-await browser?.close();
-for (const server of servers) server.kill("SIGTERM");
-if (error) throw error;

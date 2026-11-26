@@ -681,15 +681,15 @@ a claim of identical features.
 | `React: routing-only named exports` | 1928 |
 | `Preact: routing-only named exports` | 1917 |
 | `@kasperrt/smolter/react` | 5974 |
-| `@kasperrt/smolter/preact` | 6582 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 7750 |
-| `@kasperrt/smolter/preact + server transport` | 8365 |
-| `@kasperrt/smolter/react + client + document (application)` | 11277 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 11605 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11889 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 12217 |
-| `React: common routing/data exports` | 4141 |
-| `Preact: common routing/data exports` | 4122 |
+| `@kasperrt/smolter/preact` | 6586 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7757 |
+| `@kasperrt/smolter/preact + server transport` | 8376 |
+| `@kasperrt/smolter/react + client + document (application)` | 11280 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 11607 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11898 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 12225 |
+| `React: common routing/data exports` | 4119 |
+| `Preact: common routing/data exports` | 4099 |
 | `wouter 3.13.0: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact 3.13.0: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |
@@ -771,12 +771,15 @@ CI checks the newest available releases of Node 22, 24 and 26. Coverage, browser
 pnpm fix               # Formatting
 pnpm check             # Lint, types, tests, build, size gate
 pnpm coverage          # 100% lines per published source file, including browser tests
-pnpm pack:smoke         # React-only and Preact-only packed installs
+pnpm pack:smoke        # React-only and Preact-only packed installs
 pnpm build:examples    # Four independent builds
 pnpm smoke             # Four-app browser checks, file routing
-SMOLTER_ROUTES=manual SMOLTER_TEST_PORT=4473 pnpm smoke
+SMOLTER_ROUTES=manual SMOLTER_TEST_PORT=4473 pnpm smoke router.spec.ts
 pnpm smoke:production  # Built SSR servers, hydration, reads, mutations
+pnpm build:site && pnpm smoke:site  # Prerendering, browser navigation and bundle sizes
 ```
+
+Vitest runs the unit, browser, integration and packed-consumer suites. Pass a filename to `pnpm smoke` to run one integration suite. Playwright drives Chromium for browser interactions.
 
 The CI workflow defines checks for PRs and pushes to main. Coverage must remain at 100%
 for every implementation file across the core, adapters, transport, and routing

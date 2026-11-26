@@ -19,9 +19,13 @@ function isRouteData(value: unknown): value is DataResponse<unknown> {
   );
 }
 
+export interface ServerRoute extends Route {
+  routePath?: string;
+}
+
 async function dispatch(
   request: Request,
-  routes: readonly (Route & { routePath?: string })[],
+  routes: readonly ServerRoute[],
   document = false,
 ): Promise<Response> {
   const denied = requestPolicy(request);
@@ -83,7 +87,7 @@ async function dispatch(
 /** Dispatch a normalized application URL to its route loader or action and return an HTTP response. */
 export async function dispatchRoute(
   request: Request,
-  routes: readonly (Route & { routePath?: string })[],
+  routes: readonly ServerRoute[],
   document = false,
 ): Promise<Response> {
   const response = await dispatch(request, routes, document);

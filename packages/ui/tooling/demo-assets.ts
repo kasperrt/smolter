@@ -44,10 +44,10 @@ export function demoAssets(): Plugin {
       if (!context.server) return html;
       return html.replaceAll("/@smolter-ui/", `/@fs${directory}/`);
     },
-    config() {
+    config(config) {
       const basePort = Number(process.env.SMOLTER_PORT ?? 5173);
       const index = ["react", "preact", "react-ssr", "preact-ssr"].indexOf(
-        basename(process.cwd()),
+        basename(config.root ?? process.cwd()),
       );
       return {
         server: { port: basePort + index, strictPort: true },

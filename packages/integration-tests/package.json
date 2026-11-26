@@ -25,6 +25,6 @@
     "@kasperrt/smolter": "workspace:*"
   },
   "scripts": {
-    "smoke": "cd ../.. && playwright test --config packages/integration-tests/playwright.config.ts"
+    "smoke": "cd ../.. && pnpm smoke"
   }
 }

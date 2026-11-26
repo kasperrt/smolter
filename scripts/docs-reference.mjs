@@ -118,7 +118,11 @@ const content = [...pages.values()].sort(
     (order.get(a.slug) ?? saved.length) - (order.get(b.slug) ?? saved.length),
 );
 
-if (process.argv.includes("--check")) {
+function writeReference() {
+  if (!process.argv.includes("--check")) {
+    writeFileSync(output, JSON.stringify(content, null, 2) + "\n");
+    return;
+  }
   if (JSON.stringify(saved) !== JSON.stringify(content)) {
     console.error(
       "Public API documentation is stale. Run pnpm docs:reference.",
@@ -140,8 +144,7 @@ if (process.argv.includes("--check")) {
       process.exit(1);
     }
   }
-} else {
-  writeFileSync(output, JSON.stringify(content, null, 2) + "\n");
 }
+writeReference();
 
 console.log(`Documented ${pages.size} public exports.`);

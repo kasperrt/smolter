@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- React and Preact share named types for navigation state and route matches. The convention check enforces early returns and named object types in function signatures.
+- Browser integration, packed-consumer, production SSR and hosted-site tests now run with Vitest. Use `pnpm smoke router.spec.ts` to run the example navigation suite on its own.
+
 ## 0.6.0-alpha.1
 
 ### Features

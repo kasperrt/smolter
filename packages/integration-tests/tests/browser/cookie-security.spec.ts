@@ -2,17 +2,16 @@ import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { afterEach, beforeEach, vi } from "vitest";
+import { test } from "../helpers/browser.ts";
 
 let server: Server | undefined;
-let mode: string | undefined;
-test.beforeEach(() => {
-  mode = process.env.NODE_ENV;
-  delete process.env.NODE_ENV;
+beforeEach(() => {
+  vi.stubEnv("NODE_ENV", undefined);
 });
-test.afterEach(() => {
-  if (mode === undefined) delete process.env.NODE_ENV;
-  else process.env.NODE_ENV = mode;
+afterEach(() => {
+  vi.unstubAllEnvs();
   server?.closeAllConnections();
   server?.close();
 });

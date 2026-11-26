@@ -1,5 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { createServer, type ViteDevServer } from "vite";
+import { afterAll, beforeAll, vi } from "vitest";
+import { test } from "../helpers/browser.ts";
 
 const sizes = JSON.parse(readFileSync("packages/ui/src/size.json", "utf8"));
 const reference = JSON.parse(
@@ -29,6 +32,28 @@ const examples = [
   },
 ];
 
+const servers: ViteDevServer[] = [];
+beforeAll(async () => {
+  vi.stubEnv("SMOLTER_PORT", String(basePort));
+  for (const [index, app] of [
+    "react",
+    "preact",
+    "react-ssr",
+    "preact-ssr",
+  ].entries()) {
+    const server = await createServer({
+      root: `apps/${app}`,
+      configFile: `apps/${app}/vite.config.ts`,
+      server: { host: "127.0.0.1", port: basePort + index, strictPort: true },
+    });
+    servers.push(server);
+    await server.listen();
+  }
+});
+afterAll(async () => {
+  vi.unstubAllEnvs();
+  await Promise.all(servers.map((server) => server.close()));
+});
 for (const example of examples) {
   const origin = `http://127.0.0.1:${example.port}`;
   test(`${example.name}: documentation is routed and links to every API`, async ({

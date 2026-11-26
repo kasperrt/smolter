@@ -3,9 +3,10 @@ import { createServer } from "node:http";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { safeWrapAsync } from "@smolter/core";
 import { build } from "vite";
+import { test } from "../helpers/browser.ts";
 
 for (const framework of ["react", "preact"]) {
   test(`${framework} production client loaders commit deferred data without blocking the shell`, async ({
@@ -194,9 +195,11 @@ async function readOptional(signal) {
           await expect(
             page.getByText("Optional pending", { exact: true }),
           ).toHaveCount(0);
-        } else if (scenario === "reject") {
+        }
+        if (scenario === "reject") {
           await expect(page.getByRole("alert")).toHaveText("Optional failed");
-        } else {
+        }
+        if (scenario === "resolve" || scenario === "revalidate") {
           await expect(
             page.getByText("Optional resolved", { exact: true }),
           ).toBeVisible();

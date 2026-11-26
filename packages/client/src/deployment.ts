@@ -122,8 +122,11 @@ export function watchDeployment(
         read().state !== "submitting" &&
         read().url === target.href,
     );
-    if (reloaded && !customReload) handedOff = current;
-    else if (handedOff !== current) release();
+    if (reloaded && !customReload) {
+      handedOff = current;
+      return;
+    }
+    if (handedOff !== current) release();
   }
   const preloadError = async () => {
     // Speculative imports cannot claim recovery before navigation starts.
@@ -138,7 +141,9 @@ export function watchDeployment(
     if ((await changed(target, true)) && valid(current)) {
       recovery = { current, target, release };
       await recover();
-    } else release();
+      return;
+    }
+    release();
   };
   function cleanup() {
     if (state.cleanup !== cleanup) return;

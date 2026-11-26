@@ -351,7 +351,7 @@ export function createDataRouter(
         ? prefetched!.load(href)
         : Promise.resolve({
             error: new Error(
-              "Data prefetching was excluded from this build. Use router.prefetch or prefetchData in analyzed application source.",
+              "Prefetch excluded from this build. Use router.prefetch or prefetchData.",
             ),
           });
     },
