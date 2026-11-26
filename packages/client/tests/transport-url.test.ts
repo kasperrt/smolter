@@ -1,4 +1,4 @@
-import { dataTarget, dataURL } from "@smolter/core/transport";
+import { dataTarget, dataURL, requestURL } from "@smolter/core/transport";
 import { expect, it } from "vitest";
 
 it("roundtrips suffix routes without consuming application query parameters", () => {
@@ -46,6 +46,21 @@ it("rejects ambiguous legacy targets with the same parser used by dev and produc
       "/admin/_smolter",
     ),
   ).toBe("/admin/users?page=2");
+});
+
+it("rejects protocol-relative and backslash request targets", () => {
+  for (const target of [
+    "//evil.test",
+    "/\\evil.test",
+    "http://evil.test/",
+    "*",
+  ])
+    expect(requestURL(target)).toBeInstanceOf(Error);
+  const query = requestURL("/search?q=\\");
+  expect(query).not.toBeInstanceOf(Error);
+  if (query instanceof Error) return;
+  expect(query.pathname).toBe("/search");
+  expect(query.search).toBe("?q=\\");
 });
 
 it("rejects ambiguous legacy transport selectors without rejecting ordinary duplicate queries", () => {

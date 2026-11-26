@@ -3,10 +3,20 @@ import { dataSuffix } from "./namespace.ts";
 /** Parse an origin-form Node request target without accepting absolute-form or malformed URLs. */
 export function requestURL(target: string | undefined): URL | Error {
   const value = target ?? "/";
+  const path = value.split(/[?#]/, 1)[0] ?? "";
   const href = `http://local${value}`;
-  if (!value.startsWith("/") || !URL.canParse(href))
+  if (
+    !value.startsWith("/") ||
+    !path.startsWith("/") ||
+    path.startsWith("//") ||
+    path.includes("\\") ||
+    !URL.canParse(href)
+  )
     return new Error("Bad request");
-  return new URL(href);
+  const url = new URL(href);
+  if (url.pathname.startsWith("//") || url.username || url.password)
+    return new Error("Bad request");
+  return url;
 }
 
 /** Internal transport encoding preserves the complete route pathname and query. */

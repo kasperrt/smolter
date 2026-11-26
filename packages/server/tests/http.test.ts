@@ -256,21 +256,20 @@ test("request-target slashes cannot replace the HTTP host used for origin checks
     server.close();
   });
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-  for (const path of [
-    "//attacker.example/account",
-    "/%5cattacker.example/account",
-  ]) {
+  for (const [path, status] of [
+    ["//attacker.example/account", 400],
+    ["/%5cattacker.example/account", 403],
+  ] as const) {
     const denied = await fetch(base + path, {
       method: "POST",
       headers: { Origin: "http://attacker.example" },
     });
-    expect(denied.status).toBe(403);
+    expect(denied.status, path).toBe(status);
   }
   expect(action).not.toHaveBeenCalled();
   const response = await fetch(`${base}//attacker.example/account?keep=1`);
-  expect(await response.text()).toBe(
-    `${base}//attacker.example/account?keep=1`,
-  );
+  expect(response.status).toBe(400);
+  expect(action).not.toHaveBeenCalled();
 });
 
 test.each([false, true])(

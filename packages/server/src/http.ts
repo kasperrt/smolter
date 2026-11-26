@@ -7,6 +7,17 @@ import { cacheHeader } from "./private-response.ts";
 import { requestPolicy } from "./request-policy.ts";
 
 const noStoreDirective = /(?:^|,)\s*no-store(?:\s*,|$)/i;
+const framingHeader = new Set([
+  "content-length",
+  "transfer-encoding",
+  "connection",
+  "keep-alive",
+  "proxy-connection",
+  "upgrade",
+  "te",
+  "trailer",
+  "host",
+]);
 
 function badRequest(): Response {
   return new Response("Bad request", {
@@ -18,16 +29,27 @@ function badRequest(): Response {
 function requestOrigin(incoming: ServerIncomingMessage): string {
   const host = incoming.headers.host;
   const protocol = incoming.protocol ?? "http";
-  const base = `${protocol}://${host}`;
-  if (!host || /[\s/?#@\\]/.test(host) || !URL.canParse(base))
+  // Express copies X-Forwarded-Proto through unchanged. Only http and https
+  // may become the request origin, and the header must already be that origin's host.
+  if (
+    (protocol !== "http" && protocol !== "https") ||
+    typeof host !== "string" ||
+    /[\s/?#@\\%]/.test(host) ||
+    /[^\x21-\x7e]/.test(host) ||
+    !URL.canParse(`${protocol}://${host}`)
+  )
     throw badRequest();
-  const parsed = new URL(base);
+  const parsed = new URL(`${protocol}://${host}`);
+  const defaultPort = protocol === "https" ? "443" : "80";
   if (
     parsed.pathname !== "/" ||
     parsed.search ||
     parsed.hash ||
     parsed.username ||
-    parsed.password
+    parsed.password ||
+    (host !== parsed.host &&
+      host !== parsed.hostname &&
+      host !== `${parsed.hostname}:${defaultPort}`)
   )
     throw badRequest();
   return parsed.origin;
@@ -49,13 +71,19 @@ export async function webRequest(
       headers.set(name, Array.isArray(value) ? value.join(", ") : value);
   }
   const rawTarget = (target ?? incoming.originalUrl ?? incoming.url) || "/";
-  // Origin-form paths can start with //; never interpret them as a URL authority.
+  const rawPath = rawTarget.split(/[?#]/, 1)[0] ?? "";
+  // A backslash or extra slash survives as a protocol-relative pathname.
   if (
     !rawTarget.startsWith("/") ||
+    !rawPath.startsWith("/") ||
+    rawPath.startsWith("//") ||
+    rawPath.includes("\\") ||
     !URL.canParse(`.${rawTarget}`, `${origin}/`)
   )
     throw badRequest();
   const url = new URL(`.${rawTarget}`, `${origin}/`);
+  if (url.origin !== origin || url.pathname.startsWith("//"))
+    throw badRequest();
   const method = incoming.method ?? "GET";
   const denied = requestPolicy({
     method,
@@ -114,8 +142,12 @@ export async function send(response: Response, outgoing: StreamingResponse) {
     noStoreDirective.test(response.headers.get("Cache-Control") ?? "");
   outgoing.statusCode = response.status;
   response.headers.forEach((value, name) => {
-    if (name !== "set-cookie") outgoing.setHeader(name, value);
+    // Node frames the body. A copied length or transfer encoding can desynchronize it.
+    if (name === "set-cookie" || framingHeader.has(name)) return;
+    outgoing.setHeader(name, value);
   });
+  if (/\bclose\b/i.test(response.headers.get("connection") ?? ""))
+    outgoing.setHeader("connection", "close");
   if (privateCache) {
     for (const name of outgoing.getHeaderNames()) {
       if (cacheHeader.test(name)) outgoing.setHeader(name, "private, no-store");
