@@ -149,6 +149,7 @@ it("rejects synthetic webRequest calls with invalid protocol/origin or non-origi
     ["example.com", "/ok", "ws"],
     ["app.example%2eevil.com", "/ok", "https"],
     ["0x7f000001", "/ok", "http"],
+    ["example.com", "/folder/..//account", "http"],
     ["example.com", "//evil.example", "http"],
     ["example.com", "/\\evil.example", "http"],
   ] as const) {

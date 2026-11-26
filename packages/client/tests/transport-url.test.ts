@@ -50,6 +50,7 @@ it("rejects ambiguous legacy targets with the same parser used by dev and produc
 
 it("rejects protocol-relative and backslash request targets", () => {
   for (const target of [
+    "/folder/..//account",
     "//evil.test",
     "/\\evil.test",
     "http://evil.test/",

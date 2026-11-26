@@ -147,6 +147,7 @@ test("isolates application data endpoints on one origin and streams documents be
   await once(server, "listening");
   const origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   for (const { base } of handlers) {
+    expect((await fetch(`${origin}${base}/_smolter`)).status).toBe(400);
     for (const method of ["GET", "POST"]) {
       const response = await fetch(
         `${origin}${base}/_smolter?url=${base || "/"}`,
