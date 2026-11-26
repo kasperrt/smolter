@@ -30,6 +30,11 @@
       "code": ""
     },
     {
+      "title": "Hydration payload lookup",
+      "body": "Mounting reads only a script element with id smolter-data and type application/json, and streamed snapshots are finalized into that same element. Other elements that reuse the id, such as sanitized user markup that keeps id attributes, cannot supply or receive hydration data. A named element called __smolterDeferred is replaced by the deferred settlement queue instead of breaking streamed data. Custom bootstrap code should use the same selector rather than document.getElementById.",
+      "code": "const data = document.querySelector(\n  'script#smolter-data[type=\"application/json\"]',\n);"
+    },
+    {
       "title": "Navigation and root data",
       "body": "Mounting retains the committed view while a new route loads and connects navigation metadata. A rootModule with loaderPath registers root revalidation under rootModule.id or \"root\". loaderPath must identify a registered data route; mounting does not invent an endpoint. With neither hydration data nor #root, a router is returned but no application is rendered.",
       "code": ""

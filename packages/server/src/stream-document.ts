@@ -89,7 +89,7 @@ export function streamDocument(
             : "";
           controller.enqueue(
             encoder.encode(
-              `<script type="application/json"${nonce}>${hydration}</script><script${nonce}>(function(){var script=document.currentScript,payload=script.previousElementSibling,data=document.getElementById("smolter-data");if(data)data.textContent=payload.textContent;payload.remove();script.remove()})()</script>${suffix}`,
+              `<script type="application/json"${nonce}>${hydration}</script><script${nonce}>(function(){var script=document.currentScript,payload=script.previousElementSibling,data=document.querySelector('script#smolter-data[type="application/json"]');if(data)data.textContent=payload.textContent;payload.remove();script.remove()})()</script>${suffix}`,
             ),
           );
         }

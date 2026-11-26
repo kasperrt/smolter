@@ -73,7 +73,7 @@ export function deferredHydration(value: unknown, nonce?: string) {
     );
     controller.enqueue(
       encoder.encode(
-        `<script${attribute}>(window.__smolterDeferred??=[]).push(JSON.parse(${packet}));document.currentScript.remove()</script>`,
+        `<script${attribute}>(Array.isArray(window.__smolterDeferred)?window.__smolterDeferred:window.__smolterDeferred=[]).push(JSON.parse(${packet}));document.currentScript.remove()</script>`,
       ),
     );
     pending--;
@@ -81,7 +81,7 @@ export function deferredHydration(value: unknown, nonce?: string) {
       closed = true;
       controller.enqueue(
         encoder.encode(
-          `<script${attribute}>(window.__smolterDeferred??=[]).push([-1,null,null]);document.currentScript.remove()</script>`,
+          `<script${attribute}>(Array.isArray(window.__smolterDeferred)?window.__smolterDeferred:window.__smolterDeferred=[]).push([-1,null,null]);document.currentScript.remove()</script>`,
         ),
       );
       controller.close();

@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Security
+
+- Reject missing, malformed and path- or userinfo-bearing `Host` headers and non-origin-form request targets with `400` before dispatch. `GET`/`HEAD` bodies are no longer buffered.
+- `data()` wrappers carry a non-enumerable symbol marker, so loader JSON containing `"__routeData": true` can no longer set response headers or status.
+- `requestPolicy` rejects any `Sec-Fetch-Site` other than `same-origin`/`none` and checks the `Referer` origin when `Origin` is absent.
+- SSR stops at the first loader redirect, so destination loaders no longer run and their cookies cannot overwrite the redirect's. Invalid error statuses fall back to `500`.
+- `send()` appends response `Set-Cookie` headers to cookies set by earlier middleware, and any `no-store` directive neutralizes targeted CDN cache headers.
+- Hash history keeps fragments on `location.origin`; deployment recovery only reloads same-origin `http:`/`https:` URLs.
+- Navigation and forms reject `vbscript:` and `data:` as well as `javascript:`; `internalURL` requires a matching protocol; `<Form>` validates `action` and blocks native submission to unsafe `action`/`formaction` URLs.
+- Hydration escapes user objects that collide with internal sentinels and validates sentinel and error shapes.
+- Hydration reads and finalizes only `script#smolter-data[type="application/json"]`, so user markup that reuses the id (for example sanitized HTML that keeps `id` attributes) can no longer supply or capture hydration data. A named `__smolterDeferred` element no longer breaks deferred streaming. Custom bootstrap code should use the same selector.
+- Template and metadata replacements use callbacks so `$'`/`` $` ``/`$&` in data are not expanded. Vite browser-boundary checks cover `.server/` directories and `.server.json` case-insensitively, and route modules must resolve inside the routes directory.
+
+### Size
+
+- The hydration element and deferred-queue checks add, in matched gzip sizes: React application +41 B, React lazy application +42 B, Preact application +34 B, Preact file-routed application +37 B. Routing-only and common data subsets are unchanged. Size tables also reflect the earlier hardening in this release.
+
 ## 0.5.6
 
 ### Features

@@ -443,12 +443,16 @@ import { deserialize } from "@kasperrt/smolter/react/client";
 import { createDataRouter } from "@kasperrt/smolter/react";
 import routes from "virtual:smolter/routes";
 
-const data = document.getElementById("smolter-data");
+const data = document.querySelector(
+  'script#smolter-data[type="application/json"]',
+);
 const router = createDataRouter(routes, {
   browser: true,
   hydrationData: data?.textContent ? deserialize(data.textContent) : undefined,
 });
 ```
+Select the JSON script element rather than calling `getElementById`, so
+user-generated markup that reuses the id cannot supply hydration data.
 Then hydrate with your framework. A client-only route renders its fallback on
 the server and loads after hydration. Data must be JSON serializable; script
 closing characters are escaped and errors omitted.
@@ -662,18 +666,18 @@ a claim of identical features.
 | --- | ---: |
 | `React Router 8.5.1: declarative routing subset` | 13012 |
 | `React Router 8.5.1: data routing subset` | 30841 |
-| `React: routing-only named exports` | 1895 |
-| `Preact: routing-only named exports` | 1882 |
-| `@kasperrt/smolter/react` | 5721 |
-| `@kasperrt/smolter/preact` | 6332 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 7479 |
-| `@kasperrt/smolter/preact + server transport` | 8090 |
-| `@kasperrt/smolter/react + client + document (application)` | 10690 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 11025 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11332 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11656 |
-| `React: common routing/data exports` | 4044 |
-| `Preact: common routing/data exports` | 4028 |
+| `React: routing-only named exports` | 1921 |
+| `Preact: routing-only named exports` | 1910 |
+| `@kasperrt/smolter/react` | 5929 |
+| `@kasperrt/smolter/preact` | 6534 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7690 |
+| `@kasperrt/smolter/preact + server transport` | 8302 |
+| `@kasperrt/smolter/react + client + document (application)` | 11141 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 11477 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11761 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 12090 |
+| `React: common routing/data exports` | 4131 |
+| `Preact: common routing/data exports` | 4111 |
 | `wouter 3.13.0: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact 3.13.0: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |

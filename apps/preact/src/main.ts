@@ -10,7 +10,9 @@ import { app } from "./app";
 import "@smolter/ui/style.css";
 
 const root = document.getElementById("root");
-const data = document.getElementById("smolter-data");
+const data = document.querySelector(
+  'script#smolter-data[type="application/json"]',
+);
 let hydrationData = data?.textContent
   ? deserialize(data.textContent)
   : undefined;

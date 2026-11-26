@@ -15,6 +15,21 @@ export interface DeferredWindow extends Window {
   __smolterDeferred?: Settlement[];
 }
 
+// Untrusted markup can carry the same id; only Smolter's JSON script element is a payload.
+const hydrationSelector = 'script#smolter-data[type="application/json"]';
+
+/** Read the hydration payload without trusting other elements that share its id. */
+export function hydrationPayload(): string | undefined {
+  return document.querySelector(hydrationSelector)?.textContent ?? undefined;
+}
+
+// Named elements can shadow this global; only an array is a settlement queue.
+function deferredQueue(): Settlement[] {
+  const target = window as DeferredWindow;
+  if (!Array.isArray(target.__smolterDeferred)) target.__smolterDeferred = [];
+  return target.__smolterDeferred;
+}
+
 /** Restore promise identity before hydrating Suspense boundaries. */
 export function readHydration(json: string, timeout = 8_000) {
   if (!Number.isInteger(timeout) || timeout < 1 || timeout > 2_147_483_647)
@@ -23,7 +38,7 @@ export function readHydration(json: string, timeout = 8_000) {
     );
   const pending = new Map<number, PendingValue>();
   let live = false;
-  const queue = ((window as DeferredWindow).__smolterDeferred ??= []);
+  const queue = deferredQueue();
   function revive(_key: string, value: unknown): unknown {
     if (!value || typeof value !== "object" || Array.isArray(value))
       return value;

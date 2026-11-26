@@ -10,7 +10,7 @@ import {
   watchDeployment,
 } from "@smolter/client";
 import { connectHashHistory, hashURL } from "@smolter/client/hash-history";
-import { readHydration } from "@smolter/client/hydration";
+import { hydrationPayload, readHydration } from "@smolter/client/hydration";
 import { attachRootData } from "@smolter/client/root-data";
 import {
   createDataRouter,
@@ -61,10 +61,8 @@ export async function mountApplication(
     throw preloadError.cause ?? preloadError;
   }
   routes = prepareRoutes(routes);
-  const element = document.getElementById("smolter-data");
-  const initial = element?.textContent
-    ? readHydration(element.textContent, deferredTimeout)
-    : undefined;
+  const payload = hydrationPayload();
+  const initial = payload ? readHydration(payload, deferredTimeout) : undefined;
   const hydration: Hydration | undefined = initial?.hydration;
   if (hydration?.snapshot.error)
     hydration.snapshot.error = Object.assign(
