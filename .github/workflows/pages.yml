@@ -47,7 +47,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
-        run: node scripts/release.mjs verify
+        run: node scripts/release.ts verify
       - name: Verify manual retry passed main CI
         if: github.event_name == 'workflow_dispatch'
         env:

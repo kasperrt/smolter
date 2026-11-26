@@ -12,6 +12,46 @@ import { join, resolve } from "node:path";
 import * as ts from "typescript/unstable/ast";
 import { API } from "typescript/unstable/sync";
 
+interface DocLocation {
+  filename: string;
+  line: number;
+  col: number;
+}
+
+interface DocReference {
+  target: DocLocation;
+}
+
+interface DocDeclaration {
+  kind: string;
+  declarationKind: string;
+  location: DocLocation;
+  def: DocReference;
+  jsDoc?: DocComment;
+}
+
+interface DocComment {
+  doc?: string;
+}
+
+interface DocSymbol {
+  name: string;
+  declarations: DocDeclaration[];
+}
+
+interface DocModule {
+  module_doc?: DocComment;
+  symbols: DocSymbol[];
+}
+
+interface Documentation {
+  nodes: Record<string, DocModule>;
+}
+
+interface JsrManifest {
+  exports: Record<string, string>;
+}
+
 const publish = process.argv.includes("--publish");
 
 if (publish && process.env.GITHUB_ACTIONS !== "true") {
@@ -25,6 +65,7 @@ const source = new URL("../", import.meta.url);
 // JSR's hosted validation rejects global augmentation even when Deno's dry run passes.
 const files = readdirSync(new URL(".generated/", source), {
   recursive: true,
+  encoding: "utf8",
 }).filter((file) => /\.tsx?$/.test(file));
 const api = new API({ cwd: process.cwd() });
 const snapshot = api.updateSnapshot({
@@ -34,11 +75,17 @@ for (const file of files) {
   const filename = resolve(".generated", file);
   const tree = snapshot
     .getDefaultProjectForFile(filename)
-    .program.getSourceFile(filename);
-  const inspect = (node) => {
+    ?.program.getSourceFile(filename);
+  if (!tree) {
+    console.error(`JSR source is not part of the TypeScript project: ${file}`);
+    process.exit(1);
+  }
+  // `declare global` is a module declaration named by the identifier `global`.
+  const inspect = (node: ts.Node) => {
     if (
       ts.isModuleDeclaration(node) &&
-      node.flags & ts.NodeFlags.GlobalAugmentation
+      ts.isIdentifier(node.name) &&
+      node.name.text === "global"
     ) {
       console.error(`JSR forbids global type augmentation: ${file}`);
       process.exit(1);
@@ -75,8 +122,10 @@ execFileSync(
 );
 
 // Check the same source documentation that JSR indexes, before either registry publishes.
-const manifest = JSON.parse(readFileSync(join(directory, "jsr.json"), "utf8"));
-const documentation = JSON.parse(
+const manifest: JsrManifest = JSON.parse(
+  readFileSync(join(directory, "jsr.json"), "utf8"),
+);
+const documentation: Documentation = JSON.parse(
   execFileSync(
     "pnpm",
     [
@@ -100,22 +149,22 @@ const documentation = JSON.parse(
     },
   ),
 );
-const locationKey = (location) =>
+const locationKey = (location: DocLocation) =>
   `${location.filename}:${location.line}:${location.col}`;
-const declarations = new Map(
+const declarations = new Map<string, DocDeclaration>(
   Object.values(documentation.nodes).flatMap((module) =>
     module.symbols.flatMap((symbol) =>
-      symbol.declarations.map((declaration) => [
+      symbol.declarations.map((declaration): [string, DocDeclaration] => [
         locationKey(declaration.location),
         declaration,
       ]),
     ),
   ),
 );
-const documented = (declaration) => {
+const documented = (declaration: DocDeclaration): boolean => {
   if (declaration.kind === "reference") {
     const target = declarations.get(locationKey(declaration.def.target));
-    return target && target !== declaration && documented(target);
+    return Boolean(target && target !== declaration && documented(target));
   }
   return Boolean(declaration.jsDoc?.doc?.trim());
 };

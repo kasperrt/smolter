@@ -2,13 +2,13 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import ts from "typescript";
-import { build } from "vite";
+import { build, type Rolldown } from "vite";
 import { expect, test } from "vitest";
 
 test("prefetch-packed consumer", async () => {
   expect(ts.version).toBe("7.0.2");
-  expect(ts.sys).toBe(undefined);
-  expect(ts.createProgram).toBe(undefined);
+  expect("sys" in ts).toBe(false);
+  expect("createProgram" in ts).toBe(false);
   const framework = process.env.SMOLTER_PACKED_FRAMEWORK;
   const tooling = `@kasperrt/smolter/${framework}/vite`;
   const compiler = createRequire(import.meta.resolve(tooling))(
@@ -52,7 +52,10 @@ export const Page = () => <Link to="/item" ${attributes}>Item</Link>;`,
         },
       });
       const result = Array.isArray(built) ? built[0] : built;
-      const chunks = result.output.filter((item) => item.type === "chunk");
+      const output: (Rolldown.OutputChunk | Rolldown.OutputAsset)[] =
+        "output" in result ? result.output : [];
+      const chunks = output.filter((item) => item.type === "chunk");
+      expect(chunks.length).toBeGreaterThan(0);
       const modules = chunks.flatMap((chunk) =>
         Object.entries(chunk.modules)
           .filter(([, module]) => module.renderedLength > 0)

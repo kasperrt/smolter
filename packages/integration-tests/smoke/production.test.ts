@@ -13,7 +13,7 @@ for (const { name, port } of examples) {
     page,
     onTestFinished,
   }) => {
-    const server = spawn(process.execPath, [`apps/${name}/server/start.mjs`], {
+    const server = spawn(process.execPath, [`apps/${name}/server/start.ts`], {
       env: { ...process.env, PORT: String(port) },
       stdio: "inherit",
     });

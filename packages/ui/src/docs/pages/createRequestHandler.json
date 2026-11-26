@@ -37,7 +37,7 @@
     {
       "title": "Custom namespace",
       "body": "Pass the same namespace as the Vite configuration when this handler is imported directly from @kasperrt/smolter/utils/http rather than bundled by Vite. It selects the /path.__namespace data suffix and is validated like the Vite option. Export the compiled namespace from your SSR entry to keep both in one place.",
-      "code": "// src/server.ts\nexport { namespace } from \"@kasperrt/smolter/utils\";\n\n// server.mjs\nimport { namespace } from \"./dist/server/server.js\";\n\nconst handler = createRequestHandler({ namespace, build, entry });"
+      "code": "// src/server.ts\nexport { namespace } from \"@kasperrt/smolter/utils\";\n\n// server.ts\nimport { namespace } from \"./dist/server/server.js\";\n\nconst handler = createRequestHandler({ namespace, build, entry });"
     }
   ]
 }

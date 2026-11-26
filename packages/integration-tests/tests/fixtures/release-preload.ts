@@ -4,35 +4,39 @@ import fs from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import timers from "node:timers/promises";
 
-const scenario = process.env.RELEASE_TEST_SCENARIO;
+const scenario = process.env.RELEASE_TEST_SCENARIO ?? "";
 const npmOnly = process.argv[2] === "publish-npm";
 const version = process.env.RELEASE_TEST_VERSION || "0.0.1-rc.1";
 const readFileSync = fs.readFileSync;
 
-fs.readFileSync = (file, ...args) => {
-  const contents = readFileSync(file, ...args);
-  if (/\/(package|jsr)\.json$/.test(String(file)))
-    return JSON.stringify({ ...JSON.parse(contents), version });
-  return contents;
-};
+fs.readFileSync = new Proxy(readFileSync, {
+  apply(target, receiver, args: Parameters<typeof readFileSync>) {
+    const [file] = args;
+    const contents = Reflect.apply(target, receiver, args);
+    if (/\/(package|jsr)\.json$/.test(String(file)))
+      return JSON.stringify({ ...JSON.parse(contents.toString()), version });
+    return contents;
+  },
+});
 
 let publications = 0;
-let packedTarball;
+let packedTarball: string | undefined;
 let jsrPublications = 0;
 let jsrVisible = false;
 let waits = 0;
 let elapsed = 0;
 Date.now = () => elapsed;
 
-timers.setTimeout = async (delay) => {
+timers.setTimeout = async <T>(delay = 0, value?: T) => {
   assert.equal(delay, publications ? 30_000 : 5_000);
   waits++;
   elapsed += delay;
+  return value as T;
 };
 
 globalThis.fetch = async (input, options) => {
-  assert.ok(options.signal instanceof AbortSignal);
-  const url = new URL(input);
+  assert.ok(options?.signal instanceof AbortSignal);
+  const url = new URL(input instanceof Request ? input.url : input);
   if (url.hostname === "jsr.io") {
     assert.equal(npmOnly, false, "npm must not query JSR");
     if (scenario === "jsr-unavailable")
@@ -54,46 +58,53 @@ globalThis.fetch = async (input, options) => {
   return new Response(null, { status: exists ? 200 : 404 });
 };
 
-childProcess.execFileSync = (binary, args, options) => {
-  if (binary === "node") {
-    assert.deepEqual(args, ["scripts/jsr.mjs", "--publish"]);
-    jsrPublications++;
-    if (scenario === "jsr-rejected")
-      throw new Error("JSR rejected publication");
+childProcess.execFileSync = new Proxy(childProcess.execFileSync, {
+  apply(
+    _target,
+    _receiver,
+    parameters: Parameters<typeof childProcess.execFileSync>,
+  ) {
+    const [binary, args = [], options = {}] = parameters;
+    if (binary === "node") {
+      assert.deepEqual(args, ["scripts/jsr.ts", "--publish"]);
+      jsrPublications++;
+      if (scenario === "jsr-rejected")
+        throw new Error("JSR rejected publication");
+      return "";
+    }
+    if (binary === "pnpm") {
+      assert.deepEqual(args.slice(0, 2), ["pack", "--out"]);
+      assert.ok(args[2].endsWith("/package.tgz"));
+      packedTarball = args[2];
+      return "";
+    }
+    if (!npmOnly) assert.ok(jsrVisible, "combined publishing verifies JSR");
+    assert.equal(binary, "npm");
+    assert.ok(packedTarball, "npm must publish the pnpm-packed artifact");
+    assert.deepEqual(args, [
+      "publish",
+      packedTarball,
+      "--access",
+      "public",
+      "--provenance",
+      "--tag",
+      version.includes("-beta.")
+        ? "beta"
+        : version.includes("-")
+          ? "next"
+          : "latest",
+    ]);
+    assert.equal(options.env?.SMOLTER_NPM_BOOTSTRAP_TOKEN, undefined);
+    assert.equal(options.env?.NODE_AUTH_TOKEN, undefined);
+    publications++;
     return "";
-  }
-  if (binary === "pnpm") {
-    assert.deepEqual(args.slice(0, 2), ["pack", "--out"]);
-    assert.ok(args[2].endsWith("/package.tgz"));
-    packedTarball = args[2];
-    return "";
-  }
-  if (!npmOnly) assert.ok(jsrVisible, "combined publishing verifies JSR");
-  assert.equal(binary, "npm");
-  assert.ok(packedTarball, "npm must publish the pnpm-packed artifact");
-  assert.deepEqual(args, [
-    "publish",
-    packedTarball,
-    "--access",
-    "public",
-    "--provenance",
-    "--tag",
-    version.includes("-beta.")
-      ? "beta"
-      : version.includes("-")
-        ? "next"
-        : "latest",
-  ]);
-  assert.equal(options.env.SMOLTER_NPM_BOOTSTRAP_TOKEN, undefined);
-  assert.equal(options.env.NODE_AUTH_TOKEN, undefined);
-  publications++;
-  return "";
-};
+  },
+});
 
 fs.writeFileSync = (file, contents) => {
   assert.ok(String(file).endsWith("/README.md"));
-  assert.ok(contents.includes("<!-- bundlejs:start -->"));
-  assert.ok(contents.includes("deno.bundlejs.com"));
+  assert.ok(contents.toString().includes("<!-- bundlejs:start -->"));
+  assert.ok(contents.toString().includes("deno.bundlejs.com"));
 };
 
 syncBuiltinESMExports();

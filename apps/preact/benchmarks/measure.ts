@@ -1,10 +1,60 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { brotliCompressSync, constants, gzipSync } from "node:zlib";
+import { gzipSync } from "node:zlib";
 import { build } from "esbuild";
 import { minify } from "terser";
 
-export async function measure(entry, names, detailed = false) {
+/** Combination measured by size-combinations.ts as [raw, gzip, brotli] bytes. */
+type CombinationSize = [number, number, number];
+
+/** Recorded combination sizes per framework, keyed by feature mask. */
+export interface CombinationSizes {
+  react: Record<string, CombinationSize>;
+  preact: Record<string, CombinationSize>;
+}
+
+/** Reference package measured outside this build. */
+export interface ReferencePackage {
+  name: string;
+  version: string;
+  bytes: number;
+}
+
+interface ComparisonSizes {
+  wouterRouting: number;
+  wouterPreactRouting: number;
+  reactRouterRouting: number;
+  reactRouterData: number;
+  reactRouter: number;
+}
+
+/** Recorded competitor measurements and the reference packages they came from. */
+export interface Comparison {
+  packages: ReferencePackage[];
+  sizes: ComparisonSizes;
+}
+
+/** Gzip bytes of each measured adapter bundle, plus recorded comparisons. */
+export interface AdapterSizes extends ComparisonSizes {
+  react: number;
+  preact: number;
+  reactServer: number;
+  preactServer: number;
+  reactApplication: number;
+  reactLazyApplication: number;
+  preactApplication: number;
+  preactLazyApplication: number;
+  reactRouting: number;
+  preactRouting: number;
+  reactCommon: number;
+  preactCommon: number;
+}
+
+/** Gzip bytes of the minified bundle that re-exports names (or everything) from entry. */
+export async function measure(
+  entry: string | string[],
+  names?: readonly string[],
+): Promise<number> {
   const exports = names ? `{ ${names.join(", ")} }` : "*";
   const paths = (Array.isArray(entry) ? entry : [entry]).map((path) =>
     path.startsWith(".")
@@ -33,16 +83,7 @@ export async function measure(entry, names, detailed = false) {
     compress: { passes: 3 },
     mangle: true,
   });
-  const gzip = gzipSync(output.code, { level: 9 }).byteLength;
-  return detailed
-    ? {
-        raw: Buffer.byteLength(output.code),
-        gzip,
-        brotli: brotliCompressSync(output.code, {
-          params: { [constants.BROTLI_PARAM_QUALITY]: 11 },
-        }).byteLength,
-      }
-    : gzip;
+  return gzipSync(output.code ?? "", { level: 9 }).byteLength;
 }
 
 export const routingExports = [
@@ -71,7 +112,7 @@ export const commonExports = [
   "useFetcher",
 ];
 
-export async function measureAdapters() {
+export async function measureAdapters(): Promise<AdapterSizes> {
   const [
     react,
     preact,
@@ -109,7 +150,7 @@ export async function measureAdapters() {
       "./dist/preact/lazy-route.js",
     ]),
   ]);
-  const combinations = JSON.parse(
+  const combinations: CombinationSizes = JSON.parse(
     readFileSync(
       new URL(
         "../../../packages/ui/src/size-combinations.json",
@@ -131,14 +172,19 @@ export async function measureAdapters() {
     preactRouting: combinations.preact[0][1],
     reactCommon: combinations.react[1][1],
     preactCommon: combinations.preact[1][1],
-    ...JSON.parse(
-      readFileSync(
-        new URL(
-          "../../../packages/ui/src/comparison-sizes.json",
-          import.meta.url,
-        ),
-        "utf8",
-      ),
-    ).sizes,
+    ...readComparison().sizes,
   };
+}
+
+/** Read the recorded competitor measurements. */
+export function readComparison(): Comparison {
+  return JSON.parse(
+    readFileSync(
+      new URL(
+        "../../../packages/ui/src/comparison-sizes.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
 }

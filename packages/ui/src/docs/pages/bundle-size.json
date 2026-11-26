@@ -22,7 +22,7 @@
     {
       "title": "Optional prefetch capabilities",
       "body": "Smolter’s Vite plugin selects prefetch implementations from typed JSX, spreads and createElement calls. Intent-only applications omit the observer; viewport-only applications omit intent handlers; unused data prefetch omits its cache. Unions retain all possible modes. Plain Link means intent. Opaque inputs and component-value escapes retain capabilities conservatively. Source-level analysis can retain code from unused source files; it does not claim whole-program runtime inference. Without the plugin, all implementations remain available. Complete-entry measurements retain every export through ordinary bundling. The routing-only and common routing/data rows use the same Vite selection as the calculator.",
-      "code": "pnpm build\nnode scripts/prefetch-size.mjs"
+      "code": "pnpm build\nnode scripts/prefetch-size.ts"
     },
     {
       "title": "Nested layouts and route transitions",

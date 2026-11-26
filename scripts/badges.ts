@@ -1,7 +1,7 @@
 const start = "<!-- bundlejs:start -->";
 const end = "<!-- bundlejs:end -->";
 
-export function withSizeBadges(markdown, version) {
+export function withSizeBadges(markdown: string, version: string): string {
   const badges = ["react", "preact"].map((framework) => {
     const query = new URLSearchParams({
       q: `@kasperrt/smolter@${version}/${framework}`,

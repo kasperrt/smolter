@@ -3,15 +3,19 @@ import { join, resolve } from "node:path";
 import * as ts from "typescript/unstable/ast";
 import { API } from "typescript/unstable/sync";
 
-const errors = [];
-const sourceFile = /\.(?:tsx?|m?js)$/;
+type Range = [number, number];
+
+const errors: string[] = [];
+const sourceFile = /\.tsx?$/;
+// Repository sources are TypeScript; plain JavaScript files are rejected outright.
+const javascriptFile = /\.(?:[cm]?js|jsx)$/;
 const suppressionComment = new RegExp(
   "(?:\\/\\/|\\/\\*)\\s*(?:@ts-(?:ignore|expect-error|nocheck)|biome-ignore)\\b",
 );
 const files = readdirSync(".", { withFileTypes: true })
   .filter((entry) => entry.isFile() && sourceFile.test(entry.name))
   .map((entry) => entry.name);
-function inNamedTypeDeclaration(node) {
+function inNamedTypeDeclaration(node: ts.Node): boolean {
   let current = node.parent;
   while (current && !ts.isSourceFile(current)) {
     if (
@@ -23,12 +27,12 @@ function inNamedTypeDeclaration(node) {
   }
   return false;
 }
-function unwrapExpression(node) {
+function unwrapExpression(node: ts.Expression): ts.Expression {
   let current = node;
   while (ts.isParenthesizedExpression(current)) current = current.expression;
   return current;
 }
-function hasEmptyObjectBranch(node) {
+function hasEmptyObjectBranch(node: ts.Expression): boolean {
   const expr = unwrapExpression(node);
   if (!ts.isConditionalExpression(expr)) return false;
   for (const branch of [expr.whenTrue, expr.whenFalse]) {
@@ -39,18 +43,22 @@ function hasEmptyObjectBranch(node) {
   }
   return false;
 }
-function check(path) {
+function check(path: string) {
   const text = readFileSync(path, "utf8");
   const source = snapshot
     .getDefaultProjectForFile(resolve(path))
-    .program.getSourceFile(resolve(path));
-  const blocks = [];
-  const literals = [];
-  const report = (position, message) => {
+    ?.program.getSourceFile(resolve(path));
+  if (!source) {
+    errors.push(`${path}: not part of the TypeScript project.`);
+    return;
+  }
+  const blocks: Range[] = [];
+  const literals: Range[] = [];
+  const report = (position: number, message: string) => {
     const { line } = source.getLineAndCharacterOfPosition(position);
     errors.push(`${path}:${line + 1}: ${message}`);
   };
-  function visit(node) {
+  function visit(node: ts.Node) {
     if (ts.isTypeLiteralNode(node) && !inNamedTypeDeclaration(node))
       report(
         node.getStart(source),
@@ -113,13 +121,17 @@ function check(path) {
     position += line.length;
   }
 }
-function scan(directory) {
+function scan(directory: string) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) {
       if (!["node_modules", "dist"].includes(entry.name)) scan(path);
       continue;
     }
+    if (javascriptFile.test(path))
+      errors.push(
+        `${path}: write TypeScript (.ts/.tsx) instead of JavaScript.`,
+      );
     if (sourceFile.test(path)) files.push(path);
   }
 }

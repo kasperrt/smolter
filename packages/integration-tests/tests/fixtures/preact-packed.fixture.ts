@@ -22,7 +22,9 @@ test("preact-packed consumer", async () => {
     return h("p", null, useLoaderData());
   }
   const router = await loadRouter([route], "https://example.com/");
-  const html = render(h(RouterProvider, { router }, h(Routes, {})));
+  const html = render(
+    h(RouterProvider, { router }, h(Routes, { fallback: null })),
+  );
   expect(html).toMatch(/packed package works/);
   const link = () =>
     render(h(RouterProvider, { router }, h(Link, { href: "/join" }, "Join")));
@@ -39,7 +41,7 @@ test("preact-packed consumer", async () => {
       { fallback: h("p", null, "Pending") },
       h(Await, {
         resolve: Promise.resolve(42),
-        children: (value) => h("output", null, value),
+        children: (value) => h("output", null, String(value)),
       }),
     ),
   );

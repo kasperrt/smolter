@@ -6,25 +6,26 @@
     "build": "vite build && tsc -p tsconfig.build.json",
     "dev": "pnpm build && pnpm --parallel --filter \"@smolter/example-*\" dev",
     "fix": "biome check --write .",
-    "lint": "biome check . && node scripts/conventions.mjs",
+    "lint": "biome check . && node scripts/conventions.ts",
     "typecheck": "pnpm build && tsc --noEmit",
     "test": "pnpm build && vitest run --project unit",
     "coverage": "pnpm build && vitest run --coverage",
     "smoke": "vitest run --config vitest.smoke.config.ts --project integration",
-    "size": "pnpm build && node apps/preact/benchmarks/size.mjs",
+    "size": "pnpm build && node apps/preact/benchmarks/size.ts",
     "check": "pnpm lint && pnpm build && tsc --noEmit && vitest run --project unit",
-    "version:patch": "node scripts/version.mjs patch",
-    "version:minor": "node scripts/version.mjs minor",
-    "version:release": "node scripts/version.mjs release",
+    "version:patch": "node scripts/version.ts patch",
+    "version:minor": "node scripts/version.ts minor",
+    "version:prerelease": "node scripts/version.ts prerelease",
+    "version:release": "node scripts/version.ts release",
     "pack:smoke": "vitest run --config vitest.smoke.config.ts packed.test.ts",
     "build:examples": "pnpm --filter \"@smolter/example-*\" build",
     "smoke:production": "vitest run --config vitest.smoke.config.ts production.test.ts",
-    "jsr:check": "node scripts/jsr.mjs",
+    "jsr:check": "node scripts/jsr.ts",
     "build:site": "pnpm size && pnpm --filter @smolter/example-preact build --mode hosted",
     "smoke:site": "vitest run --config vitest.smoke.config.ts site.test.ts",
-    "docs:badges": "node scripts/readme-badges.mjs",
-    "docs:reference": "pnpm build && node scripts/docs-reference.mjs",
-    "docs:check": "pnpm build && node scripts/docs-reference.mjs --check"
+    "docs:badges": "node scripts/readme-badges.ts",
+    "docs:reference": "pnpm build && node scripts/docs-reference.ts",
+    "docs:check": "pnpm build && node scripts/docs-reference.ts --check"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
@@ -34,7 +35,7 @@
     "vite": "catalog:",
     "vitest": "catalog:"
   },
-  "version": "0.6.0-alpha.1",
+  "version": "0.6.0-alpha.2",
   "description": "A tiny typed data router for React and Preact.",
   "sideEffects": false,
   "license": "MIT",
@@ -148,7 +149,7 @@
       "optional": true
     }
   },
-  "author": "Kasper Rynning-T\u00f8nnesen <kasperrt@users.noreply.github.com> (https://github.com/kasperrt)",
+  "author": "Kasper Rynning-Tønnesen <kasperrt@users.noreply.github.com> (https://github.com/kasperrt)",
   "homepage": "https://kasperrt.github.io/smolter/",
   "bugs": {
     "url": "https://github.com/kasperrt/smolter/issues"

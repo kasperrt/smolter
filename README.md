@@ -572,7 +572,7 @@ consume request bodies with Express body parsers before this handler.
 The adapter has no Express dependency and forwards failures to `next(error)`.
 Serve Vite's hashed `/assets/` files compressed (Brotli or gzip, with
 `Vary: Accept-Encoding`) and with `Cache-Control: public, max-age=31536000, immutable`;
-the adapter does not compress or cache static files. The SSR examples' `start.mjs`
+the adapter does not compress or cache static files. The SSR examples' `start.ts`
 precompresses them at startup.
 
 See the [Express guide](https://kasperrt.github.io/smolter/docs/express)

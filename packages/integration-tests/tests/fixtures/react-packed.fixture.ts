@@ -9,9 +9,13 @@ import {
   loadRouter,
   renderApplication,
 } from "@kasperrt/smolter/react/server";
-import { createElement } from "react";
+import { createElement, type ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 import { expect, test } from "vitest";
+
+interface LayoutProps {
+  children?: ReactNode;
+}
 
 test("react-packed consumer", async () => {
   const route = defineRoute("/", {
@@ -47,7 +51,7 @@ test("react-packed consumer", async () => {
   );
   const root = {
     default: Routes,
-    Layout: ({ children }) =>
+    Layout: ({ children }: LayoutProps) =>
       createElement(
         Document,
         null,

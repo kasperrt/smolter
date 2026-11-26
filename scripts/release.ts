@@ -1,35 +1,56 @@
-import { execFileSync } from "node:child_process";
+import { type ExecFileSyncOptions, execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
-import { withSizeBadges } from "./badges.mjs";
+import { withSizeBadges } from "./badges.ts";
+
+interface MergeRequest {
+  merged_at: string | null;
+  base: { ref: string; repo: { full_name: string } };
+  merge_commit_sha: string;
+}
+interface MainReference {
+  object: { sha: string };
+}
+interface Release {
+  tag_name: string;
+}
 
 const directory = new URL("../", import.meta.url);
-const manifest = JSON.parse(readFileSync(new URL("package.json", directory)));
-const jsr = JSON.parse(readFileSync(new URL("jsr.json", directory)));
+const manifest = JSON.parse(
+  readFileSync(new URL("package.json", directory), "utf8"),
+);
+const jsr = JSON.parse(readFileSync(new URL("jsr.json", directory), "utf8"));
 const repository = "kasperrt/smolter";
 const sha = process.env.RELEASE_SHA;
-const mode = process.argv[2];
+const mode = process.argv[2] ?? "";
 const prerelease = manifest.version.includes("-");
 const beta = manifest.version.includes("-beta.");
 
-function command(binary, args, options = {}) {
+function command(
+  binary: string,
+  args: string[],
+  options: ExecFileSyncOptions = {},
+) {
   return execFileSync(binary, args, { stdio: "inherit", ...options });
 }
 
-function github(path) {
+function github<T>(path: string): T {
   return JSON.parse(
-    command("gh", ["api", path], { stdio: "pipe", encoding: "utf8" }),
+    command("gh", ["api", path], {
+      stdio: "pipe",
+      encoding: "utf8",
+    }).toString(),
   );
 }
 
-function fail(message) {
+function fail(message: string): never {
   console.error(message);
   process.exit(1);
 }
 
-async function published(url) {
+async function published(url: string) {
   const response = await fetch(url, { signal: AbortSignal.timeout(15_000) });
   if (response.status === 404) return false;
   if (!response.ok) fail(`Registry check failed: ${response.status} ${url}`);
@@ -41,8 +62,10 @@ if (manifest.version !== jsr.version) fail("npm and JSR versions must match.");
 if (mode === "verify") {
   if (process.env.GITHUB_ACTIONS !== "true" || !sha)
     fail("Release requires GitHub Actions.");
-  const pulls = beta ? [] : github(`repos/${repository}/commits/${sha}/pulls`);
-  const matchesMerge = (pr) =>
+  const pulls = beta
+    ? []
+    : github<MergeRequest[]>(`repos/${repository}/commits/${sha}/pulls`);
+  const matchesMerge = (pr: MergeRequest) =>
     pr.merged_at &&
     pr.base.ref === "main" &&
     pr.base.repo.full_name === repository &&
@@ -51,7 +74,7 @@ if (mode === "verify") {
   const merged =
     beta ||
     pulls.some(matchesMerge) ||
-    github(
+    github<MergeRequest[]>(
       `repos/${repository}/pulls?state=closed&base=main&sort=updated&direction=desc&per_page=100`,
     ).some(matchesMerge);
   if (!merged) {
@@ -68,7 +91,7 @@ if (mode === "verify") {
     if (npmRelease && jsrReleased && npmRelease.gitHead !== sha)
       fail("After 0.0.1, release commits must come from a merged PR to main.");
   }
-  const main = github(`repos/${repository}/git/ref/heads/main`);
+  const main = github<MainReference>(`repos/${repository}/git/ref/heads/main`);
   if (main.object.sha !== sha)
     fail("A newer main commit exists; release that commit instead.");
 }
@@ -85,7 +108,7 @@ if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
     withSizeBadges(readFileSync(readme, "utf8"), manifest.version),
   );
   if (mode !== "publish-npm" && !(await published(jsrUrl)))
-    command("node", ["scripts/jsr.mjs", "--publish"]);
+    command("node", ["scripts/jsr.ts", "--publish"]);
   // Explicit combined/JSR publishing still verifies JSR; npm is independent.
   for (
     let attempt = 0;
@@ -146,8 +169,11 @@ if (["publish", "publish-jsr", "publish-npm"].includes(mode)) {
 }
 
 if (mode === "tag") {
+  if (!sha) fail("Missing release SHA.");
   const tag = `v${manifest.version}`;
-  const releases = github(`repos/${repository}/releases?per_page=100`);
+  const releases = github<Release[]>(
+    `repos/${repository}/releases?per_page=100`,
+  );
   if (!releases.some((release) => release.tag_name === tag)) {
     const changelog = readFileSync("CHANGELOG.md", "utf8");
     const notes = changelog

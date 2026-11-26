@@ -5,22 +5,31 @@ import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 import { build } from "vite";
 import { routerPlugin } from "../dist/vite/index.js";
 
+interface PrefetchRow {
+  framework: "react" | "preact";
+  mode: string;
+  data: boolean;
+  raw: number;
+  gzip: number;
+  brotli: number;
+}
+
 // A production Link + data-router fixture, with framework runtimes external.
-// These application fixtures are distinct from the named-export tables in size.mjs.
+// These application fixtures are distinct from the named-export tables in size.ts.
 const root = await mkdtemp(join(tmpdir(), "smolter-prefetch-size-"));
 await mkdir(join(root, "src"));
 await writeFile(
   join(root, "tsconfig.json"),
   '{"compilerOptions":{"strict":true}}',
 );
-const rows = [];
-for (const framework of ["react", "preact"]) {
+const rows: PrefetchRow[] = [];
+for (const framework of ["react", "preact"] as const) {
   for (const [mode, value] of [
     ["none", '"none"'],
     ["intent", '"intent"'],
     ["viewport", '"viewport"'],
     ["union", 'globalThis.mode as "intent" | "viewport"'],
-  ]) {
+  ] as const) {
     for (const data of [false, true]) {
       if (mode === "none" && data) continue;
       await writeFile(
@@ -47,6 +56,8 @@ for (const framework of ["react", "preact"]) {
         },
       });
       const result = Array.isArray(built) ? built[0] : built;
+      if (!("output" in result))
+        throw new Error("Expected a single build output");
       const code = result.output
         .filter((item) => item.type === "chunk")
         .map((item) => item.code)

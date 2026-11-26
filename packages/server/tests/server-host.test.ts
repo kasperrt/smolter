@@ -31,10 +31,10 @@ it.each(["react", "preact"])(
     await mkdir(join(root, "server"));
     await mkdir(join(root, "dist/server"), { recursive: true });
     const source = await readFile(
-      `apps/${framework}-ssr/server/start.mjs`,
+      `apps/${framework}-ssr/server/start.ts`,
       "utf8",
     );
-    const entry = join(root, "server/start.mjs");
+    const entry = join(root, "server/start.ts");
     await Promise.all([
       writeFile(join(root, "package.json"), '{"type":"module"}'),
       writeFile(join(root, "dist/index.html"), "Host fixture"),

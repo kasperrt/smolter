@@ -58,10 +58,10 @@ it.each(["react", "preact"])(
       join(root, "dist/assets/hidden-link.js"),
     );
     const source = await readFile(
-      `apps/${framework}-ssr/server/start.mjs`,
+      `apps/${framework}-ssr/server/start.ts`,
       "utf8",
     );
-    const entry = join(root, "server/start.mjs");
+    const entry = join(root, "server/start.ts");
     await writeFile(
       entry,
       `${source

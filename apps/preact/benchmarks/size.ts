@@ -1,26 +1,25 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { commonExports, measure, measureAdapters } from "./measure.mjs";
+import {
+  commonExports,
+  measure,
+  measureAdapters,
+  readComparison,
+} from "./measure.ts";
+
+type SizeRow = [string, number];
 
 const path = new URL("../../../packages/ui/src/size.json", import.meta.url);
-await import("./size-combinations.mjs");
+await import("./size-combinations.ts");
 const sizes = await measureAdapters();
 const json = `${JSON.stringify(sizes, null, 2)}\n`;
 
 if (readFileSync(path, "utf8") !== json) writeFileSync(path, json);
 
 if (!process.argv.includes("--write-only")) {
-  const references = JSON.parse(
-    readFileSync(
-      new URL(
-        "../../../packages/ui/src/comparison-sizes.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ).packages;
+  const references = readComparison().packages;
   const sharedExports = commonExports;
   const shared = [sizes.reactCommon, sizes.preactCommon];
-  const rows = [
+  const rows: SizeRow[] = [
     [
       "React Router 8.5.1: declarative routing subset",
       sizes.reactRouterRouting,
@@ -58,10 +57,9 @@ if (!process.argv.includes("--write-only")) {
       sizes.wouterRouting,
     ],
     ["wouter-preact 3.13.0: same routing subset", sizes.wouterPreactRouting],
-    ...references.map(({ name, version, bytes }) => [
-      `${name}@${version}`,
-      bytes,
-    ]),
+    ...references.map(
+      ({ name, version, bytes }): SizeRow => [`${name}@${version}`, bytes],
+    ),
   ];
   const table = [
     "<!-- size-comparison:start -->",

@@ -27,7 +27,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm build
       - run: pnpm exec tsc --noEmit
-      - run: node scripts/docs-reference.mjs --check
+      - run: node scripts/docs-reference.ts --check
       - run: pnpm exec vitest run --project unit
       - run: pnpm pack:smoke
       - run: pnpm build:examples

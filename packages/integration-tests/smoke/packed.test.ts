@@ -92,9 +92,9 @@ test.for(cases)(
       `${framework} installs must not pull in ${other}`,
     ).toBe(false);
     writeFileSync(
-      join(cwd, "consumer.test.js"),
+      join(cwd, "consumer.test.ts"),
       readFileSync(
-        `packages/integration-tests/tests/fixtures/${framework}-packed.test.js`,
+        `packages/integration-tests/tests/fixtures/${framework}-packed.fixture.ts`,
         "utf8",
       ),
     );
@@ -122,9 +122,9 @@ test.for(cases)(
       { cwd, stdio: "inherit" },
     );
     writeFileSync(
-      join(cwd, "prefetch.test.js"),
+      join(cwd, "prefetch.test.ts"),
       readFileSync(
-        "packages/integration-tests/tests/fixtures/prefetch-packed.test.js",
+        "packages/integration-tests/tests/fixtures/prefetch-packed.fixture.ts",
         "utf8",
       ),
     );
