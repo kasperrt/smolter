@@ -48,6 +48,7 @@ export function serverRendering(): Plugin {
             // nosemgrep: javascript.express.security.audit.res-render-injection.res-render-injection
             const html = await entry.render(incoming, template);
             response.setHeader("Content-Type", "text/html; charset=utf-8");
+            response.setHeader("Cache-Control", "private, no-store");
             response.end(html);
           };
           const { error } = await safeWrapAsync(render);

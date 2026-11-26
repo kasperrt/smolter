@@ -19,7 +19,10 @@ const application = createRequestHandler({
   build: {
     default: async (request) =>
       new Response(await render(request, template), {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "private, no-store",
+        },
       }),
     handleDataRequest: data,
   },

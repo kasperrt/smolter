@@ -4,6 +4,8 @@
 
 ### Security
 
+- The React and Preact SSR examples send `Cache-Control: private, no-store` on session-specific HTML in development and production.
+- The Node adapter rejects text-decoded upload streams before buffering and closes connections on body-limit rejections. Middleware must preserve raw request bytes for byte-limit enforcement.
 - Reject missing, malformed and path- or userinfo-bearing `Host` headers and non-origin-form request targets with `400` before dispatch. `GET`/`HEAD` bodies are no longer buffered.
 - `data()` wrappers carry a non-enumerable symbol marker, so loader JSON containing `"__routeData": true` can no longer set response headers or status.
 - `requestPolicy` rejects any `Sec-Fetch-Site` other than `same-origin`/`none` and checks the `Referer` origin when `Origin` is absent.

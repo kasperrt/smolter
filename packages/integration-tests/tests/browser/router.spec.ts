@@ -218,6 +218,9 @@ for (const example of examples) {
           dataRequests.push(request.url());
       });
       const response = await page.goto(`${origin}/examples/counter`);
+      expect(await response!.headerValue("cache-control")).toBe(
+        "private, no-store",
+      );
       expect(await response!.text()).toContain('data-testid="count">0');
       await expect(page.getByTestId("runs")).toHaveText("1");
       await page

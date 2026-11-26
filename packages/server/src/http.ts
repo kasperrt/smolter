@@ -70,6 +70,7 @@ export async function webRequest(
     if (size > maxBodySize)
       throw new Response("Request body too large", {
         status: 413,
+        headers: { Connection: "close" },
       });
   };
   checkSize(Number(headers.get("Content-Length")));
@@ -79,6 +80,7 @@ export async function webRequest(
   const hasBody = method !== "GET" && method !== "HEAD";
   const chunks: Uint8Array[] = [];
   if (hasBody) {
+    if (incoming.readableEncoding) throw badRequest();
     let size = 0;
     // Keep the socket available long enough to send 413 after a chunk crosses the limit.
     for await (const chunk of incoming.iterator({ destroyOnReturn: false })) {

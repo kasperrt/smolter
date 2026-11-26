@@ -11,12 +11,12 @@
     },
     {
       "title": "Middleware order",
-      "body": "Mount Prometheus, tracing, authentication, body size limits and static serving first. Do not consume the request stream with a body parser before this middleware. Genuine render and stream failures are passed to next(error). Clean client disconnects cancel the response without calling error middleware. Express trust proxy remains your application’s responsibility. The adapter does not start a server, install Prometheus, or depend on Express.",
+      "body": "Mount Prometheus, tracing, authentication, body size limits and static serving first. Leave request bodies as raw bytes. The adapter returns 400 if earlier middleware calls setEncoding() on an upload. Mount body parsers on separate routes. Genuine render and stream failures are passed to next(error). Clean client disconnects cancel the response without calling error middleware. Express trust proxy remains your application’s responsibility. The adapter does not start a server, install Prometheus, or depend on Express.",
       "code": ""
     },
     {
       "title": "Returns",
-      "body": "Route data uses the reserved .__smolter suffix. /users.__smolter?page=2 dispatches /users?page=2; /users/.__smolter preserves the trailing slash. Document requests call build.default. Explicit dataEndpoint retains legacy ?url= transport. Invalid targets or malformed Host headers return 400. Data responses use private, no-store. Apply authorization inside loaders/actions or match both the route path and its .__smolter suffix (Express app.use(\"/admin\", ...) does not match /admin.__smolter). Reserve the suffix in Express/static middleware. Client disconnection aborts the Request; responses stream with backpressure and preserve existing Set-Cookie headers.",
+      "body": "Route data uses the reserved .__smolter suffix. /users.__smolter?page=2 dispatches /users?page=2; /users/.__smolter preserves the trailing slash. Document requests call build.default. Explicit dataEndpoint retains legacy ?url= transport. Invalid targets or malformed Host headers return 400. Data responses use private, no-store. When build.default renders personalized HTML itself, set Cache-Control: private, no-store on that Response. Apply authorization inside loaders/actions or match both the route path and its .__smolter suffix (Express app.use(\"/admin\", ...) does not match /admin.__smolter). Reserve the suffix in Express/static middleware. Client disconnection aborts the Request; responses stream with backpressure and preserve existing Set-Cookie headers.",
       "code": ""
     },
     {

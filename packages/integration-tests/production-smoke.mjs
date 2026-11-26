@@ -36,6 +36,10 @@ async function verify() {
       if (message.type() === "error") errors.push(message.text());
     });
     const response = await page.goto(`${origin}/examples/counter`);
+    assert.equal(
+      await response.headerValue("cache-control"),
+      "private, no-store",
+    );
     assert.match(await response.text(), /data-testid="count">0/);
     await page.getByRole("button", { name: "Add one +", exact: true }).click();
     await page.waitForFunction(
@@ -69,6 +73,10 @@ async function verify() {
         hydrationRequests.push(request.url());
     });
     const failed = await page.goto(`${origin}/tasks/missing`);
+    assert.equal(
+      await failed.headerValue("cache-control"),
+      "private, no-store",
+    );
     assert.match(await failed.text(), /Task not found/);
     await page.waitForFunction(() => !document.getElementById("root")?.inert);
     await page
