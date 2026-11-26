@@ -3,6 +3,7 @@ import { expect, it } from "vitest";
 import {
   readSubmission,
   submissionBody,
+  submitForm,
   submitValue,
 } from "../src/submission.ts";
 
@@ -90,5 +91,36 @@ it("honors explicit fetcher action targets and JSON encoding without replay", as
   );
   expect(calls).toEqual([{ method: "PATCH", value: { name: "value" } }]);
   expect(fetcher.getSnapshot().data).toBe("saved");
+  router.dispose();
+});
+
+it("prevents default and throws when form action or formaction uses an unsafe protocol", () => {
+  const router = createDataRouter([], { url: "https://example.com/form" });
+  for (const unsafe of [
+    "javascript:alert(1)",
+    "vbscript:msgbox(1)",
+    "data:text/html,<script>alert(1)</script>",
+  ]) {
+    let prevented = false;
+    const event = {
+      currentTarget: {} as HTMLFormElement,
+      defaultPrevented: false,
+      preventDefault() {
+        prevented = true;
+      },
+    };
+    expect(() =>
+      submitForm(router, event, null, { action: unsafe, reloadDocument: true }),
+    ).toThrow("JavaScript navigation");
+    expect(prevented).toBe(true);
+    prevented = false;
+    const submitter = {
+      getAttribute: (name: string) => (name === "formaction" ? unsafe : null),
+    } as unknown as HTMLElement;
+    expect(() => submitForm(router, event, submitter, {})).toThrow(
+      "JavaScript navigation",
+    );
+    expect(prevented).toBe(true);
+  }
   router.dispose();
 });

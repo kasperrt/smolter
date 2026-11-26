@@ -1,5 +1,6 @@
 import { safeWrapAsync } from "@smolter/core";
 import { serializeData } from "@smolter/core/serialize";
+import { escapeHydrationObject } from "./deferred-hydration.ts";
 
 // Deferred failures must remain rejected promises after hydration so Await's
 // errorElement has the same behavior on the server and in the browser.
@@ -23,12 +24,12 @@ export async function resolveHydration(value: unknown): Promise<unknown> {
     Object.getPrototypeOf(value) === Object.prototype
   ) {
     const entries = await Promise.all(
-      Object.entries(value).map(async ([key, field]) => [
-        key,
-        await resolveHydration(field),
-      ]),
+      Object.entries(value).map(
+        async ([key, field]) =>
+          [key, await resolveHydration(field)] as [string, unknown],
+      ),
     );
-    return Object.fromEntries(entries);
+    return escapeHydrationObject(entries);
   }
   return value;
 }

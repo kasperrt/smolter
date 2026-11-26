@@ -1,5 +1,5 @@
 import { readFile, realpath } from "node:fs/promises";
-import { relative, resolve } from "node:path";
+import { isAbsolute, relative, resolve } from "node:path";
 import { flatRoutes } from "@smolter/files";
 import {
   isFileServingAllowed,
@@ -74,6 +74,7 @@ export function routerPlugin({
         const path = relative(directory, canonical);
         if (
           path.startsWith("..") ||
+          isAbsolute(path) ||
           resolve(directory, path) !== canonical ||
           (devServer && !isFileServingAllowed(canonical, devServer))
         )

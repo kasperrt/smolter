@@ -90,7 +90,14 @@ export function deploymentCheck(options: DeploymentOptions) {
   async function reload(target: URL, current: () => boolean = () => true) {
     // Claim recovery only after checking ownership and active submissions.
     const { data } = await safeWrapAsync(() => {
-      if (stopped || !current() || sessionStorage.getItem(key)) return false;
+      if (
+        stopped ||
+        !current() ||
+        target.origin !== location.origin ||
+        (target.protocol !== "http:" && target.protocol !== "https:") ||
+        sessionStorage.getItem(key)
+      )
+        return false;
       navigationTarget(target);
       sessionStorage.setItem(key, "1");
       if (options.reload) options.reload(target);

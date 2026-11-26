@@ -1,6 +1,15 @@
 import { safeWrapAsync } from "@smolter/core";
 import { serializeData } from "@smolter/core/serialize";
 
+const hydrationSentinel = /^__smolter(?:Pending|Rejected|Undefined|Literal)$/;
+
+/** Escape plain user objects whose single key matches an internal hydration sentinel. */
+export function escapeHydrationObject(entries: [string, unknown][]): unknown {
+  if (entries.length === 1 && hydrationSentinel.test(entries[0][0]))
+    return { __smolterLiteral: entries[0] };
+  return Object.fromEntries(entries);
+}
+
 /** Encode deferred values without delaying the initial document snapshot. */
 export function deferredHydration(value: unknown, nonce?: string) {
   const promises = new Map<Promise<unknown>, number>();
@@ -48,7 +57,7 @@ export function deferredHydration(value: unknown, nonce?: string) {
       typeof value === "object" &&
       Object.getPrototypeOf(value) === Object.prototype
     )
-      return Object.fromEntries(
+      return escapeHydrationObject(
         Object.entries(value).map(([key, field]) => [key, encode(field)]),
       );
     return value;

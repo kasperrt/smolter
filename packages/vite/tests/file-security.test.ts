@@ -2,9 +2,10 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileRouter } from "@smolter/vite";
-import { createServer } from "vite";
+import { build, createServer } from "vite";
 import { expect, it } from "vitest";
 import { viteFixture } from "../../integration-tests/tests/helpers/vite.ts";
+import { applicationPlugins } from "../src/application/vite.ts";
 
 it("retains Vite's secret-file and outside-root protections with Smolter transport installed", async (context) => {
   const secret = "SYNTHETIC_SECRET_DO_NOT_SERVE";
@@ -91,4 +92,36 @@ it("enforces deny rules and canonical containment when symlink preservation is e
     expect(response.status).not.toBe(200);
     expect(await response.text()).not.toContain(secret);
   }
+});
+
+it("rejects symlinked routes escaping the routes directory during lazy client route builds", async (context) => {
+  const root = await mkdtemp(join(tmpdir(), "smolter-lazy-symlink-"));
+  const outside = await mkdtemp(join(tmpdir(), "smolter-lazy-outside-"));
+  context.onTestFinished(() => rm(root, { recursive: true, force: true }));
+  context.onTestFinished(() => rm(outside, { recursive: true, force: true }));
+  await mkdir(join(root, "src/routes/escaped"), { recursive: true });
+  await writeFile(
+    join(outside, "route.ts"),
+    'export default function Secret() { return "SYNTHETIC_SECRET"; }',
+  );
+  await symlink(
+    join(outside, "route.ts"),
+    join(root, "src/routes/escaped/route.ts"),
+  );
+  await writeFile(
+    join(root, "entry.ts"),
+    'import routes from "virtual:smolter/routes"; console.log(routes);',
+  );
+  await expect(
+    build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: applicationPlugins({ framework: "preact", ssr: false }),
+      build: {
+        write: false,
+        rollupOptions: { input: join(root, "entry.ts") },
+      },
+    }),
+  ).rejects.toThrow("Forbidden client route module");
 });

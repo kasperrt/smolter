@@ -6,6 +6,33 @@ import type { ServerIncomingMessage } from "./handler.ts";
 import { cacheHeader } from "./private-response.ts";
 import { requestPolicy } from "./request-policy.ts";
 
+const noStoreDirective = /(?:^|,)\s*no-store(?:\s*,|$)/i;
+
+function badRequest(): Response {
+  return new Response("Bad request", {
+    status: 400,
+    headers: { Connection: "close" },
+  });
+}
+
+function requestOrigin(incoming: ServerIncomingMessage): string {
+  const host = incoming.headers.host;
+  const protocol = incoming.protocol ?? "http";
+  const base = `${protocol}://${host}`;
+  if (!host || /[\s/?#@\\]/.test(host) || !URL.canParse(base))
+    throw badRequest();
+  const parsed = new URL(base);
+  if (
+    parsed.pathname !== "/" ||
+    parsed.search ||
+    parsed.hash ||
+    parsed.username ||
+    parsed.password
+  )
+    throw badRequest();
+  return parsed.origin;
+}
+
 /** Convert a Node request with cancellation and an optional route target. Enforce mutation policy and a 1 MiB body limit; rejected requests throw a Response. */
 export async function webRequest(
   incoming: ServerIncomingMessage,
@@ -15,19 +42,23 @@ export async function webRequest(
 ): Promise<Request> {
   if (!Number.isSafeInteger(maxBodySize) || maxBodySize < 0)
     throw new RangeError("maxBodySize must be a nonnegative safe integer");
-  const origin = `${incoming.protocol ?? "http"}://${incoming.headers.host}`;
+  const origin = requestOrigin(incoming);
   const headers = new Headers();
   for (const [name, value] of Object.entries(incoming.headers)) {
     if (value)
       headers.set(name, Array.isArray(value) ? value.join(", ") : value);
   }
+  const rawTarget = (target ?? incoming.originalUrl ?? incoming.url) || "/";
   // Origin-form paths can start with //; never interpret them as a URL authority.
-  const url = new URL(
-    `.${target ?? incoming.originalUrl ?? incoming.url ?? "/"}`,
-    `${origin}/`,
-  );
+  if (
+    !rawTarget.startsWith("/") ||
+    !URL.canParse(`.${rawTarget}`, `${origin}/`)
+  )
+    throw badRequest();
+  const url = new URL(`.${rawTarget}`, `${origin}/`);
+  const method = incoming.method ?? "GET";
   const denied = requestPolicy({
-    method: incoming.method ?? "GET",
+    method,
     url: url.href,
     headers,
   });
@@ -45,22 +76,24 @@ export async function webRequest(
   const controller = new AbortController();
   outgoing.once("close", () => controller.abort());
   if (outgoing.destroyed || outgoing.writableEnded) controller.abort();
+  const hasBody = method !== "GET" && method !== "HEAD";
   const chunks: Uint8Array[] = [];
-  let size = 0;
-  // Keep the socket available long enough to send 413 after a chunk crosses the limit.
-  for await (const chunk of incoming.iterator({ destroyOnReturn: false })) {
-    size += chunk.byteLength;
-    checkSize(size);
-    chunks.push(chunk);
+  if (hasBody) {
+    let size = 0;
+    // Keep the socket available long enough to send 413 after a chunk crosses the limit.
+    for await (const chunk of incoming.iterator({ destroyOnReturn: false })) {
+      size += chunk.byteLength;
+      checkSize(size);
+      chunks.push(chunk);
+    }
   }
   return new Request(url, {
     method: incoming.method,
     headers,
     signal: controller.signal,
-    ...(incoming.method !== "GET" &&
-      incoming.method !== "HEAD" && {
-        body: new Uint8Array(Buffer.concat(chunks)),
-      }),
+    ...(hasBody && {
+      body: new Uint8Array(Buffer.concat(chunks)),
+    }),
   });
 }
 
@@ -75,8 +108,8 @@ export async function send(response: Response, outgoing: StreamingResponse) {
     return;
   }
   const privateCache =
-    outgoing.getHeader("Cache-Control") === "private, no-store" ||
-    response.headers.get("Cache-Control") === "private, no-store";
+    noStoreDirective.test(String(outgoing.getHeader("Cache-Control") ?? "")) ||
+    noStoreDirective.test(response.headers.get("Cache-Control") ?? "");
   outgoing.statusCode = response.status;
   response.headers.forEach((value, name) => {
     if (name !== "set-cookie") outgoing.setHeader(name, value);
@@ -87,7 +120,15 @@ export async function send(response: Response, outgoing: StreamingResponse) {
     }
   }
   const cookies = response.headers.getSetCookie();
-  if (cookies.length) outgoing.setHeader("set-cookie", cookies);
+  if (cookies.length) {
+    const existing = outgoing.getHeader("set-cookie");
+    const prior = Array.isArray(existing)
+      ? existing.map(String)
+      : existing !== undefined
+        ? [String(existing)]
+        : [];
+    outgoing.setHeader("set-cookie", [...prior, ...cookies]);
+  }
   if (!response.body) {
     outgoing.end();
     return;

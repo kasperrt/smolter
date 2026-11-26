@@ -1,5 +1,5 @@
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { readFile, realpath } from "node:fs/promises";
+import { isAbsolute, relative, resolve } from "node:path";
 import { flatRoutes } from "@smolter/files";
 import { type Plugin, transformWithOxc } from "vite";
 
@@ -67,10 +67,19 @@ export function lazyFiles(
           "The .__smolter suffix is reserved for data transport.",
         );
       modules.clear();
+      const directory = await realpath(root);
       const definitions: string[] = [];
       for (const route of routes) {
         this.addWatchFile(route.file);
-        const source = await readFile(route.file, "utf8");
+        const canonical = await realpath(route.file);
+        const path = relative(directory, canonical);
+        if (
+          path.startsWith("..") ||
+          isAbsolute(path) ||
+          resolve(directory, path) !== canonical
+        )
+          return this.error("Forbidden client route module");
+        const source = await readFile(canonical, "utf8");
         const transformed = await transformWithOxc(source, route.file);
         const ast = this.parse(transformed.code);
         const fields: Record<string, string | boolean> = {};

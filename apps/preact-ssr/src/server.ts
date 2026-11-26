@@ -12,10 +12,11 @@ export async function render(request: Request, template: string) {
   const html = renderToString(app(router));
   const data = serialize(router.getSnapshot());
   return template
-    .replace("<!--app-->", html)
+    .replace("<!--app-->", () => html)
     .replace(
       "<!--data-->",
-      `<script id="smolter-data" type="application/json">${data}</script>`,
+      () =>
+        `<script id="smolter-data" type="application/json">${data}</script>`,
     );
 }
 

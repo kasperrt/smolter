@@ -25,14 +25,32 @@ export function readHydration(json: string, timeout = 8_000) {
   let live = false;
   const queue = ((window as DeferredWindow).__smolterDeferred ??= []);
   function revive(_key: string, value: unknown): unknown {
-    if (!value || typeof value !== "object") return value;
-    if ("__smolterUndefined" in value) return undefined;
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      return value;
+    const keys = Object.keys(value);
+    if (keys.length !== 1) return value;
+    const tag = keys[0];
+    const record = value as Record<string, unknown>;
+    if (tag === "__smolterLiteral" && Array.isArray(record.__smolterLiteral)) {
+      const [field, inner] = record.__smolterLiteral;
+      if (typeof field === "string")
+        return Object.defineProperty({}, field, {
+          value: inner,
+          enumerable: true,
+          writable: true,
+          configurable: true,
+        });
+    }
+    if (tag === "__smolterUndefined" && record.__smolterUndefined === true)
+      return undefined;
     let promise: Promise<unknown>;
     if (
-      "__smolterPending" in value &&
-      typeof value.__smolterPending === "number"
+      tag === "__smolterPending" &&
+      typeof record.__smolterPending === "number" &&
+      Number.isInteger(record.__smolterPending) &&
+      record.__smolterPending >= 0
     ) {
-      const id = value.__smolterPending;
+      const id = record.__smolterPending;
       const existing = pending.get(id);
       if (existing) return existing.promise;
       let resolve!: PendingValue["resolve"];
@@ -42,14 +60,25 @@ export function readHydration(json: string, timeout = 8_000) {
         reject = fail;
       });
       pending.set(id, { promise, resolve, reject });
-    } else if ("__smolterRejected" in value) {
-      const failure = value.__smolterRejected as { message: string };
-      promise = Promise.reject(
-        Object.defineProperties(
-          new Error(failure.message),
-          Object.getOwnPropertyDescriptors(failure),
-        ),
-      );
+    } else if (
+      tag === "__smolterRejected" &&
+      record.__smolterRejected &&
+      typeof record.__smolterRejected === "object" &&
+      typeof (record.__smolterRejected as { message?: unknown }).message ===
+        "string"
+    ) {
+      const failure = record.__smolterRejected as Record<string, unknown>;
+      const error = new Error(failure.message as string);
+      if (typeof failure.name === "string") error.name = failure.name;
+      if (typeof failure.status === "number")
+        Object.assign(error, {
+          status: failure.status,
+          ...(typeof failure.statusText === "string" && {
+            statusText: failure.statusText,
+          }),
+          ...(Object.hasOwn(failure, "data") && { data: failure.data }),
+        });
+      promise = Promise.reject(error);
     } else return value;
     void safeWrapAsync(() => promise);
     return promise;

@@ -236,7 +236,7 @@ function useDefaultAction() {
     .replace(/:([^/]+)/g, (_match, name: string) =>
       encodeURIComponent(scope.snapshot.params[name] ?? ""),
     )
-    .replace("*", scope.snapshot.params["*"] ?? "");
+    .replace("*", () => scope.snapshot.params["*"] ?? "");
   url.searchParams.delete("index");
   if (node.index) url.searchParams.append("index", "");
   return url.href;

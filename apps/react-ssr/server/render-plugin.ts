@@ -24,8 +24,21 @@ export function serverRendering(): Plugin {
               request.url!,
               await readFile(resolve(server.config.root, "index.html"), "utf8"),
             );
+            const host = request.headers.host;
+            const rawTarget = request.url ?? "/";
+            if (
+              !host ||
+              /[\s/?#@\\]/.test(host) ||
+              !rawTarget.startsWith("/") ||
+              !URL.canParse(`.${rawTarget}`, `http://${host}/`)
+            ) {
+              response
+                .writeHead(400, { Connection: "close" })
+                .end("Bad request");
+              return;
+            }
             const incoming = new Request(
-              `http://${request.headers.host}${request.url}`,
+              new URL(`.${rawTarget}`, `http://${host}/`),
               {
                 headers: { cookie: request.headers.cookie ?? "" },
                 signal: controller.signal,

@@ -10,6 +10,9 @@ for (const framework of ["react", "preact"] as const) {
     "config.server.ts",
     "lib/auth.server.js",
     "src/auth.server.ts",
+    "lib/auth.SERVER.ts",
+    "lib/auth.server/index.ts",
+    "config.server.json",
     "lib/auth.server.ts?raw",
     "lib/auth.server.ts?url",
     "lib/auth.server.ts?raw&inline",
@@ -20,7 +23,12 @@ for (const framework of ["react", "preact"] as const) {
       context.onTestFinished(() => rm(root, { recursive: true, force: true }));
       const file = join(root, specifier.split("?")[0]);
       await mkdir(dirname(file), { recursive: true });
-      await writeFile(file, 'export default "SYNTHETIC_SERVER_CREDENTIAL";');
+      await writeFile(
+        file,
+        file.endsWith(".json")
+          ? '{"secret":"SYNTHETIC_SERVER_CREDENTIAL"}'
+          : 'export default "SYNTHETIC_SERVER_CREDENTIAL";',
+      );
       await writeFile(
         join(root, "entry.ts"),
         `import secret from ${JSON.stringify(`./${specifier}`)}; console.log(secret);`,

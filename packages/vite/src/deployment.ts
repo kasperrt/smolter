@@ -116,8 +116,7 @@ export function deploymentPlugin(
     },
     renderChunk(code) {
       if (!enabled || !code.includes(placeholder)) return;
-      return code.replace(
-        new RegExp(`["']${placeholder}["']`, "g"),
+      return code.replace(new RegExp(`["']${placeholder}["']`, "g"), () =>
         JSON.stringify(metadata),
       );
     },

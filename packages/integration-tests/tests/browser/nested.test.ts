@@ -427,4 +427,28 @@ for (const { name, api, h, mount, state } of frameworks) {
       .poll(() => container.querySelector("#context")?.textContent)
       .toBe("shared");
   });
+  it(`${name} preserves literal $ sequences in nested splat form actions`, async (context) => {
+    function Splat() {
+      return h(api.Form, { id: "splat-form", method: "post" });
+    }
+    const router = api.createNestedRouter(
+      [{ id: "splat", path: "/files/*", default: Splat }],
+      { url: "https://example.test/files/a/$'/b" },
+    );
+    await router.navigate("/files/a/$'/b");
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = mount(container);
+    context.onTestFinished(() => {
+      root.unmount();
+      router.dispose();
+      container.remove();
+    });
+    root.render(h(api.RouterProvider, { router }, h(api.NestedRoutes)));
+    await expect
+      .poll(
+        () => container.querySelector<HTMLFormElement>("#splat-form")?.action,
+      )
+      .toBe("https://example.test/files/a/$'/b");
+  });
 }

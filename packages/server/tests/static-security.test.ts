@@ -136,5 +136,8 @@ it.each(["react", "preact"])(
       if (new URL(path, "http://local").pathname.startsWith("/assets/"))
         expect.soft(result.status, path).not.toBe(200);
     }
+    expect((await request("//attacker.example/assets/app.js")).status).toBe(
+      400,
+    );
   },
 );

@@ -25,10 +25,21 @@ const application = createRequestHandler({
   },
 });
 
+const MAX_SESSIONS = 256;
+const issuedSessions = new Set();
+
 createServer(async (incoming, outgoing) => {
   const handle = async () => {
-    const origin = `http://${incoming.headers.host}`;
-    const url = new URL(incoming.url, origin);
+    const rawTarget = incoming.url ?? "/";
+    if (
+      !rawTarget.startsWith("/") ||
+      rawTarget.startsWith("//") ||
+      !URL.canParse(`http://local${rawTarget}`)
+    ) {
+      outgoing.writeHead(400, { Connection: "close" }).end("Bad request");
+      return;
+    }
+    const url = new URL(`http://local${rawTarget}`);
     if (url.pathname.startsWith("/assets/")) {
       const asset = await safeWrapAsync(async () => {
         const path = decodeURIComponent(url.pathname);
@@ -59,9 +70,19 @@ createServer(async (incoming, outgoing) => {
       outgoing.end(asset.data.body);
       return;
     }
-    if (!/(?:^|; )smolter-session=/.test(incoming.headers.cookie ?? "")) {
+    const cookieHeader = incoming.headers.cookie ?? "";
+    const existing = cookieHeader.match(
+      /(?:^|; )smolter-session=([\w-]+)/,
+    )?.[1];
+    if (!existing || !issuedSessions.has(existing)) {
       const id = randomUUID();
-      incoming.headers.cookie = `smolter-session=${id}`;
+      if (issuedSessions.size >= MAX_SESSIONS)
+        issuedSessions.delete(issuedSessions.values().next().value);
+      issuedSessions.add(id);
+      const others = cookieHeader
+        .split(/;\s*/)
+        .filter((part) => part && !part.startsWith("smolter-session="));
+      incoming.headers.cookie = [...others, `smolter-session=${id}`].join("; ");
       outgoing.setHeader(
         "Set-Cookie",
         `smolter-session=${id}; HttpOnly; SameSite=Lax; Path=/`,

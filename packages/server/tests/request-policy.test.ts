@@ -50,6 +50,40 @@ for (const dispatch of [
     }
     expect(action).not.toHaveBeenCalled();
   });
+  it("rejects same-site fetch metadata and foreign or malformed Referer without Origin", async () => {
+    const action = vi.fn(() => "saved");
+    for (const headers of [
+      { "Sec-Fetch-Site": "same-site" },
+      { "Sec-Fetch-Site": "unexpected" },
+      { Referer: "https://attacker.example/page" },
+      { Referer: "not-a-url" },
+    ] as Record<string, string>[]) {
+      const response = await dispatch(
+        new Request("https://app.example/account", {
+          method: "POST",
+          headers,
+        }),
+        action,
+      );
+      expect(response.status).toBe(403);
+    }
+    expect(action).not.toHaveBeenCalled();
+    for (const headers of [
+      { "Sec-Fetch-Site": "same-origin" },
+      { "Sec-Fetch-Site": "none" },
+      { Referer: "https://app.example/settings" },
+    ] as Record<string, string>[]) {
+      const response = await dispatch(
+        new Request("https://app.example/account", {
+          method: "POST",
+          headers,
+        }),
+        action,
+      );
+      expect(response.status).toBe(200);
+    }
+    expect(action).toHaveBeenCalledTimes(3);
+  });
   it("preserves same-origin browser mutations and headerless server clients", async () => {
     const action = vi.fn(() => "saved");
     for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {

@@ -4,6 +4,7 @@
  */
 
 import { type Fetcher, type Router } from "@smolter/core";
+import { navigationTarget } from "@smolter/core/environment";
 import { type RouteFormOptions, submitForm } from "@smolter/core/submission";
 import { useRouter } from "./context.ts";
 
@@ -37,6 +38,8 @@ export function Form(options: InternalFormProps): ReactNode {
     ...props
   } = options;
   const router = useRouter<Router>();
+  if (action !== undefined)
+    navigationTarget(new URL(action, router.getSnapshot().url));
   const submit = (event: FormSubmitEvent) => {
     onSubmit?.(event);
     submitForm(

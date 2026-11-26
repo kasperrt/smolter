@@ -1,3 +1,4 @@
+import { isUnsafeProtocol, navigationTarget } from "./environment.ts";
 import type {
   Fetcher,
   NavigateOptions,
@@ -77,11 +78,16 @@ export function submitForm(
   options: RouteFormOptions,
   fetcher?: Fetcher,
 ): void {
+  const action = submitter?.getAttribute("formaction") ?? options.action;
+  if (action !== undefined) {
+    const resolved = new URL(action, router.getSnapshot().url);
+    if (isUnsafeProtocol(resolved.protocol)) {
+      event.preventDefault();
+      navigationTarget(resolved);
+    }
+  }
   if (event.defaultPrevented || options.reloadDocument) return;
-  const target = internalURL(
-    router.getSnapshot().url,
-    submitter?.getAttribute("formaction") ?? options.action,
-  );
+  const target = internalURL(router.getSnapshot().url, action);
   if (!target) return;
   const data = new FormData(event.currentTarget, submitter);
   const method = submitter?.getAttribute("formmethod") ?? options.method;

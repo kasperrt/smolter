@@ -1,5 +1,5 @@
 import { safeWrapAsync } from "@smolter/core";
-import { dataTarget } from "@smolter/core/transport";
+import { dataTarget, requestURL } from "@smolter/core/transport";
 import { send, webRequest } from "@smolter/server/http";
 import type { ViteDevServer } from "vite";
 
@@ -45,10 +45,16 @@ export function configureTransport(
   guardRequests(server);
   server.middlewares.use(async (incoming, outgoing, next) => {
     const dispatch = async () => {
-      const target = dataTarget(
-        new URL(`http://local${incoming.url ?? "/"}`),
-        dataEndpoint,
-      );
+      const url = requestURL(incoming.url);
+      if (url instanceof Error)
+        return send(
+          new Response(url.message, {
+            status: 400,
+            headers: { Connection: "close" },
+          }),
+          outgoing,
+        );
+      const target = dataTarget(url, dataEndpoint);
       if (target === undefined) return next();
       outgoing.setHeader("Cache-Control", "private, no-store");
       if (target instanceof Error) {

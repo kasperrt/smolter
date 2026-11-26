@@ -8,6 +8,16 @@ import {
 import { privateResponse } from "./private-response.ts";
 import { requestPolicy } from "./request-policy.ts";
 
+const routeDataMarker = Symbol.for("smolter.routeData");
+
+function isRouteData(value: unknown): value is DataResponse<unknown> {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      Reflect.get(value, routeDataMarker) === true,
+  );
+}
+
 async function dispatch(
   request: Request,
   routes: readonly (Route & { routePath?: string })[],
@@ -60,11 +70,10 @@ async function dispatch(
     return Response.json({
       __routeError: errorData(value),
     });
-  if (value && typeof value === "object" && "__routeData" in value) {
-    const result = value as DataResponse<unknown>;
+  if (isRouteData(value)) {
     return Response.json(
-      await resolveData(result.value),
-      document ? result.init : { headers: result.init.headers },
+      await resolveData(value.value),
+      document ? value.init : { headers: value.init.headers },
     );
   }
   return Response.json((await normalizeResult(value)) ?? null);

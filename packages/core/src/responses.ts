@@ -17,9 +17,23 @@ export interface DataResponse<T> {
   __routeData: true;
 }
 
+const routeDataMarker = Symbol.for("smolter.routeData");
+
+function isRouteData(value: unknown): value is DataResponse<unknown> {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      Reflect.get(value, routeDataMarker) === true,
+  );
+}
+
 /** Wrap loader data with HTTP status and headers without creating a Response body. */
 export function data<T>(value: T, init: ResponseInit = {}): DataResponse<T> {
-  return { value, init, __routeData: true };
+  return Object.defineProperty(
+    { value, init, __routeData: true } as DataResponse<T>,
+    routeDataMarker,
+    { value: true },
+  );
 }
 
 /** Create an empty redirect Response with a Location header; defaults to HTTP 302. */
@@ -47,16 +61,31 @@ export async function normalizeResult(
   value: unknown,
   resolveDeferred = true,
 ): Promise<unknown> {
-  if (value && typeof value === "object" && "__routeError" in value) {
-    const error = value.__routeError as {
-      message: string;
-      status?: number;
-      statusText?: string;
-    };
-    return Object.defineProperties(
-      Error(error.message),
-      Object.getOwnPropertyDescriptors(error),
-    );
+  if (
+    value &&
+    typeof value === "object" &&
+    Object.hasOwn(value, "__routeError") &&
+    Object.keys(value).length === 1
+  ) {
+    const raw = (value as { __routeError: unknown }).__routeError;
+    if (
+      raw &&
+      typeof raw === "object" &&
+      typeof (raw as { message?: unknown }).message === "string"
+    ) {
+      const source = raw as Record<string, unknown>;
+      const error = Error(source.message as string);
+      if (typeof source.name === "string") error.name = source.name;
+      if (typeof source.status === "number")
+        Object.assign(error, {
+          status: source.status,
+          ...(typeof source.statusText === "string" && {
+            statusText: source.statusText,
+          }),
+          ...(Object.hasOwn(source, "data") && { data: source.data }),
+        });
+      return error;
+    }
   }
   if (value instanceof Response) {
     if (value.headers.has("Location")) return value;
@@ -67,8 +96,7 @@ export async function normalizeResult(
       });
     return value.json();
   }
-  if (value && typeof value === "object" && "__routeData" in value)
-    value = (value as DataResponse<unknown>).value;
+  if (isRouteData(value)) value = value.value;
   return resolveDeferred ? resolveData(value) : value;
 }
 

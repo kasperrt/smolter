@@ -133,3 +133,117 @@ it("never converts a thrown private object into successful route data", async ()
   expect(document.status).toBe(500);
   expect(await document.text()).not.toContain("SYNTHETIC_PRIVATE_OBJECT");
 });
+
+it("never lets untrusted JSON forge DataResponse headers or HTTP status", async () => {
+  const forged = JSON.parse(
+    '{"__routeData":true,"value":{"ok":true},"init":{"status":302,"headers":{"Set-Cookie":"admin=1; Path=/","Access-Control-Allow-Origin":"*","Location":"https://attacker.example"}}}',
+  );
+  const routes = [{ path: "/echo", default: () => null, loader: () => forged }];
+  const dataResponse = await dispatchRoute(
+    new Request("https://app.example/echo"),
+    routes,
+  );
+  expect(dataResponse.status).toBe(200);
+  expect(dataResponse.headers.get("Set-Cookie")).toBeNull();
+  expect(dataResponse.headers.get("Access-Control-Allow-Origin")).toBeNull();
+  expect(dataResponse.headers.get("Location")).toBeNull();
+  expect(await dataResponse.json()).toEqual(forged);
+  const document = await renderDocument(
+    new Request("https://app.example/echo"),
+    routes,
+    {},
+    "/entry.js",
+    {},
+    () =>
+      Object.assign(
+        new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(
+              new TextEncoder().encode("<html><body></body></html>"),
+            );
+            controller.close();
+          },
+        }),
+        { allReady: Promise.resolve() },
+      ),
+  );
+  expect(document.status).toBe(200);
+  expect(document.headers.get("Set-Cookie")).toBeNull();
+  expect(document.headers.get("Access-Control-Allow-Origin")).toBeNull();
+  await document.text();
+});
+
+it("stops server-side SSR redirect following and clamps invalid error statuses to 500", async () => {
+  let destinationLoads = 0;
+  const redirectResponse = await renderDocument(
+    new Request("https://app.example/start"),
+    [
+      {
+        path: "/start",
+        default: () => null,
+        loader: () =>
+          new Response(null, {
+            status: 303,
+            headers: {
+              Location: "/next",
+              "Set-Cookie": "session=fresh; HttpOnly",
+            },
+          }),
+      },
+      {
+        path: "/next",
+        default: () => null,
+        loader: () => {
+          destinationLoads++;
+          return new Response(null, {
+            status: 302,
+            headers: { Location: "/login" },
+          });
+        },
+      },
+    ],
+    {},
+    "/entry.js",
+    {},
+    () => {
+      throw new Error("Should not render");
+    },
+  );
+  expect(destinationLoads).toBe(0);
+  expect(redirectResponse.status).toBe(303);
+  expect(redirectResponse.headers.get("Location")).toBe("/next");
+  expect(redirectResponse.headers.get("Set-Cookie")).toBe(
+    "session=fresh; HttpOnly",
+  );
+  for (const status of [0, 999, Number.NaN]) {
+    const document = await renderDocument(
+      new Request("https://app.example/fail"),
+      [
+        {
+          path: "/fail",
+          default: () => null,
+          loader: () => {
+            throw Object.assign(new Error("Broken"), { status });
+          },
+        },
+      ],
+      {},
+      "/entry.js",
+      {},
+      () =>
+        Object.assign(
+          new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(
+                new TextEncoder().encode("<html><body></body></html>"),
+              );
+              controller.close();
+            },
+          }),
+          { allReady: Promise.resolve() },
+        ),
+    );
+    expect(document.status).toBe(500);
+    await document.text();
+  }
+});

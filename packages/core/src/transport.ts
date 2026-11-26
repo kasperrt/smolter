@@ -1,5 +1,14 @@
 const suffix = ".__smolter";
 
+/** Parse an origin-form Node request target without accepting absolute-form or malformed URLs. */
+export function requestURL(target: string | undefined): URL | Error {
+  const value = target ?? "/";
+  const href = `http://local${value}`;
+  if (!value.startsWith("/") || !URL.canParse(href))
+    return new Error("Bad request");
+  return new URL(href);
+}
+
 /** Internal transport encoding preserves the complete route pathname and query. */
 export function dataURL(url: URL, endpoint?: string): string {
   if (url.pathname.startsWith("//")) throw new TypeError("Invalid route URL");

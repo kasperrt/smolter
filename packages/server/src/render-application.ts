@@ -11,6 +11,16 @@ import { progressiveDocument } from "./progressive-document.ts";
 import { requestPolicy } from "./request-policy.ts";
 import { resolveHydration, streamDocument } from "./stream-document.ts";
 
+const routeDataMarker = Symbol.for("smolter.routeData");
+
+function isRouteData(value: unknown): value is DataResponse<unknown> {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      Reflect.get(value, routeDataMarker) === true,
+  );
+}
+
 interface ServerRoot {
   loader?: (args: DataArgs) => unknown;
   ErrorBoundary?: unknown;
@@ -70,8 +80,7 @@ export async function renderDocument(
   let rootResponse: ResponseInit | undefined;
   function responseMetadata(value: unknown): ResponseInit | undefined {
     if (value instanceof Response) return value;
-    if (value && typeof value === "object" && "__routeData" in value)
-      return (value as DataResponse<unknown>).init;
+    if (isRouteData(value)) return value.init;
   }
   const rootResult = safeWrapAsync(async () => {
     const { data, error } = await safeWrapAsync(async () => ({
@@ -119,8 +128,10 @@ export async function renderDocument(
       ...route,
       loader: async (args: Parameters<typeof loader>[0]) => {
         const value = await loader(args);
-        if (value instanceof Response && value.headers.has("Location"))
+        if (value instanceof Response && value.headers.has("Location")) {
           redirectResponse = value;
+          return undefined;
+        }
         return value;
       },
     };
@@ -192,6 +203,15 @@ export async function renderDocument(
   headers.delete("Content-Encoding");
   headers.set("Content-Type", "text/html; charset=utf-8");
   privateHeaders(headers);
+  const errorStatus =
+    snapshot.error &&
+    "status" in snapshot.error &&
+    typeof snapshot.error.status === "number" &&
+    Number.isInteger(snapshot.error.status) &&
+    snapshot.error.status >= 200 &&
+    snapshot.error.status <= 599
+      ? snapshot.error.status
+      : 500;
   return new Response(
     deferred
       ? progressiveDocument(stream!, deferred.stream, {
@@ -206,7 +226,7 @@ export async function renderDocument(
         }),
     {
       status: snapshot.error
-        ? Number("status" in snapshot.error ? snapshot.error.status : 500)
+        ? errorStatus
         : (actionResponse?.status ??
           routeResponse?.status ??
           rootResponse?.status ??

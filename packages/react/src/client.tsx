@@ -9,7 +9,7 @@ import {
   recoverDeployment,
   watchDeployment,
 } from "@smolter/client";
-import { connectHashHistory } from "@smolter/client/hash-history";
+import { connectHashHistory, hashURL } from "@smolter/client/hash-history";
 import { readHydration } from "@smolter/client/hydration";
 import { attachRootData } from "@smolter/client/root-data";
 import {
@@ -18,6 +18,7 @@ import {
   type Router,
   safeWrapAsync,
 } from "@smolter/core";
+import { errorData } from "@smolter/core/errors";
 import { connectNavigation } from "@smolter/core/navigation";
 import { prepareRoutes } from "@smolter/core/prepare-routes";
 import { retainRoute } from "@smolter/core/presentation";
@@ -49,10 +50,7 @@ export async function mountApplication(
     deployment = null,
     deferredTimeout,
   } = typeof options === "boolean" ? { hash: options } : options;
-  const initialURL = new URL(
-    hash ? location.hash.slice(1) || "/" : location.href,
-    location.origin,
-  );
+  const initialURL = hash ? hashURL(location.hash) : new URL(location.href);
   const initialRoute = matchRoutes(routes, initialURL.pathname)?.route as
     | AppRoute
     | undefined;
@@ -72,13 +70,11 @@ export async function mountApplication(
   if (hydration?.snapshot.error)
     hydration.snapshot.error = Object.assign(
       new Error(hydration.snapshot.error.message),
-      hydration.snapshot.error,
+      errorData(hydration.snapshot.error),
     );
   const router = createDataRouter(routes, {
     browser: !hash,
-    url: hash
-      ? new URL(location.hash.slice(1) || "/", location.origin).href
-      : location.href,
+    url: initialURL.href,
     ...(hydration && { hydrationData: hydration.snapshot }),
   });
   const dispose = router.dispose;

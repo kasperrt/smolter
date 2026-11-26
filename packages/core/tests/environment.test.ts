@@ -7,6 +7,7 @@ import {
 import { defineRoute } from "../src/match.ts";
 import { createDataRouter } from "../src/router.ts";
 import type { CommitOptions, Snapshot } from "../src/types.ts";
+import { internalURL } from "../src/url.ts";
 
 afterEach(() => {
   configureApplication({});
@@ -34,6 +35,8 @@ it.each([
   "javascript:alert(1)",
   "JaVaScRiPt:alert(1)",
   "\tjava\nscript:alert(1)",
+  "vbscript:msgbox(1)",
+  "data:text/html,<script>alert(1)</script>",
 ])("rejects executable navigation targets: %s", (href) => {
   const assign = vi.fn();
   const handoff = vi.fn();
@@ -53,6 +56,15 @@ it.each([
   expect(() => leaveDocument(destination)).toThrow("JavaScript navigation");
   expect(assign).not.toHaveBeenCalled();
   expect(handoff).not.toHaveBeenCalled();
+});
+
+it("rejects same-origin blob URLs as internal routes", () => {
+  expect(
+    internalURL(
+      "https://app.example/",
+      "blob:https://app.example/550e8400-e29b-41d4-a716-446655440000",
+    ),
+  ).toBeUndefined();
 });
 
 it.each([
