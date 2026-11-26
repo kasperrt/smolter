@@ -12,10 +12,7 @@ import { join, resolve } from "node:path";
 import { afterAll, beforeAll, expect, test } from "vitest";
 
 const directory = mkdtempSync(join(tmpdir(), "smolter-pack-"));
-
-const vitestPackage = JSON.parse(
-  readFileSync(new URL(import.meta.resolve("vitest/package.json")), "utf8"),
-);
+const vitestBin = resolve("node_modules/vitest/vitest.mjs");
 const manifest = JSON.parse(readFileSync("package.json", "utf8"));
 const tarball = join(
   directory,
@@ -86,7 +83,6 @@ test.for(cases)(
         ...deps,
         "typescript@7.0.2",
         "vite@8.3.5",
-        `vitest@${vitestPackage.version}`,
       ],
       { cwd, stdio: "inherit" },
     );
@@ -132,7 +128,7 @@ test.for(cases)(
         "utf8",
       ),
     );
-    execFileSync(process.execPath, ["node_modules/vitest/vitest.mjs", "run"], {
+    execFileSync(process.execPath, [vitestBin, "run", "--root", cwd], {
       cwd,
       env: { ...process.env, SMOLTER_PACKED_FRAMEWORK: framework },
       stdio: "inherit",

@@ -27,6 +27,12 @@ interface RouteFingerprint {
   path: string;
   fingerprint: string;
 }
+interface DeploymentMetadata {
+  version: string;
+  manifestURL: string;
+  shared: string;
+  routes: RouteFingerprint[];
+}
 
 /** Emit deterministic build and route dependency identities for deployment recovery. */
 export function deploymentPlugin(
@@ -39,12 +45,7 @@ export function deploymentPlugin(
   let manifestURL = "";
   let manifestFile = "";
   let environment = "";
-  let metadata: {
-    version: string;
-    manifestURL: string;
-    shared: string;
-    routes: RouteFingerprint[];
-  };
+  let metadata: DeploymentMetadata;
   const hash = (value: string) =>
     createHash("sha256").update(value).digest("hex").slice(0, 24);
   const stable = (value: string) => value.replaceAll(root, "<root>");

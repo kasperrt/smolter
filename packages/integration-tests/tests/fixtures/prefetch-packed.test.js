@@ -43,7 +43,7 @@ export const Page = () => <Link to="/item" ${attributes}>Item</Link>;`,
         build: {
           write: false,
           minify: true,
-          ...(ssr ? { ssr: resolve("build-fixture/src/entry.tsx") } : {}),
+          ...(ssr && { ssr: resolve("build-fixture/src/entry.tsx") }),
           lib: {
             entry: resolve("build-fixture/src/entry.tsx"),
             formats: ["es"],

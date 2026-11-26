@@ -63,15 +63,20 @@ it.each(["loader", "clientLoader", "action", "clientAction"] as const)(
   },
 );
 
+interface ChildPayload {
+  child: Promise<string>;
+}
+interface CyclicPayload {
+  optional: Promise<ChildPayload>;
+  self?: unknown;
+  date: Date;
+}
+
 it("awaits required client work while preserving cycles and nested promise identity", async () => {
   const required = deferred<void>();
-  const optional = deferred<{ child: Promise<string> }>();
+  const optional = deferred<ChildPayload>();
   const child = deferred<string>();
-  const payload: {
-    optional: typeof optional.promise;
-    self?: unknown;
-    date: Date;
-  } = {
+  const payload: CyclicPayload = {
     optional: optional.promise,
     date: new Date(),
   };

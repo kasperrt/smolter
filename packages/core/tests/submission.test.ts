@@ -60,8 +60,13 @@ it("keeps page and fetcher GET submissions separate while encoding repeated cont
   router.dispose();
 });
 
+interface RecordedSubmission {
+  method: string;
+  value: unknown;
+}
+
 it("honors explicit fetcher action targets and JSON encoding without replay", async () => {
-  const calls: { method: string; value: unknown }[] = [];
+  const calls: RecordedSubmission[] = [];
   const router = createDataRouter(
     [
       {

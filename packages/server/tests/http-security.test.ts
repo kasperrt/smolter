@@ -13,6 +13,11 @@ import {
 } from "../src/handler.ts";
 import { send, webRequest } from "../src/http.ts";
 
+interface RawHttpResponse {
+  status: number;
+  connection?: string;
+}
+
 it("rejects malformed or path-bearing Host headers before dispatching routes", async (context) => {
   const seen: string[] = [];
   const handler = createRequestHandler({
@@ -52,10 +57,7 @@ it("rejects malformed or path-bearing Host headers before dispatching routes", a
     "2130706433",
     "",
   ]) {
-    const response = await new Promise<{
-      status: number;
-      connection?: string;
-    }>((resolve, reject) => {
+    const response = await new Promise<RawHttpResponse>((resolve, reject) => {
       const req = httpRequest(
         {
           hostname: "127.0.0.1",
@@ -108,24 +110,22 @@ it("rejects non-origin-form request targets with 400 and Connection: close", asy
     "//evil.example/assets",
     "/\\evil.example",
   ]) {
-    const result = await new Promise<{ status: number; connection?: string }>(
-      (resolve, reject) => {
-        const req = httpRequest(
-          { hostname: "127.0.0.1", port, method: "OPTIONS", path },
-          (res) => {
-            res.resume();
-            res.once("end", () =>
-              resolve({
-                status: res.statusCode!,
-                connection: res.headers.connection,
-              }),
-            );
-          },
-        );
-        req.once("error", reject);
-        req.end();
-      },
-    );
+    const result = await new Promise<RawHttpResponse>((resolve, reject) => {
+      const req = httpRequest(
+        { hostname: "127.0.0.1", port, method: "OPTIONS", path },
+        (res) => {
+          res.resume();
+          res.once("end", () =>
+            resolve({
+              status: res.statusCode!,
+              connection: res.headers.connection,
+            }),
+          );
+        },
+      );
+      req.once("error", reject);
+      req.end();
+    });
     expect(result.status, path).toBe(400);
     expect(result.connection, path).toBe("close");
   }

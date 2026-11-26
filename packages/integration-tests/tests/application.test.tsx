@@ -788,8 +788,12 @@ test("data dispatch resolves plain values and transports rejected handler errors
   expect(await absent.json()).toStrictEqual({ error: "No route" });
 });
 
+interface SavedActionData {
+  saved: string;
+}
+
 function SavedAction() {
-  const result = useActionData<{ saved: string }>();
+  const result = useActionData<SavedActionData>();
   return <output>{result?.saved}</output>;
 }
 

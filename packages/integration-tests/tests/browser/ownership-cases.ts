@@ -33,6 +33,9 @@ interface OwnershipWindow extends Window {
 interface OptionalData {
   optional: unknown;
 }
+interface NestedDetail {
+  nested: Promise<string>;
+}
 
 export function ownershipCases(owned = false, selected?: string[]) {
   const { Destination, Home, root } = owned ? explicit : original;
@@ -102,7 +105,7 @@ export function ownershipCases(owned = false, selected?: string[]) {
         fail = reject;
       });
       void safeWrapAsync(() => nested);
-      const detail = deferred<{ nested: Promise<string> }>();
+      const detail = deferred<NestedDetail>();
       const nestedParent = mode.startsWith("nested-parent");
       const hasNested =
         nestedParent || ["nested", "reject-after"].includes(mode);

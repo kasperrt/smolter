@@ -10,11 +10,13 @@ import { Document, Scripts } from "@smolter/preact/document";
 import type { RootModule } from "@smolter/preact/route-types";
 import { useState } from "preact/compat";
 
+interface StreamDetailData {
+  detail: string | Promise<string>;
+  later?: Promise<string>;
+}
+
 export function StreamingPage() {
-  const data = useLoaderData<{
-    detail: string | Promise<string>;
-    later?: Promise<string>;
-  }>();
+  const data = useLoaderData<StreamDetailData>();
   const [count, setCount] = useState(0);
   const fetcher = useFetcher<number>();
   return (

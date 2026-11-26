@@ -5,22 +5,39 @@ import { API } from "typescript/unstable/sync";
 
 const errors = [];
 const sourceFile = /\.(?:tsx?|m?js)$/;
+const suppressionComment = new RegExp(
+  "(?:\\/\\/|\\/\\*)\\s*(?:@ts-(?:ignore|expect-error|nocheck)|biome-ignore)\\b",
+);
 const files = readdirSync(".", { withFileTypes: true })
   .filter((entry) => entry.isFile() && sourceFile.test(entry.name))
   .map((entry) => entry.name);
-// Object types nested in intersections, unions or generic arguments belong to the
-// signature or assertion that contains them.
-function typeOwner(node) {
-  let current = node;
-  while (
-    ts.isIntersectionTypeNode(current.parent) ||
-    ts.isUnionTypeNode(current.parent) ||
-    ts.isParenthesizedTypeNode(current.parent) ||
-    ts.isArrayTypeNode(current.parent) ||
-    ts.isTypeReferenceNode(current.parent)
-  )
+function inNamedTypeDeclaration(node) {
+  let current = node.parent;
+  while (current && !ts.isSourceFile(current)) {
+    if (
+      ts.isInterfaceDeclaration(current) ||
+      ts.isTypeAliasDeclaration(current)
+    )
+      return true;
     current = current.parent;
+  }
+  return false;
+}
+function unwrapExpression(node) {
+  let current = node;
+  while (ts.isParenthesizedExpression(current)) current = current.expression;
   return current;
+}
+function hasEmptyObjectBranch(node) {
+  const expr = unwrapExpression(node);
+  if (!ts.isConditionalExpression(expr)) return false;
+  for (const branch of [expr.whenTrue, expr.whenFalse]) {
+    const inner = unwrapExpression(branch);
+    if (ts.isObjectLiteralExpression(inner) && !inner.properties.length)
+      return true;
+    if (hasEmptyObjectBranch(inner)) return true;
+  }
+  return false;
 }
 function check(path) {
   const text = readFileSync(path, "utf8");
@@ -34,27 +51,15 @@ function check(path) {
     errors.push(`${path}:${line + 1}: ${message}`);
   };
   function visit(node) {
-    const owner = ts.isTypeLiteralNode(node) && typeOwner(node);
-    if (
-      owner &&
-      (ts.isParameterDeclaration(owner.parent) ||
-        ((ts.isFunctionLikeDeclaration(owner.parent) ||
-          ts.isFunctionTypeNode(owner.parent)) &&
-          owner.parent.type === owner))
-    )
+    if (ts.isTypeLiteralNode(node) && !inNamedTypeDeclaration(node))
       report(
         node.getStart(source),
-        "Name object types used in function signatures.",
+        "Define object types as named interfaces or type aliases.",
       );
-    if (
-      owner &&
-      (ts.isAsExpression(owner.parent) ||
-        ts.isTypeAssertion(owner.parent) ||
-        ts.isSatisfiesExpression(owner.parent))
-    )
+    if (ts.isSpreadAssignment(node) && hasEmptyObjectBranch(node.expression))
       report(
         node.getStart(source),
-        "Name object types used in type assertions.",
+        "Use && shorthand spread instead of ternary with an empty object.",
       );
     if (ts.isIfStatement(node) && node.elseStatement)
       report(
@@ -90,12 +95,21 @@ function check(path) {
   visit(source);
   let position = 0;
   for (const line of text.split(/(?<=\n)/)) {
+    const insideLiteral = literals.some(
+      ([start, end]) => position >= start && position < end,
+    );
     if (
       !line.trim() &&
       blocks.some(([start, end]) => position > start && position < end) &&
-      !literals.some(([start, end]) => position >= start && position < end)
+      !insideLiteral
     )
       report(position, "Remove blank-line padding inside code blocks.");
+    const suppression = !insideLiteral && suppressionComment.exec(line);
+    if (suppression)
+      report(
+        position + suppression.index,
+        "Fix the underlying type or lint issue instead of suppressing it.",
+      );
     position += line.length;
   }
 }

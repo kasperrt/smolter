@@ -19,12 +19,18 @@ import { Suspense, use, useState } from "react";
 interface OptionalProps {
   value: Promise<string>;
 }
+interface OptionalData {
+  optional: Promise<string>;
+}
+interface RootRevision {
+  revision: number;
+}
 
 function Optional({ value }: OptionalProps) {
   return <p>{use(value)}</p>;
 }
 export function Home() {
-  const data = useLoaderData<{ optional: Promise<string> }>();
+  const data = useLoaderData<OptionalData>();
   return (
     <Suspense fallback={<p>Optional data pending</p>}>
       <Optional value={data.optional} />
@@ -37,7 +43,7 @@ export function Destination() {
 function Shell() {
   const navigate = useNavigate();
   const { submit } = useFetcher();
-  const root = useRootData<{ revision: number }>();
+  const root = useRootData<RootRevision>();
   const [count, setCount] = useState(0);
   return (
     <main>

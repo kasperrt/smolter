@@ -1,19 +1,24 @@
 import type { DocPage } from "./index";
 
 type Level = "yes" | "partial" | "alternative" | "no";
+export interface SupportReference {
+  href: string;
+  label: string;
+}
 export interface Support {
   label: string;
   short: string;
   level: Level;
   detail: string;
-  reference?: { href: string; label: string };
+  reference?: SupportReference;
+}
+interface ReactAlternative {
+  detail: string;
+  reference: SupportReference;
 }
 
 // These are framework primitives, not drop-in Smolter application APIs.
-const reactAlternatives: Record<
-  string,
-  { detail: string; reference: { href: string; label: string } }
-> = {
+const reactAlternatives: Record<string, ReactAlternative> = {
   Await: {
     detail:
       "React 19+ provides use(promise) with Suspense and an error boundary. Use a stable promise. Smolter's React application integration revives streamed loader promises before hydration.",
