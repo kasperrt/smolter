@@ -1,34 +1,131 @@
 import { randomUUID } from "node:crypto";
-import { readFile, realpath } from "node:fs/promises";
+import { readdir, readFile, realpath } from "node:fs/promises";
 import { createServer } from "node:http";
 import { extname, resolve } from "node:path";
+import { promisify } from "node:util";
+import { brotliCompress, constants, gzip } from "node:zlib";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
 import { safeWrapAsync } from "@smolter/core";
-import { data, render } from "../dist/server/server.js";
+import { data, namespace, render } from "../dist/server/server.js";
 
 const root = await realpath(resolve(import.meta.dirname, "../dist"));
 const template = await readFile(resolve(root, "index.html"), "utf8");
 const types = {
   ".js": "text/javascript",
   ".css": "text/css",
+  ".svg": "image/svg+xml",
+  ".json": "application/json",
   ".woff2": "font/woff2",
 };
+// Hashed build assets never change at a URL, so browsers may keep them.
+const immutable = "public, max-age=31536000, immutable";
+const compressible = new Set([".js", ".css", ".svg", ".json"]);
+const brotli = promisify(brotliCompress);
+const gzipped = promisify(gzip);
+// Cache all build assets in memory and precompress text assets at startup.
+const assets = new Map();
+const listing = await safeWrapAsync(() =>
+  readdir(resolve(root, "assets"), { withFileTypes: true }),
+);
+for (const entry of listing.data ?? []) {
+  if (!entry.isFile() || entry.name.startsWith(".")) continue;
+  const file = resolve(root, "assets", entry.name);
+  const body = await readFile(file);
+  const ext = extname(entry.name);
+  const type = types[ext] ?? "application/octet-stream";
+  if (!compressible.has(ext)) {
+    assets.set(file, { body, type });
+    continue;
+  }
+  const [br, gz] = await Promise.all([
+    brotli(body, {
+      params: {
+        [constants.BROTLI_PARAM_QUALITY]: constants.BROTLI_MAX_QUALITY,
+        [constants.BROTLI_PARAM_SIZE_HINT]: body.length,
+      },
+    }),
+    gzipped(body, { level: constants.Z_BEST_COMPRESSION }),
+  ]);
+  assets.set(file, { body, br, gzip: gz, type });
+}
+// Inline the small shared stylesheet into SSR HTML to eliminate a render-blocking RTT.
+const styleMatch = template.match(
+  /<link\s+rel="stylesheet"[^>]+href="([^"]+)"[^>]*>/,
+);
+const styleAsset = styleMatch && assets.get(resolve(root, `.${styleMatch[1]}`));
+const documentTemplate = styleAsset
+  ? template.replace(
+      styleMatch[0],
+      () => `<style>${styleAsset.body.toString("utf8")}</style>`,
+    )
+  : template;
 
+function acceptedEncoding(header = "") {
+  const weights = new Map(
+    header.split(",").map((part) => {
+      const [name, ...params] = part.trim().toLowerCase().split(";");
+      const weight = params
+        .map((param) => param.trim())
+        .find((param) => param.startsWith("q="));
+      return [name, weight ? Number(weight.slice(2)) : 1];
+    }),
+  );
+  return ["br", "gzip"].find((name) => (weights.get(name) ?? 0) > 0);
+}
+
+const session = `${namespace}-session`;
+const sessionPattern = new RegExp(`(?:^|; )${session}=([\\w-]+)`);
 const application = createRequestHandler({
+  namespace,
   entry: "",
   build: {
-    default: async (request) =>
-      new Response(await render(request, template), {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      }),
+    default: async (request) => {
+      const html = await render(request, documentTemplate);
+      const body = Buffer.from(html);
+      const encoding =
+        body.length >= 1024
+          ? acceptedEncoding(request.headers.get("accept-encoding") ?? "")
+          : undefined;
+      const payload =
+        encoding === "br"
+          ? await brotli(body, {
+              params: {
+                [constants.BROTLI_PARAM_MODE]: constants.BROTLI_MODE_TEXT,
+                [constants.BROTLI_PARAM_QUALITY]: 4,
+                [constants.BROTLI_PARAM_SIZE_HINT]: body.length,
+              },
+            })
+          : encoding === "gzip"
+            ? await gzipped(body, { level: 4 })
+            : body;
+      return new Response(payload, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "private, no-store",
+          Vary: "Accept-Encoding",
+          ...(encoding && { "Content-Encoding": encoding }),
+        },
+      });
+    },
     handleDataRequest: data,
   },
 });
 
+const MAX_SESSIONS = 256;
+const issuedSessions = new Set();
+
 createServer(async (incoming, outgoing) => {
   const handle = async () => {
-    const origin = `http://${incoming.headers.host}`;
-    const url = new URL(incoming.url, origin);
+    const rawTarget = incoming.url ?? "/";
+    if (
+      !rawTarget.startsWith("/") ||
+      rawTarget.startsWith("//") ||
+      !URL.canParse(`http://local${rawTarget}`)
+    ) {
+      outgoing.writeHead(400, { Connection: "close" }).end("Bad request");
+      return;
+    }
+    const url = new URL(`http://local${rawTarget}`);
     if (url.pathname.startsWith("/assets/")) {
       const asset = await safeWrapAsync(async () => {
         const path = decodeURIComponent(url.pathname);
@@ -37,7 +134,7 @@ createServer(async (incoming, outgoing) => {
           path.split("/").some((part) => part.startsWith("."))
         )
           return;
-        const file = await realpath(resolve(root, `.${path}`));
+        const file = resolve(root, `.${path}`);
         if (
           !file.startsWith(`${root}/assets/`) ||
           file
@@ -46,25 +143,36 @@ createServer(async (incoming, outgoing) => {
             .some((part) => part.startsWith("."))
         )
           return;
-        return { file, body: await readFile(file) };
+        return assets.get(file);
       });
       if (!asset.data) {
         outgoing.writeHead(404).end();
         return;
       }
-      outgoing.setHeader(
-        "Content-Type",
-        types[extname(asset.data.file)] ?? "application/octet-stream",
-      );
-      outgoing.end(asset.data.body);
+      const hasEncoded = Boolean(asset.data.br);
+      const encoding =
+        hasEncoded && acceptedEncoding(incoming.headers["accept-encoding"]);
+      outgoing.setHeader("Content-Type", asset.data.type);
+      outgoing.setHeader("Cache-Control", immutable);
+      if (hasEncoded) outgoing.setHeader("Vary", "Accept-Encoding");
+      if (encoding) outgoing.setHeader("Content-Encoding", encoding);
+      outgoing.end(encoding ? asset.data[encoding] : asset.data.body);
       return;
     }
-    if (!/(?:^|; )smolter-session=/.test(incoming.headers.cookie ?? "")) {
+    const cookieHeader = incoming.headers.cookie ?? "";
+    const existing = cookieHeader.match(sessionPattern)?.[1];
+    if (!existing || !issuedSessions.has(existing)) {
       const id = randomUUID();
-      incoming.headers.cookie = `smolter-session=${id}`;
+      if (issuedSessions.size >= MAX_SESSIONS)
+        issuedSessions.delete(issuedSessions.values().next().value);
+      issuedSessions.add(id);
+      const others = cookieHeader
+        .split(/;\s*/)
+        .filter((part) => part && !part.startsWith(`${session}=`));
+      incoming.headers.cookie = [...others, `${session}=${id}`].join("; ");
       outgoing.setHeader(
         "Set-Cookie",
-        `smolter-session=${id}; HttpOnly; SameSite=Lax; Path=/`,
+        `${session}=${id}; HttpOnly; SameSite=Lax; Path=/`,
       );
     }
     await application(incoming, outgoing, () => {

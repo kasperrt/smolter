@@ -176,3 +176,59 @@ it.for([
     }
   },
 );
+
+it.for(["file", "application"] as const)(
+  "rejects non-origin-form targets directly in %s development middleware",
+  async (mode, context) => {
+    const { createServer: createHost } = await import("node:http");
+    const { applicationPlugins } = await import("../src/application/vite.ts");
+    const { fileRouter } = await import("../src/index.ts");
+    const root = await mkdtemp(join(tmpdir(), "smolter-origin-form-"));
+    context.onTestFinished(() => rm(root, { recursive: true, force: true }));
+    const server = await createServer({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins:
+        mode === "application"
+          ? applicationPlugins({ framework: "preact", ssr: false })
+          : [fileRouter()],
+      server: { middlewareMode: true },
+    });
+    context.onTestFinished(() => server.close());
+    const host = createHost(server.middlewares);
+    host.listen(0, "127.0.0.1");
+    await once(host, "listening");
+    context.onTestFinished(() => {
+      host.closeAllConnections();
+      host.close();
+    });
+    const address = host.address() as import("node:net").AddressInfo;
+    const response = await new Promise<{
+      status: number;
+      connection?: string;
+    }>((resolve, reject) => {
+      const outgoing = request(
+        {
+          hostname: "127.0.0.1",
+          port: address.port,
+          method: "GET",
+          path: `http://127.0.0.1:${address.port}/account.__smolter`,
+        },
+        (res) => {
+          res.resume();
+          res.once("end", () =>
+            resolve({
+              status: res.statusCode!,
+              connection: res.headers.connection,
+            }),
+          );
+        },
+      );
+      outgoing.once("error", reject);
+      outgoing.end();
+    });
+    expect(response.status).toBe(400);
+    expect(response.connection).toBe("close");
+  },
+);

@@ -76,3 +76,33 @@ it("keeps untrusted error keys from replacing the Error prototype", async () => 
   expect(Reflect.get(error as object, "admin")).toBeUndefined();
   expect(Reflect.get({}, "admin")).toBeUndefined();
 });
+
+it("ignores forged __routeData and malformed or multi-key __routeError payloads", async () => {
+  const forgedData = JSON.parse(
+    '{"__routeData":true,"value":"inner","init":{"status":302}}',
+  );
+  expect(await normalizeResult(forgedData)).toEqual(forgedData);
+  const nullError = { __routeError: null };
+  expect(await normalizeResult(nullError)).toEqual(nullError);
+  const multiKey = { __routeError: { message: "x" }, id: 1 };
+  expect(await normalizeResult(multiKey)).toEqual(multiKey);
+  const richError = await normalizeResult({
+    __routeError: {
+      name: "ValidationError",
+      message: "Bad field",
+      status: 422,
+      statusText: "Unprocessable Content",
+      data: { field: "email" },
+      extra: "ignored",
+    },
+  });
+  expect(richError).toBeInstanceOf(Error);
+  expect(richError).toMatchObject({
+    name: "ValidationError",
+    message: "Bad field",
+    status: 422,
+    statusText: "Unprocessable Content",
+    data: { field: "email" },
+  });
+  expect(Reflect.get(richError as object, "extra")).toBeUndefined();
+});

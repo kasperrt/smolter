@@ -1,5 +1,6 @@
 import { matchRoutes, safeWrapAsync } from "@smolter/core";
 import { navigationTarget } from "@smolter/core/environment";
+import { namespace } from "@smolter/core/namespace";
 import type { DeploymentOptions } from "./deployment.ts";
 
 type Manifest = Pick<DeploymentOptions, "version" | "shared" | "routes">;
@@ -25,7 +26,7 @@ function manifestValue(value: unknown): Manifest | undefined {
 export function deploymentCheck(options: DeploymentOptions) {
   const { version, manifestURL, timeout = 2000 } = options;
   const manifest = new URL(manifestURL, location.href);
-  const key = `smolter:deployment:${manifest.href}:${version}`;
+  const key = `${namespace}:deployment:${manifest.href}:${version}`;
   let stopped = false;
   let pending: Promise<Manifest | undefined> | undefined;
   let forced = false;
@@ -90,7 +91,14 @@ export function deploymentCheck(options: DeploymentOptions) {
   async function reload(target: URL, current: () => boolean = () => true) {
     // Claim recovery only after checking ownership and active submissions.
     const { data } = await safeWrapAsync(() => {
-      if (stopped || !current() || sessionStorage.getItem(key)) return false;
+      if (
+        stopped ||
+        !current() ||
+        target.origin !== location.origin ||
+        (target.protocol !== "http:" && target.protocol !== "https:") ||
+        sessionStorage.getItem(key)
+      )
+        return false;
       navigationTarget(target);
       sessionStorage.setItem(key, "1");
       if (options.reload) options.reload(target);

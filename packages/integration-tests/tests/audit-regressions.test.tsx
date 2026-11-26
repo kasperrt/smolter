@@ -126,7 +126,9 @@ it("starts root and route loaders concurrently and streams a shell before deferr
     remaining += new TextDecoder().decode(part.value);
   }
   expect(remaining).toContain("Ready detail");
-  expect(remaining).toContain('document.getElementById("smolter-data")');
+  expect(remaining).toContain(
+    `document.querySelector('script#smolter-data[type="application/json"]')`,
+  );
 });
 
 it("renders root loader failures through the root boundary and preserves status and hydration ownership", async () => {

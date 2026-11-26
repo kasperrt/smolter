@@ -9,8 +9,8 @@ import {
   recoverDeployment,
   watchDeployment,
 } from "@smolter/client";
-import { connectHashHistory } from "@smolter/client/hash-history";
-import { readHydration } from "@smolter/client/hydration";
+import { connectHashHistory, hashURL } from "@smolter/client/hash-history";
+import { hydrationPayload, readHydration } from "@smolter/client/hydration";
 import { attachRootData } from "@smolter/client/root-data";
 import {
   createDataRouter,
@@ -18,6 +18,8 @@ import {
   type Router,
   safeWrapAsync,
 } from "@smolter/core";
+import { errorData } from "@smolter/core/errors";
+import { namespace } from "@smolter/core/namespace";
 import { connectNavigation } from "@smolter/core/navigation";
 import { retainRoute } from "@smolter/core/presentation";
 import { hydrate, render } from "preact";
@@ -48,36 +50,32 @@ export async function mountApplication(
     deployment = null,
     deferredTimeout,
   } = typeof options === "boolean" ? { hash: options } : options;
-  const initialURL = new URL(
-    hash ? location.hash.slice(1) || "/" : location.href,
-    location.origin,
-  );
+  const initialURL = hash ? hashURL(location.hash) : new URL(location.href);
   const initialRoute = matchRoutes(routes, initialURL.pathname)?.route as
     | AppRoute
     | undefined;
-  const { error: preloadError } = await safeWrapAsync(() =>
-    initialRoute?.preload?.(),
-  );
-  if (preloadError) {
-    await recoverDeployment(deployment, initialURL);
-    throw preloadError.cause ?? preloadError;
+  if (initialRoute?.preload) {
+    const { error: preloadError } = await safeWrapAsync(
+      () => initialRoute.preload!(),
+      true,
+    );
+    if (preloadError) {
+      await recoverDeployment(deployment, initialURL);
+      throw preloadError.cause ?? preloadError;
+    }
   }
   routes = prepareRoutes(routes);
-  const element = document.getElementById("smolter-data");
-  const initial = element?.textContent
-    ? readHydration(element.textContent, deferredTimeout)
-    : undefined;
+  const payload = hydrationPayload();
+  const initial = payload ? readHydration(payload, deferredTimeout) : undefined;
   const hydration: Hydration | undefined = initial?.hydration;
   if (hydration?.snapshot.error)
     hydration.snapshot.error = Object.assign(
       new Error(hydration.snapshot.error.message),
-      hydration.snapshot.error,
+      errorData(hydration.snapshot.error),
     );
   const router = createDataRouter(routes, {
     browser: !hash,
-    url: hash
-      ? new URL(location.hash.slice(1) || "/", location.origin).href
-      : location.href,
+    url: initialURL.href,
     ...(hydration && { hydrationData: hydration.snapshot }),
   });
   const dispose = router.dispose;
@@ -102,16 +100,18 @@ export async function mountApplication(
     // Explicitly unmanaged head nodes must not participate in positional hydration.
     const preserved = Array.from(
       document.querySelectorAll(
-        "head > [data-smolter-preserve], body > [data-smolter-stream]",
+        `head > [data-${namespace}-preserve], body > [data-${namespace}-stream]`,
       ),
       (node) => ({ node, next: node.nextSibling, parent: node.parentNode! }),
     );
     for (const { node } of preserved) node.remove();
-    const { error } = await safeWrapAsync(() =>
-      hydrate(
-        createElement(RouterApplication, { ...props, document: true }),
-        document,
-      ),
+    const { error } = await safeWrapAsync(
+      () =>
+        hydrate(
+          createElement(RouterApplication, { ...props, document: true }),
+          document,
+        ),
+      true,
     );
     for (const { node, next, parent } of preserved.reverse())
       parent.insertBefore(node, next?.parentNode === parent ? next : null);

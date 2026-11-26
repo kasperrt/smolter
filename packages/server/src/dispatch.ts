@@ -1,5 +1,6 @@
 import { matchRoutes, type Route, safeWrapAsync } from "@smolter/core";
 import { errorData } from "@smolter/core/errors";
+import { namespace } from "@smolter/core/namespace";
 import {
   type DataResponse,
   normalizeResult,
@@ -7,6 +8,16 @@ import {
 } from "@smolter/core/responses";
 import { privateResponse } from "./private-response.ts";
 import { requestPolicy } from "./request-policy.ts";
+
+const routeDataMarker = Symbol.for(`${namespace}.routeData`);
+
+function isRouteData(value: unknown): value is DataResponse<unknown> {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      Reflect.get(value, routeDataMarker) === true,
+  );
+}
 
 async function dispatch(
   request: Request,
@@ -53,18 +64,17 @@ async function dispatch(
     }
     const headers = new Headers(value.headers);
     headers.delete("Location");
-    headers.set("X-Smolter-Redirect", location);
+    headers.set(`X-${namespace}-Redirect`, location);
     return new Response(null, { headers });
   }
   if (value instanceof Error)
     return Response.json({
       __routeError: errorData(value),
     });
-  if (value && typeof value === "object" && "__routeData" in value) {
-    const result = value as DataResponse<unknown>;
+  if (isRouteData(value)) {
     return Response.json(
-      await resolveData(result.value),
-      document ? result.init : { headers: result.init.headers },
+      await resolveData(value.value),
+      document ? value.init : { headers: value.init.headers },
     );
   }
   return Response.json((await normalizeResult(value)) ?? null);

@@ -1,8 +1,10 @@
 import { safeWrapAsync } from "@smolter/core";
-import { dataTarget } from "@smolter/core/transport";
+import { dataSuffix } from "@smolter/core/namespace";
+import { dataTarget, requestURL } from "@smolter/core/transport";
 import { send, webRequest } from "@smolter/server/http";
 import { routerPlugin } from "@smolter/vite";
 import type { Plugin, UserConfig } from "vite";
+import { configuredNamespace } from "../namespace.ts";
 import { browserBoundary } from "./browser-boundary.ts";
 import { lazyFiles } from "./lazy-files.ts";
 
@@ -15,6 +17,8 @@ export interface ApplicationOptions {
   ssr?: boolean;
   splitRoutes?: boolean;
   resourceRequest?: (url: string) => boolean;
+  /** Client-visible identifier prefix; see routerPlugin. Defaults to "smolter". */
+  namespace?: string;
 }
 export const preactConfig: UserConfig = {
   resolve: {
@@ -47,7 +51,9 @@ export function applicationPlugins({
   ssr = true,
   splitRoutes = true,
   resourceRequest,
+  namespace,
 }: ApplicationOptions = {}): Plugin[] {
+  let suffix = dataSuffix();
   const application: Plugin = {
     name: "smolter-application",
     enforce: "pre",
@@ -58,6 +64,9 @@ export function applicationPlugins({
             resolve: { dedupe: ["react", "react-dom", "@kasperrt/smolter"] },
             ssr: { noExternal: ["@kasperrt/smolter"] },
           },
+    configResolved(config) {
+      suffix = dataSuffix(configuredNamespace(config));
+    },
     transformIndexHtml: {
       order: "post",
       handler(html, context) {
@@ -78,10 +87,16 @@ export function applicationPlugins({
       // Own the HTTP adapter so redirects retain authentication cookies.
       server.middlewares.use(async (incoming, outgoing, next) => {
         const run = async () => {
-          const target = dataTarget(
-            new URL(`http://local${incoming.url ?? "/"}`),
-            dataEndpoint,
-          );
+          const url = requestURL(incoming.url);
+          if (url instanceof Error)
+            return send(
+              new Response(url.message, {
+                status: 400,
+                headers: { Connection: "close" },
+              }),
+              outgoing,
+            );
+          const target = dataTarget(url, dataEndpoint, suffix);
           if (target === undefined) return next();
           outgoing.setHeader("Cache-Control", "private, no-store");
           if (target instanceof Error)
@@ -153,6 +168,12 @@ export function applicationPlugins({
     application,
     browserBoundary(),
     ...(splitRoutes ? [lazyFiles(directory, dataEndpoint, framework)] : []),
-    routerPlugin({ directory, framework, dataEndpoint, maxBodySize }),
+    routerPlugin({
+      directory,
+      framework,
+      dataEndpoint,
+      maxBodySize,
+      namespace,
+    }),
   ];
 }

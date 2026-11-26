@@ -1,7 +1,30 @@
 import type { DocPage } from "./docs";
 import { documentationGroups } from "./docs/navigation";
-import { pageSupport } from "./docs/support";
+import { pageSupport, type Support } from "./docs/support";
 import type { ElementFactory, LinkFactory } from "./types";
+
+interface CachedGroup {
+  title: string;
+  description: string;
+  items: { page: DocPage; support: Support[] }[];
+}
+
+const groupCache = new WeakMap<DocPage[], CachedGroup[]>();
+
+function cachedGroups(pages: DocPage[]): CachedGroup[] {
+  const existing = groupCache.get(pages);
+  if (existing) return existing;
+  const groups = documentationGroups(pages).map((group) => ({
+    title: group.title,
+    description: group.description,
+    items: group.pages.map((item) => ({
+      page: item,
+      support: pageSupport(item),
+    })),
+  }));
+  groupCache.set(pages, groups);
+  return groups;
+}
 
 export interface DocumentationProps<N> {
   page: DocPage;
@@ -26,15 +49,15 @@ export function createDocumentation<N>(
   }: DocumentationProps<N>) {
     const sectionId = (title: string) =>
       title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const exampleCode = [
+      page.signature,
+      ...page.sections.map((section) => section.code),
+    ].join("\n");
     const related = pages.filter(
       (item) =>
         item.slug !== page.slug &&
-        new RegExp(`\\b${item.slug}\\b`).test(
-          [
-            page.signature,
-            ...page.sections.map((section) => section.code),
-          ].join("\n"),
-        ),
+        exampleCode.includes(item.slug) &&
+        new RegExp(`\\b${item.slug}\\b`).test(exampleCode),
     );
     return h(
       "div",
@@ -52,13 +75,13 @@ export function createDocumentation<N>(
           { className: "docs-loading", role: "status" },
           pending ? "Loading guide…" : "",
         ),
-        ...documentationGroups(pages).map((group) =>
+        ...cachedGroups(pages).map((group) =>
           h(
             "section",
             { key: group.title },
             h("h2", null, group.title),
             h("p", { className: "docs-group-description" }, group.description),
-            ...group.pages.map((item) =>
+            ...group.items.map(({ page: item, support: badges }) =>
               renderLink(
                 `/docs/${item.slug}`,
                 h(
@@ -68,13 +91,12 @@ export function createDocumentation<N>(
                   h(
                     "span",
                     { className: "docs-support-mini", "aria-hidden": true },
-                    ...pageSupport(item).map((support) =>
+                    ...badges.map((support) =>
                       h(
                         "abbr",
                         {
                           key: support.short,
                           className: `support-${support.level}`,
-                          title: `${support.label}: ${support.detail}`,
                         },
                         support.short,
                       ),

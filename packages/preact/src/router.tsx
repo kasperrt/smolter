@@ -1,3 +1,4 @@
+import { namespace } from "@smolter/core/namespace";
 import { createStore } from "@smolter/core/store";
 import { Fragment } from "preact";
 import type { ReactNode } from "preact/compat";
@@ -74,7 +75,7 @@ function StreamOutlet({ children }: StreamOutletProps) {
       for (const marker of markers) marker.remove();
       markers.length = 0;
     } else {
-      for (const marker of markers) marker.data += ":smolter";
+      for (const marker of markers) marker.data += `:${namespace}`;
     }
     initial.current = { owner, markers };
   }, [owner, loaded, error]);

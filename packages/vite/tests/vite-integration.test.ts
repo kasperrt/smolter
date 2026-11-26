@@ -21,6 +21,7 @@ it("dispatches HTTP reads and mutations to server route exports", async (context
   const { root, server } = await viteFixture(
     context,
     'export { loader, action } from "../../handlers.ts";',
+    { dataEndpoint: "/_data" },
   );
   await writeFile(
     join(root, "handlers.ts"),
@@ -42,6 +43,7 @@ it("dispatches HTTP reads and mutations to server route exports", async (context
   const mutation = await fetch(endpoint, { method: "PATCH", body });
   expect(await mutation.json()).toEqual({ method: "PATCH", amount: "3" });
   expect((await fetch(`${base}/evil.__smolter`)).status).toBe(400);
+  expect((await fetch(`${base}_data`)).status).toBe(400);
   expect((await fetch(`${base}unhandled`)).status).toBe(404);
 });
 

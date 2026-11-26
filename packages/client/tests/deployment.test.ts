@@ -960,10 +960,15 @@ it("waits for another tracked fetcher before recovering a failed action redirect
   expect(storage.size).toBe(1);
 });
 
-it("never executes or claims a recovery marker for executable destinations", async () => {
+it("never executes or claims a recovery marker for executable or foreign-origin destinations", async () => {
   const { options, reload, storage, location } = setup("new");
   const { recoverDeployment } = await import("../src/deployment.ts");
-  for (const destination of ["javascript:alert(1)", "java\nscript:alert(1)"]) {
+  for (const destination of [
+    "javascript:alert(1)",
+    "java\nscript:alert(1)",
+    "https://attacker.example/phish",
+    "blob:https://app.test/550e8400-e29b-41d4-a716-446655440000",
+  ]) {
     expect(await recoverDeployment(options, new URL(destination))).toBe(false);
     expect(
       await recoverDeployment(

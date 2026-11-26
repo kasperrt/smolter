@@ -56,8 +56,12 @@ export function leaveDocument(
   leave();
 }
 
+export function isUnsafeProtocol(protocol: string): boolean {
+  return /^(?:javascript|vbscript|data):$/.test(protocol);
+}
+
 export function navigationTarget(url: URL): URL {
-  if (url.protocol === "javascript:")
+  if (isUnsafeProtocol(url.protocol))
     throw new TypeError("JavaScript navigation is not allowed");
   return url;
 }

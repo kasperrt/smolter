@@ -1,7 +1,9 @@
 /** Resolve an internal URL; external links remain the browser's responsibility. */
 export function internalURL(base: string, href = base): URL | undefined {
-  const url = new URL(href, base);
-  if (url.origin === new URL(base).origin) return url;
+  const origin = new URL(base);
+  const url = new URL(href, origin);
+  if (url.origin === origin.origin && url.protocol === origin.protocol)
+    return url;
 }
 
 /** Match a location against an anchor's origin and path, optionally including descendants. */

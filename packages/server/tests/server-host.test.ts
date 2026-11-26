@@ -59,6 +59,7 @@ it.each(["react", "preact"])(
         `let started = false;
 let aborted = false;
 
+export const namespace = "smolter";
 export const data = () => Response.json(null);
 
 export async function render(request) {

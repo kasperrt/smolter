@@ -192,3 +192,46 @@ it("checks deployment metadata when the initial route import fails", async (cont
   expect(fetcher).toHaveBeenCalledOnce();
   expect(reload).toHaveBeenCalledOnce();
 });
+
+it("ignores foreign-origin and malformed hash fragments on mount and hashchange", async (context) => {
+  const original = location.href;
+  const container = document.createElement("div");
+  container.id = "root";
+  document.body.append(container);
+  history.replaceState(
+    null,
+    "",
+    "/mount-shell#https://attacker.example/dashboard",
+  );
+  const router = await mountApplication(
+    [
+      { path: "/", default: () => createElement("output", null, "Safe home") },
+      {
+        path: "/dashboard",
+        default: () => createElement("output", null, "Dashboard"),
+      },
+    ],
+    undefined,
+    { hash: true },
+  );
+  context.onTestFinished(() => {
+    router.dispose();
+    container.remove();
+    history.replaceState(null, "", original);
+  });
+  await expect.poll(() => container.textContent).toBe("Safe home");
+  expect(new URL(router.getSnapshot().url).origin).toBe(location.origin);
+  for (const hash of [
+    "#//attacker.example/dashboard",
+    "#javascript:alert(1)",
+    "#http://[",
+    "#/\\evil",
+  ]) {
+    history.replaceState(null, "", `/mount-shell${hash}`);
+    dispatchEvent(new HashChangeEvent("hashchange"));
+    await expect
+      .poll(() => new URL(router.getSnapshot().url).origin)
+      .toBe(location.origin);
+    expect(new URL(router.getSnapshot().url).pathname).toBe("/");
+  }
+});

@@ -2,14 +2,21 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { safeWrapAsync } from "@smolter/core";
 import type { Plugin } from "vite";
+import { configuredNamespace, namespaceConfig } from "./namespace.ts";
 
 /** Deployment manifest configuration. Serve the emitted file with Cache-Control: no-store. */
 export interface DeploymentPluginOptions {
-  /** Public URL, optionally on an asset host. Defaults to Vite base + smolter-manifest.json. */
+  /** Public URL, optionally on an asset host. Defaults to Vite base + manifestFile. */
   manifestURL?: string;
   /** Change when independently deployed server contracts become incompatible. */
   compatibility?: string;
+  /** Emitted manifest file name. Defaults to `${namespace}-manifest.json`. */
+  manifestFile?: string;
+  /** Client-visible identifier prefix; see routerPlugin. Defaults to "smolter". */
+  namespace?: string;
 }
+
+const manifestFilePattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\.json$/;
 
 interface RouteFingerprint {
   path: string;
@@ -25,6 +32,7 @@ export function deploymentPlugin(
   let enabled = false;
   let root = "";
   let manifestURL = "";
+  let manifestFile = "";
   let environment = "";
   let metadata: {
     version: string;
@@ -37,7 +45,14 @@ export function deploymentPlugin(
   const stable = (value: string) => value.replaceAll(root, "<root>");
   return {
     name: "smolter-deployment",
+    config: () => namespaceConfig(options.namespace),
     configResolved(config) {
+      manifestFile =
+        options.manifestFile ?? `${configuredNamespace(config)}-manifest.json`;
+      if (!manifestFilePattern.test(manifestFile))
+        throw new TypeError(
+          "manifestFile must be a .json file name without directories",
+        );
       root = config.root;
       environment = JSON.stringify([
         config.base,
@@ -47,8 +62,7 @@ export function deploymentPlugin(
         options.compatibility,
       ]);
       enabled = config.command === "build" && !config.build.ssr;
-      manifestURL =
-        options.manifestURL ?? `${config.base}smolter-manifest.json`;
+      manifestURL = options.manifestURL ?? `${config.base}${manifestFile}`;
     },
     resolveId(id) {
       if (id === "virtual:smolter/deployment") return virtualId;
@@ -116,8 +130,7 @@ export function deploymentPlugin(
     },
     renderChunk(code) {
       if (!enabled || !code.includes(placeholder)) return;
-      return code.replace(
-        new RegExp(`["']${placeholder}["']`, "g"),
+      return code.replace(new RegExp(`["']${placeholder}["']`, "g"), () =>
         JSON.stringify(metadata),
       );
     },
@@ -125,7 +138,7 @@ export function deploymentPlugin(
       if (!enabled) return;
       this.emitFile({
         type: "asset",
-        fileName: "smolter-manifest.json",
+        fileName: manifestFile,
         source: JSON.stringify(metadata),
       });
     },

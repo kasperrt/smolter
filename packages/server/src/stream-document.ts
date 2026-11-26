@@ -1,5 +1,9 @@
 import { safeWrapAsync } from "@smolter/core";
+import { namespace } from "@smolter/core/namespace";
 import { serializeData } from "@smolter/core/serialize";
+import { escapeHydrationObject } from "./deferred-hydration.ts";
+
+const encoder = new TextEncoder();
 
 // Deferred failures must remain rejected promises after hydration so Await's
 // errorElement has the same behavior on the server and in the browser.
@@ -11,7 +15,7 @@ export async function resolveHydration(value: unknown): Promise<unknown> {
     if (!error) return resolveHydration(data!.value);
     const cause = error.cause;
     return {
-      __smolterRejected: {
+      [`__${namespace}Rejected`]: {
         message: cause instanceof Error ? cause.message : String(cause),
       },
     };
@@ -23,12 +27,12 @@ export async function resolveHydration(value: unknown): Promise<unknown> {
     Object.getPrototypeOf(value) === Object.prototype
   ) {
     const entries = await Promise.all(
-      Object.entries(value).map(async ([key, field]) => [
-        key,
-        await resolveHydration(field),
-      ]),
+      Object.entries(value).map(
+        async ([key, field]) =>
+          [key, await resolveHydration(field)] as [string, unknown],
+      ),
     );
-    return Object.fromEntries(entries);
+    return escapeHydrationObject(entries);
   }
   return value;
 }
@@ -46,7 +50,6 @@ export function streamDocument(
   options: StreamDocumentOptions,
 ): ReadableStream<Uint8Array> {
   const reader = source.getReader();
-  const encoder = new TextEncoder();
   const decoder = new TextDecoder();
   let suffix = "";
   let first = true;
@@ -88,7 +91,7 @@ export function streamDocument(
             : "";
           controller.enqueue(
             encoder.encode(
-              `<script type="application/json"${nonce}>${hydration}</script><script${nonce}>(function(){var script=document.currentScript,payload=script.previousElementSibling,data=document.getElementById("smolter-data");if(data)data.textContent=payload.textContent;payload.remove();script.remove()})()</script>${suffix}`,
+              `<script type="application/json"${nonce}>${hydration}</script><script${nonce}>(function(){var script=document.currentScript,payload=script.previousElementSibling,data=document.querySelector('script#${namespace}-data[type="application/json"]');if(data)data.textContent=payload.textContent;payload.remove();script.remove()})()</script>${suffix}`,
             ),
           );
         }

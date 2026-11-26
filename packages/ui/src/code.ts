@@ -19,11 +19,13 @@ export function createCode<N>(
         "code",
         null,
         ...highlight(source).map((token, index) =>
-          h(
-            "span",
-            { key: index, className: token.kind && `syntax-${token.kind}` },
-            token.text,
-          ),
+          token.kind
+            ? h(
+                "span",
+                { key: index, className: `syntax-${token.kind}` },
+                token.text,
+              )
+            : token.text,
         ),
       ),
     );

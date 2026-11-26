@@ -1,6 +1,7 @@
 import routes from "virtual:smolter/routes";
 import { createDataRouter } from "@kasperrt/smolter/react";
 import { deserialize } from "@kasperrt/smolter/react/client";
+import { namespace } from "@kasperrt/smolter/utils";
 import { retainRoute } from "@smolter/core/presentation";
 import { siteHistory, siteRoute } from "@smolter/ui/hosting";
 import { watchMetadata } from "@smolter/ui/metadata";
@@ -10,7 +11,9 @@ import { app } from "./app";
 import "@smolter/ui/style.css";
 
 const root = document.getElementById("root");
-const data = document.getElementById("smolter-data");
+const data = document.querySelector(
+  `script#${namespace}-data[type="application/json"]`,
+);
 let hydrationData = data?.textContent
   ? deserialize(data.textContent)
   : undefined;

@@ -1,3 +1,4 @@
+import { namespace } from "@kasperrt/smolter/utils";
 import type { Store } from "./types";
 
 function initialStore(): Store {
@@ -11,14 +12,21 @@ function initialStore(): Store {
   };
 }
 
+const MAX_SESSIONS = 256;
+const session = new RegExp(`(?:^|; )${namespace}-session=([\\w-]+)`);
 const sessions = new Map<string, Store>();
 
 export function readStore(request: Request): Store {
-  const id =
-    request.headers
-      .get("cookie")
-      ?.match(/(?:^|; )smolter-session=([\w-]+)/)?.[1] ?? "anonymous";
-  const store = sessions.get(id) ?? initialStore();
+  const id = request.headers.get("cookie")?.match(session)?.[1] ?? "anonymous";
+  const existing = sessions.get(id);
+  if (existing) {
+    sessions.delete(id);
+    sessions.set(id, existing);
+    return existing;
+  }
+  if (sessions.size >= MAX_SESSIONS)
+    sessions.delete(sessions.keys().next().value!);
+  const store = initialStore();
   sessions.set(id, store);
   return store;
 }

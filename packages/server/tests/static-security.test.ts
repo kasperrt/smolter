@@ -11,6 +11,7 @@ import {
 import { get } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { brotliDecompressSync, gunzipSync } from "node:zlib";
 import { expect, it, onTestFinished } from "vitest";
 
 it.each(["react", "preact"])(
@@ -33,7 +34,7 @@ it.each(["react", "preact"])(
       writeFile(join(root, "dist/index.html"), "SSR template"),
       writeFile(
         join(root, "dist/server/server.js"),
-        'export const data = () => Response.json(null); export const render = () => "SSR response";',
+        'export const namespace = "smolter"; export const data = () => Response.json(null); export const render = () => "SSR response";',
       ),
       writeFile(join(root, "dist/assets/app.js"), "public asset"),
       ...[
@@ -108,6 +109,48 @@ it.each(["react", "preact"])(
       status: 200,
       body: "public asset",
     });
+    const encoded = (path: string, encoding: string) =>
+      new Promise<{
+        headers: import("node:http").IncomingHttpHeaders;
+        body: Buffer;
+      }>((resolve, reject) => {
+        get(
+          {
+            hostname: "127.0.0.1",
+            port,
+            path,
+            headers: { "Accept-Encoding": encoding },
+          },
+          (response) => {
+            const chunks: Buffer[] = [];
+            response.on("data", (chunk: Buffer) => chunks.push(chunk));
+            response.on("end", () =>
+              resolve({
+                headers: response.headers,
+                body: Buffer.concat(chunks),
+              }),
+            );
+            response.on("error", reject);
+          },
+        ).on("error", reject);
+      });
+    const brotli = await encoded("/assets/app.js", "gzip;q=0.5, br");
+    expect(brotli.headers["content-encoding"]).toBe("br");
+    expect(brotli.headers.vary).toBe("Accept-Encoding");
+    expect(brotli.headers["cache-control"]).toBe(
+      "public, max-age=31536000, immutable",
+    );
+    expect(brotliDecompressSync(brotli.body).toString()).toBe("public asset");
+    const gzip = await encoded("/assets/app.js", "br;q=0, gzip");
+    expect(gzip.headers["content-encoding"]).toBe("gzip");
+    expect(gunzipSync(gzip.body).toString()).toBe("public asset");
+    const identity = await encoded("/assets/app.js", "identity");
+    expect(identity.headers["content-encoding"]).toBeUndefined();
+    expect(identity.body.toString()).toBe("public asset");
+    for (const path of ["/assets/linked.js", "/assets/hidden-link.js"])
+      expect(
+        (await encoded(path, "br, gzip")).headers["content-encoding"],
+      ).toBeUndefined();
     for (const path of [
       "/.env",
       "/assets/.env",
@@ -136,5 +179,8 @@ it.each(["react", "preact"])(
       if (new URL(path, "http://local").pathname.startsWith("/assets/"))
         expect.soft(result.status, path).not.toBe(200);
     }
+    expect((await request("//attacker.example/assets/app.js")).status).toBe(
+      400,
+    );
   },
 );

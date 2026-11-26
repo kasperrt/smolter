@@ -1,17 +1,37 @@
-const suffix = ".__smolter";
+import { dataSuffix } from "./namespace.ts";
+
+/** Parse an origin-form Node request target without accepting absolute-form or malformed URLs. */
+export function requestURL(target: string | undefined): URL | Error {
+  const value = target ?? "/";
+  const path = value.split(/[?#]/, 1)[0] ?? "";
+  const href = `http://local${value}`;
+  if (
+    !value.startsWith("/") ||
+    !path.startsWith("/") ||
+    path.startsWith("//") ||
+    path.includes("\\") ||
+    !URL.canParse(href)
+  )
+    return new Error("Bad request");
+  const url = new URL(href);
+  if (url.pathname.startsWith("//") || url.username || url.password)
+    return new Error("Bad request");
+  return url;
+}
 
 /** Internal transport encoding preserves the complete route pathname and query. */
 export function dataURL(url: URL, endpoint?: string): string {
   if (url.pathname.startsWith("//")) throw new TypeError("Invalid route URL");
   return endpoint
     ? `${endpoint}?url=${encodeURIComponent(url.pathname + url.search)}`
-    : `${url.pathname}${suffix}${url.search}`;
+    : `${url.pathname}${dataSuffix()}${url.search}`;
 }
 
 /** Normalize before dispatch; legacy endpoints are accepted only when configured. */
 export function dataTarget(
   url: URL,
   endpoint?: string,
+  suffix: string = dataSuffix(),
 ): string | Error | undefined {
   const legacy = endpoint !== undefined && url.pathname === endpoint;
   if (!legacy && !url.pathname.endsWith(suffix)) return;

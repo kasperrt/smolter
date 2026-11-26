@@ -1,4 +1,7 @@
 import { safeWrapAsync } from "@smolter/core";
+import { namespace } from "@smolter/core/namespace";
+
+const encoder = new TextEncoder();
 
 interface ProgressiveDocumentOptions {
   signal: AbortSignal;
@@ -13,7 +16,6 @@ export function progressiveDocument(
 ): ReadableStream<Uint8Array> {
   const html = source.getReader();
   const data = settlements.getReader();
-  const encoder = new TextEncoder();
   const decoder = new TextDecoder();
   let stopped = false;
   let cancelled = false;
@@ -64,7 +66,7 @@ export function progressiveDocument(
           }
           let chunk = decoder.decode(result.value, { stream: true });
           if (chunk === "<div hidden>")
-            chunk = "<div hidden data-smolter-stream>";
+            chunk = `<div hidden data-${namespace}-stream>`;
           if (first && !/^<!doctype/i.test(chunk))
             chunk = `<!doctype html>${chunk}`;
           first = false;

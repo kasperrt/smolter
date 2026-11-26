@@ -10,6 +10,7 @@ export function splitDocumentation(): Plugin {
   return {
     name: "smolter-split-documentation",
     apply: "build",
+    applyToEnvironment: (environment) => environment.name === "client",
     enforce: "pre",
     async buildStart() {
       const server = await createServer({

@@ -16,7 +16,7 @@
     },
     {
       "title": "Hosting and base paths",
-      "body": "The default public URL is Vite base plus smolter-manifest.json. Set manifestURL explicitly for a relative base or reverse proxy. Your host must serve the emitted file at that URL with Cache-Control: no-store, before fallback routes. Cross-origin reads require CORS.",
+      "body": "The default public URL is Vite base plus manifestFile, which defaults to ${namespace}-manifest.json (smolter-manifest.json without a namespace). manifestFile must be a .json file name without directories. Set manifestURL explicitly for a relative base or reverse proxy. Your host must serve the emitted file at that URL with Cache-Control: no-store, before fallback routes. Cross-origin reads require CORS.",
       "code": "deploymentPlugin({ manifestURL: \"/admin/smolter-manifest.json\" });"
     },
     {

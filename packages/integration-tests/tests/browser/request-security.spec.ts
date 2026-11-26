@@ -79,9 +79,13 @@ test("same-site foreign-origin forms cannot execute authenticated document or da
       response.url().startsWith(`${target}/`),
     );
     await page.getByRole("button", { name: "Submit" }).click();
-    expect((await response).status()).toBe(403);
+    expect((await response).status()).toBe(path === "/authority" ? 400 : 403);
     await expect(
-      page.getByText("Cross-origin mutation forbidden"),
+      page.getByText(
+        path === "/authority"
+          ? "Bad request"
+          : "Cross-origin mutation forbidden",
+      ),
     ).toBeVisible();
   }
   expect(mutations).toBe(0);

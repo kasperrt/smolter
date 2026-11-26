@@ -3,7 +3,7 @@
   font-style: normal;
   font-weight: 400 600;
   font-display: optional;
-  src: url("./fonts/pixelify-sans-500.ttf") format("truetype");
+  src: url("./fonts/pixelify-sans-500.woff2") format("woff2");
 }
 
 :root {

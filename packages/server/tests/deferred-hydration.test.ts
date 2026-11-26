@@ -3,6 +3,7 @@ import { expect, it, vi } from "vitest";
 import { deferred } from "../../integration-tests/tests/helpers/deferred.ts";
 import { deferredHydration } from "../src/deferred-hydration.ts";
 import { progressiveDocument } from "../src/progressive-document.ts";
+import { resolveHydration } from "../src/stream-document.ts";
 
 function packets(html: string): unknown[] {
   const window = { __smolterDeferred: [] };
@@ -158,4 +159,34 @@ it("distinguishes undefined deferred values from null", async () => {
     [1, null, null],
     [-1, null, null],
   ]);
+});
+
+it("escapes plain user objects whose key collides with hydration sentinels", async () => {
+  const userPayload = {
+    pending: { __smolterPending: 0 },
+    rejected: { __smolterRejected: null },
+    undef: { __smolterUndefined: true },
+    literal: { __smolterLiteral: ["__smolterPending", 0] },
+    real: Promise.resolve("actual"),
+  };
+  const encoded = deferredHydration(userPayload);
+  expect(JSON.parse(encoded.initial)).toEqual({
+    pending: { __smolterLiteral: ["__smolterPending", 0] },
+    rejected: { __smolterLiteral: ["__smolterRejected", null] },
+    undef: { __smolterLiteral: ["__smolterUndefined", true] },
+    literal: {
+      __smolterLiteral: ["__smolterLiteral", ["__smolterPending", 0]],
+    },
+    real: { __smolterPending: 0 },
+  });
+  await encoded.stream.cancel();
+  expect(await resolveHydration(userPayload)).toEqual({
+    pending: { __smolterLiteral: ["__smolterPending", 0] },
+    rejected: { __smolterLiteral: ["__smolterRejected", null] },
+    undef: { __smolterLiteral: ["__smolterUndefined", true] },
+    literal: {
+      __smolterLiteral: ["__smolterLiteral", ["__smolterPending", 0]],
+    },
+    real: "actual",
+  });
 });

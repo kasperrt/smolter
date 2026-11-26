@@ -55,6 +55,12 @@ import { createDataRouter, useFetcher } from "@kasperrt/smolter/react";
 // Preact: import from "@kasperrt/smolter/preact".
 ```
 
+For the namespace and SSR loading updates in the 0.6 alpha, pin the prerelease explicitly once published:
+
+```sh
+pnpm add @kasperrt/smolter@0.6.0-alpha.1
+```
+
 ## Try the four standalone examples
 
 ```sh
@@ -443,12 +449,16 @@ import { deserialize } from "@kasperrt/smolter/react/client";
 import { createDataRouter } from "@kasperrt/smolter/react";
 import routes from "virtual:smolter/routes";
 
-const data = document.getElementById("smolter-data");
+const data = document.querySelector(
+  'script#smolter-data[type="application/json"]',
+);
 const router = createDataRouter(routes, {
   browser: true,
   hydrationData: data?.textContent ? deserialize(data.textContent) : undefined,
 });
 ```
+Select the JSON script element rather than calling `getElementById`, so
+user-generated markup that reuses the id cannot supply hydration data.
 Then hydrate with your framework. A client-only route renders its fallback on
 the server and loads after hydration. Data must be JSON serializable; script
 closing characters are escaped and errors omitted.
@@ -560,6 +570,10 @@ Mount `createRequestHandler({ build, entry })` from
 server entry and `entry` is the browser entry URL from Vite's manifest. Do not
 consume request bodies with Express body parsers before this handler.
 The adapter has no Express dependency and forwards failures to `next(error)`.
+Serve Vite's hashed `/assets/` files compressed (Brotli or gzip, with
+`Vary: Accept-Encoding`) and with `Cache-Control: public, max-age=31536000, immutable`;
+the adapter does not compress or cache static files. The SSR examples' `start.mjs`
+precompresses them at startup.
 
 See the [Express guide](https://kasperrt.github.io/smolter/docs/express)
 for a complete server example and streaming and hydration behavior.
@@ -628,6 +642,8 @@ recovery ownership; they do not require another provider or store.
 
 ## Size and checks
 
+In the 0.6.0-alpha.1 production SSR examples, compressing HTML and inlining the shared stylesheet brought median LCP on `/docs/getting-started` from 656 to 300 ms for React and from 484 to 304 ms for Preact. These were five cold Chromium loads per build with 4× CPU throttling, 80 ms RTT and a 400 kB/s downlink, comparing commits `257ce6f` and `bb4ecb0`. The gzip table below measures library exports separately from example page transfer.
+
 | Need | Public import |
 | --- | --- |
 | Navigation only | `@kasperrt/smolter/react` or `/preact`, using `createRouter` |
@@ -662,18 +678,18 @@ a claim of identical features.
 | --- | ---: |
 | `React Router 8.5.1: declarative routing subset` | 13012 |
 | `React Router 8.5.1: data routing subset` | 30841 |
-| `React: routing-only named exports` | 1895 |
-| `Preact: routing-only named exports` | 1882 |
-| `@kasperrt/smolter/react` | 5721 |
-| `@kasperrt/smolter/preact` | 6332 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 7479 |
-| `@kasperrt/smolter/preact + server transport` | 8090 |
-| `@kasperrt/smolter/react + client + document (application)` | 10690 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 11025 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11332 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 11656 |
-| `React: common routing/data exports` | 4044 |
-| `Preact: common routing/data exports` | 4028 |
+| `React: routing-only named exports` | 1928 |
+| `Preact: routing-only named exports` | 1917 |
+| `@kasperrt/smolter/react` | 5974 |
+| `@kasperrt/smolter/preact` | 6582 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7750 |
+| `@kasperrt/smolter/preact + server transport` | 8365 |
+| `@kasperrt/smolter/react + client + document (application)` | 11277 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 11605 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11889 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 12217 |
+| `React: common routing/data exports` | 4141 |
+| `Preact: common routing/data exports` | 4122 |
 | `wouter 3.13.0: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact 3.13.0: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |
@@ -813,6 +829,8 @@ for Express, CDN paths, TypeScript declarations and unsaved-state handling.
 ### Shared origins and streaming SSR
 
 The default route suffix preserves application prefixes: `/admin/users.__smolter` dispatches `/admin/users`. Reserve this suffix in Express and static routing, and apply authentication to both document and data requests. File routing rejects statically declared suffix collisions; arbitrary Express routes and dynamic parameter values remain host-owned. Explicit `dataEndpoint` configuration retains the legacy query transport for migration and must agree across browser, Vite and production. Transport responses, including errors and redirects, use `Cache-Control: private, no-store`.
+
+Set `namespace` on `applicationPlugins` or `fileRouter` to rename every client-visible identifier, for example `namespace: "app"` for `/users.__app`, `X-app-Redirect`, `#app-data`, `data-app-preserve` and `app-manifest.json`. Vite compiles it into browser and SSR bundles. Pass the same `namespace` to `createRequestHandler` when the handler is imported outside the Vite build, and use `namespace` from `@kasperrt/smolter/utils` for application-owned names such as session cookies.
 
 Pass deployment metadata before mounting so recovery covers the initial route import:
 

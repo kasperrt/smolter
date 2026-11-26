@@ -14,7 +14,7 @@ export function demoAssets(): Plugin {
     generateBundle: {
       order: "post",
       handler(_options, bundle) {
-        for (const file of ["fonts/pixelify-sans-500.ttf", "favicon.svg"]) {
+        for (const file of ["fonts/pixelify-sans-500.woff2", "favicon.svg"]) {
           const asset = this.emitFile({
             type: "asset",
             name: basename(file),
@@ -28,6 +28,15 @@ export function demoAssets(): Plugin {
               `${base}${this.getFileName(asset)}`,
             );
           }
+        }
+        // Place the render-blocking stylesheet before the module script so CSS fetches first.
+        for (const output of Object.values(bundle)) {
+          if (output.type !== "asset" || !output.fileName.endsWith(".html"))
+            continue;
+          output.source = String(output.source).replace(
+            /(<script\s+type="module"[^>]*><\/script>(?:\s*<link\s+rel="modulepreload"[^>]*>)*)(\s*)(<link\s+rel="stylesheet"[^>]*>)/,
+            "$3$2$1",
+          );
         }
       },
     },

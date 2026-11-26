@@ -14,7 +14,7 @@ it("bounds unfinished streams without retrying or waiting for document completio
   });
   Reflect.deleteProperty(window, "__smolterDeferred");
   const { hydration, dispose } = readHydration(
-    '{"pending":{"__smolterPending":0}}',
+    String.raw`{"pending":{"\u005f\u005fsmolterPending":0}}`,
     100,
   );
   const rejected = expect(hydration.pending).rejects.toThrow(
@@ -227,4 +227,48 @@ it("keeps rejected hydration data from replacing the Error prototype", async (co
   expect(result.reason.message).toBe("Denied");
   expect(result.reason.admin).toBeUndefined();
   expect(Reflect.get({}, "admin")).toBeUndefined();
+});
+
+it("restores escaped literal sentinel objects and ignores malformed sentinel shapes", async (context) => {
+  Reflect.deleteProperty(window, "__smolterDeferred");
+  const { hydration, dispose } = readHydration(
+    JSON.stringify({
+      escapedPending: { __smolterLiteral: ["__smolterPending", 0] },
+      escapedRejected: { __smolterLiteral: ["__smolterRejected", null] },
+      escapedNested: {
+        __smolterLiteral: ["__smolterLiteral", ["__smolterPending", 0]],
+      },
+      malformedLiteral: { __smolterLiteral: [123, "x"] },
+      malformedRejected: { __smolterRejected: null },
+      negativePending: { __smolterPending: -1 },
+      richRejected: {
+        __smolterRejected: {
+          name: "HttpError",
+          message: "Denied",
+          status: 403,
+          statusText: "Forbidden",
+          data: { reason: "policy" },
+        },
+      },
+    }),
+  );
+  context.onTestFinished(dispose);
+  expect(hydration.escapedPending).toEqual({ __smolterPending: 0 });
+  expect(hydration.escapedRejected).toEqual({ __smolterRejected: null });
+  expect(hydration.escapedNested).toEqual({
+    __smolterLiteral: ["__smolterPending", 0],
+  });
+  expect(hydration.malformedLiteral).toEqual({ __smolterLiteral: [123, "x"] });
+  expect(hydration.malformedRejected).toEqual({ __smolterRejected: null });
+  expect(hydration.negativePending).toEqual({ __smolterPending: -1 });
+  const [rejected] = await Promise.allSettled([hydration.richRejected]);
+  expect(rejected.status).toBe("rejected");
+  if (rejected.status !== "rejected") throw new Error("Expected rejection");
+  expect(rejected.reason).toMatchObject({
+    name: "HttpError",
+    message: "Denied",
+    status: 403,
+    statusText: "Forbidden",
+    data: { reason: "policy" },
+  });
 });

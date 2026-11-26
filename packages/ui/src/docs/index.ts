@@ -29,7 +29,10 @@ const authored = Object.values(
 );
 
 const sizeGuide = authored.find((page) => page.slug === "bundle-size")!;
-sizeGuide.sections[1].code = [
+const measuredTiers = sizeGuide.sections.find(
+  (section) => section.title === "Measured tiers",
+)!;
+measuredTiers.code = [
   `React routing only: ${sizes.reactRouting} B gzip`,
   `Preact routing only: ${sizes.preactRouting} B gzip`,
   `React common routing/data: ${sizes.reactCommon} B gzip`,

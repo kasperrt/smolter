@@ -1,7 +1,9 @@
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { readFile, realpath } from "node:fs/promises";
+import { isAbsolute, relative, resolve } from "node:path";
+import { dataSuffix } from "@smolter/core/namespace";
 import { flatRoutes } from "@smolter/files";
 import { type Plugin, transformWithOxc } from "vite";
+import { configuredNamespace } from "../namespace.ts";
 
 interface ChunkMetadata {
   importedCss?: Set<string>;
@@ -16,11 +18,13 @@ export function lazyFiles(
 ): Plugin {
   let root: string;
   const modules = new Map<string, string>();
+  let suffix = dataSuffix();
   return {
     name: "smolter-lazy-routes",
     enforce: "pre",
     configResolved(config) {
       root = resolve(config.root, directory);
+      suffix = dataSuffix(configuredNamespace(config));
     },
     generateBundle(_options, bundle) {
       if (!modules.size) return;
@@ -62,15 +66,24 @@ export function lazyFiles(
       const nested = discovered.some((route) => route.parentId);
       const routes = nested ? discovered : await flatRoutes(root);
       if (routes instanceof Error) return this.error(routes.message);
-      if (routes.some((route) => route.path.endsWith(".__smolter")))
+      if (routes.some((route) => route.path.endsWith(suffix)))
         return this.error(
-          "The .__smolter suffix is reserved for data transport.",
+          `The ${suffix} suffix is reserved for data transport.`,
         );
       modules.clear();
+      const directory = await realpath(root);
       const definitions: string[] = [];
       for (const route of routes) {
         this.addWatchFile(route.file);
-        const source = await readFile(route.file, "utf8");
+        const canonical = await realpath(route.file);
+        const path = relative(directory, canonical);
+        if (
+          path.startsWith("..") ||
+          isAbsolute(path) ||
+          resolve(directory, path) !== canonical
+        )
+          return this.error("Forbidden client route module");
+        const source = await readFile(canonical, "utf8");
         const transformed = await transformWithOxc(source, route.file);
         const ast = this.parse(transformed.code);
         const fields: Record<string, string | boolean> = {};

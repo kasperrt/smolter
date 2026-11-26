@@ -5,7 +5,11 @@ import type { TestContext } from "vitest";
 import { expect, it, vi } from "vitest";
 import { createRequestHandler } from "../src/handler.ts";
 
-async function host(context: TestContext, maxBodySize?: number) {
+async function host(
+  context: TestContext,
+  maxBodySize?: number,
+  decode = false,
+) {
   const action = vi.fn(
     async (request: Request) => new Response(await request.text()),
   );
@@ -17,6 +21,7 @@ async function host(context: TestContext, maxBodySize?: number) {
     build: { default: action, handleDataRequest: action },
   });
   const server = createServer((request, response) => {
+    if (decode) request.setEncoding("utf8");
     void handler(request, response, (error) => {
       next(error);
       response.statusCode = 500;
@@ -50,6 +55,14 @@ it("caps default document and both data request bodies before application work",
   expect(next).not.toHaveBeenCalled();
 });
 
+it("requires raw upload bytes when earlier middleware configures text decoding", async (context) => {
+  const { origin, action } = await host(context, 16, true);
+  const response = await fetch(origin, { method: "POST", body: "ok" });
+  expect(response.status).toBe(400);
+  expect(response.headers.get("connection")).toBe("close");
+  expect(action).not.toHaveBeenCalled();
+});
+
 it("rejects oversized chunked uploads without waiting for the sender to finish", async (context) => {
   const { origin, action } = await host(context, 16);
   const request = httpRequest(origin, {
@@ -63,6 +76,7 @@ it("rejects oversized chunked uploads without waiting for the sender to finish",
   request.write("12345678901234567");
   const [response] = await received;
   expect(response.statusCode).toBe(413);
+  expect(response.headers.connection).toBe("close");
   expect(request.writableEnded).toBe(false);
   expect(action).not.toHaveBeenCalled();
   response.resume();

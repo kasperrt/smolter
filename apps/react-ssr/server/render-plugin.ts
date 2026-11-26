@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { safeWrapAsync } from "@smolter/core";
 import type { Plugin } from "vite";
 
-export function serverRendering(): Plugin {
+export function serverRendering(namespace: string): Plugin {
   return {
     name: "example-ssr",
     configureServer(server) {
@@ -12,7 +12,7 @@ export function serverRendering(): Plugin {
           if (
             request.method !== "GET" ||
             new URL(request.url ?? "/", "http://local").pathname.endsWith(
-              ".__smolter",
+              `.__${namespace}`,
             )
           )
             return next();
@@ -24,8 +24,21 @@ export function serverRendering(): Plugin {
               request.url!,
               await readFile(resolve(server.config.root, "index.html"), "utf8"),
             );
+            const host = request.headers.host;
+            const rawTarget = request.url ?? "/";
+            if (
+              !host ||
+              /[\s/?#@\\]/.test(host) ||
+              !rawTarget.startsWith("/") ||
+              !URL.canParse(`.${rawTarget}`, `http://${host}/`)
+            ) {
+              response
+                .writeHead(400, { Connection: "close" })
+                .end("Bad request");
+              return;
+            }
             const incoming = new Request(
-              `http://${request.headers.host}${request.url}`,
+              new URL(`.${rawTarget}`, `http://${host}/`),
               {
                 headers: { cookie: request.headers.cookie ?? "" },
                 signal: controller.signal,
@@ -35,6 +48,7 @@ export function serverRendering(): Plugin {
             // nosemgrep: javascript.express.security.audit.res-render-injection.res-render-injection
             const html = await entry.render(incoming, template);
             response.setHeader("Content-Type", "text/html; charset=utf-8");
+            response.setHeader("Cache-Control", "private, no-store");
             response.end(html);
           };
           const { error } = await safeWrapAsync(render);

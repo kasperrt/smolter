@@ -80,11 +80,12 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
         for (const route of paths) {
           const { html, data, metadata } = await prerender(`/${route}`);
           const source = template
-            .replace(/<title>.*?<\/title>/, metadataTags(metadata))
-            .replace("<!--app-->", html)
+            .replace(/<title>.*?<\/title>/, () => metadataTags(metadata))
+            .replace("<!--app-->", () => html)
             .replace(
               "<!--data-->",
-              `<script id="smolter-data" type="application/json">${data}</script>`,
+              () =>
+                `<script id="smolter-data" type="application/json">${data}</script>`,
             );
           if (!route) index.source = source;
           else

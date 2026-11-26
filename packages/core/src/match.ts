@@ -33,9 +33,9 @@ export function matchRoutes(
         patterns.delete(patterns.keys().next().value!);
       patterns.set(route.path, parts);
     }
+    if (parts.length !== segments.length && parts.at(-1) !== "*") continue;
     const params: Params = {};
-    const matched =
-      (parts.length === segments.length || parts.at(-1) === "*") &&
+    if (
       parts.every((part, index) => {
         const value = segments[index];
         if (part === "*") {
@@ -49,8 +49,9 @@ export function matchRoutes(
           return true;
         }
         return part === value;
-      });
-    if (matched) return { route, params };
+      })
+    )
+      return { route, params };
   }
 }
 

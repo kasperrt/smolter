@@ -4,16 +4,26 @@ import { useState } from "react";
 import fileRoutes from "./examples/routes.tsx.txt?raw";
 import manualRoutes from "./manual-routes.ts?raw";
 
-const examples = import.meta.glob<string>("./examples/*.tsx.txt", {
-  eager: true,
-  query: "?raw",
-  import: "default",
-});
-const sources = import.meta.glob<string>("./routes/**/*.ts", {
-  eager: true,
-  query: "?raw",
-  import: "default",
-});
+const examples = import.meta.glob<string>(
+  [
+    "./examples/*.tsx.txt",
+    "!./examples/about.tsx.txt",
+    "!./examples/routes.tsx.txt",
+  ],
+  {
+    eager: true,
+    query: "?raw",
+    import: "default",
+  },
+);
+const sources = import.meta.glob<string>(
+  ["./routes/**/*.ts", "!./routes/**/view.ts", "!./routes/docs.*/**"],
+  {
+    eager: true,
+    query: "?raw",
+    import: "default",
+  },
+);
 
 export function Source() {
   const [url] = useLocation();

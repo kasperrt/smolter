@@ -1,5 +1,22 @@
 import { safeWrapAsync } from "@smolter/core";
+import { namespace } from "@smolter/core/namespace";
 import { serializeData } from "@smolter/core/serialize";
+
+const encoder = new TextEncoder();
+const hydrationSentinel = new RegExp(
+  `^__${namespace}(?:Pending|Rejected|Undefined|Literal)$`,
+);
+const pendingTag = `__${namespace}Pending`;
+const queue = `window.__${namespace}Deferred`;
+// Named elements can shadow the global; only an array is a settlement queue.
+const push = `(Array.isArray(${queue})?${queue}:${queue}=[]).push`;
+
+/** Escape plain user objects whose single key matches an internal hydration sentinel. */
+export function escapeHydrationObject(entries: [string, unknown][]): unknown {
+  if (entries.length === 1 && hydrationSentinel.test(entries[0][0]))
+    return { [`__${namespace}Literal`]: entries[0] };
+  return Object.fromEntries(entries);
+}
 
 /** Encode deferred values without delaying the initial document snapshot. */
 export function deferredHydration(value: unknown, nonce?: string) {
@@ -7,7 +24,6 @@ export function deferredHydration(value: unknown, nonce?: string) {
   let pending = 0;
   let closed = false;
   let controller!: ReadableStreamDefaultController<Uint8Array>;
-  const encoder = new TextEncoder();
   const attribute = nonce
     ? ` nonce="${nonce.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;")}"`
     : "";
@@ -22,7 +38,7 @@ export function deferredHydration(value: unknown, nonce?: string) {
   function encode(value: unknown): unknown {
     if (value instanceof Promise) {
       const existing = promises.get(value);
-      if (existing !== undefined) return { __smolterPending: existing };
+      if (existing !== undefined) return { [pendingTag]: existing };
       const id = promises.size;
       promises.set(value, id);
       pending++;
@@ -40,7 +56,7 @@ export function deferredHydration(value: unknown, nonce?: string) {
         }
       };
       void observe();
-      return { __smolterPending: id };
+      return { [pendingTag]: id };
     }
     if (Array.isArray(value)) return value.map(encode);
     if (
@@ -48,7 +64,7 @@ export function deferredHydration(value: unknown, nonce?: string) {
       typeof value === "object" &&
       Object.getPrototypeOf(value) === Object.prototype
     )
-      return Object.fromEntries(
+      return escapeHydrationObject(
         Object.entries(value).map(([key, field]) => [key, encode(field)]),
       );
     return value;
@@ -58,13 +74,13 @@ export function deferredHydration(value: unknown, nonce?: string) {
     const packet = serializeData(
       JSON.stringify([
         id,
-        value === undefined ? { __smolterUndefined: true } : value,
+        value === undefined ? { [`__${namespace}Undefined`]: true } : value,
         error,
       ]),
     );
     controller.enqueue(
       encoder.encode(
-        `<script${attribute}>(window.__smolterDeferred??=[]).push(JSON.parse(${packet}));document.currentScript.remove()</script>`,
+        `<script${attribute}>${push}(JSON.parse(${packet}));document.currentScript.remove()</script>`,
       ),
     );
     pending--;
@@ -72,7 +88,7 @@ export function deferredHydration(value: unknown, nonce?: string) {
       closed = true;
       controller.enqueue(
         encoder.encode(
-          `<script${attribute}>(window.__smolterDeferred??=[]).push([-1,null,null]);document.currentScript.remove()</script>`,
+          `<script${attribute}>${push}([-1,null,null]);document.currentScript.remove()</script>`,
         ),
       );
       controller.close();
