@@ -1113,6 +1113,9 @@ nav a.active {
   font-size: 12px;
   line-height: 1.5;
 }
+.size-option:not(:has(input:disabled)):hover strong {
+  color: #a8126c;
+}
 .size-option:has(input:disabled) {
   cursor: default;
 }

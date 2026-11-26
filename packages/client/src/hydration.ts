@@ -12,6 +12,10 @@ interface PendingValue {
   reject: (reason: Error) => void;
 }
 
+interface ErrorMessage {
+  message?: unknown;
+}
+
 /** Window settlement queue under the default namespace. */
 export interface DeferredWindow extends Window {
   __smolterDeferred?: Settlement[];
@@ -89,7 +93,7 @@ export function readHydration(json: string, timeout = 8_000) {
       tag === rejectedTag &&
       field &&
       typeof field === "object" &&
-      typeof (field as { message?: unknown }).message === "string"
+      typeof (field as ErrorMessage).message === "string"
     ) {
       const failure = field as Record<string, unknown>;
       const error = new Error(failure.message as string);

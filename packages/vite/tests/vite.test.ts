@@ -1,7 +1,7 @@
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, it, vi } from "vitest";
-import { viteFixture } from "../../integration-tests/tests/helpers/vite";
+import { viteFixture } from "./helpers/vite.ts";
 
 interface RoutePath {
   path: string;

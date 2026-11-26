@@ -1,4 +1,3 @@
-import assert from "node:assert/strict";
 import {
   defineRoute,
   RouterProvider,
@@ -12,7 +11,7 @@ import {
 } from "@kasperrt/smolter/react/server";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
-import { test } from "vitest";
+import { expect, test } from "vitest";
 
 test("react-packed consumer", async () => {
   const route = defineRoute("/", {
@@ -26,23 +25,21 @@ test("react-packed consumer", async () => {
   const html = renderToString(
     createElement(RouterProvider, { router }, createElement(Routes, {})),
   );
-  assert.match(html, /packed package works/);
-  console.log("react: packed install + SSR passed");
+  expect(html).toMatch(/packed package works/);
   const response = await dispatchRoute(new Request("https://example.com/"), [
     route,
   ]);
-  assert.equal(await response.json(), "packed package works");
+  expect(await response.json()).toBe("packed package works");
   const { version } = await import("react");
   if (version.startsWith("18.")) {
-    await assert.rejects(
+    await expect(
       renderApplication(
         new Request("https://example.com/"),
         [route],
         { default: Routes, Layout: () => null },
         "/entry.js",
       ),
-      /React DOM 19/,
-    );
+    ).rejects.toThrow(/React DOM 19/);
     return;
   }
   const { Document, Scripts } = await import(
@@ -66,6 +63,6 @@ test("react-packed consumer", async () => {
       "/entry.js",
     )
   ).text();
-  assert.match(documentHTML, /packed package works/);
-  assert.match(documentHTML, /smolter-data/);
+  expect(documentHTML).toMatch(/packed package works/);
+  expect(documentHTML).toMatch(/smolter-data/);
 });

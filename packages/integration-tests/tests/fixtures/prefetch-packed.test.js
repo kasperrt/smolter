@@ -1,21 +1,20 @@
-import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import ts from "typescript";
 import { build } from "vite";
-import { test } from "vitest";
+import { expect, test } from "vitest";
 
 test("prefetch-packed consumer", async () => {
-  assert.equal(ts.version, "7.0.2");
-  assert.equal(ts.sys, undefined);
-  assert.equal(ts.createProgram, undefined);
+  expect(ts.version).toBe("7.0.2");
+  expect(ts.sys).toBe(undefined);
+  expect(ts.createProgram).toBe(undefined);
   const framework = process.env.SMOLTER_PACKED_FRAMEWORK;
   const tooling = `@kasperrt/smolter/${framework}/vite`;
   const compiler = createRequire(import.meta.resolve(tooling))(
     "typescript/unstable/sync",
   );
-  assert.equal(typeof compiler.API, "function");
+  expect(typeof compiler.API).toBe("function");
   const { fileRouter } = await import(tooling);
   mkdirSync("build-fixture/src", { recursive: true });
   writeFileSync(
@@ -60,18 +59,13 @@ export const Page = () => <Link to="/item" ${attributes}>Item</Link>;`,
           .map(([id]) => id),
       );
       for (const [index, name] of ["intent", "viewport", "prefetch"].entries())
-        assert.equal(
+        expect(
           modules.some((id) => id.endsWith(`/core/${name}.js`)),
-          expected[index],
           `${framework} ${ssr} ${attributes}: ${name}`,
-        );
-      assert.doesNotMatch(
-        chunks.map((chunk) => chunk.code).join("\n"),
+        ).toBe(expected[index]);
+      expect(chunks.map((chunk) => chunk.code).join("\n")).not.toMatch(
         /typescript|node:|createProgram/,
       );
     }
   }
-  console.log(
-    `Packed ${framework} browser/SSR prefetch builds passed with consumer TS7`,
-  );
 });

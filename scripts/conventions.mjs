@@ -8,6 +8,20 @@ const sourceFile = /\.(?:tsx?|m?js)$/;
 const files = readdirSync(".", { withFileTypes: true })
   .filter((entry) => entry.isFile() && sourceFile.test(entry.name))
   .map((entry) => entry.name);
+// Object types nested in intersections, unions or generic arguments belong to the
+// signature or assertion that contains them.
+function typeOwner(node) {
+  let current = node;
+  while (
+    ts.isIntersectionTypeNode(current.parent) ||
+    ts.isUnionTypeNode(current.parent) ||
+    ts.isParenthesizedTypeNode(current.parent) ||
+    ts.isArrayTypeNode(current.parent) ||
+    ts.isTypeReferenceNode(current.parent)
+  )
+    current = current.parent;
+  return current;
+}
 function check(path) {
   const text = readFileSync(path, "utf8");
   const source = snapshot
@@ -20,16 +34,27 @@ function check(path) {
     errors.push(`${path}:${line + 1}: ${message}`);
   };
   function visit(node) {
+    const owner = ts.isTypeLiteralNode(node) && typeOwner(node);
     if (
-      ts.isTypeLiteralNode(node) &&
-      (ts.isParameterDeclaration(node.parent) ||
-        ((ts.isFunctionLikeDeclaration(node.parent) ||
-          ts.isFunctionTypeNode(node.parent)) &&
-          node.parent.type === node))
+      owner &&
+      (ts.isParameterDeclaration(owner.parent) ||
+        ((ts.isFunctionLikeDeclaration(owner.parent) ||
+          ts.isFunctionTypeNode(owner.parent)) &&
+          owner.parent.type === owner))
     )
       report(
         node.getStart(source),
         "Name object types used in function signatures.",
+      );
+    if (
+      owner &&
+      (ts.isAsExpression(owner.parent) ||
+        ts.isTypeAssertion(owner.parent) ||
+        ts.isSatisfiesExpression(owner.parent))
+    )
+      report(
+        node.getStart(source),
+        "Name object types used in type assertions.",
       );
     if (ts.isIfStatement(node) && node.elseStatement)
       report(

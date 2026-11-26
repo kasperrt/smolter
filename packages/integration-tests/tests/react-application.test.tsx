@@ -137,7 +137,7 @@ it("requires React DOM 19 for integrated SSR without changing the legacy loadRou
   onTestFinished(() => vi.doUnmock("react-dom/server"));
   {
     const { renderApplication: legacyRender } = await import(
-      "../../server/src/react.ts"
+      "@smolter/server/react"
     );
     await expect(
       legacyRender(
@@ -148,32 +148,6 @@ it("requires React DOM 19 for integrated SSR without changing the legacy loadRou
       ),
     ).rejects.toThrow("React DOM 19");
   }
-});
-
-it("disposes the request router when a renderer rejects before producing its shell", async () => {
-  const { renderDocument } = await import(
-    "../../server/src/render-application.ts"
-  );
-  let disposed = false;
-  const failure = new Error("Shell failed");
-  await expect(
-    renderDocument(
-      new Request("https://example.test"),
-      [{ path: "/", default: () => null }],
-      {},
-      "/entry.js",
-      { earlyHydration: true },
-      (props) => {
-        const dispose = props.router.dispose;
-        props.router.dispose = () => {
-          disposed = true;
-          dispose();
-        };
-        return Promise.reject(failure);
-      },
-    ),
-  ).rejects.toBe(failure);
-  expect(disposed).toBe(true);
 });
 
 it("renders React document content without an optional root module", async () => {

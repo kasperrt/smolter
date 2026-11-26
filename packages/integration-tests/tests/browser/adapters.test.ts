@@ -12,7 +12,7 @@ import { createRoot as preactRoot } from "preact/compat/client";
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it } from "vitest";
-import { deferred } from "../helpers/deferred";
+import { deferred } from "../../../../tooling/test/deferred.ts";
 
 const frameworks = [
   { name: "React", api: react, element: createElement, root: createRoot },

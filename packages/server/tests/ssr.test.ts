@@ -9,7 +9,8 @@ import { render } from "preact-render-to-string";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { expect, it } from "vitest";
-import { deferred } from "../../integration-tests/tests/helpers/deferred";
+import { deferred } from "../../../tooling/test/deferred.ts";
+import { renderDocument } from "../src/render-application.ts";
 
 it("forwards incoming request cancellation to SSR loaders", async () => {
   const controller = new AbortController();
@@ -196,4 +197,27 @@ it("React and Preact static Scripts omit private error metadata", async () => {
     expect(html).not.toContain("SYNTHETIC_PRIVATE_CONFIG");
   }
   router.dispose();
+});
+
+it("disposes the request router when a renderer rejects before producing its shell", async () => {
+  let disposed = false;
+  const failure = new Error("Shell failed");
+  await expect(
+    renderDocument(
+      new Request("https://example.test"),
+      [{ path: "/", default: () => null }],
+      {},
+      "/entry.js",
+      { earlyHydration: true },
+      (props) => {
+        const dispose = props.router.dispose;
+        props.router.dispose = () => {
+          disposed = true;
+          dispose();
+        };
+        return Promise.reject(failure);
+      },
+    ),
+  ).rejects.toBe(failure);
+  expect(disposed).toBe(true);
 });

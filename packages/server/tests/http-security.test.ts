@@ -7,7 +7,10 @@ import {
 } from "node:http";
 import { type AddressInfo, Socket } from "node:net";
 import { expect, it, vi } from "vitest";
-import { createRequestHandler } from "../src/handler.ts";
+import {
+  createRequestHandler,
+  type ServerIncomingMessage,
+} from "../src/handler.ts";
 import { send, webRequest } from "../src/http.ts";
 
 it("rejects malformed or path-bearing Host headers before dispatching routes", async (context) => {
@@ -131,9 +134,7 @@ it("rejects non-origin-form request targets with 400 and Connection: close", asy
 
 it("rejects synthetic webRequest calls with invalid protocol/origin or non-origin-form target", async () => {
   const make = (host: string, url: string, protocol?: string) => {
-    const incoming = new IncomingMessage(new Socket()) as IncomingMessage & {
-      protocol?: string;
-    };
+    const incoming = new IncomingMessage(new Socket()) as ServerIncomingMessage;
     incoming.headers.host = host;
     incoming.url = url;
     incoming.protocol = protocol;
@@ -162,9 +163,7 @@ it("rejects synthetic webRequest calls with invalid protocol/origin or non-origi
 });
 
 it("accepts a canonical host, an explicit default port, and a backslash in the query", async () => {
-  const incoming = new IncomingMessage(new Socket()) as IncomingMessage & {
-    protocol?: string;
-  };
+  const incoming = new IncomingMessage(new Socket()) as ServerIncomingMessage;
   incoming.headers.host = "app.example:443";
   incoming.url = "/search?q=\\";
   incoming.protocol = "https";

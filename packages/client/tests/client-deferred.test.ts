@@ -2,7 +2,12 @@ import { createDataRouter } from "@smolter/core";
 import { prepareRoutes } from "@smolter/core/prepare-routes";
 import { data } from "@smolter/core/responses";
 import { expect, it, onTestFinished } from "vitest";
-import { deferred } from "../../integration-tests/tests/helpers/deferred.ts";
+
+interface OptionalPayload {
+  optional: Promise<string>;
+}
+
+import { deferred } from "../../../tooling/test/deferred.ts";
 
 it("commits client loader data without awaiting nested promises", async () => {
   const optional = deferred<string>();
@@ -107,7 +112,7 @@ it("keeps late client rejections observable without restoring an abandoned route
     ]),
   );
   await router.navigate("/");
-  const payload = router.getSnapshot().data as { optional: Promise<string> };
+  const payload = router.getSnapshot().data as OptionalPayload;
   expect(payload.optional).toBe(optional);
   await router.navigate("/next");
   reject(new Error("optional failed"));

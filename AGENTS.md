@@ -19,7 +19,7 @@ Read `.agents/skills/smolter/SKILL.md` in full before changing or reviewing this
 
 - Write tests with Vitest. Browser interaction tests use the shared Playwright browser fixture.
 - Before committing, run `pnpm lint`, `pnpm typecheck`, and tests appropriate to the changed behavior. For runtime changes, verify coverage, packed consumers, production-browser behavior and sizes. Keep the existing coverage and size gates.
-- `pnpm lint` runs Biome and the AST-based convention check for prohibited async syntax, `any`, `else`, inline object signatures and padding inside code blocks. Also inspect the diff for ownership and package-boundary rules that syntax checks cannot establish.
+- `pnpm lint` runs Biome and the AST-based convention check for prohibited async syntax, `any`, `else`, inline object types in signatures or type assertions (including inside intersections, unions and generic arguments) and padding inside code blocks. Also inspect the diff for ownership and package-boundary rules that syntax checks cannot establish.
 - Update affected guides, generated API references, size tables and changelog. Distinguish reproducible evidence from assumptions and untested consumer behavior.
 - For beta releases, validate locally and push directly to main without a PR to avoid duplicate CI runs. Stable releases retain the PR process. Keep main CI, JSR validation and independent npm publication. A beta release must not move npm `latest`. Verify actual registry availability and package integrity; an accepted or queued upload is not a completed release.
 - Stop temporary servers and browser sessions started for the task. Preserve existing user development processes and unrelated changes.

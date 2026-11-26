@@ -8,7 +8,7 @@ import { createRoot as preactRoot } from "preact/compat/client";
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it } from "vitest";
-import { deferred } from "../helpers/deferred.ts";
+import { deferred } from "../../../../tooling/test/deferred.ts";
 
 for (const { name, api, h, mount } of [
   { name: "React", api: react, h: createElement, mount: createRoot },

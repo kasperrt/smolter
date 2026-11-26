@@ -7,7 +7,7 @@ import { handleRequest } from "@smolter/server";
 import { dispatchRoute, renderApplication } from "@smolter/server/preact";
 import { Suspense } from "preact/compat";
 import { expect, it } from "vitest";
-import { deferred } from "./helpers/deferred.ts";
+import { deferred } from "../../../tooling/test/deferred.ts";
 
 const root: RootModule = {
   default: Outlet,

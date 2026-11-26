@@ -3,7 +3,7 @@ import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { type AddressInfo, Socket } from "node:net";
 import { safeWrapAsync } from "@smolter/core";
 import { expect, onTestFinished, test, vi } from "vitest";
-import { deferred } from "../../integration-tests/tests/helpers/deferred.ts";
+import { deferred } from "../../../tooling/test/deferred.ts";
 import { createRequestHandler } from "../src/handler.ts";
 import { send, webRequest } from "../src/http.ts";
 

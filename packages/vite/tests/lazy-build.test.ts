@@ -3,10 +3,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build } from "vite";
 import { expect, it } from "vitest";
-import { viteFixture } from "../../integration-tests/tests/helpers/vite.ts";
 import { lazyFiles } from "../src/application/lazy-files.ts";
 import { deploymentPlugin } from "../src/deployment.ts";
 import { fileRouter } from "../src/index.ts";
+import { viteFixture } from "./helpers/vite.ts";
 
 interface DeploymentManifest {
   version: string;

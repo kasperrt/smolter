@@ -18,6 +18,20 @@ import {
 } from "../fixtures/optional-page.tsx";
 import { test } from "../helpers/browser.ts";
 
+interface OptionalMetrics {
+  lcp: number;
+  cls: number;
+}
+
+interface LayoutShift extends PerformanceEntry {
+  hadRecentInput: boolean;
+  value: number;
+}
+
+interface MetricsWindow extends Window {
+  optionalMetrics?: OptionalMetrics;
+}
+
 // This is a comparative fixture, not a timing threshold for shared CI hosts.
 for (const strategy of ["stream", "request"] as const) {
   test(`measure optional loading: ${strategy}`, { timeout: 180_000 }, async ({
@@ -146,10 +160,7 @@ for (const strategy of ["stream", "request"] as const) {
               });
               new PerformanceObserver((list) => {
                 for (const entry of list.getEntries()) {
-                  const shift = entry as PerformanceEntry & {
-                    hadRecentInput: boolean;
-                    value: number;
-                  };
+                  const shift = entry as LayoutShift;
                   if (!shift.hadRecentInput) metrics.cls += shift.value;
                 }
               }).observe({ type: "layout-shift", buffered: true });
@@ -206,11 +217,7 @@ for (const strategy of ["stream", "request"] as const) {
                 "resource",
               ) as PerformanceResourceTiming[];
               return {
-                ...(
-                  window as Window & {
-                    optionalMetrics?: { lcp: number; cls: number };
-                  }
-                ).optionalMetrics,
+                ...(window as MetricsWindow).optionalMetrics,
                 ttfb: nav.responseStart,
                 complete: nav.responseEnd,
                 js: resources

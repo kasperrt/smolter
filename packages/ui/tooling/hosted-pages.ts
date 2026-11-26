@@ -4,6 +4,11 @@ import type { pageMetadata } from "@smolter/ui/metadata";
 import { createServer, type Plugin, type ResolvedConfig } from "vite";
 import { metadataTags } from "./site-metadata.ts";
 
+interface PrerenderModule {
+  prerender: (path: string) => Promise<RenderedPage>;
+  paths: string[];
+}
+
 interface RenderedPage {
   html: string;
   data: string;
@@ -50,10 +55,7 @@ export function hostedPages(framework: "react" | "preact"): Plugin {
       const { error } = await safeWrapAsync(async () => {
         const { prerender, paths } = (await server.ssrLoadModule(
           "/src/prerender.ts",
-        )) as {
-          prerender: (path: string) => Promise<RenderedPage>;
-          paths: string[];
-        };
+        )) as PrerenderModule;
         if (framework === "preact") {
           for (const legacy of ["react", "preact"]) {
             for (const route of paths) {

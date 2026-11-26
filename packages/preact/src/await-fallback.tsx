@@ -4,17 +4,25 @@ import { useState } from "preact/hooks";
 import type { AwaitProps } from "./await.tsx";
 import { useEffect } from "./runtime.ts";
 
-type Resolution<T> = { source: Promise<T> } & Result<{ value: T }>;
+interface Resolved<T> {
+  value: T;
+}
+
+interface ResolutionSource<T> {
+  source: Promise<T>;
+}
+
+type Resolution<T> = ResolutionSource<T> & Result<Resolved<T>>;
 
 // Promise results are shared; each boundary retains its own rendering ownership.
 const resolutions = new WeakMap<
   Promise<unknown>,
-  Promise<Result<{ value: unknown }>>
+  Promise<Result<Resolved<unknown>>>
 >();
 
 export function resolveAwait<T>(resolve: Promise<T>) {
   let pending = resolutions.get(resolve) as
-    | Promise<Result<{ value: T }>>
+    | Promise<Result<Resolved<T>>>
     | undefined;
   if (!pending) {
     pending = safeWrapAsync(async () => ({ value: await resolve }));

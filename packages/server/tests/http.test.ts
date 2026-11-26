@@ -102,9 +102,7 @@ test.each(["production", "development", "test", undefined])(
 );
 
 test("isolates application data endpoints on one origin and streams documents before their tail resolves", async () => {
-  const { deferred } = await import(
-    "../../integration-tests/tests/helpers/deferred.ts"
-  );
+  const { deferred } = await import("../../../tooling/test/deferred.ts");
   const tail = deferred<void>();
   const encoder = new TextEncoder();
   const handlers = ["", "/admin", "/remotes", "/embed"].map((base) => ({

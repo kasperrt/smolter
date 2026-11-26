@@ -18,6 +18,11 @@ export interface DeploymentPluginOptions {
 
 const manifestFilePattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\.json$/;
 
+interface RouteModuleId {
+  path: string;
+  id: string;
+}
+
 interface RouteFingerprint {
   path: string;
   fingerprint: string;
@@ -91,10 +96,7 @@ export function deploymentPlugin(
         }),
       );
       const routeModule = this.getModuleInfo("\0virtual:smolter/routes");
-      const routes = (routeModule?.meta.smolterRoutes ?? []) as {
-        path: string;
-        id: string;
-      }[];
+      const routes = (routeModule?.meta.smolterRoutes ?? []) as RouteModuleId[];
       const routeIds = new Set(routes.map((route) => route.id));
       const fingerprint = (starts: string[], dynamic: boolean) => {
         const visited = new Set<string>();

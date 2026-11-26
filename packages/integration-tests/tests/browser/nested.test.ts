@@ -8,7 +8,7 @@ import { createRoot as preactRoot } from "preact/compat/client";
 import { createElement, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vitest";
-import { deferred } from "../helpers/deferred";
+import { deferred } from "../../../../tooling/test/deferred.ts";
 
 const frameworks = [
   {

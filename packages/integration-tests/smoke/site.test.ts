@@ -1,12 +1,11 @@
-import assert from "node:assert/strict";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { extname, join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { expect } from "@playwright/test";
+import { deferred } from "../../../tooling/test/deferred.ts";
 import { test as browserTest } from "../tests/helpers/browser.ts";
-import { deferred } from "../tests/helpers/deferred.ts";
 
 declare global {
   interface Window {
@@ -64,53 +63,54 @@ const test = browserTest
     page.setDefaultTimeout(10_000);
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    onCleanup(() => assert.deepEqual(errors, []));
+    onCleanup(() => expect(errors).toStrictEqual([]));
     return page;
   });
 
 test("prerendered pages, sitemap and entry bundle meet publishing requirements", () => {
   const sitemap = readFileSync("site/sitemap.xml", "utf8");
-  assert(sitemap.includes("https://kasperrt.github.io/smolter/docs/fetchers/"));
-  assert(
+  expect(sitemap).toContain(
+    "https://kasperrt.github.io/smolter/docs/fetchers/",
+  );
+  expect(
     !sitemap.includes("/react/") &&
       !sitemap.includes("/preact/") &&
       !sitemap.includes("/tasks"),
+  ).toBeTruthy();
+  expect(sitemap, "Removed migration guide remains discoverable").not.toContain(
+    "migration-0.3",
   );
-  assert(
-    !sitemap.includes("migration-0.3"),
-    "Removed migration guide remains discoverable",
-  );
-  assert(!existsSync("site/docs/migration-0.3/index.html"));
+  expect(existsSync("site/docs/migration-0.3/index.html")).toBeFalsy();
   const awaitHtml = readFileSync("site/docs/Await/index.html", "utf8");
-  assert(awaitHtml.includes("React 19+ provides use(promise)"));
-  assert(awaitHtml.includes("https://react.dev/reference/react/use"));
+  expect(awaitHtml).toContain("React 19+ provides use(promise)");
+  expect(awaitHtml).toContain("https://react.dev/reference/react/use");
   const gettingStartedHtml = readFileSync(
     "site/docs/getting-started/index.html",
     "utf8",
   );
-  assert(
-    !/href="(?:\/smolter)?\/(?:tasks|counter|examples\/counter)(?:[/?#"])/.test(
+  expect(
+    /href="(?:\/smolter)?\/(?:tasks|counter|examples\/counter)(?:[/?#"])/.test(
       gettingStartedHtml,
     ),
     "Guide must not link to retired demos",
-  );
+  ).toBeFalsy();
   const landingHtml = readFileSync("site/index.html", "utf8");
-  assert(
-    landingHtml.includes("Data flow you can follow."),
+  expect(
+    landingHtml,
     "Root document must contain prerendered content",
-  );
+  ).toContain("Data flow you can follow.");
   const entry = landingHtml.match(/<script[^>]+src="([^"]+\.js)"/)![1];
   const entryBytes = readFileSync(
     join("site", entry.replace(/^\/smolter\//, "")),
   );
-  assert(
-    gzipSync(entryBytes, { level: 9 }).length < 28_000,
+  expect(
+    gzipSync(entryBytes, { level: 9 }).length,
     "Site initial JavaScript exceeded its 28 kB gzip budget",
-  );
-  assert(
-    !existsSync("site/react/assets"),
+  ).toBeLessThan(28_000);
+  expect(
+    existsSync("site/react/assets"),
     "Do not publish a second React runtime for the site",
-  );
+  ).toBeFalsy();
 });
 
 test("hydration preserves the landing page and article during navigation", async ({
@@ -140,16 +140,16 @@ test("hydration preserves the landing page and article during navigation", async
   });
   releaseEntry();
   await landing.waitForLoadState("networkidle");
-  assert(
+  expect(
     await landing.evaluate(
       () => window.initialLanding === document.querySelector(".landing"),
     ),
     `landing was replaced during hydration`,
-  );
-  assert(
-    !landingScripts.some((url) => /_smolter-doc_|\/source-/.test(url)),
+  ).toBeTruthy();
+  expect(
+    landingScripts.some((url) => /_smolter-doc_|\/source-/.test(url)),
     `unrelated content loaded on landing`,
-  );
+  ).toBeFalsy();
   await landing.close();
   const articleScripts: string[] = [];
   const hydrated = await browser.newPage();
@@ -177,68 +177,65 @@ test("hydration preserves the landing page and article during navigation", async
       exact: true,
     })
     .waitFor();
-  assert.equal(
-    await hydrated.title(),
+  expect(await hydrated.title()).toBe(
     "Independent reads and writes · smolter docs",
   );
-  assert.equal(
+  expect(
     await hydrated.locator('link[rel="canonical"]').getAttribute("href"),
-    "https://kasperrt.github.io/smolter/docs/fetchers/",
-  );
-  assert(
+  ).toBe("https://kasperrt.github.io/smolter/docs/fetchers/");
+  expect(
     await hydrated.locator('meta[name="description"]').getAttribute("content"),
-  );
-  assert.equal(
+  ).toBeTruthy();
+  expect(
     await hydrated.locator('meta[property="og:title"]').getAttribute("content"),
-    await hydrated.title(),
-  );
-  assert.equal(
+  ).toBe(await hydrated.title());
+  expect(
     await hydrated.locator('meta[name="twitter:card"]').getAttribute("content"),
-    "summary_large_image",
-  );
+  ).toBe("summary_large_image");
   const structuredData = await hydrated
     .locator('script[type="application/ld+json"]')
     .textContent();
-  assert(structuredData);
-  const schema = JSON.parse(structuredData);
-  assert.equal(schema.codeRepository, "https://github.com/kasperrt/smolter");
+  expect(structuredData).toBeTruthy();
+  const schema = JSON.parse(structuredData ?? "null");
+  expect(schema.codeRepository).toBe("https://github.com/kasperrt/smolter");
   const icon = await hydrated.locator('link[rel="icon"]').getAttribute("href");
-  assert(icon);
+  expect(icon).toBeTruthy();
   const iconResponse = await hydrated.request.get(
-    new URL(icon, hydrated.url()).href,
+    new URL(icon ?? "", hydrated.url()).href,
   );
-  assert(iconResponse.ok());
-  assert((await iconResponse.text()).includes('<path fill="#572849"'));
+  expect(iconResponse.ok()).toBeTruthy();
+  expect(await iconResponse.text()).toContain('<path fill="#572849"');
   const image = await hydrated
     .locator('meta[property="og:image"]')
     .getAttribute("content");
-  assert(image);
-  assert((await hydrated.request.get(origin + new URL(image).pathname)).ok());
+  expect(image).toBeTruthy();
+  expect(
+    (
+      await hydrated.request.get(origin + new URL(image ?? "", origin).pathname)
+    ).ok(),
+  ).toBeTruthy();
   await hydrated.evaluate(() => {
     window.initialArticle = document.querySelector(".docs-article");
   });
   allowScripts();
   await hydrated.waitForLoadState("networkidle");
-  assert(
+  expect(
     await hydrated.evaluate(
       () => window.initialArticle === document.querySelector(".docs-article"),
     ),
     `${errors.join("\n")}`,
-  );
-  assert(
-    !articleScripts.some((url) => /_smolter-doc_|\/source-/.test(url)),
+  ).toBeTruthy();
+  expect(
+    articleScripts.some((url) => /_smolter-doc_|\/source-/.test(url)),
     `SSR article was downloaded twice`,
-  );
+  ).toBeFalsy();
   console.log(`hydration retained the article`);
-  assert.equal(await hydrated.locator(".docs-support > div").count(), 4);
+  expect(await hydrated.locator(".docs-support > div").count()).toBe(4);
   const documentSupport = hydrated.locator(
     '.docs-sidebar a[href$="/docs/Document"] .docs-support-mini',
   );
-  assert.equal(
-    await documentSupport.locator(".support-alternative").count(),
-    0,
-  );
-  assert.equal(await documentSupport.locator(".support-yes").count(), 4);
+  expect(await documentSupport.locator(".support-alternative").count()).toBe(0);
+  expect(await documentSupport.locator(".support-yes").count()).toBe(4);
   const actionsLink = hydrated
     .getByRole("navigation", { name: "Documentation", exact: true })
     .getByRole("link", { name: "Actions", exact: true });
@@ -247,26 +244,25 @@ test("hydration preserves the landing page and article during navigation", async
   );
   await actionsLink.hover();
   await prefetched;
-  assert.equal(hydrated.url(), `${origin}/smolter/docs/fetchers/`);
+  expect(hydrated.url()).toBe(`${origin}/smolter/docs/fetchers/`);
   await actionsLink.focus();
   await actionsLink.click();
   await hydrated
     .getByRole("heading", { name: "Actions", exact: true })
     .waitFor();
-  assert.equal(
+  expect(
     articleScripts.filter((url) => url.includes("_smolter-doc_")).length,
-    1,
     `navigation should load only its article`,
-  );
-  assert(articleScripts.some((url) => url.includes("_smolter-doc_actions-")));
-  assert.equal(
+  ).toBe(1);
+  expect(
+    articleScripts.some((url) => url.includes("_smolter-doc_actions-")),
+  ).toBeTruthy();
+  expect(
     await hydrated.locator('link[rel="canonical"]').getAttribute("href"),
-    "https://kasperrt.github.io/smolter/docs/actions/",
-  );
-  assert.equal(
+  ).toBe("https://kasperrt.github.io/smolter/docs/actions/");
+  expect(
     await hydrated.locator('meta[property="og:title"]').getAttribute("content"),
-    "Actions · smolter docs",
-  );
+  ).toBe("Actions · smolter docs");
   // A cold article must not replace the shared shell with a loading panel.
   const { promise: articleReady, resolve: releaseArticle } = deferred<void>();
   const { promise: requested, resolve: articleRequested } = deferred<void>();
@@ -287,7 +283,7 @@ test("hydration preserves the landing page and article during navigation", async
       .click();
   });
   await requested;
-  assert(
+  expect(
     await hydrated.evaluate(
       () =>
         window.docsHeader === document.querySelector("header") &&
@@ -296,12 +292,12 @@ test("hydration preserves the landing page and article during navigation", async
         document.querySelector(".docs-article h1")?.textContent === "Actions",
     ),
     "Pending article replaced the guide shell",
-  );
+  ).toBeTruthy();
   releaseArticle();
   await hydrated
     .getByRole("heading", { name: "Loaders", exact: true })
     .waitFor();
-  assert(
+  expect(
     await hydrated.evaluate(
       () =>
         window.docsDocument === document.documentElement &&
@@ -310,25 +306,22 @@ test("hydration preserves the landing page and article during navigation", async
         window.docsArticle === document.querySelector(".docs-article"),
     ),
     "Article navigation remounted the shared layout",
-  );
+  ).toBeTruthy();
   await hydrated.locator(".wordmark").click();
   await hydrated
     .getByRole("heading", { name: "Data flow you can follow.", exact: true })
     .waitFor();
-  assert.equal(
-    await hydrated.title(),
+  expect(await hydrated.title()).toBe(
     "smolter · Typed routing for React and Preact",
   );
-  assert.equal(
+  expect(
     await hydrated.locator('link[rel="canonical"]').getAttribute("href"),
-    "https://kasperrt.github.io/smolter/",
-  );
-  assert.equal(
+  ).toBe("https://kasperrt.github.io/smolter/");
+  expect(
     await hydrated.locator('meta[name="robots"]').getAttribute("content"),
-    "index,follow",
-  );
+  ).toBe("index,follow");
   await hydrated.close();
-  assert.deepEqual(errors, []);
+  expect(errors).toStrictEqual([]);
 });
 
 test("legacy framework links redirect to the guide", async ({
@@ -369,35 +362,33 @@ test("bundle selector reflects measured sizes and respects reduced motion", asyn
   await serverPages.check();
   await page.clock.runFor(120);
   const rising = Number((await total.innerText()).replaceAll(",", ""));
-  assert(
+  expect(
     rising > combinations.preact[1][1] && rising < combinations.preact[3][1],
     "Total must count upward through intermediate values",
-  );
-  assert.equal(
-    await selector.locator(".size-announcement").innerText(),
+  ).toBeTruthy();
+  expect(await selector.locator(".size-announcement").innerText()).toBe(
     `${combinations.preact[3][1].toLocaleString("en-US")} bytes gzip`,
   );
   await serverPages.uncheck();
   await page.clock.runFor(120);
   const falling = Number((await total.innerText()).replaceAll(",", ""));
-  assert(
+  expect(
     falling < rising && falling > combinations.preact[1][1],
     "Rapid changes must retarget downward from the displayed value",
-  );
+  ).toBeTruthy();
   await page.clock.runFor(400);
-  assert.equal(
-    await total.innerText(),
+  expect(await total.innerText()).toBe(
     combinations.preact[1][1].toLocaleString("en-US"),
   );
   await page.clock.resume();
   await expect(total).toHaveText(
     combinations.preact[1][1].toLocaleString("en-US"),
   );
-  assert(
+  expect(
     await selector
       .getByRole("checkbox", { name: "Paths, links & history" })
       .isDisabled(),
-  );
+  ).toBeTruthy();
   await selector
     .getByRole("checkbox", { name: "Prefetch on intent" })
     .uncheck();
@@ -410,16 +401,16 @@ test("bundle selector reflects measured sizes and respects reduced motion", asyn
   await selector
     .getByRole("checkbox", { name: "Server-rendered pages" })
     .check();
-  assert(
+  expect(
     await selector
       .getByRole("checkbox", { name: "Load and save data" })
       .isDisabled(),
-  );
-  assert(
+  ).toBeTruthy();
+  expect(
     await selector
       .getByRole("checkbox", { name: "Load and save data" })
       .isChecked(),
-  );
+  ).toBeTruthy();
   await expect(total).toHaveText(
     combinations.preact[3][1].toLocaleString("en-US"),
   );
@@ -433,28 +424,26 @@ test("bundle selector reflects measured sizes and respects reduced motion", asyn
   });
   await reactChoice.focus();
   await page.keyboard.press("ArrowLeft");
-  assert(
+  expect(
     await selector
       .getByRole("radio", { name: "Preact", exact: true })
       .isChecked(),
-  );
+  ).toBeTruthy();
   await expect(total).toHaveText(
     combinations.preact[3][1].toLocaleString("en-US"),
   );
   await page.keyboard.press("ArrowRight");
-  assert(await reactChoice.isChecked());
+  expect(await reactChoice.isChecked()).toBeTruthy();
   await page.emulateMedia({ reducedMotion: "reduce" });
-  assert.equal(
+  expect(
     await reactChoice.evaluate(
       (input) => getComputedStyle(input.parentElement!).transitionDuration,
     ),
-    "0s",
-  );
+  ).toBe("0s");
   await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 100);
   await selector.getByRole("radio", { name: "Preact", exact: true }).check();
   await page.clock.runFor(80);
-  assert.equal(
-    await total.innerText(),
+  expect(await total.innerText()).toBe(
     combinations.preact[3][1].toLocaleString("en-US"),
   );
   await page.clock.resume();
@@ -465,8 +454,8 @@ test("bundle selector reflects measured sizes and respects reduced motion", asyn
   const comparisons = page.getByRole("table", {
     name: "Bundle sizes · gzip bytes",
   });
-  assert(
-    (await comparisons.innerText()).includes(String(sizes.reactRouterData)),
+  expect(await comparisons.innerText()).toContain(
+    String(sizes.reactRouterData),
   );
   for (const framework of ["react", "preact"]) {
     await selector
@@ -485,20 +474,19 @@ test("bundle selector reflects measured sizes and respects reduced motion", asyn
       });
       const cell = row.getByRole("cell").nth(framework === "react" ? 0 : 1);
       const expected = Number(await cell.innerText());
-      assert.equal(expected, combinations[framework][data ? 1 : 0][1]);
-      assert.equal(
-        expected,
+      expect(expected).toBe(combinations[framework][data ? 1 : 0][1]);
+      expect(expected).toBe(
         sizes[`${framework}${data ? "Common" : "Routing"}`],
       );
       await expect(total).toHaveText(expected.toLocaleString("en-US"));
     }
   }
   await page.setViewportSize({ width: 390, height: 844 });
-  assert(
+  expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
-  );
+  ).toBeTruthy();
 });
 
 test("opening a guide retains usable content while its article loads", async ({
@@ -529,18 +517,17 @@ test("opening a guide retains usable content while its article loads", async ({
   });
   console.log("Pages: waiting for cold guide request");
   await guideRequested;
-  assert(
+  expect(
     await page.evaluate(
       () =>
         window.landingBeforeGuide === document.querySelector(".landing") &&
         window.headerBeforeGuide === document.querySelector("header"),
     ),
     "Opening docs replaced usable content with a loading panel",
-  );
-  assert.equal(
+  ).toBeTruthy();
+  expect(
     await page.getByText("Loading documentation…", { exact: true }).count(),
-    0,
-  );
+  ).toBe(0);
   releaseGuide();
   await page
     .getByRole("heading", { name: "Getting started", exact: true })
@@ -555,7 +542,7 @@ test("deep links serve the matching guide or missing-page metadata", async ({
   await page
     .getByRole("heading", { name: "Data flow you can follow.", exact: true })
     .waitFor();
-  assert.equal(new URL(page.url()).pathname, "/smolter/");
+  expect(new URL(page.url()).pathname).toBe("/smolter/");
   for (const prefix of ["", "react/", "preact/"]) {
     for (const retired of [
       "tasks",
@@ -566,18 +553,16 @@ test("deep links serve the matching guide or missing-page metadata", async ({
       "search",
     ]) {
       const path = `${prefix}${retired}`;
-      assert(!existsSync(`site/${path}/index.html`));
+      expect(existsSync(`site/${path}/index.html`)).toBeFalsy();
       const response = await page.goto(`${origin}/smolter/${path}`);
-      assert(response);
-      assert.equal(response.status(), 404);
+      expect(response?.status()).toBe(404);
       await page
         .getByRole("heading", { name: "Page not found", exact: true })
         .waitFor();
-      assert.equal(page.url(), `${origin}/smolter/${path}`);
-      assert.equal(
+      expect(page.url()).toBe(`${origin}/smolter/${path}`);
+      expect(
         await page.locator('meta[name="robots"]').getAttribute("content"),
-        "noindex,follow",
-      );
+      ).toBe("noindex,follow");
     }
   }
   await page.goto(`${origin}/smolter/docs/useFetcher`);
@@ -601,8 +586,7 @@ test("deep links serve the matching guide or missing-page metadata", async ({
   await page
     .getByRole("heading", { name: "Routing only", exact: true })
     .waitFor();
-  assert.match(
-    await page.locator(".docs-article").innerText(),
+  expect(await page.locator(".docs-article").innerText()).toMatch(
     /Preact routing only: \d+ B gzip/,
   );
   for (const [slug, section] of [
@@ -620,9 +604,8 @@ test("deep links serve the matching guide or missing-page metadata", async ({
     await page
       .getByText("Documentation page not found", { exact: true })
       .waitFor();
-    assert.equal(
+    expect(
       await page.locator('meta[name="robots"]').getAttribute("content"),
-      "noindex,follow",
-    );
+    ).toBe("noindex,follow");
   }
 });

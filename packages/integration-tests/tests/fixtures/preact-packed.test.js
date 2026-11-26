@@ -1,4 +1,3 @@
-import assert from "node:assert/strict";
 import {
   Await,
   defineRoute,
@@ -12,7 +11,7 @@ import { loadRouter } from "@kasperrt/smolter/preact/server";
 import { h } from "preact";
 import { Suspense } from "preact/compat";
 import { render, renderToStringAsync } from "preact-render-to-string";
-import { test } from "vitest";
+import { expect, test } from "vitest";
 
 test("preact-packed consumer", async () => {
   const route = defineRoute("/", {
@@ -24,16 +23,16 @@ test("preact-packed consumer", async () => {
   }
   const router = await loadRouter([route], "https://example.com/");
   const html = render(h(RouterProvider, { router }, h(Routes, {})));
-  assert.match(html, /packed package works/);
+  expect(html).toMatch(/packed package works/);
   const link = () =>
     render(h(RouterProvider, { router }, h(Link, { href: "/join" }, "Join")));
-  assert.match(link(), /href="https:\/\/example\.com\/join"/);
+  expect(link()).toMatch(/href="https:\/\/example\.com\/join"/);
   configureApplication({
     resolveURL: (url) => new URL(url.pathname, "https://remote.example"),
   });
-  assert.match(link(), /href="https:\/\/remote\.example\/join"/);
+  expect(link()).toMatch(/href="https:\/\/remote\.example\/join"/);
   configureApplication({});
-  assert.match(link(), /href="https:\/\/example\.com\/join"/);
+  expect(link()).toMatch(/href="https:\/\/example\.com\/join"/);
   const deferred = await renderToStringAsync(
     h(
       Suspense,
@@ -44,7 +43,7 @@ test("preact-packed consumer", async () => {
       }),
     ),
   );
-  assert.match(deferred, /<output>42<\/output>/);
+  expect(deferred).toMatch(/<output>42<\/output>/);
   const rejected = await renderToStringAsync(
     h(
       Suspense,
@@ -56,7 +55,6 @@ test("preact-packed consumer", async () => {
       }),
     ),
   );
-  assert.match(rejected, /Try again/);
-  assert.doesNotMatch(rejected, /Unexpected/);
-  console.log("preact: packed install + SSR + deferred rendering passed");
+  expect(rejected).toMatch(/Try again/);
+  expect(rejected).not.toMatch(/Unexpected/);
 });

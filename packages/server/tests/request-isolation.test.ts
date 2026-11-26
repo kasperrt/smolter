@@ -1,7 +1,7 @@
 import type { Route } from "@smolter/core";
 import { loadRouter } from "@smolter/server";
 import { expect, it, vi } from "vitest";
-import { deferred } from "../../integration-tests/tests/helpers/deferred.ts";
+import { deferred } from "../../../tooling/test/deferred.ts";
 
 it("isolates credential-bearing SSR requests using the same route definitions", async () => {
   const started = deferred<void>();

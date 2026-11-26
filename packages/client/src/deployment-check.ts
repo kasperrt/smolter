@@ -3,6 +3,10 @@ import { navigationTarget } from "@smolter/core/environment";
 import { namespace } from "@smolter/core/namespace";
 import type { DeploymentOptions } from "./deployment.ts";
 
+interface FingerprintedRoute {
+  fingerprint?: string;
+}
+
 type Manifest = Pick<DeploymentOptions, "version" | "shared" | "routes">;
 function manifestValue(value: unknown): Manifest | undefined {
   if (!value || typeof value !== "object") return;
@@ -81,10 +85,10 @@ export function deploymentCheck(options: DeploymentOptions) {
     )
       return true;
     const before = matchRoutes(options.routes, target.pathname)?.route as
-      | { fingerprint?: string }
+      | FingerprintedRoute
       | undefined;
     const after = matchRoutes(latest.routes, target.pathname)?.route as
-      | { fingerprint?: string }
+      | FingerprintedRoute
       | undefined;
     return !before || !after || before.fingerprint !== after.fingerprint;
   }

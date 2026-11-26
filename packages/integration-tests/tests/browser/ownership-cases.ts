@@ -14,11 +14,25 @@ import { type Router, safeWrapAsync } from "@smolter/core";
 import { createElement } from "preact";
 import { renderToReadableStream } from "preact-render-to-string/stream";
 import { build } from "vite";
+import { deferred } from "../../../../tooling/test/deferred.ts";
 import * as explicit from "../fixtures/owned-ownership-page.tsx";
 import * as original from "../fixtures/ownership-page.tsx";
 import { PreactRoot } from "../fixtures/preact-ownership.tsx";
 import { test } from "../helpers/browser.ts";
-import { deferred } from "../helpers/deferred.ts";
+
+interface FrameObservations {
+  empty: number;
+  done: boolean;
+}
+
+interface OwnershipWindow extends Window {
+  ownershipRouter?: Router;
+  ownershipFrames?: FrameObservations;
+}
+
+interface OptionalData {
+  optional: unknown;
+}
 
 export function ownershipCases(owned = false, selected?: string[]) {
   const { Destination, Home, root } = owned ? explicit : original;
@@ -226,10 +240,9 @@ export function ownershipCases(owned = false, selected?: string[]) {
         if (nestedParent) {
           detail.resolve({ nested });
           await page.evaluate(async () => {
-            const router = (window as Window & { ownershipRouter?: Router })
-              .ownershipRouter;
+            const router = (window as OwnershipWindow).ownershipRouter;
             if (!router) throw new Error("Missing ownership fixture router");
-            await (router.getSnapshot().data as { optional: unknown }).optional;
+            await (router.getSnapshot().data as OptionalData).optional;
           });
           // Suspense retains its server fallback during hydration; explicit Await
           // owns its fallback and can show the newly pending nested boundary.
@@ -348,9 +361,7 @@ export function ownershipCases(owned = false, selected?: string[]) {
             "Optional failed",
           );
           const emptyFrames = await page.evaluate(() => {
-            const { ownershipFrames } = window as Window & {
-              ownershipFrames?: { empty: number; done: boolean };
-            };
+            const { ownershipFrames } = window as OwnershipWindow;
             if (!ownershipFrames) throw new Error("Missing frame observations");
             ownershipFrames.done = true;
             return ownershipFrames.empty;

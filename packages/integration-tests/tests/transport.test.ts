@@ -3,7 +3,7 @@ import { createDataRouter, defineRoute } from "@smolter/core";
 import { dataTarget } from "@smolter/core/transport";
 import { handleRequest } from "@smolter/server";
 import { afterEach, expect, it, vi } from "vitest";
-import { deferred } from "./helpers/deferred";
+import { deferred } from "../../../tooling/test/deferred.ts";
 
 afterEach(() => vi.unstubAllGlobals());
 

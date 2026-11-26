@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
-import { viteFixture } from "../../integration-tests/tests/helpers/vite.ts";
 import { routerPlugin as preactRouter } from "../src/preact.ts";
 import { routerPlugin as reactRouter } from "../src/react.ts";
+import { viteFixture } from "./helpers/vite.ts";
 
 for (const [framework, plugin] of [
   ["react", reactRouter],

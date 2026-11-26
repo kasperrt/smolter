@@ -8,6 +8,11 @@ import { prepareRoutes } from "./prepare-routes.ts";
 import { createDataRouter } from "./router.ts";
 import type { DataArgs, Route, RouteModule, Router } from "./types.ts";
 
+/** Lazily loaded nested route exports, including route handle metadata. */
+interface NestedRouteModule extends RouteModule {
+  handle?: unknown;
+}
+
 /** Absolute route patterns with explicit parent identity; omitted from flat builds. */
 export interface NestedRoute extends Route {
   id: string;
@@ -16,7 +21,7 @@ export interface NestedRoute extends Route {
   pathless?: boolean;
   handle?: unknown;
   preload?: () => Promise<void>;
-  lazy?: () => Promise<RouteModule & { handle?: unknown }>;
+  lazy?: () => Promise<NestedRouteModule>;
 }
 
 /** Loader values belonging to one committed route branch. */

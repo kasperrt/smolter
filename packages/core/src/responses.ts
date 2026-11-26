@@ -12,6 +12,14 @@ export interface RouteError extends Error {
   data?: unknown;
 }
 
+interface RouteErrorPayload {
+  __routeError: unknown;
+}
+
+interface ErrorMessage {
+  message?: unknown;
+}
+
 /** Loader value paired with HTTP response metadata. */
 export interface DataResponse<T> {
   value: T;
@@ -69,11 +77,11 @@ export async function normalizeResult(
     Object.hasOwn(value, "__routeError") &&
     Object.keys(value).length === 1
   ) {
-    const raw = (value as { __routeError: unknown }).__routeError;
+    const raw = (value as RouteErrorPayload).__routeError;
     if (
       raw &&
       typeof raw === "object" &&
-      typeof (raw as { message?: unknown }).message === "string"
+      typeof (raw as ErrorMessage).message === "string"
     ) {
       const source = raw as Record<string, unknown>;
       const error = Error(source.message as string);

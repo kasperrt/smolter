@@ -8,7 +8,7 @@ import type { ActionData, LoaderData } from "@smolter/react";
 import { loadRouter, serialize } from "@smolter/server";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
-import { deferred } from "./helpers/deferred.ts";
+import { deferred } from "../../../tooling/test/deferred.ts";
 
 const body = () => new FormData();
 describe("data router", () => {

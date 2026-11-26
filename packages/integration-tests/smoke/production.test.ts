@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { safeWrapAsync } from "@smolter/core";
+import { expect } from "vitest";
 import { test } from "../tests/helpers/browser.ts";
 
 const examples = [
@@ -33,19 +33,17 @@ for (const { name, port } of examples) {
       }
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    assert.ok(ready, `${name} did not start`);
+    expect(ready, `${name} did not start`).toBeTruthy();
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("console", (message) => {
       if (message.type() === "error") errors.push(message.text());
     });
     const response = await page.goto(`${origin}/examples/counter`);
-    assert.ok(response);
-    assert.equal(
-      await response.headerValue("cache-control"),
+    expect(await response?.headerValue("cache-control")).toBe(
       "private, no-store",
     );
-    assert.match(await response.text(), /data-testid="count">0/);
+    expect(await response?.text()).toMatch(/data-testid="count">0/);
     await page.getByRole("button", { name: "Add one +", exact: true }).click();
     await page.waitForFunction(
       () =>
@@ -78,12 +76,10 @@ for (const { name, port } of examples) {
         hydrationRequests.push(request.url());
     });
     const failed = await page.goto(`${origin}/tasks/missing`);
-    assert.ok(failed);
-    assert.equal(
-      await failed.headerValue("cache-control"),
+    expect(await failed?.headerValue("cache-control")).toBe(
       "private, no-store",
     );
-    assert.match(await failed.text(), /Task not found/);
+    expect(await failed?.text()).toMatch(/Task not found/);
     await page.waitForFunction(() => !document.getElementById("root")?.inert);
     await page
       .getByRole("alert")
@@ -91,10 +87,9 @@ for (const { name, port } of examples) {
       .waitFor();
     await page.getByRole("link", { name: "Docs", exact: true }).click();
     await page.waitForURL("**/docs/getting-started");
-    assert.equal(
+    expect(
       hydrationRequests.filter((url) => url.includes("missing")).length,
-      0,
-    );
-    assert.deepEqual(errors, []);
+    ).toBe(0);
+    expect(errors).toStrictEqual([]);
   });
 }

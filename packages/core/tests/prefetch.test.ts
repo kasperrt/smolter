@@ -1,7 +1,7 @@
 import { createDataRouter } from "@smolter/core";
 
 import { expect, it, vi } from "vitest";
-import { deferred } from "../../integration-tests/tests/helpers/deferred.ts";
+import { deferred } from "../../../tooling/test/deferred.ts";
 
 it("deduplicates reads, reuses navigation data once, and preserves query/hash without publishing speculative state", async () => {
   const gate = deferred<string>();

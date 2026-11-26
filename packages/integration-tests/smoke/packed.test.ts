@@ -1,4 +1,3 @@
-import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import {
   existsSync,
@@ -92,11 +91,10 @@ test.for(cases)(
       { cwd, stdio: "inherit" },
     );
     const other = framework === "react" ? "preact" : "react";
-    assert.equal(
+    expect(
       existsSync(join(cwd, "node_modules", other)),
-      false,
       `${framework} installs must not pull in ${other}`,
-    );
+    ).toBe(false);
     writeFileSync(
       join(cwd, "consumer.test.js"),
       readFileSync(
