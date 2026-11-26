@@ -33,9 +33,11 @@
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "preact": "catalog:",
+    "preact-render-to-string": "catalog:"
   },
-  "version": "0.6.0-alpha.2",
+  "version": "0.6.0-alpha.3",
   "description": "A tiny typed data router for React and Preact.",
   "sideEffects": false,
   "license": "MIT",

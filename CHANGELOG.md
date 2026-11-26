@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0-alpha.3
+
+- Align all versioned workspace packages with the release version and include them in future version bumps.
+- Update development dependencies to the latest versions eligible under the repository release-age policy. Retain the React transform version required by the Vite React plugin.
+- Clarify fixed-entry SSR rendering for static analysis and verify HTML-safe JSON-LD serialization.
+
 ## 0.6.0-alpha.2
 
 - Convert repository scripts, SSR example servers, benchmarks and test fixtures to TypeScript. Add a prerelease increment command.

@@ -19,7 +19,8 @@ export function serverRendering(namespace: string): Plugin {
           const controller = new AbortController();
           response.once("close", () => controller.abort());
           const render = async () => {
-            const entry = await server.ssrLoadModule("/src/server.ts");
+            const { render: renderPage } =
+              await server.ssrLoadModule("/src/server.ts");
             const template = await server.transformIndexHtml(
               request.url!,
               await readFile(resolve(server.config.root, "index.html"), "utf8"),
@@ -44,9 +45,7 @@ export function serverRendering(namespace: string): Plugin {
                 signal: controller.signal,
               },
             );
-            // This is our SSR entry accepting a Request, not Express template-name rendering.
-            // nosemgrep: javascript.express.security.audit.res-render-injection.res-render-injection
-            const html = await entry.render(incoming, template);
+            const html = await renderPage(incoming, template);
             response.setHeader("Content-Type", "text/html; charset=utf-8");
             response.setHeader("Cache-Control", "private, no-store");
             response.end(html);

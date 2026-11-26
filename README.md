@@ -678,18 +678,18 @@ a claim of identical features.
 | --- | ---: |
 | `React Router 8.5.1: declarative routing subset` | 13012 |
 | `React Router 8.5.1: data routing subset` | 30841 |
-| `React: routing-only named exports` | 1928 |
-| `Preact: routing-only named exports` | 1917 |
-| `@kasperrt/smolter/react` | 5974 |
-| `@kasperrt/smolter/preact` | 6586 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 7757 |
-| `@kasperrt/smolter/preact + server transport` | 8376 |
-| `@kasperrt/smolter/react + client + document (application)` | 11280 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 11607 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11898 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 12225 |
-| `React: common routing/data exports` | 4119 |
-| `Preact: common routing/data exports` | 4099 |
+| `React: routing-only named exports` | 1908 |
+| `Preact: routing-only named exports` | 1897 |
+| `@kasperrt/smolter/react` | 5984 |
+| `@kasperrt/smolter/preact` | 6609 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7778 |
+| `@kasperrt/smolter/preact + server transport` | 8403 |
+| `@kasperrt/smolter/react + client + document (application)` | 11285 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 11610 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11923 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 12244 |
+| `React: common routing/data exports` | 4098 |
+| `Preact: common routing/data exports` | 4081 |
 | `wouter 3.13.0: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact 3.13.0: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |
@@ -784,6 +784,8 @@ Vitest runs the unit, browser, integration and packed-consumer suites. Pass a fi
 The CI workflow defines checks for PRs and pushes to main. Coverage must remain at 100%
 for every implementation file across the core, adapters, transport, and routing
 packages. Reports are uploaded as CI artifacts.
+
+Use `pnpm version:prerelease` to advance a prerelease. The command updates npm, JSR and every versioned workspace package together.
 
 Publishing requires passing CI, including the strict size gate. Direct commits
 to main are allowed until 0.0.1 exists on npm and JSR; subsequent changes require

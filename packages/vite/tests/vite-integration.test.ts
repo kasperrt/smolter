@@ -1,4 +1,6 @@
+import { once } from "node:events";
 import { writeFile } from "node:fs/promises";
+import { request as httpRequest } from "node:http";
 import { join } from "node:path";
 import { fileRouter } from "@smolter/vite";
 import { build } from "vite";
@@ -116,12 +118,21 @@ for (const maxBodySize of [undefined, 16]) {
       { maxBodySize },
     );
     const endpoint = `${server.resolvedUrls!.local[0]}.__smolter`;
-    const oversized = await fetch(endpoint, {
+    const request = httpRequest(endpoint, {
       method: "POST",
-      body: "x".repeat((maxBodySize ?? 1_048_576) + 1),
+      headers: { "Content-Length": String((maxBodySize ?? 1_048_576) + 1) },
     });
-    expect(oversized.status).toBe(413);
-    expect(await oversized.text()).toBe("Request body too large");
+    context.onTestFinished(() => {
+      request.destroy();
+    });
+    const received = once(request, "response");
+    request.flushHeaders();
+    const [oversized] = await received;
+    expect(oversized.statusCode).toBe(413);
+    let body = "";
+    for await (const chunk of oversized) body += chunk;
+    expect(body).toBe("Request body too large");
+    request.destroy();
     const accepted = await fetch(endpoint, {
       method: "POST",
       body: "x".repeat(16),

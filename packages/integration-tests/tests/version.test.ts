@@ -34,12 +34,16 @@ for (const [current, command, expected] of [
   it(`handles ${command} for ${current} without corrupting either manifest`, (context) => {
     const cwd = mkdtempSync(join(tmpdir(), "smolter-version-"));
     const directory = cwd;
-    const files = ["package.json", "jsr.json"];
+    const files = ["package.json", "jsr.json", "packages/core/package.json"];
+    mkdirSync(join(cwd, "packages/core"), { recursive: true });
     context.onTestFinished(() => rmSync(cwd, { recursive: true, force: true }));
     mkdirSync(directory, { recursive: true });
     const originals = files.map((file) => {
-      const version =
-        command === "mismatched" && file === "jsr.json" ? "0.0.2" : current;
+      const version = file.startsWith("packages/")
+        ? "0.0.1-rc.1"
+        : command === "mismatched" && file === "jsr.json"
+          ? "0.0.2"
+          : current;
       const contents = JSON.stringify({
         name: "test",
         version,

@@ -1,4 +1,5 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 
 interface Manifest {
   version: string;
@@ -11,6 +12,15 @@ const manifests: Manifest[] = await Promise.all(
   files.map(async (file) => JSON.parse(await readFile(file, "utf8"))),
 );
 const current = manifests[0].version;
+const workspaceFiles = [];
+for (const root of ["packages", "apps"]) {
+  if (!existsSync(root)) continue;
+  for (const entry of await readdir(root, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const file = `${root}/${entry.name}/package.json`;
+    if (existsSync(file)) workspaceFiles.push(file);
+  }
+}
 const numeric = "(0|[1-9]\\d*)";
 const identifier = "(?:0|[1-9]\\d*|\\d*[A-Za-z-][\\dA-Za-z-]*)";
 const pattern = new RegExp(
@@ -44,6 +54,12 @@ if (typeof version !== "string") {
     "Use patch, minor, prerelease (to advance a prerelease), or release (to promote one).",
   );
   process.exit(1);
+}
+for (const file of workspaceFiles) {
+  const manifest: Manifest = JSON.parse(await readFile(file, "utf8"));
+  if (!manifest.version) continue;
+  files.push(file);
+  manifests.push(manifest);
 }
 for (const [index, file] of files.entries()) {
   manifests[index].version = version;
