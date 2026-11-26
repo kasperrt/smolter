@@ -1,4 +1,4 @@
-const suffix = ".__smolter";
+import { dataSuffix } from "./namespace.ts";
 
 /** Parse an origin-form Node request target without accepting absolute-form or malformed URLs. */
 export function requestURL(target: string | undefined): URL | Error {
@@ -14,13 +14,14 @@ export function dataURL(url: URL, endpoint?: string): string {
   if (url.pathname.startsWith("//")) throw new TypeError("Invalid route URL");
   return endpoint
     ? `${endpoint}?url=${encodeURIComponent(url.pathname + url.search)}`
-    : `${url.pathname}${suffix}${url.search}`;
+    : `${url.pathname}${dataSuffix()}${url.search}`;
 }
 
 /** Normalize before dispatch; legacy endpoints are accepted only when configured. */
 export function dataTarget(
   url: URL,
   endpoint?: string,
+  suffix: string = dataSuffix(),
 ): string | Error | undefined {
   const legacy = endpoint !== undefined && url.pathname === endpoint;
   if (!legacy && !url.pathname.endsWith(suffix)) return;

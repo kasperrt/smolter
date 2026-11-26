@@ -1,4 +1,5 @@
 import { safeWrapAsync } from "@smolter/core";
+import { namespace } from "@smolter/core/namespace";
 
 // Late stream failures have no matching server-rendered error content.
 export class HydrationError extends Error {}
@@ -11,12 +12,18 @@ interface PendingValue {
   reject: (reason: Error) => void;
 }
 
+/** Window settlement queue under the default namespace. */
 export interface DeferredWindow extends Window {
   __smolterDeferred?: Settlement[];
 }
 
+const deferredGlobal = `__${namespace}Deferred`;
+const literalTag = `__${namespace}Literal`;
+const undefinedTag = `__${namespace}Undefined`;
+const pendingTag = `__${namespace}Pending`;
+const rejectedTag = `__${namespace}Rejected`;
 // Untrusted markup can carry the same id; only Smolter's JSON script element is a payload.
-const hydrationSelector = 'script#smolter-data[type="application/json"]';
+const hydrationSelector = `script#${namespace}-data[type="application/json"]`;
 
 /** Read the hydration payload without trusting other elements that share its id. */
 export function hydrationPayload(): string | undefined {
@@ -25,9 +32,11 @@ export function hydrationPayload(): string | undefined {
 
 // Named elements can shadow this global; only an array is a settlement queue.
 function deferredQueue(): Settlement[] {
-  const target = window as DeferredWindow;
-  if (!Array.isArray(target.__smolterDeferred)) target.__smolterDeferred = [];
-  return target.__smolterDeferred;
+  const queue: unknown = Reflect.get(window, deferredGlobal);
+  if (Array.isArray(queue)) return queue;
+  const created: Settlement[] = [];
+  Reflect.set(window, deferredGlobal, created);
+  return created;
 }
 
 /** Restore promise identity before hydrating Suspense boundaries. */
@@ -46,26 +55,26 @@ export function readHydration(json: string, timeout = 8_000) {
     if (keys.length !== 1) return value;
     const tag = keys[0];
     const record = value as Record<string, unknown>;
-    if (tag === "__smolterLiteral" && Array.isArray(record.__smolterLiteral)) {
-      const [field, inner] = record.__smolterLiteral;
-      if (typeof field === "string")
-        return Object.defineProperty({}, field, {
+    const field = record[tag];
+    if (tag === literalTag && Array.isArray(field)) {
+      const [name, inner] = field;
+      if (typeof name === "string")
+        return Object.defineProperty({}, name, {
           value: inner,
           enumerable: true,
           writable: true,
           configurable: true,
         });
     }
-    if (tag === "__smolterUndefined" && record.__smolterUndefined === true)
-      return undefined;
+    if (tag === undefinedTag && field === true) return undefined;
     let promise: Promise<unknown>;
     if (
-      tag === "__smolterPending" &&
-      typeof record.__smolterPending === "number" &&
-      Number.isInteger(record.__smolterPending) &&
-      record.__smolterPending >= 0
+      tag === pendingTag &&
+      typeof field === "number" &&
+      Number.isInteger(field) &&
+      field >= 0
     ) {
-      const id = record.__smolterPending;
+      const id = field;
       const existing = pending.get(id);
       if (existing) return existing.promise;
       let resolve!: PendingValue["resolve"];
@@ -76,13 +85,12 @@ export function readHydration(json: string, timeout = 8_000) {
       });
       pending.set(id, { promise, resolve, reject });
     } else if (
-      tag === "__smolterRejected" &&
-      record.__smolterRejected &&
-      typeof record.__smolterRejected === "object" &&
-      typeof (record.__smolterRejected as { message?: unknown }).message ===
-        "string"
+      tag === rejectedTag &&
+      field &&
+      typeof field === "object" &&
+      typeof (field as { message?: unknown }).message === "string"
     ) {
-      const failure = record.__smolterRejected as Record<string, unknown>;
+      const failure = field as Record<string, unknown>;
       const error = new Error(failure.message as string);
       if (typeof failure.name === "string") error.name = failure.name;
       if (typeof failure.status === "number")

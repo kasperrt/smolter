@@ -33,6 +33,11 @@
       "title": "Request body limit (0.5.2)",
       "body": "Node createRequestHandler and Vite applicationPlugins/routerPlugin default to maxBodySize: 1048576 (1 MiB). Oversized declared lengths are rejected before reading; chunked bodies are counted as received and return 413 before application handlers run. The limit includes multipart overhead and counts received bytes, not decompressed content. Configure the same finite, nonnegative integer in production and development for intentionally larger uploads; zero permits only empty bodies. Keep hosting timeouts, rate/concurrency limits and any decompression limits. Low-level webRequest accepts this limit as its fourth argument and throws a Response for policy or size rejection; the provided middleware sends it automatically.",
       "code": "createRequestHandler({ build, entry, maxBodySize: 8 * 1024 * 1024 });\n// Match the production limit in Vite:\napplicationPlugins({ maxBodySize: 8 * 1024 * 1024 });"
+    },
+    {
+      "title": "Custom namespace",
+      "body": "Pass the same namespace as the Vite configuration when this handler is imported directly from @kasperrt/smolter/utils/http rather than bundled by Vite. It selects the /path.__namespace data suffix and is validated like the Vite option. Export the compiled namespace from your SSR entry to keep both in one place.",
+      "code": "// src/server.ts\nexport { namespace } from \"@kasperrt/smolter/utils\";\n\n// server.mjs\nimport { namespace } from \"./dist/server/server.js\";\n\nconst handler = createRequestHandler({ namespace, build, entry });"
     }
   ]
 }

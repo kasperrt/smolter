@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { safeWrapAsync } from "@smolter/core";
+import { dataSuffix, validNamespace } from "@smolter/core/namespace";
 import { dataTarget, requestURL } from "@smolter/core/transport";
 import { send, webRequest } from "./http.ts";
 import { privateResponse } from "./private-response.ts";
@@ -19,6 +20,8 @@ export interface RequestHandlerOptions {
   dataEndpoint?: string;
   /** Maximum request-body bytes, including multipart overhead. Defaults to 1 MiB. */
   maxBodySize?: number;
+  /** Must match the Vite namespace when this handler is not bundled by Vite. */
+  namespace?: string;
 }
 
 /** Node request with optional Express protocol and original URL information. */
@@ -37,11 +40,15 @@ export function createRequestHandler({
   entry,
   dataEndpoint,
   maxBodySize,
+  namespace,
 }: RequestHandlerOptions): (
   incoming: ServerIncomingMessage,
   outgoing: ServerResponse,
   next: NextHandler,
 ) => Promise<void> {
+  const suffix = dataSuffix(
+    namespace === undefined ? undefined : validNamespace(namespace),
+  );
   return async (
     incoming: ServerIncomingMessage,
     outgoing: ServerResponse,
@@ -59,7 +66,7 @@ export function createRequestHandler({
         );
         return;
       }
-      const target = dataTarget(url, dataEndpoint);
+      const target = dataTarget(url, dataEndpoint, suffix);
       const dataRequest = target !== undefined;
       if (dataRequest) outgoing.setHeader("Cache-Control", "private, no-store");
       if (target instanceof Error) {

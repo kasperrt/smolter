@@ -11,6 +11,7 @@ import {
   type Router,
   safeWrapAsync,
 } from "@smolter/core";
+import { namespace } from "@smolter/core/namespace";
 import { privateResponse } from "./private-response.ts";
 import { requestPolicy } from "./request-policy.ts";
 
@@ -84,7 +85,7 @@ async function dispatchRequest(
     if (location) {
       const headers = new Headers(result.data.headers);
       headers.delete("Location");
-      headers.set("X-Smolter-Redirect", location);
+      headers.set(`X-${namespace}-Redirect`, location);
       return new Response(null, { headers });
     }
     return result.data;

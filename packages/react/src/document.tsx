@@ -6,6 +6,7 @@
 
 import { applicationEnvironment } from "@smolter/core/environment";
 import { errorData } from "@smolter/core/errors";
+import { namespace } from "@smolter/core/namespace";
 import { scrollPositions } from "@smolter/core/navigation";
 import { serializeData } from "@smolter/core/serialize";
 import type { ComponentProps } from "react";
@@ -99,7 +100,7 @@ export function Scripts({ nonce }: ScriptProps): import("react").ReactElement {
       },
     }),
     createElement("script", {
-      id: "smolter-data",
+      id: `${namespace}-data`,
       type: "application/json",
       ...(nonce && { nonce }),
       dangerouslySetInnerHTML: { __html: json },

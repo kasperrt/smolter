@@ -41,6 +41,7 @@ export function configureTransport(
   framework: "react" | "preact" = "react",
   dataEndpoint: string | undefined = undefined,
   maxBodySize?: number,
+  suffix?: string,
 ): void {
   guardRequests(server);
   server.middlewares.use(async (incoming, outgoing, next) => {
@@ -54,7 +55,7 @@ export function configureTransport(
           }),
           outgoing,
         );
-      const target = dataTarget(url, dataEndpoint);
+      const target = dataTarget(url, dataEndpoint, suffix);
       if (target === undefined) return next();
       outgoing.setHeader("Cache-Control", "private, no-store");
       if (target instanceof Error) {

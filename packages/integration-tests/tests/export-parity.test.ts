@@ -13,6 +13,7 @@ it("keeps adapter implementation helpers out of public utilities", () => {
     "defineRoute",
     "internalURL",
     "matchRoutes",
+    "namespace",
     "navigationClick",
     "serialize",
     "serializeData",

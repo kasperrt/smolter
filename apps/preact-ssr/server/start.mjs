@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { extname, resolve } from "node:path";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
 import { safeWrapAsync } from "@smolter/core";
-import { data, render } from "../dist/server/server.js";
+import { data, namespace, render } from "../dist/server/server.js";
 
 const root = await realpath(resolve(import.meta.dirname, "../dist"));
 const template = await readFile(resolve(root, "index.html"), "utf8");
@@ -14,7 +14,10 @@ const types = {
   ".woff2": "font/woff2",
 };
 
+const session = `${namespace}-session`;
+const sessionPattern = new RegExp(`(?:^|; )${session}=([\\w-]+)`);
 const application = createRequestHandler({
+  namespace,
   entry: "",
   build: {
     default: async (request) =>
@@ -74,9 +77,7 @@ createServer(async (incoming, outgoing) => {
       return;
     }
     const cookieHeader = incoming.headers.cookie ?? "";
-    const existing = cookieHeader.match(
-      /(?:^|; )smolter-session=([\w-]+)/,
-    )?.[1];
+    const existing = cookieHeader.match(sessionPattern)?.[1];
     if (!existing || !issuedSessions.has(existing)) {
       const id = randomUUID();
       if (issuedSessions.size >= MAX_SESSIONS)
@@ -84,11 +85,11 @@ createServer(async (incoming, outgoing) => {
       issuedSessions.add(id);
       const others = cookieHeader
         .split(/;\s*/)
-        .filter((part) => part && !part.startsWith("smolter-session="));
-      incoming.headers.cookie = [...others, `smolter-session=${id}`].join("; ");
+        .filter((part) => part && !part.startsWith(`${session}=`));
+      incoming.headers.cookie = [...others, `${session}=${id}`].join("; ");
       outgoing.setHeader(
         "Set-Cookie",
-        `smolter-session=${id}; HttpOnly; SameSite=Lax; Path=/`,
+        `${session}=${id}; HttpOnly; SameSite=Lax; Path=/`,
       );
     }
     await application(incoming, outgoing, () => {

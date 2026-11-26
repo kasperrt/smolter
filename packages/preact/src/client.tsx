@@ -19,6 +19,7 @@ import {
   safeWrapAsync,
 } from "@smolter/core";
 import { errorData } from "@smolter/core/errors";
+import { namespace } from "@smolter/core/namespace";
 import { connectNavigation } from "@smolter/core/navigation";
 import { retainRoute } from "@smolter/core/presentation";
 import { hydrate, render } from "preact";
@@ -96,7 +97,7 @@ export async function mountApplication(
     // Explicitly unmanaged head nodes must not participate in positional hydration.
     const preserved = Array.from(
       document.querySelectorAll(
-        "head > [data-smolter-preserve], body > [data-smolter-stream]",
+        `head > [data-${namespace}-preserve], body > [data-${namespace}-stream]`,
       ),
       (node) => ({ node, next: node.nextSibling, parent: node.parentNode! }),
     );

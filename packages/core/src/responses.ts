@@ -3,6 +3,8 @@
  *
  * @module
  */
+import { namespace } from "./namespace.ts";
+
 /** Normalized route failure with an HTTP status, status text and optional response data. */
 export interface RouteError extends Error {
   status: number;
@@ -17,7 +19,7 @@ export interface DataResponse<T> {
   __routeData: true;
 }
 
-const routeDataMarker = Symbol.for("smolter.routeData");
+const routeDataMarker = Symbol.for(`${namespace}.routeData`);
 
 function isRouteData(value: unknown): value is DataResponse<unknown> {
   return Boolean(

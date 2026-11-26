@@ -1,0 +1,28 @@
+{
+  "slug": "namespace",
+  "title": "namespace",
+  "summary": "The configured client-visible identifier prefix.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Value",
+      "body": "The namespace configured through the Vite namespace option, or \"smolter\" when none is set. Vite compiles it into browser and SSR bundles; code that Vite does not bundle sees the default.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Derive application-owned names, such as a session cookie or a custom hydration bootstrap, from the same value so a single Vite option renames them.",
+      "code": "import { namespace } from \"@kasperrt/smolter/utils\";\n\nconst cookie = `${namespace}-session`;\nconst data = document.querySelector(\n  `script#${namespace}-data[type=\"application/json\"]`,\n);"
+    },
+    {
+      "title": "Configuration",
+      "body": "Set the value with the namespace option of applicationPlugins, fileRouter or deploymentPlugin. All plugins read the same resolved Vite define, so setting it once is enough.",
+      "code": "applicationPlugins({ namespace: \"app\" });"
+    },
+    {
+      "title": "Behavior and edge cases",
+      "body": "Changing the namespace changes the transport suffix, redirect header, hydration script id, deferred globals and sentinels, stream attributes, recovery storage key and default manifest file. Deploy matching browser and server builds together and update markup that uses data-smolter-preserve to data-<namespace>-preserve. A Node handler imported outside Vite must receive the namespace explicitly.",
+      "code": ""
+    }
+  ]
+}

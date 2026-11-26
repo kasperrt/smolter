@@ -1,5 +1,6 @@
 import { readFile, realpath } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
+import { dataSuffix } from "@smolter/core/namespace";
 import { flatRoutes } from "@smolter/files";
 import {
   isFileServingAllowed,
@@ -7,6 +8,7 @@ import {
   transformWithOxc,
   type ViteDevServer,
 } from "vite";
+import { configuredNamespace, namespaceConfig } from "./namespace.ts";
 import { prefetchSelection } from "./prefetch-plugin.ts";
 import { configureTransport } from "./transport.ts";
 
@@ -18,6 +20,12 @@ export interface FileRouterOptions {
   clientRoutes?: string;
   serverRoutes?: string;
   framework?: "react" | "preact";
+  /**
+   * Client-visible identifier prefix: lowercase letters and digits, defaulting to "smolter".
+   * It names the `.__${namespace}` data suffix, `X-${namespace}-Redirect` header,
+   * `${namespace}-data` hydration script, deferred globals and stream attributes.
+   */
+  namespace?: string;
 }
 
 /** Build-time flat route discovery and the optional server data transport. */
@@ -28,20 +36,23 @@ export function routerPlugin({
   clientRoutes,
   serverRoutes,
   framework = "react",
+  namespace,
 }: FileRouterOptions = {}): Plugin {
   const prefetch = prefetchSelection();
   let root: string;
   let projectRoot: string;
   let devServer: ViteDevServer | undefined;
+  let suffix = dataSuffix();
   const clientFiles = new Set<string>();
   const publicId = "virtual:smolter/routes";
   const virtualId = `\0${publicId}`;
-  const suffix = "?smolter-client";
+  const clientQuery = "?smolter-client";
   return {
     name: "smolter-flat-routes",
     enforce: "pre",
     config() {
       return {
+        ...namespaceConfig(namespace),
         // Keep capability implementations visible to this plugin instead of hiding it
         // inside a development dependency prebundle or an external SSR package.
         optimizeDeps: { exclude: ["@kasperrt/smolter"] },
@@ -52,6 +63,7 @@ export function routerPlugin({
       return prefetch.transform(code, id);
     },
     configResolved(config) {
+      suffix = dataSuffix(configuredNamespace(config));
       prefetch.configure(config.root);
       projectRoot = config.root;
       root = resolve(config.root, directory);
@@ -60,8 +72,8 @@ export function routerPlugin({
       if (id === publicId) return virtualId;
     },
     async load(id, options) {
-      if (id.endsWith(suffix)) {
-        const file = id.slice(0, -suffix.length);
+      if (id.endsWith(clientQuery)) {
+        const file = id.slice(0, -clientQuery.length);
         if (!clientFiles.has(file)) {
           const routes = await flatRoutes(root, true);
           if (routes instanceof Error) return this.error(routes.message);
@@ -173,9 +185,9 @@ export function routerPlugin({
       }
       const routes = await flatRoutes(root);
       if (routes instanceof Error) return this.error(routes.message);
-      if (routes.some((route) => route.path.endsWith(".__smolter")))
+      if (routes.some((route) => route.path.endsWith(suffix)))
         return this.error(
-          "The .__smolter suffix is reserved for data transport.",
+          `The ${suffix} suffix is reserved for data transport.`,
         );
       clientFiles.clear();
       for (const route of routes) clientFiles.add(route.file);
@@ -214,7 +226,7 @@ export function routerPlugin({
           }
         }
         imports.push(
-          `import * as route${index} from ${JSON.stringify(file + (options?.ssr ? "" : suffix))};`,
+          `import * as route${index} from ${JSON.stringify(file + (options?.ssr ? "" : clientQuery))};`,
         );
         definitions.push(
           options?.ssr || !Object.keys(handlers).length
@@ -261,6 +273,7 @@ export function routerPlugin({
         framework,
         dataEndpoint,
         maxBodySize,
+        suffix,
       );
     },
   };

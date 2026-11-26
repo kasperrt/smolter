@@ -33,7 +33,7 @@ it.each(["react", "preact"])(
       writeFile(join(root, "dist/index.html"), "SSR template"),
       writeFile(
         join(root, "dist/server/server.js"),
-        'export const data = () => Response.json(null); export const render = () => "SSR response";',
+        'export const namespace = "smolter"; export const data = () => Response.json(null); export const render = () => "SSR response";',
       ),
       writeFile(join(root, "dist/assets/app.js"), "public asset"),
       ...[

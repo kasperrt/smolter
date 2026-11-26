@@ -668,14 +668,14 @@ a claim of identical features.
 | `React Router 8.5.1: data routing subset` | 30841 |
 | `React: routing-only named exports` | 1921 |
 | `Preact: routing-only named exports` | 1910 |
-| `@kasperrt/smolter/react` | 5929 |
-| `@kasperrt/smolter/preact` | 6534 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 7690 |
-| `@kasperrt/smolter/preact + server transport` | 8302 |
-| `@kasperrt/smolter/react + client + document (application)` | 11141 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 11477 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11761 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 12090 |
+| `@kasperrt/smolter/react` | 5966 |
+| `@kasperrt/smolter/preact` | 6575 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7743 |
+| `@kasperrt/smolter/preact + server transport` | 8356 |
+| `@kasperrt/smolter/react + client + document (application)` | 11215 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 11544 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11830 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 12154 |
 | `React: common routing/data exports` | 4131 |
 | `Preact: common routing/data exports` | 4111 |
 | `wouter 3.13.0: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
@@ -817,6 +817,8 @@ for Express, CDN paths, TypeScript declarations and unsaved-state handling.
 ### Shared origins and streaming SSR
 
 The default route suffix preserves application prefixes: `/admin/users.__smolter` dispatches `/admin/users`. Reserve this suffix in Express and static routing, and apply authentication to both document and data requests. File routing rejects statically declared suffix collisions; arbitrary Express routes and dynamic parameter values remain host-owned. Explicit `dataEndpoint` configuration retains the legacy query transport for migration and must agree across browser, Vite and production. Transport responses, including errors and redirects, use `Cache-Control: private, no-store`.
+
+Set `namespace` on `applicationPlugins` or `fileRouter` to rename every client-visible identifier, for example `namespace: "app"` for `/users.__app`, `X-app-Redirect`, `#app-data`, `data-app-preserve` and `app-manifest.json`. Vite compiles it into browser and SSR bundles. Pass the same `namespace` to `createRequestHandler` when the handler is imported outside the Vite build, and use `namespace` from `@kasperrt/smolter/utils` for application-owned names such as session cookies.
 
 Pass deployment metadata before mounting so recovery covers the initial route import:
 

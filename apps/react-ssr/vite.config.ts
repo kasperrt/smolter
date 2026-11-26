@@ -5,6 +5,9 @@ import { defineConfig } from "vite";
 import { serverRendering } from "./server/render-plugin.ts";
 import { sessions } from "./server/session.ts";
 
+// Rename every client-visible Smolter identifier, including the example session cookie.
+const namespace = "smolter";
+
 const routing =
   process.env.SMOLTER_ROUTES === "manual"
     ? {
@@ -23,9 +26,9 @@ export default defineConfig({
       include: /\/apps\/react(?:-ssr)?\/src\/.*\.[jt]sx?(?:\?.*)?$/,
     }),
     demoAssets(),
-    sessions(),
-    fileRouter(routing),
-    serverRendering(),
+    sessions(namespace),
+    fileRouter({ ...routing, namespace }),
+    serverRendering(namespace),
   ],
   ssr: { noExternal: ["@smolter/ui", "@kasperrt/smolter"] },
 });

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Features
+
+- A `namespace` option on `applicationPlugins`, `fileRouter`/`routerPlugin` and `deploymentPlugin` renames every client-visible Smolter identifier from Vite configuration. With `namespace: "app"`, data requests use `/path.__app`, redirects use `X-app-Redirect`, the hydration script is `#app-data`, deferred data uses `window.__appDeferred` and `__app*` sentinels, streaming attributes are `data-app-stream`/`data-app-preserve`, recovery uses the `app:deployment` session key, and the deployment manifest is `app-manifest.json`. Vite compiles the value into browser and SSR bundles, so a production browser build contains no `smolter` identifier. Names are limited to 32 lowercase letters or digits starting with a letter. The default stays `smolter`, so existing applications are unchanged.
+- `deploymentPlugin({ manifestFile })` sets the emitted manifest name independently; the default `manifestURL` follows it.
+- `createRequestHandler({ namespace })` matches the Vite namespace when the handler is imported outside the Vite build, and `namespace` from `@kasperrt/smolter/utils` exposes the compiled value for application-owned names. The SSR examples derive their session cookie, hydration script and data suffix from one `namespace` constant in `vite.config.ts`.
+
 ### Security
 
 - The React and Preact SSR examples send `Cache-Control: private, no-store` on session-specific HTML in development and production.
@@ -20,6 +26,7 @@
 ### Size
 
 - The hydration element and deferred-queue checks add, in matched gzip sizes: React application +41 B, React lazy application +42 B, Preact application +34 B, Preact file-routed application +37 B. Routing-only and common data subsets are unchanged. Size tables also reflect the earlier hardening in this release.
+- Namespace support adds, in matched gzip sizes: React adapter +37 B, Preact adapter +41 B, server transport +53–54 B, React application +74 B, React lazy application +67 B, Preact application +69 B, Preact file-routed application +64 B. Routing-only and common data subsets are unchanged.
 
 ## 0.5.6
 

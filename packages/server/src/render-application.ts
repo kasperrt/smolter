@@ -1,6 +1,7 @@
 import type { DataArgs, Route, Router } from "@smolter/core";
 import { createDataRouter, matchRoutes, safeWrapAsync } from "@smolter/core";
 import { errorData } from "@smolter/core/errors";
+import { namespace } from "@smolter/core/namespace";
 import { prepareRoutes } from "@smolter/core/prepare-routes";
 import { type DataResponse, normalizeResult } from "@smolter/core/responses";
 import { loadRouter } from "@smolter/server";
@@ -11,7 +12,7 @@ import { progressiveDocument } from "./progressive-document.ts";
 import { requestPolicy } from "./request-policy.ts";
 import { resolveHydration, streamDocument } from "./stream-document.ts";
 
-const routeDataMarker = Symbol.for("smolter.routeData");
+const routeDataMarker = Symbol.for(`${namespace}.routeData`);
 
 function isRouteData(value: unknown): value is DataResponse<unknown> {
   return Boolean(

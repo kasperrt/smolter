@@ -11,6 +11,7 @@ import type {
   RouteModule,
 } from "@smolter/core";
 
+import { namespace } from "@smolter/core/namespace";
 import { dataURL } from "@smolter/core/transport";
 
 export type { ClientActionArgs, ClientLoaderArgs } from "@smolter/core";
@@ -49,7 +50,7 @@ export function serverRoute<M extends RouteModule = RouteModule>(
       signal,
       ...(request.method !== "GET" && { body: await request.formData() }),
     });
-    const location = response.headers.get("X-Smolter-Redirect");
+    const location = response.headers.get(`X-${namespace}-Redirect`);
     if (location)
       return new Response(null, {
         status: 303,

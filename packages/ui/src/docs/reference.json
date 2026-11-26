@@ -2065,7 +2065,7 @@
     "entries": ["react/vite", "preact/vite"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface FileRouterOptions {\n  directory?: string;\n  dataEndpoint?: string;\n  /** Maximum development request-body bytes. Defaults to 1 MiB. */\n  maxBodySize?: number;\n  clientRoutes?: string;\n  serverRoutes?: string;\n  framework?: \"react\" | \"preact\";\n}",
+    "signature": "interface FileRouterOptions {\n  directory?: string;\n  dataEndpoint?: string;\n  /** Maximum development request-body bytes. Defaults to 1 MiB. */\n  maxBodySize?: number;\n  clientRoutes?: string;\n  serverRoutes?: string;\n  framework?: \"react\" | \"preact\";\n  /**\n   * Client-visible identifier prefix: lowercase letters and digits, defaulting to \"smolter\".\n   * It names the `.__${namespace}` data suffix, `X-${namespace}-Redirect` header,\n   * `${namespace}-data` hydration script, deferred globals and stream attributes.\n   */\n  namespace?: string;\n}",
     "fields": [
       {
         "name": "directory",
@@ -2096,6 +2096,11 @@
         "name": "framework",
         "signature": "framework?: \"react\" | \"preact\";",
         "summary": ""
+      },
+      {
+        "name": "namespace",
+        "signature": "namespace?: string;",
+        "summary": "Client-visible identifier prefix: lowercase letters and digits, defaulting to \"smolter\".\nIt names the `.__${namespace}` data suffix, `X-${namespace}-Redirect` header,\n`${namespace}-data` hydration script, deferred globals and stream attributes."
       }
     ],
     "source": "packages/vite/src/index.ts"
@@ -2116,7 +2121,7 @@
     "entries": ["react/vite", "preact/vite"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface ApplicationOptions {\n  directory?: string;\n  framework?: \"react\" | \"preact\";\n  dataEndpoint?: string;\n  /** Maximum development request-body bytes. Defaults to 1 MiB. */\n  maxBodySize?: number;\n  ssr?: boolean;\n  splitRoutes?: boolean;\n  resourceRequest?: (url: string) => boolean;\n}",
+    "signature": "interface ApplicationOptions {\n  directory?: string;\n  framework?: \"react\" | \"preact\";\n  dataEndpoint?: string;\n  /** Maximum development request-body bytes. Defaults to 1 MiB. */\n  maxBodySize?: number;\n  ssr?: boolean;\n  splitRoutes?: boolean;\n  resourceRequest?: (url: string) => boolean;\n  /** Client-visible identifier prefix; see routerPlugin. Defaults to \"smolter\". */\n  namespace?: string;\n}",
     "fields": [
       {
         "name": "directory",
@@ -2152,6 +2157,11 @@
         "name": "resourceRequest",
         "signature": "resourceRequest?: (url: string) => boolean;",
         "summary": ""
+      },
+      {
+        "name": "namespace",
+        "signature": "namespace?: string;",
+        "summary": "Client-visible identifier prefix; see routerPlugin. Defaults to \"smolter\"."
       }
     ],
     "source": "packages/vite/src/application/vite.ts"
@@ -2162,17 +2172,27 @@
     "entries": ["react/vite", "preact/vite"],
     "kind": "Types",
     "summary": "Deployment manifest configuration. Serve the emitted file with Cache-Control: no-store.",
-    "signature": "interface DeploymentPluginOptions {\n  /** Public URL, optionally on an asset host. Defaults to Vite base + smolter-manifest.json. */\n  manifestURL?: string;\n  /** Change when independently deployed server contracts become incompatible. */\n  compatibility?: string;\n}",
+    "signature": "interface DeploymentPluginOptions {\n  /** Public URL, optionally on an asset host. Defaults to Vite base + manifestFile. */\n  manifestURL?: string;\n  /** Change when independently deployed server contracts become incompatible. */\n  compatibility?: string;\n  /** Emitted manifest file name. Defaults to `${namespace}-manifest.json`. */\n  manifestFile?: string;\n  /** Client-visible identifier prefix; see routerPlugin. Defaults to \"smolter\". */\n  namespace?: string;\n}",
     "fields": [
       {
         "name": "manifestURL",
         "signature": "manifestURL?: string;",
-        "summary": "Public URL, optionally on an asset host. Defaults to Vite base + smolter-manifest.json."
+        "summary": "Public URL, optionally on an asset host. Defaults to Vite base + manifestFile."
       },
       {
         "name": "compatibility",
         "signature": "compatibility?: string;",
         "summary": "Change when independently deployed server contracts become incompatible."
+      },
+      {
+        "name": "manifestFile",
+        "signature": "manifestFile?: string;",
+        "summary": "Emitted manifest file name. Defaults to `${namespace}-manifest.json`."
+      },
+      {
+        "name": "namespace",
+        "signature": "namespace?: string;",
+        "summary": "Client-visible identifier prefix; see routerPlugin. Defaults to \"smolter\"."
       }
     ],
     "source": "packages/vite/src/deployment.ts"
@@ -2294,7 +2314,7 @@
     "entries": ["utils/http"],
     "kind": "API",
     "summary": "Node/Express middleware; mount after metrics, tracing and static assets.",
-    "signature": "function createRequestHandler({\n  build,\n  entry,\n  dataEndpoint,\n  maxBodySize,\n}: RequestHandlerOptions): (\n  incoming: ServerIncomingMessage,\n  outgoing: ServerResponse,\n  next: NextHandler,\n) => Promise<void>;",
+    "signature": "function createRequestHandler({\n  build,\n  entry,\n  dataEndpoint,\n  maxBodySize,\n  namespace,\n}: RequestHandlerOptions): (\n  incoming: ServerIncomingMessage,\n  outgoing: ServerResponse,\n  next: NextHandler,\n) => Promise<void>;",
     "fields": [],
     "source": "packages/server/src/handler.ts"
   },
@@ -2325,7 +2345,7 @@
     "entries": ["utils/http"],
     "kind": "Types",
     "summary": "SSR build, browser entry URL and application-scoped data endpoint for Node or Express.",
-    "signature": "interface RequestHandlerOptions {\n  build: ServerBuild;\n  /** Browser entry URL resolved from Vite's production manifest. */\n  entry: string;\n  /** Must match the browser and Vite transport endpoint. */\n  dataEndpoint?: string;\n  /** Maximum request-body bytes, including multipart overhead. Defaults to 1 MiB. */\n  maxBodySize?: number;\n}",
+    "signature": "interface RequestHandlerOptions {\n  build: ServerBuild;\n  /** Browser entry URL resolved from Vite's production manifest. */\n  entry: string;\n  /** Must match the browser and Vite transport endpoint. */\n  dataEndpoint?: string;\n  /** Maximum request-body bytes, including multipart overhead. Defaults to 1 MiB. */\n  maxBodySize?: number;\n  /** Must match the Vite namespace when this handler is not bundled by Vite. */\n  namespace?: string;\n}",
     "fields": [
       {
         "name": "build",
@@ -2346,6 +2366,11 @@
         "name": "maxBodySize",
         "signature": "maxBodySize?: number;",
         "summary": "Maximum request-body bytes, including multipart overhead. Defaults to 1 MiB."
+      },
+      {
+        "name": "namespace",
+        "signature": "namespace?: string;",
+        "summary": "Must match the Vite namespace when this handler is not bundled by Vite."
       }
     ],
     "source": "packages/server/src/handler.ts"
@@ -2416,5 +2441,15 @@
       }
     ],
     "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "namespace",
+    "title": "namespace",
+    "entries": ["utils"],
+    "kind": "API",
+    "summary": "Client-visible prefix for transport, hydration and deployment identifiers.",
+    "signature": "const namespace: string;",
+    "fields": [],
+    "source": "packages/core/src/namespace.ts"
   }
 ]

@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { safeWrapAsync } from "@smolter/core";
 import type { Plugin } from "vite";
 
-export function serverRendering(): Plugin {
+export function serverRendering(namespace: string): Plugin {
   return {
     name: "example-ssr",
     configureServer(server) {
@@ -12,7 +12,7 @@ export function serverRendering(): Plugin {
           if (
             request.method !== "GET" ||
             new URL(request.url ?? "/", "http://local").pathname.endsWith(
-              ".__smolter",
+              `.__${namespace}`,
             )
           )
             return next();
