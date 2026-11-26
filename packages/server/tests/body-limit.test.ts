@@ -44,12 +44,21 @@ async function host(
 it("caps default document and both data request bodies before application work", async (context) => {
   const { origin, action, next } = await host(context);
   for (const path of ["/", "/account.__smolter", "/_smolter?url=%2Faccount"]) {
-    const response = await fetch(origin + path, {
+    const request = httpRequest(origin + path, {
       method: "POST",
-      body: new Uint8Array(1_048_577),
+      headers: { "Content-Length": "1048577" },
     });
-    expect(response.status).toBe(413);
-    expect(await response.text()).toBe("Request body too large");
+    context.onTestFinished(() => {
+      request.destroy();
+    });
+    const received = once(request, "response");
+    request.flushHeaders();
+    const [response] = await received;
+    expect(response.statusCode).toBe(413);
+    let body = "";
+    for await (const chunk of response) body += chunk;
+    expect(body).toBe("Request body too large");
+    request.destroy();
   }
   expect(action).not.toHaveBeenCalled();
   expect(next).not.toHaveBeenCalled();

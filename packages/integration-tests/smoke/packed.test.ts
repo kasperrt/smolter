@@ -43,7 +43,7 @@ const cases = [
   { framework: "react", version: "18.0.0" },
   { framework: "react", version: "19.3.1" },
   { framework: "preact", version: "11.0.1" },
-  { framework: "preact", version: "11.1.1" },
+  { framework: "preact", version: "11.2.0" },
 ];
 test.for(cases)(
   "packed $framework@$version",
@@ -70,7 +70,7 @@ test.for(cases)(
           ]
         : [
             `preact@${version}`,
-            `preact-render-to-string@${version === "11.0.1" ? "6.8.1" : "6.8.2"}`,
+            `preact-render-to-string@${version === "11.0.1" ? "6.8.1" : "6.8.3"}`,
           ];
     execFileSync(
       "npm",
@@ -82,7 +82,7 @@ test.for(cases)(
         "--no-fund",
         ...deps,
         "typescript@7.0.2",
-        "vite@8.3.5",
+        "vite@8.3.8",
       ],
       { cwd, stdio: "inherit" },
     );
