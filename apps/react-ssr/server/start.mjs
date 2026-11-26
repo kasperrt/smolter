@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { readFile, realpath } from "node:fs/promises";
+import { readdir, readFile, realpath } from "node:fs/promises";
 import { createServer } from "node:http";
 import { extname, resolve } from "node:path";
+import { promisify } from "node:util";
+import { brotliCompress, constants, gzip } from "node:zlib";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
 import { safeWrapAsync } from "@smolter/core";
 import { data, namespace, render } from "../dist/server/server.js";
@@ -11,8 +13,53 @@ const template = await readFile(resolve(root, "index.html"), "utf8");
 const types = {
   ".js": "text/javascript",
   ".css": "text/css",
+  ".svg": "image/svg+xml",
+  ".json": "application/json",
   ".woff2": "font/woff2",
 };
+// Hashed build assets never change at a URL, so browsers may keep them.
+const immutable = "public, max-age=31536000, immutable";
+const compressible = new Set([".js", ".css", ".svg", ".json"]);
+const brotli = promisify(brotliCompress);
+const gzipped = promisify(gzip);
+// Compress once at startup at maximum ratio instead of per request.
+const encoded = new Map();
+const listing = await safeWrapAsync(() =>
+  readdir(resolve(root, "assets"), { withFileTypes: true }),
+);
+for (const entry of listing.data ?? []) {
+  if (
+    !entry.isFile() ||
+    entry.name.startsWith(".") ||
+    !compressible.has(extname(entry.name))
+  )
+    continue;
+  const file = resolve(root, "assets", entry.name);
+  const body = await readFile(file);
+  const [br, gz] = await Promise.all([
+    brotli(body, {
+      params: {
+        [constants.BROTLI_PARAM_QUALITY]: constants.BROTLI_MAX_QUALITY,
+        [constants.BROTLI_PARAM_SIZE_HINT]: body.length,
+      },
+    }),
+    gzipped(body, { level: constants.Z_BEST_COMPRESSION }),
+  ]);
+  encoded.set(file, { body, br, gzip: gz });
+}
+
+function acceptedEncoding(header = "") {
+  const weights = new Map(
+    header.split(",").map((part) => {
+      const [name, ...params] = part.trim().toLowerCase().split(";");
+      const weight = params
+        .map((param) => param.trim())
+        .find((param) => param.startsWith("q="));
+      return [name, weight ? Number(weight.slice(2)) : 1];
+    }),
+  );
+  return ["br", "gzip"].find((name) => (weights.get(name) ?? 0) > 0);
+}
 
 const session = `${namespace}-session`;
 const sessionPattern = new RegExp(`(?:^|; )${session}=([\\w-]+)`);
@@ -63,17 +110,26 @@ createServer(async (incoming, outgoing) => {
             .some((part) => part.startsWith("."))
         )
           return;
-        return { file, body: await readFile(file) };
+        return {
+          file,
+          body: encoded.get(file)?.body ?? (await readFile(file)),
+        };
       });
       if (!asset.data) {
         outgoing.writeHead(404).end();
         return;
       }
+      const variants = encoded.get(asset.data.file);
+      const encoding =
+        variants && acceptedEncoding(incoming.headers["accept-encoding"]);
       outgoing.setHeader(
         "Content-Type",
         types[extname(asset.data.file)] ?? "application/octet-stream",
       );
-      outgoing.end(asset.data.body);
+      outgoing.setHeader("Cache-Control", immutable);
+      if (variants) outgoing.setHeader("Vary", "Accept-Encoding");
+      if (encoding) outgoing.setHeader("Content-Encoding", encoding);
+      outgoing.end(encoding ? variants[encoding] : asset.data.body);
       return;
     }
     const cookieHeader = incoming.headers.cookie ?? "";

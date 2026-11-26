@@ -11,6 +11,7 @@
 ### Performance
 
 - The production React and Preact SSR examples ship documentation navigation in the browser entry and load article content through the route loader. This removes about 332 kB of JavaScript from the initial counter page in each example. The shared font now transfers as a 14,932-byte WOFF2.
+- The production React and Preact SSR example servers serve hashed `/assets/` files precompressed with Brotli or gzip (negotiated through `Accept-Encoding`, with `Vary`) and `Cache-Control: public, max-age=31536000, immutable`, keep them in memory instead of reading them on every request, and send SVG as `image/svg+xml`. The React entry script now transfers 74,045 bytes instead of 287,569, and the Preact entry 22,051 instead of 84,065. In six cold Chromium loads with 4× CPU throttling, 80 ms latency and 400 kB/s downlink, median hydration completed at 451 ms instead of 1,016 ms (React) and 343 ms instead of 488 ms (Preact); the first counter update moved from 1,313 to 748 ms and from 771 to 630 ms; LCP moved from 376 to 346 ms and from 364 to 340 ms. TTFB was unchanged. Library runtime and bundle sizes are unchanged.
 - Document hydration skips the per-property JSON reviver for snapshots without potential protocol tags or Unicode escapes. The application bundles grow by 16–18 bytes gzip.
 
 ### Security
