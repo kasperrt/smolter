@@ -55,6 +55,12 @@ import { createDataRouter, useFetcher } from "@kasperrt/smolter/react";
 // Preact: import from "@kasperrt/smolter/preact".
 ```
 
+For the namespace and SSR loading updates in the 0.6 alpha, pin the prerelease explicitly once published:
+
+```sh
+pnpm add @kasperrt/smolter@0.6.0-alpha.1
+```
+
 ## Try the four standalone examples
 
 ```sh
@@ -635,6 +641,8 @@ fetchers share the application router's cancellation, revalidation and deploymen
 recovery ownership; they do not require another provider or store.
 
 ## Size and checks
+
+In the 0.6.0-alpha.1 production SSR examples, compressing HTML and inlining the shared stylesheet brought median LCP on `/docs/getting-started` from 656 to 300 ms for React and from 484 to 304 ms for Preact. These were five cold Chromium loads per build with 4× CPU throttling, 80 ms RTT and a 400 kB/s downlink, comparing commits `257ce6f` and `bb4ecb0`. The gzip table below measures library exports separately from example page transfer.
 
 | Need | Public import |
 | --- | --- |

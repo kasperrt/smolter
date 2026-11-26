@@ -10,6 +10,25 @@
       "code": "pnpm add @kasperrt/smolter react react-dom\n# Or: pnpm add @kasperrt/smolter preact\n# With Smolter’s Vite plugin:\npnpm add -D vite typescript"
     },
     {
+      "title": "Try 0.6.0-alpha.1",
+      "body": "Once published, install the exact alpha version to try custom transport names and the updated hydration runtime. Use the matching browser and server builds when changing the namespace.",
+      "code": "pnpm add @kasperrt/smolter@0.6.0-alpha.1",
+      "links": [
+        {
+          "href": "/docs/namespace",
+          "label": "Configure a namespace"
+        },
+        {
+          "href": "/docs/bundle-size",
+          "label": "Compare bundle sizes"
+        },
+        {
+          "href": "/docs/server-rendering",
+          "label": "SSR loading measurements"
+        }
+      ]
+    },
+    {
       "title": "Define the data",
       "body": "Put browser reads in clientLoader.ts. Replace this array with a request to your API when needed.",
       "code": "// routes/tasks/clientLoader.ts\nexport function clientLoader() {\n  return { tasks: [{ id: \"1\", title: \"Try smolter\" }] };\n}"

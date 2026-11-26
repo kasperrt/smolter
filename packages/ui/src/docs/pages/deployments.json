@@ -21,8 +21,8 @@
     },
     {
       "title": "Bases, CDNs and multiple applications",
-      "body": "By default the public manifest URL uses Vite base. Set manifestURL explicitly for a relative base, a reverse proxy or multiple applications sharing a domain. Each application must read its own manifest. The emitted filename remains smolter-manifest.json; your server maps the public URL to that file. Cross-origin asset hosts must allow CORS for manifest reads. Packaged/offline applications can omit the plugin and helper.",
-      "code": "deploymentPlugin({ manifestURL: \"/admin/smolter-manifest.json\" })"
+      "body": "By default the public manifest URL uses Vite base. Set manifestURL explicitly for a relative base, a reverse proxy or multiple applications sharing a domain. Each application must read its own manifest. The emitted filename defaults to smolter-manifest.json. A namespace of app changes it to app-manifest.json. Set manifestFile to choose another filename. The default public URL follows the filename, and an explicit manifestURL must map to the emitted file. Cross-origin asset hosts must allow CORS for manifest reads. Packaged/offline applications can omit the plugin and helper.",
+      "code": "deploymentPlugin({ namespace: \"app\", manifestFile: \"release.json\", manifestURL: \"/admin/release.json\" })"
     },
     {
       "title": "Failures, forms and reload loops",

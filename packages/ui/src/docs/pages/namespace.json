@@ -16,7 +16,7 @@
     },
     {
       "title": "Configuration",
-      "body": "Set the value with the namespace option of applicationPlugins, fileRouter or deploymentPlugin. All plugins read the same resolved Vite define, so setting it once is enough.",
+      "body": "Set the value with the namespace option of applicationPlugins, fileRouter or deploymentPlugin. All plugins read the same resolved Vite define, so setting it once is enough. Use 1–32 lowercase ASCII letters or digits, beginning with a letter. With \"app\", a request for /tasks uses /tasks.__app, the hydration script is #app-data, and the default deployment manifest is app-manifest.json.",
       "code": "applicationPlugins({ namespace: \"app\" });"
     },
     {

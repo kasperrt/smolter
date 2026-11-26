@@ -27,11 +27,11 @@
     {
       "title": "Hydrate",
       "body": "deserialize restores Error objects. A successful hydration snapshot avoids a duplicate initial loader request. Client-only routes render their fallback on the server and load in the browser.",
-      "code": "import { deserialize } from \"@kasperrt/smolter/react/client\";\n\nconst hydrationData = deserialize(\n  document.querySelector(\"#smolter-data\")!.textContent!,\n);\nconst router = createDataRouter(browserRoutes, { browser: true, hydrationData });\n\nhydrateRoot(document.querySelector(\"#app\")!,\n  <RouterProvider router={router}><Routes /></RouterProvider>,\n);"
+      "code": "import { deserialize } from \"@kasperrt/smolter/react/client\";\n\nimport { namespace } from \"@kasperrt/smolter/utils\";\n\nconst hydrationData = deserialize(\n  document.querySelector(`script#${namespace}-data[type=\"application/json\"]`)!.textContent!,\n);\nconst router = createDataRouter(browserRoutes, { browser: true, hydrationData });\n\nhydrateRoot(document.querySelector(\"#app\")!,\n  <RouterProvider router={router}><Routes /></RouterProvider>,\n);"
     },
     {
       "title": "Production transport",
-      "body": "The browser proxy appends .__smolter to the route pathname and preserves its query. Vite and createRequestHandler normalize it before dispatch. Application prefixes remain in the path. Explicit dataEndpoint retains legacy query transport when configured consistently.",
+      "body": "The browser proxy appends .__smolter to the route pathname and preserves its query. Vite and createRequestHandler normalize it before dispatch. Application prefixes remain in the path. Explicit dataEndpoint retains legacy query transport when configured consistently. With namespace set to \"app\", the suffix becomes .__app. Pass the same value to a standalone Node handler and reserve the configured suffix in your hosting middleware.",
       "code": ""
     },
     {
@@ -57,6 +57,11 @@
     {
       "title": "Client promises versus server transport",
       "body": "Deferred clientLoader data in 0.4.6 stays in browser memory and needs neither earlyHydration nor the SSR promise protocol. Server loader HTTP responses still resolve nested values before JSON serialization. A clientLoader can await serverLoader() for required data and return separate optional promises. SSR behavior and the 8-second initial hydration budget are unchanged.",
+      "code": ""
+    },
+    {
+      "title": "Production loading in 0.6.0-alpha.1",
+      "body": "The example servers compress session-specific HTML, inline their small stylesheet and serve precompressed static assets. Across five cold Chromium loads per build (4× CPU, 80 ms RTT, 400 kB/s down), median LCP on /docs/getting-started moved from 656 to 300 ms for React and from 484 to 304 ms for Preact. The SSR root became interactive at 435 and 322 ms respectively, down from 671 and 529 ms. These measurements compare commits 257ce6f and bb4ecb0. Measure TTFB and the first successful interaction separately on your deployment.",
       "code": ""
     }
   ]
