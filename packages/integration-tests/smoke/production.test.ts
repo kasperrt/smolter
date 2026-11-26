@@ -1,23 +1,28 @@
-import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { chromium } from "@playwright/test";
+import { once } from "node:events";
 import { safeWrapAsync } from "@smolter/core";
+import { expect } from "vitest";
+import { test } from "../tests/helpers/browser.ts";
 
 const examples = [
   { name: "react-ssr", port: 4375 },
   { name: "preact-ssr", port: 4376 },
 ];
-const servers = examples.map(({ name, port }) =>
-  spawn(process.execPath, [`apps/${name}/server/start.mjs`], {
-    env: { ...process.env, PORT: String(port) },
-    stdio: "inherit",
-  }),
-);
-let browser;
-
-async function verify() {
-  browser = await chromium.launch();
-  for (const { name, port } of examples) {
+for (const { name, port } of examples) {
+  test(`${name} supports production hydration, fetchers and mutations`, async ({
+    page,
+    onTestFinished,
+  }) => {
+    const server = spawn(process.execPath, [`apps/${name}/server/start.ts`], {
+      env: { ...process.env, PORT: String(port) },
+      stdio: "inherit",
+    });
+    onTestFinished(async () => {
+      if (server.exitCode !== null || server.signalCode !== null) return;
+      const exited = once(server, "exit");
+      server.kill("SIGTERM");
+      await exited;
+    });
     const origin = `http://127.0.0.1:${port}`;
     let ready = false;
     for (let attempt = 0; attempt < 50; attempt++) {
@@ -28,19 +33,17 @@ async function verify() {
       }
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    assert.ok(ready, `${name} did not start`);
-    const page = await browser.newPage();
-    const errors = [];
+    expect(ready, `${name} did not start`).toBeTruthy();
+    const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("console", (message) => {
       if (message.type() === "error") errors.push(message.text());
     });
     const response = await page.goto(`${origin}/examples/counter`);
-    assert.equal(
-      await response.headerValue("cache-control"),
+    expect(await response?.headerValue("cache-control")).toBe(
       "private, no-store",
     );
-    assert.match(await response.text(), /data-testid="count">0/);
+    expect(await response?.text()).toMatch(/data-testid="count">0/);
     await page.getByRole("button", { name: "Add one +", exact: true }).click();
     await page.waitForFunction(
       () =>
@@ -67,17 +70,16 @@ async function verify() {
     await page.getByLabel("Title", { exact: true }).fill("Production action");
     await page.getByRole("button", { name: "Save task" }).click();
     await page.getByText("Task saved.", { exact: true }).waitFor();
-    const hydrationRequests = [];
+    const hydrationRequests: string[] = [];
     page.on("request", (request) => {
       if (new URL(request.url()).pathname.endsWith(".__smolter"))
         hydrationRequests.push(request.url());
     });
     const failed = await page.goto(`${origin}/tasks/missing`);
-    assert.equal(
-      await failed.headerValue("cache-control"),
+    expect(await failed?.headerValue("cache-control")).toBe(
       "private, no-store",
     );
-    assert.match(await failed.text(), /Task not found/);
+    expect(await failed?.text()).toMatch(/Task not found/);
     await page.waitForFunction(() => !document.getElementById("root")?.inert);
     await page
       .getByRole("alert")
@@ -85,19 +87,9 @@ async function verify() {
       .waitFor();
     await page.getByRole("link", { name: "Docs", exact: true }).click();
     await page.waitForURL("**/docs/getting-started");
-    assert.equal(
+    expect(
       hydrationRequests.filter((url) => url.includes("missing")).length,
-      0,
-    );
-    assert.deepEqual(errors, []);
-    await page.close();
-    console.log(
-      `${name}: production SSR, success/error hydration, fetcher read, POST and PATCH passed`,
-    );
-  }
+    ).toBe(0);
+    expect(errors).toStrictEqual([]);
+  });
 }
-
-const { error } = await safeWrapAsync(verify);
-await browser?.close();
-for (const server of servers) server.kill("SIGTERM");
-if (error) throw error;

@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { withSizeBadges } from "./badges.mjs";
+import { withSizeBadges } from "./badges.ts";
 
 const { name, version } = JSON.parse(readFileSync("package.json", "utf8"));
 const responses = await Promise.all([

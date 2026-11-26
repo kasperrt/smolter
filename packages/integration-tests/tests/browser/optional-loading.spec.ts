@@ -8,14 +8,15 @@ import {
   renderApplication,
 } from "@kasperrt/smolter/preact/server";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
-import { expect, test } from "@playwright/test";
-import { safeWrapAsync } from "@smolter/core";
+import { expect } from "@playwright/test";
+import { type DataArgs, safeWrapAsync } from "@smolter/core";
 import { build } from "vite";
 import {
   OptionalDestination,
   OptionalHome,
   optionalRoot,
 } from "../fixtures/optional-page.tsx";
+import { test } from "../helpers/browser.ts";
 
 for (const scenario of [
   "settle",
@@ -25,7 +26,10 @@ for (const scenario of [
   "malformed",
   "offline",
 ]) {
-  test(`independent optional loading: ${scenario}`, async ({ page }) => {
+  test(`independent optional loading: ${scenario}`, async ({
+    page,
+    annotate,
+  }) => {
     const output = await mkdtemp(join(tmpdir(), "smolter-optional-"));
     const result = await build({
       configFile: false,
@@ -52,7 +56,7 @@ for (const scenario of [
       {
         path: "/",
         default: OptionalHome,
-        loader: ({ request }: { request: Request }) => {
+        loader: ({ request }: DataArgs) => {
           loads++;
           return {
             strategy: "request",
@@ -157,14 +161,16 @@ for (const scenario of [
         await page.goBack();
         await expect.poll(() => gates.length).toBe(2);
         gates[1]();
-      } else if (scenario === "mode") {
+      }
+      if (scenario === "mode") {
         await page.getByRole("button", { name: "Watch", exact: true }).click();
         await expect.poll(() => gates.length).toBe(2);
         gates[1]();
         await expect(page.getByText("Total 22")).toBeVisible();
         gates[0]();
         await expect(page.getByText("Total 11")).toHaveCount(0);
-      } else {
+      }
+      if (["settle", "failure", "malformed", "offline"].includes(scenario)) {
         gates[0]();
         if (failures) {
           await expect(page.getByText("Statistics unavailable")).toBeVisible();
@@ -190,11 +196,13 @@ for (const scenario of [
           gzip: gzipSync(item.code, { level: 9 }).length,
           brotli: brotliCompressSync(item.code).length,
         }));
-      await test.info().attach("optional-results", {
-        body: JSON.stringify(
-          { scenario, loads, mutations, requests, assets },
-          null,
-          2,
+      await annotate("optional-results", {
+        body: Buffer.from(
+          JSON.stringify(
+            { scenario, loads, mutations, requests, assets },
+            null,
+            2,
+          ),
         ),
         contentType: "application/json",
       });

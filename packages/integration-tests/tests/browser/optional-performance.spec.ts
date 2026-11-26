@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -8,7 +8,7 @@ import {
   renderApplication,
 } from "@kasperrt/smolter/preact/server";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { safeWrapAsync } from "@smolter/core";
 import { build } from "vite";
 import {
@@ -16,11 +16,28 @@ import {
   OptionalHome,
   optionalRoot,
 } from "../fixtures/optional-page.tsx";
+import { test } from "../helpers/browser.ts";
+
+interface OptionalMetrics {
+  lcp: number;
+  cls: number;
+}
+
+interface LayoutShift extends PerformanceEntry {
+  hadRecentInput: boolean;
+  value: number;
+}
+
+interface MetricsWindow extends Window {
+  optionalMetrics?: OptionalMetrics;
+}
 
 // This is a comparative fixture, not a timing threshold for shared CI hosts.
 for (const strategy of ["stream", "request"] as const) {
-  test(`measure optional loading: ${strategy}`, async ({ browser }) => {
-    test.setTimeout(180_000);
+  test(`measure optional loading: ${strategy}`, { timeout: 180_000 }, async ({
+    browser,
+    annotate,
+  }) => {
     const output = await mkdtemp(
       join(tmpdir(), "smolter-optional-performance-"),
     );
@@ -143,10 +160,7 @@ for (const strategy of ["stream", "request"] as const) {
               });
               new PerformanceObserver((list) => {
                 for (const entry of list.getEntries()) {
-                  const shift = entry as PerformanceEntry & {
-                    hadRecentInput: boolean;
-                    value: number;
-                  };
+                  const shift = entry as LayoutShift;
                   if (!shift.hadRecentInput) metrics.cls += shift.value;
                 }
               }).observe({ type: "layout-shift", buffered: true });
@@ -203,11 +217,7 @@ for (const strategy of ["stream", "request"] as const) {
                 "resource",
               ) as PerformanceResourceTiming[];
               return {
-                ...(
-                  window as Window & {
-                    optionalMetrics?: { lcp: number; cls: number };
-                  }
-                ).optionalMetrics,
+                ...(window as MetricsWindow).optionalMetrics,
                 ttfb: nav.responseStart,
                 complete: nav.responseEnd,
                 js: resources
@@ -243,12 +253,15 @@ for (const strategy of ["stream", "request"] as const) {
           gzip: gzipSync(item.code, { level: 9 }).length,
           brotli: brotliCompressSync(item.code).length,
         }));
+      const directory = join("test-results", "optional-performance", strategy);
+      await mkdir(directory, { recursive: true });
+      const path = join(directory, "measurements.json");
       await writeFile(
-        test.info().outputPath("measurements.json"),
+        path,
         JSON.stringify({ strategy, assets, rows }, null, 2),
       );
-      await test.info().attach("performance", {
-        body: JSON.stringify({ strategy, assets, rows }, null, 2),
+      await annotate("performance", {
+        path,
         contentType: "application/json",
       });
     });

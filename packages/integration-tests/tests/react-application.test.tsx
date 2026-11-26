@@ -11,6 +11,7 @@ import { Document, Links, Meta, Scripts } from "@smolter/react/document";
 import { lazyRoute } from "@smolter/react/lazy-route";
 import { dispatchRoute, renderApplication } from "@smolter/server/react";
 import { applicationPlugins } from "@smolter/vite/react";
+import type { PropsWithChildren } from "react";
 import { expect, it, onTestFinished, vi } from "vitest";
 
 it("renders React root, metadata, route data, errors and hydration without a Preact renderer", async () => {
@@ -33,7 +34,7 @@ it("renders React root, metadata, route data, errors and hydration without a Pre
       { name: "description", content: "React" },
     ],
     links: () => [{ rel: "author", href: "/author" }],
-    Layout: ({ children }: { children: import("react").ReactNode }) => (
+    Layout: ({ children }: PropsWithChildren) => (
       <Document>
         <head>
           <Meta />
@@ -78,10 +79,14 @@ it("renders React root, metadata, route data, errors and hydration without a Pre
   expect(await data.json()).toEqual({ value: 1 });
 });
 
+interface ApplicationConfig {
+  resolve: { dedupe: string[] };
+}
+
 it("selects React application tooling without Preact aliases", async () => {
   const plugins = applicationPlugins();
   const app = plugins.find((plugin) => plugin.name === "smolter-application")!;
-  const config = app.config as () => { resolve: { dedupe: string[] } };
+  const config = app.config as () => ApplicationConfig;
   expect(config().resolve.dedupe).toContain("react");
   expect(JSON.stringify(config())).not.toContain("preact");
   expect(plugins.some((plugin) => plugin.name === "smolter-lazy-routes")).toBe(
@@ -132,7 +137,7 @@ it("requires React DOM 19 for integrated SSR without changing the legacy loadRou
   onTestFinished(() => vi.doUnmock("react-dom/server"));
   {
     const { renderApplication: legacyRender } = await import(
-      "../../server/src/react.ts"
+      "@smolter/server/react"
     );
     await expect(
       legacyRender(
@@ -143,32 +148,6 @@ it("requires React DOM 19 for integrated SSR without changing the legacy loadRou
       ),
     ).rejects.toThrow("React DOM 19");
   }
-});
-
-it("disposes the request router when a renderer rejects before producing its shell", async () => {
-  const { renderDocument } = await import(
-    "../../server/src/render-application.ts"
-  );
-  let disposed = false;
-  const failure = new Error("Shell failed");
-  await expect(
-    renderDocument(
-      new Request("https://example.test"),
-      [{ path: "/", default: () => null }],
-      {},
-      "/entry.js",
-      { earlyHydration: true },
-      (props) => {
-        const dispose = props.router.dispose;
-        props.router.dispose = () => {
-          disposed = true;
-          dispose();
-        };
-        return Promise.reject(failure);
-      },
-    ),
-  ).rejects.toBe(failure);
-  expect(disposed).toBe(true);
 });
 
 it("renders React document content without an optional root module", async () => {

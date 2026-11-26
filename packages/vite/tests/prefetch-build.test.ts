@@ -63,7 +63,7 @@ for (const framework of ["react", "preact"] as const) {
           build: {
             write: false,
             minify: true,
-            ...(ssr ? { ssr: join(root, "src/entry.tsx") } : {}),
+            ...(ssr && { ssr: join(root, "src/entry.tsx") }),
             lib: { entry: join(root, "src/entry.tsx"), formats: ["es"] },
             rolldownOptions: {
               external: /^(?:react|react-dom|preact)(?:\/|$)/,

@@ -1,6 +1,6 @@
 import { runInNewContext } from "node:vm";
 import { expect, it, vi } from "vitest";
-import { deferred } from "../../integration-tests/tests/helpers/deferred.ts";
+import { deferred } from "../../../tooling/test/deferred.ts";
 import { deferredHydration } from "../src/deferred-hydration.ts";
 import { progressiveDocument } from "../src/progressive-document.ts";
 import { resolveHydration } from "../src/stream-document.ts";

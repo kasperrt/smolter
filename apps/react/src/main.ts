@@ -44,7 +44,8 @@ if (import.meta.env.VITE_HOSTED) {
 retainRoute(router, flushSync);
 watchMetadata(router);
 
-if (root) {
-  if (hydrationData) hydrateRoot(root, app(router));
-  else createRoot(root).render(app(router));
+function mount(container: HTMLElement) {
+  if (hydrationData) return hydrateRoot(container, app(router));
+  createRoot(container).render(app(router));
 }
+if (root) mount(root);

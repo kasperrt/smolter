@@ -46,11 +46,8 @@ for (const owner of ["route", "root", "action"] as const) {
           {
             path: "/account",
             default: () => null,
-            ...(owner === "route"
-              ? { loader: fail }
-              : owner === "action"
-                ? { action: fail }
-                : {}),
+            ...(owner === "route" && { loader: fail }),
+            ...(owner === "action" && { action: fail }),
           },
         ],
         owner === "root" ? { loader: fail } : {},

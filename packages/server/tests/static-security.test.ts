@@ -58,10 +58,10 @@ it.each(["react", "preact"])(
       join(root, "dist/assets/hidden-link.js"),
     );
     const source = await readFile(
-      `apps/${framework}-ssr/server/start.mjs`,
+      `apps/${framework}-ssr/server/start.ts`,
       "utf8",
     );
-    const entry = join(root, "server/start.mjs");
+    const entry = join(root, "server/start.ts");
     await writeFile(
       entry,
       `${source
@@ -89,31 +89,34 @@ it.each(["react", "preact"])(
       await exited;
     });
     const [port] = await once(child, "message");
+    interface StatusResponse {
+      status: number | undefined;
+      body: string;
+    }
+    interface BinaryResponse {
+      headers: import("node:http").IncomingHttpHeaders;
+      body: Buffer;
+    }
     const request = (path: string) =>
-      new Promise<{ status: number | undefined; body: string }>(
-        (resolve, reject) => {
-          get({ hostname: "127.0.0.1", port, path }, (response) => {
-            let body = "";
-            response.setEncoding("utf8");
-            response.on("data", (chunk) => {
-              body += chunk;
-            });
-            response.on("end", () =>
-              resolve({ status: response.statusCode, body }),
-            );
-            response.on("error", reject);
-          }).on("error", reject);
-        },
-      );
+      new Promise<StatusResponse>((resolve, reject) => {
+        get({ hostname: "127.0.0.1", port, path }, (response) => {
+          let body = "";
+          response.setEncoding("utf8");
+          response.on("data", (chunk) => {
+            body += chunk;
+          });
+          response.on("end", () =>
+            resolve({ status: response.statusCode, body }),
+          );
+          response.on("error", reject);
+        }).on("error", reject);
+      });
     expect(await request("/assets/app.js")).toEqual({
       status: 200,
       body: "public asset",
     });
     const encoded = (path: string, encoding: string) =>
-      new Promise<{
-        headers: import("node:http").IncomingHttpHeaders;
-        body: Buffer;
-      }>((resolve, reject) => {
+      new Promise<BinaryResponse>((resolve, reject) => {
         get(
           {
             hostname: "127.0.0.1",

@@ -3,6 +3,10 @@ import { navigationTarget } from "@smolter/core/environment";
 import { namespace } from "@smolter/core/namespace";
 import type { DeploymentOptions } from "./deployment.ts";
 
+interface FingerprintedRoute {
+  fingerprint?: string;
+}
+
 type Manifest = Pick<DeploymentOptions, "version" | "shared" | "routes">;
 function manifestValue(value: unknown): Manifest | undefined {
   if (!value || typeof value !== "object") return;
@@ -81,10 +85,10 @@ export function deploymentCheck(options: DeploymentOptions) {
     )
       return true;
     const before = matchRoutes(options.routes, target.pathname)?.route as
-      | { fingerprint?: string }
+      | FingerprintedRoute
       | undefined;
     const after = matchRoutes(latest.routes, target.pathname)?.route as
-      | { fingerprint?: string }
+      | FingerprintedRoute
       | undefined;
     return !before || !after || before.fingerprint !== after.fingerprint;
   }
@@ -101,9 +105,15 @@ export function deploymentCheck(options: DeploymentOptions) {
         return false;
       navigationTarget(target);
       sessionStorage.setItem(key, "1");
-      if (options.reload) options.reload(target);
-      else if (target.href === location.href) location.reload();
-      else location.assign(target.href);
+      if (options.reload) {
+        options.reload(target);
+        return true;
+      }
+      if (target.href === location.href) {
+        location.reload();
+        return true;
+      }
+      location.assign(target.href);
       return true;
     });
     return data ?? false;

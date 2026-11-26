@@ -24,8 +24,8 @@ export function lazyTransition(
 ): NonNullable<RouteModule["viewTransition"]> {
   return (commit, previous, next) => {
     const handler = read()?.viewTransition;
-    if (handler) handler(commit, previous, next);
-    else commit();
+    if (handler) return void handler(commit, previous, next);
+    commit();
   };
 }
 

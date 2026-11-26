@@ -2,7 +2,12 @@ import { createDataRouter } from "@smolter/core";
 import { prepareRoutes } from "@smolter/core/prepare-routes";
 import { data } from "@smolter/core/responses";
 import { expect, it, onTestFinished } from "vitest";
-import { deferred } from "../../integration-tests/tests/helpers/deferred.ts";
+
+interface OptionalPayload {
+  optional: Promise<string>;
+}
+
+import { deferred } from "../../../tooling/test/deferred.ts";
 
 it("commits client loader data without awaiting nested promises", async () => {
   const optional = deferred<string>();
@@ -58,15 +63,20 @@ it.each(["loader", "clientLoader", "action", "clientAction"] as const)(
   },
 );
 
+interface ChildPayload {
+  child: Promise<string>;
+}
+interface CyclicPayload {
+  optional: Promise<ChildPayload>;
+  self?: unknown;
+  date: Date;
+}
+
 it("awaits required client work while preserving cycles and nested promise identity", async () => {
   const required = deferred<void>();
-  const optional = deferred<{ child: Promise<string> }>();
+  const optional = deferred<ChildPayload>();
   const child = deferred<string>();
-  const payload: {
-    optional: typeof optional.promise;
-    self?: unknown;
-    date: Date;
-  } = {
+  const payload: CyclicPayload = {
     optional: optional.promise,
     date: new Date(),
   };
@@ -107,7 +117,7 @@ it("keeps late client rejections observable without restoring an abandoned route
     ]),
   );
   await router.navigate("/");
-  const payload = router.getSnapshot().data as { optional: Promise<string> };
+  const payload = router.getSnapshot().data as OptionalPayload;
   expect(payload.optional).toBe(optional);
   await router.navigate("/next");
   reject(new Error("optional failed"));

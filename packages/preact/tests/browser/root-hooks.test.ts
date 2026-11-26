@@ -16,7 +16,7 @@ import {
 import { createElement } from "preact";
 import { createRoot } from "preact/compat/client";
 import { expect, it } from "vitest";
-import { deferred } from "../../../integration-tests/tests/helpers/deferred.ts";
+import { deferred } from "../../../../tooling/test/deferred.ts";
 
 it("keeps root data and outlet context while pending route data commits and errors propagate", async (context) => {
   const pending = deferred<string>();

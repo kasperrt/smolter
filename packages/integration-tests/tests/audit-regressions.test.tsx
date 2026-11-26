@@ -7,7 +7,7 @@ import { handleRequest } from "@smolter/server";
 import { dispatchRoute, renderApplication } from "@smolter/server/preact";
 import { Suspense } from "preact/compat";
 import { expect, it } from "vitest";
-import { deferred } from "./helpers/deferred.ts";
+import { deferred } from "../../../tooling/test/deferred.ts";
 
 const root: RootModule = {
   default: Outlet,
@@ -82,12 +82,16 @@ it("provides explicit loader reasons instead of browser-location timing", async 
   router.dispose();
 });
 
+interface DeferredDetailData {
+  detail: Promise<string>;
+}
+
 it("starts root and route loaders concurrently and streams a shell before deferred data settles", async () => {
   const critical = deferred<string>();
   const slow = deferred<string>();
   let routeStarted = false;
   function Page() {
-    const data = useLoaderData<{ detail: Promise<string> }>();
+    const data = useLoaderData<DeferredDetailData>();
     return (
       <main>
         Shell

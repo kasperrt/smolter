@@ -8,7 +8,7 @@ import type { ActionData, LoaderData } from "@smolter/react";
 import { loadRouter, serialize } from "@smolter/server";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
-import { deferred } from "./helpers/deferred.ts";
+import { deferred } from "../../../tooling/test/deferred.ts";
 
 const body = () => new FormData();
 describe("data router", () => {
@@ -59,14 +59,18 @@ describe("data router", () => {
     });
   });
   it("infers route and function data without duplicated interfaces", () => {
+    interface NamedData {
+      name: string;
+    }
+    interface SavedFlag {
+      saved: boolean;
+    }
     const loader = async () => ({ name: "Ada" });
     const action = () => ({ saved: true });
     const route = defineRoute("/", { loader, action });
-    expectTypeOf<DataOf<typeof loader>>().toEqualTypeOf<{ name: string }>();
-    expectTypeOf<LoaderData<typeof route>>().toEqualTypeOf<{ name: string }>();
-    expectTypeOf<ActionData<typeof route>>().toEqualTypeOf<{
-      saved: boolean;
-    }>();
+    expectTypeOf<DataOf<typeof loader>>().toEqualTypeOf<NamedData>();
+    expectTypeOf<LoaderData<typeof route>>().toEqualTypeOf<NamedData>();
+    expectTypeOf<ActionData<typeof route>>().toEqualTypeOf<SavedFlag>();
   });
   it("passes Request, params and abort signal to loaders", async () => {
     const router = await loadRouter(
@@ -379,22 +383,40 @@ it("selects client handlers locally and skips them during SSR", async () => {
   expect(fetcher.getSnapshot().data).toEqual({ source: "clientAction" });
   expect(clientLoads).toBe(2);
   expect(clientActions).toBe(1);
+  interface ServerSource {
+    source: "server";
+  }
+  interface ClientSource {
+    source: "client";
+  }
+  interface ServerActionSource {
+    source: "server-action";
+  }
+  interface ClientActionSource {
+    source: "clientAction";
+  }
   expectTypeOf<LoaderData<typeof route>>().toEqualTypeOf<
-    { source: "server" } | { source: "client" }
+    ServerSource | ClientSource
   >();
   expectTypeOf<ActionData<typeof route>>().toEqualTypeOf<
-    { source: "server-action" } | { source: "clientAction" }
+    ServerActionSource | ClientActionSource
   >();
 });
 
 it("loads a client-only route after its empty SSR snapshot is hydrated", async () => {
+  interface CountData {
+    count: number;
+  }
+  interface SavedFlag {
+    saved: boolean;
+  }
   let runs = 0;
   const route = defineRoute("/", {
     clientLoader: () => ({ count: ++runs }),
     clientAction: () => ({ saved: true }),
   });
-  expectTypeOf<LoaderData<typeof route>>().toEqualTypeOf<{ count: number }>();
-  expectTypeOf<ActionData<typeof route>>().toEqualTypeOf<{ saved: boolean }>();
+  expectTypeOf<LoaderData<typeof route>>().toEqualTypeOf<CountData>();
+  expectTypeOf<ActionData<typeof route>>().toEqualTypeOf<SavedFlag>();
   const server = await loadRouter([route], "https://test.dev/");
   expect(runs).toBe(0);
   expect(server.getSnapshot().data).toBeUndefined();

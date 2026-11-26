@@ -55,15 +55,16 @@ process.on("message", async () => {
         child.send("restart");
         [port] = await ready;
       }
+      interface SecurityResponse {
+        status: number;
+        body: string;
+        cache?: string;
+        connection?: string;
+      }
       for (const path of ["http://[", "http://[::1", "https://["]) {
         const result = await safeWrapAsync(
           () =>
-            new Promise<{
-              status: number;
-              body: string;
-              cache?: string;
-              connection?: string;
-            }>((resolve, reject) => {
+            new Promise<SecurityResponse>((resolve, reject) => {
               const outgoing = request(
                 {
                   hostname: "127.0.0.1",
@@ -157,7 +158,9 @@ it.for([
       expect(callback).toHaveBeenCalledWith(failure);
       expect(logger).not.toHaveBeenCalled();
       expect(write).not.toHaveBeenCalled();
-    } else if (variant === "malformed" || variant === "response") {
+      return;
+    }
+    if (variant === "malformed" || variant === "response") {
       expect(outgoing.statusCode).toBe(variant === "malformed" ? 400 : 500);
       expect(write).toHaveBeenCalledWith(
         outgoing.statusCode,
@@ -169,11 +172,11 @@ it.for([
       expect(end).toHaveBeenCalledWith(
         variant === "malformed" ? "Bad request" : "Request failed",
       );
-    } else {
-      expect(write).not.toHaveBeenCalled();
-      expect(end).not.toHaveBeenCalled();
-      if (variant === "headers") expect(outgoing.destroyed).toBe(true);
+      return;
     }
+    expect(write).not.toHaveBeenCalled();
+    expect(end).not.toHaveBeenCalled();
+    if (variant === "headers") expect(outgoing.destroyed).toBe(true);
   },
 );
 
@@ -203,11 +206,12 @@ it.for(["file", "application"] as const)(
       host.closeAllConnections();
       host.close();
     });
-    const address = host.address() as import("node:net").AddressInfo;
-    const response = await new Promise<{
+    interface RawHttpResponse {
       status: number;
       connection?: string;
-    }>((resolve, reject) => {
+    }
+    const address = host.address() as import("node:net").AddressInfo;
+    const response = await new Promise<RawHttpResponse>((resolve, reject) => {
       const outgoing = request(
         {
           hostname: "127.0.0.1",

@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vitest";
-import { deferred } from "../../integration-tests/tests/helpers/deferred.ts";
+import { deferred } from "../../../tooling/test/deferred.ts";
 import { resolveHydration, streamDocument } from "../src/stream-document.ts";
 
 it("encodes deferred failures without rejecting the entire hydration payload", async () => {

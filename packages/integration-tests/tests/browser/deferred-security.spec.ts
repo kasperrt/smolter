@@ -4,12 +4,18 @@ import type { AddressInfo } from "node:net";
 import { resolve } from "node:path";
 import { Scripts } from "@kasperrt/smolter/preact/document";
 import { renderApplication } from "@kasperrt/smolter/preact/server";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { build } from "esbuild";
 import { type ComponentChildren, h } from "preact";
+import { afterEach } from "vitest";
+import { test } from "../helpers/browser.ts";
+
+interface LayoutProps {
+  children: ComponentChildren;
+}
 
 let server: Server | undefined;
-test.afterEach(() => {
+afterEach(() => {
   server?.closeAllConnections();
   server?.close();
 });
@@ -26,7 +32,7 @@ test("streamed JSON keys remain data before and after minified hydration", async
     {
       loader: () => ({ value: Promise.resolve(payload) }),
       default: () => h("output", null),
-      Layout: ({ children }: { children: ComponentChildren }) =>
+      Layout: ({ children }: LayoutProps) =>
         h(
           "html",
           null,

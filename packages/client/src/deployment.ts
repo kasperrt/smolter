@@ -13,6 +13,11 @@ interface WatcherState {
   // Previously created fetchers must notify the currently installed watcher.
   settled?: () => Promise<void>;
 }
+interface PendingRecovery {
+  current: number;
+  target: URL;
+  release: () => void;
+}
 const watchers = new WeakMap<NavigationRouter, WatcherState>();
 /** Build identity and the fresh, non-cacheable manifest URL emitted by deploymentPlugin. */
 export interface DeploymentOptions {
@@ -45,9 +50,7 @@ export function watchDeployment(
   const navigate = router.navigate;
   const dispose = router.dispose;
   let replay = false;
-  let recovery:
-    | { current: number; target: URL; release: () => void }
-    | undefined;
+  let recovery: PendingRecovery | undefined;
   let releaseError = () => {};
   let handedOff: number | undefined;
   const dataRouter = router as NavigationRouter &
@@ -122,8 +125,11 @@ export function watchDeployment(
         read().state !== "submitting" &&
         read().url === target.href,
     );
-    if (reloaded && !customReload) handedOff = current;
-    else if (handedOff !== current) release();
+    if (reloaded && !customReload) {
+      handedOff = current;
+      return;
+    }
+    if (handedOff !== current) release();
   }
   const preloadError = async () => {
     // Speculative imports cannot claim recovery before navigation starts.
@@ -138,7 +144,9 @@ export function watchDeployment(
     if ((await changed(target, true)) && valid(current)) {
       recovery = { current, target, release };
       await recover();
-    } else release();
+      return;
+    }
+    release();
   };
   function cleanup() {
     if (state.cleanup !== cleanup) return;

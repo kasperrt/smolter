@@ -1,9 +1,9 @@
 import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { type FileRouterOptions, fileRouter } from "@smolter/vite";
 import { createServer, type Plugin } from "vite";
 import type { TestContext } from "vitest";
+import { type FileRouterOptions, fileRouter } from "../../src/index.ts";
 
 type RouterPluginFactory = (options: FileRouterOptions) => Plugin;
 

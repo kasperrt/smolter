@@ -45,6 +45,10 @@ export function Outlet({
 interface StreamOutletProps {
   children: ReactNode;
 }
+interface OutletMarkers {
+  owner: unknown;
+  markers: Comment[];
+}
 
 // Hydration claims only this outlet’s stream targets, retaining the comment
 // structure Preact needs. Root boundaries remain outside its inert anchors.
@@ -57,9 +61,7 @@ function StreamOutlet({ children }: StreamOutletProps) {
     : (route?.resolveComponent?.() ?? route?.default);
   const start = useRef<HTMLTemplateElement>(null);
   const end = useRef<HTMLTemplateElement>(null);
-  const initial = useRef<{ owner: unknown; markers: Comment[] } | undefined>(
-    undefined,
-  );
+  const initial = useRef<OutletMarkers | undefined>(undefined);
   useLayoutEffect(() => {
     if (!loaded && !error) return;
     if (initial.current?.owner === owner) return;
@@ -71,13 +73,14 @@ function StreamOutlet({ children }: StreamOutletProps) {
       if (node.nodeType === 8 && /^\/?\$s:/.test((node as Comment).data))
         markers.push(node as Comment);
     }
-    if (initial.current) {
+    const previous = initial.current;
+    initial.current = { owner, markers };
+    if (previous) {
       for (const marker of markers) marker.remove();
       markers.length = 0;
-    } else {
-      for (const marker of markers) marker.data += `:${namespace}`;
+      return;
     }
-    initial.current = { owner, markers };
+    for (const marker of markers) marker.data += `:${namespace}`;
   }, [owner, loaded, error]);
   return createElement(
     Fragment,

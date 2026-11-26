@@ -3,6 +3,10 @@ import { matchRoutes } from "./match.ts";
 import type { NavigationRouter } from "./navigation-router.ts";
 import type { Router } from "./types.ts";
 
+interface PreloadableRoute {
+  preload?: () => Promise<void>;
+}
+
 /** Trigger speculative loading on intent or viewport entry, or disable it. */
 export type PrefetchMode = "none" | "intent" | "viewport";
 
@@ -12,7 +16,7 @@ export function prefetchLink(
   data: boolean,
 ) {
   const route = matchRoutes(router.routes, destination.pathname)?.route as
-    | { preload?: () => Promise<void> }
+    | PreloadableRoute
     | undefined;
   void safeWrapAsync(() => route?.preload?.());
   if (data && "prefetch" in router)

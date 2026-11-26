@@ -1,3 +1,4 @@
+import type { RouteMatchData } from "@smolter/core/navigation";
 import { useRouter, useSnapshot } from "./context.ts";
 import { Routes } from "./routes.ts";
 import {
@@ -34,11 +35,7 @@ export function useOutletContext<T>(): T {
 }
 
 /** Read the active flat route match; this is not a nested layout match chain. */
-export function useMatches(): {
-  id: string;
-  data: unknown;
-  params: import("@smolter/core").Params;
-}[] {
+export function useMatches(): RouteMatchData[] {
   const router = useRouter();
   const snapshot = useSnapshot();
   const route = router.routes.find((item) => item.path === snapshot.path);

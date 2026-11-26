@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { fileRouter } from "@smolter/vite";
 import { build } from "vite";
 import { expect, it } from "vitest";
-import { viteFixture } from "../../integration-tests/tests/helpers/vite";
+import { viteFixture } from "./helpers/vite.ts";
 
 it("keeps client handlers in browser route modules", async (context) => {
   const { server } = await viteFixture(

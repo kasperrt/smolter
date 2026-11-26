@@ -1,3 +1,4 @@
+import { classNames } from "./class-names";
 import type { DocPage } from "./docs";
 import { documentationGroups } from "./docs/navigation";
 import { pageSupport, type Support } from "./docs/support";
@@ -103,7 +104,7 @@ export function createDocumentation<N>(
                     ),
                   ),
                 ),
-                item.slug === page.slug ? "active" : undefined,
+                classNames(item.slug === page.slug && "active"),
               ),
             ),
           ),
@@ -229,7 +230,7 @@ export function createDocumentation<N>(
           link(
             `#${sectionId(section.title)}`,
             section.title,
-            section.group ? "docs-outline-child" : undefined,
+            classNames(section.group && "docs-outline-child"),
           ),
         ]),
         ...(page.fields?.length

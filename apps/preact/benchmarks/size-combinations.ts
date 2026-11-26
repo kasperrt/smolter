@@ -5,7 +5,11 @@ import { brotliCompress, constants, gzipSync } from "node:zlib";
 import { safeWrapAsync } from "@smolter/core";
 import { build } from "vite";
 import { routerPlugin } from "../../../dist/vite/index.js";
-import { commonExports, routingExports } from "./measure.mjs";
+import {
+  type CombinationSizes,
+  commonExports,
+  routingExports,
+} from "./measure.ts";
 
 // Measure complete combinations, never sums of separately compressed features.
 const root = resolve(".generated/size-combinations");
@@ -14,10 +18,10 @@ await writeFile(
   join(root, "tsconfig.json"),
   '{"compilerOptions":{"strict":true}}',
 );
-const sizes = { react: {}, preact: {} };
+const sizes: CombinationSizes = { react: {}, preact: {} };
 const compress = promisify(brotliCompress);
-const pending = [];
-for (const framework of ["react", "preact"]) {
+const pending: ReturnType<typeof safeWrapAsync<void>>[] = [];
+for (const framework of ["react", "preact"] as const) {
   for (let mask = 0; mask < 64; mask++) {
     const data = Boolean(mask & 1);
     const ssr = Boolean(mask & 2);
@@ -71,6 +75,8 @@ ${recovery ? `export { watchDeployment, recoverDeployment } from "${entry}/clien
       },
     });
     const result = Array.isArray(built) ? built[0] : built;
+    if (!("output" in result))
+      throw new Error("Expected a single build output");
     const code = result.output
       .filter((item) => item.type === "chunk")
       .map((item) => item.code)

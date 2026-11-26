@@ -10,10 +10,15 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { expect, it } from "vitest";
 
-const script = resolve("scripts/version.mjs");
+const script = resolve("scripts/version.ts");
 
 for (const [current, command, expected] of [
   ["0.0.1-rc.1", "release", "0.0.1"],
+  ["0.6.0-alpha.1", "prerelease", "0.6.0-alpha.2"],
+  ["0.6.0-alpha.9", "prerelease", "0.6.0-alpha.10"],
+  ["1.0.0-rc", "prerelease", "1.0.0-rc.1"],
+  ["1.0.0-beta.2+build.7", "prerelease", "1.0.0-beta.3"],
+  ["0.6.0", "prerelease", undefined],
   ["0.0.1-rc.1", "patch", "0.0.2"],
   ["0.0.1-rc.1", "minor", "0.1.0"],
   ["0.0.1", "patch", "0.0.2"],

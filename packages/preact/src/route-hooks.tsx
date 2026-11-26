@@ -1,5 +1,10 @@
 import type { NavigateOptions, Router } from "@smolter/core";
-import type { NavigationType } from "@smolter/core/navigation";
+import type {
+  HistoryLocation,
+  NavigationType,
+  PendingNavigation,
+  RouteMatchData,
+} from "@smolter/core/navigation";
 import { pendingLocation } from "@smolter/core/presentation";
 import {
   type Submission,
@@ -39,10 +44,7 @@ export function useRouteError(): Error | undefined {
 }
 
 /** Read the current page navigation or submission state. */
-export function useNavigation(): {
-  state: "idle" | "loading" | "submitting";
-  location: URL | undefined;
-} {
+export function useNavigation(): PendingNavigation {
   const router = useRouter<Router>();
   const snapshot = useSnapshot();
   const location = pendingLocation(router);
@@ -56,11 +58,7 @@ export function useNavigation(): {
 }
 
 /** Read the active flat route match and loader data; this is not a nested layout match chain. */
-export function useMatches(): {
-  id: string;
-  data: unknown;
-  params: import("@smolter/core").Params;
-}[] {
+export function useMatches(): RouteMatchData[] {
   const router = useRouter();
   const snapshot = useSnapshot();
   const route = router.routes.find((item) => item.path === snapshot.path);
@@ -88,7 +86,7 @@ export function useSubmit(): (
 }
 
 /** Read the current router location as a URL. */
-export function useURLLocation(): URL & { state: unknown; key: string } {
+export function useURLLocation(): HistoryLocation {
   const href = useSnapshot("url");
   const snapshot = useNavigationSnapshot(useRouter<Router>());
   return useMemo(

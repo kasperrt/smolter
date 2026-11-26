@@ -17,7 +17,11 @@ interface HomeData {
   stats?: Promise<number>;
 }
 
-function RequestedStats({ mode }: { mode: string }) {
+interface LayoutProps {
+  children?: ComponentChildren;
+}
+
+function RequestedStats({ mode }: Pick<HomeData, "mode">) {
   const [value, setValue] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -110,7 +114,7 @@ function Shell() {
 
 export const optionalRoot = {
   default: Shell,
-  Layout: ({ children }: { children?: ComponentChildren }) => (
+  Layout: ({ children }: LayoutProps) => (
     <Document>
       <head>
         <title>Optional data experiment</title>

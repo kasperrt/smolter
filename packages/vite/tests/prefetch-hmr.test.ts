@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { expect, it, vi } from "vitest";
-import { viteFixture } from "../../integration-tests/tests/helpers/vite.ts";
+import { viteFixture } from "./helpers/vite.ts";
 
 const isReload = (message: unknown) =>
   typeof message === "object" &&

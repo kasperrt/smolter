@@ -5,6 +5,10 @@ import {
   type PrefetchCapabilities,
 } from "./prefetch-analysis.ts";
 
+interface SelectedCapabilities extends PrefetchCapabilities {
+  transitions: boolean;
+}
+
 // Shared by file routing and application routing, including manual route arrays.
 export function prefetchSelection() {
   let root: string;
@@ -20,7 +24,7 @@ export function prefetchSelection() {
     );
     return { ...capabilities, transitions };
   };
-  let selected: (PrefetchCapabilities & { transitions: boolean }) | undefined;
+  let selected: SelectedCapabilities | undefined;
   let pending: ReturnType<typeof analyze> | undefined;
   const ids = new Set<string>();
   return {

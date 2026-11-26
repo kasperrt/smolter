@@ -3,8 +3,8 @@ import {
   leaveDocument,
   resolveApplicationURL,
 } from "./environment.ts";
-import { createStore } from "./store.ts";
-import type { NavigateOptions, Router } from "./types.ts";
+import { createStore, type Store } from "./store.ts";
+import type { NavigateOptions, Params, Router, Snapshot } from "./types.ts";
 import { navigationClick } from "./url.ts";
 
 /** Browser history operation: POP, PUSH or REPLACE. */
@@ -17,16 +17,35 @@ export interface NavigationSnapshot {
   preventScrollReset: boolean;
 }
 
+export type HistoryLocation = URL & Pick<NavigationSnapshot, "state" | "key">;
+
+export interface PendingNavigation {
+  state: Snapshot["state"];
+  location: URL | undefined;
+}
+
+export interface RouteMatchData {
+  id: string;
+  data: unknown;
+  params: Params;
+}
+
+export interface LayoutMatchData extends RouteMatchData {
+  handle: unknown;
+}
+
+interface NavigationStore extends Store<NavigationSnapshot> {
+  positions?: Map<string, [number, number]>;
+}
+
 export function scrollPositions(router: Router) {
   const store = navigationStore(router);
   return (store.positions ??= new Map());
 }
 
-const stores = new WeakMap<Router, ReturnType<typeof createNavigationStore>>();
+const stores = new WeakMap<Router, NavigationStore>();
 
-function createNavigationStore(): ReturnType<
-  typeof createStore<NavigationSnapshot>
-> & { positions?: Map<string, [number, number]> } {
+function createNavigationStore(): NavigationStore {
   return createStore<NavigationSnapshot>({
     type: "POP",
     state: typeof history === "undefined" ? null : history.state?.state,

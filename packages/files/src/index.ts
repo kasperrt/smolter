@@ -32,6 +32,7 @@ export async function flatRoutes(
     for (const entry of entries) {
       let name = entry.name;
       let file = resolve(directory, name);
+      if (!entry.isDirectory() && !entry.isFile()) continue;
       if (entry.isDirectory()) {
         const candidates = (await readdir(file)).filter((name) =>
           routeFile.test(name),
@@ -40,9 +41,9 @@ export async function flatRoutes(
           return new Error(`Multiple route files in ${file}`);
         if (!candidates.length) continue;
         file = resolve(file, candidates[0]);
-      } else {
-        if (!entry.isFile() || !flatFile.test(name) || name.endsWith(".d.ts"))
-          continue;
+      }
+      if (entry.isFile()) {
+        if (!flatFile.test(name) || name.endsWith(".d.ts")) continue;
         name = name.replace(flatFile, "");
       }
       const escaped = name.replaceAll("[.]", "\0");

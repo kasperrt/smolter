@@ -6,11 +6,24 @@ import { promisify } from "node:util";
 import { brotliCompress, constants, gzip } from "node:zlib";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
 import { safeWrapAsync } from "@smolter/core";
-import { data, namespace, render } from "../dist/server/server.js";
+import type * as ServerBuild from "../src/server.ts";
+
+interface Asset {
+  body: Buffer;
+  br?: Buffer;
+  gzip?: Buffer;
+  type: string;
+}
+
+// The compiled SSR build exists only after `vite build --ssr`; type it from its source entry.
+const serverBuild = new URL("../dist/server/server.js", import.meta.url).href;
+const { data, namespace, render }: typeof ServerBuild = await import(
+  serverBuild
+);
 
 const root = await realpath(resolve(import.meta.dirname, "../dist"));
 const template = await readFile(resolve(root, "index.html"), "utf8");
-const types = {
+const types: Record<string, string> = {
   ".js": "text/javascript",
   ".css": "text/css",
   ".svg": "image/svg+xml",
@@ -23,7 +36,7 @@ const compressible = new Set([".js", ".css", ".svg", ".json"]);
 const brotli = promisify(brotliCompress);
 const gzipped = promisify(gzip);
 // Cache all build assets in memory and precompress text assets at startup.
-const assets = new Map();
+const assets = new Map<string, Asset>();
 const listing = await safeWrapAsync(() =>
   readdir(resolve(root, "assets"), { withFileTypes: true }),
 );
@@ -70,7 +83,7 @@ function acceptedEncoding(header = "") {
       return [name, weight ? Number(weight.slice(2)) : 1];
     }),
   );
-  return ["br", "gzip"].find((name) => (weights.get(name) ?? 0) > 0);
+  return (["br", "gzip"] as const).find((name) => (weights.get(name) ?? 0) > 0);
 }
 
 const session = `${namespace}-session`;

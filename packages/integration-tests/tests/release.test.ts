@@ -14,8 +14,8 @@ for (const version of ["0.0.1-rc.1", "0.4.5-beta.1", "0.0.1"]) {
         process.execPath,
         [
           "--import",
-          "./packages/integration-tests/tests/fixtures/release-preload.mjs",
-          "scripts/release.mjs",
+          "./packages/integration-tests/tests/fixtures/release-preload.ts",
+          "scripts/release.ts",
           "publish",
         ],
         {
@@ -52,8 +52,8 @@ for (const scenario of [
       process.execPath,
       [
         "--import",
-        "./packages/integration-tests/tests/fixtures/release-verify-preload.mjs",
-        "scripts/release.mjs",
+        "./packages/integration-tests/tests/fixtures/release-verify-preload.ts",
+        "scripts/release.ts",
         "verify",
       ],
       {
@@ -86,8 +86,8 @@ it("does not report a staged npm upload as a released version", () => {
     process.execPath,
     [
       "--import",
-      "./packages/integration-tests/tests/fixtures/release-preload.mjs",
-      "scripts/release.mjs",
+      "./packages/integration-tests/tests/fixtures/release-preload.ts",
+      "scripts/release.ts",
       "publish",
     ],
     {
@@ -112,8 +112,8 @@ for (const scenario of [
       process.execPath,
       [
         "--import",
-        "./packages/integration-tests/tests/fixtures/release-preload.mjs",
-        "scripts/release.mjs",
+        "./packages/integration-tests/tests/fixtures/release-preload.ts",
+        "scripts/release.ts",
         "publish",
       ],
       {
@@ -137,8 +137,8 @@ for (const mode of ["publish-jsr", "publish-npm"]) {
       process.execPath,
       [
         "--import",
-        "./packages/integration-tests/tests/fixtures/release-preload.mjs",
-        "scripts/release.mjs",
+        "./packages/integration-tests/tests/fixtures/release-preload.ts",
+        "scripts/release.ts",
         mode,
       ],
       {
@@ -156,8 +156,8 @@ for (const scenario of ["jsr-rejected", "jsr-missing", "jsr-unavailable"]) {
       process.execPath,
       [
         "--import",
-        "./packages/integration-tests/tests/fixtures/release-preload.mjs",
-        "scripts/release.mjs",
+        "./packages/integration-tests/tests/fixtures/release-preload.ts",
+        "scripts/release.ts",
         "publish-npm",
       ],
       {
@@ -175,8 +175,8 @@ for (const scenario of ["unmerged", "stale"]) {
       process.execPath,
       [
         "--import",
-        "./packages/integration-tests/tests/fixtures/release-verify-preload.mjs",
-        "scripts/release.mjs",
+        "./packages/integration-tests/tests/fixtures/release-verify-preload.ts",
+        "scripts/release.ts",
         "verify",
       ],
       {

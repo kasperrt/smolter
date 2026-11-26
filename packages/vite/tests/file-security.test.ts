@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { fileRouter } from "@smolter/vite";
 import { build, createServer } from "vite";
 import { expect, it } from "vitest";
-import { viteFixture } from "../../integration-tests/tests/helpers/vite.ts";
 import { applicationPlugins } from "../src/application/vite.ts";
+import { viteFixture } from "./helpers/vite.ts";
 
 it("retains Vite's secret-file and outside-root protections with Smolter transport installed", async (context) => {
   const secret = "SYNTHETIC_SECRET_DO_NOT_SERVE";

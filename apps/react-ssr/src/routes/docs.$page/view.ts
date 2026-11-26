@@ -24,7 +24,7 @@ export default function Documentation() {
       page,
       pages: docs,
       link: (href, children, className) =>
-        h(Link, { href: href, className }, children),
+        h(Link, { href, className }, children),
     })
   );
 }

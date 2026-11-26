@@ -9,15 +9,33 @@ import {
   renderApplication,
 } from "@kasperrt/smolter/preact/server";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { type Router, safeWrapAsync } from "@smolter/core";
 import { createElement } from "preact";
 import { renderToReadableStream } from "preact-render-to-string/stream";
 import { build } from "vite";
+import { deferred } from "../../../../tooling/test/deferred.ts";
 import * as explicit from "../fixtures/owned-ownership-page.tsx";
 import * as original from "../fixtures/ownership-page.tsx";
 import { PreactRoot } from "../fixtures/preact-ownership.tsx";
-import { deferred } from "../helpers/deferred.ts";
+import { test } from "../helpers/browser.ts";
+
+interface FrameObservations {
+  empty: number;
+  done: boolean;
+}
+
+interface OwnershipWindow extends Window {
+  ownershipRouter?: Router;
+  ownershipFrames?: FrameObservations;
+}
+
+interface OptionalData {
+  optional: unknown;
+}
+interface NestedDetail {
+  nested: Promise<string>;
+}
 
 export function ownershipCases(owned = false, selected?: string[]) {
   const { Destination, Home, root } = owned ? explicit : original;
@@ -46,6 +64,7 @@ export function ownershipCases(owned = false, selected?: string[]) {
     const disconnect = mode.startsWith("disconnect");
     test(`${owned ? "explicit deferred fallback ownership" : "retains only owned streaming content"}: ${mode}`, async ({
       page,
+      annotate,
     }) => {
       const output = await mkdtemp(join(tmpdir(), "smolter-ownership-"));
       const result = await build({
@@ -86,7 +105,7 @@ export function ownershipCases(owned = false, selected?: string[]) {
         fail = reject;
       });
       void safeWrapAsync(() => nested);
-      const detail = deferred<{ nested: Promise<string> }>();
+      const detail = deferred<NestedDetail>();
       const nestedParent = mode.startsWith("nested-parent");
       const hasNested =
         nestedParent || ["nested", "reject-after"].includes(mode);
@@ -224,10 +243,9 @@ export function ownershipCases(owned = false, selected?: string[]) {
         if (nestedParent) {
           detail.resolve({ nested });
           await page.evaluate(async () => {
-            const router = (window as Window & { ownershipRouter?: Router })
-              .ownershipRouter;
+            const router = (window as OwnershipWindow).ownershipRouter;
             if (!router) throw new Error("Missing ownership fixture router");
-            await (router.getSnapshot().data as { optional: unknown }).optional;
+            await (router.getSnapshot().data as OptionalData).optional;
           });
           // Suspense retains its server fallback during hydration; explicit Await
           // owns its fallback and can show the newly pending nested boundary.
@@ -302,14 +320,16 @@ export function ownershipCases(owned = false, selected?: string[]) {
           await expect.poll(() => aborted).toBe(1);
           await expect.poll(() => failedRequests.length).toBeGreaterThan(0);
           if (mode === "disconnect") await page.clock.runFor(2001);
-          await test.info().attach("interrupted-document", {
-            body: JSON.stringify({
-              failedRequests,
-              browser: await page.evaluate(() => ({
-                readyState: document.readyState,
-                main: document.querySelector("main")?.outerHTML,
-              })),
-            }),
+          await annotate("interrupted-document", {
+            body: Buffer.from(
+              JSON.stringify({
+                failedRequests,
+                browser: await page.evaluate(() => ({
+                  readyState: document.readyState,
+                  main: document.querySelector("main")?.outerHTML,
+                })),
+              }),
+            ),
             contentType: "application/json",
           });
           if (mode === "disconnect-default") {
@@ -344,9 +364,7 @@ export function ownershipCases(owned = false, selected?: string[]) {
             "Optional failed",
           );
           const emptyFrames = await page.evaluate(() => {
-            const { ownershipFrames } = window as Window & {
-              ownershipFrames?: { empty: number; done: boolean };
-            };
+            const { ownershipFrames } = window as OwnershipWindow;
             if (!ownershipFrames) throw new Error("Missing frame observations");
             ownershipFrames.done = true;
             return ownershipFrames.empty;

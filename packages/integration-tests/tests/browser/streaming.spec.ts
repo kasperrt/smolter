@@ -2,12 +2,13 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { safeWrapAsync } from "@smolter/core";
 import { send } from "@smolter/server/http";
 import { renderApplication } from "@smolter/server/preact";
 import { build } from "vite";
 import { StreamingPage, streamingRoot } from "../fixtures/streaming-page.tsx";
+import { test } from "../helpers/browser.ts";
 
 for (const mode of ["values", "failures", "injected", "navigation", "csp"]) {
   const reject = mode === "failures";

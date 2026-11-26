@@ -1,4 +1,5 @@
 import { version } from "../../../package.json";
+import { classNames } from "./class-names";
 import sizes from "./size.json";
 import { comparisonRows, createSizeTable } from "./size-table";
 import type { ElementFactory, LinkFactory, ShellProps } from "./types";
@@ -37,7 +38,7 @@ export function createShell<N>(
         renderLink(
           "/docs/getting-started",
           "Docs",
-          routePath.startsWith("/docs") ? "active" : undefined,
+          classNames(routePath.startsWith("/docs") && "active"),
         ),
         link("https://github.com/kasperrt/smolter", "GitHub ↗"),
         h("span", { className: "version" }, `v${version}`),
@@ -145,11 +146,11 @@ export function createShell<N>(
         h(
           "div",
           {
-            className: documentation
-              ? "docs-workspace"
-              : landing
-                ? "landing-workspace"
-                : "workspace",
+            className: classNames(
+              documentation && "docs-workspace",
+              !documentation && landing && "landing-workspace",
+              !documentation && !landing && "workspace",
+            ),
           },
           h(
             "div",

@@ -1,7 +1,8 @@
 import { createServer } from "node:http";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { safeWrapAsync } from "@smolter/core";
 import { routePreloads } from "@smolter/server/assets";
+import { test } from "../helpers/browser.ts";
 
 test("reuses cross-origin stylesheet hints when Vite applies the matched route CSS", async ({
   page,

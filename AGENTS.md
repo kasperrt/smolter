@@ -5,8 +5,9 @@ Read `.agents/skills/smolter/SKILL.md` in full before changing or reviewing this
 ## Code conventions
 
 - No `try`, `catch`, or `finally` blocks, and no `.then()`, `.catch()`, or `.finally()` chains. Use `async`/`await` with the existing internal `safeWrapAsync` from `@smolter/core` for fallible work. Handle its `{ data, error }` result directly; do not invent tuple adapters or duplicate wrappers.
+- Prefer guard clauses and early returns. Define object types as named interfaces or type aliases rather than inline object literals, and share those types between adapters when the contracts match. Use `&&` shorthand spreads (`...(cond && { key })`) instead of ternary spreads with `{}`.
 - No empty lines inserted for breathing room between related statements, declarations, guards, state updates, awaits, cleanup or returns inside a function/block. Keep the flow contiguous. Blank lines may separate imports from top-level declarations or independent top-level definitions; they are not a substitute for structure.
-- No `any`, `@ts-ignore`, `@ts-nocheck`, or broad lint/coverage exclusions. Fix types and ownership rather than suppressing errors.
+- No `any`, `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, `biome-ignore`, or broad lint/coverage exclusions. Fix types and ownership rather than suppressing errors.
 - Use Biome with this repository's double quotes and two-space indentation. Do not import another repository's formatter settings or introduce ESLint.
 - Keep helper outcomes to data/error rather than positional tuples with three or more values. Domain payloads and existing public router interfaces retain their required fields and methods.
 - Import other workspace packages through their `@smolter/*` aliases and declared exports, never relative paths into another package's source. Public examples and packed consumers use `@kasperrt/smolter/*` exports.
@@ -16,8 +17,9 @@ Read `.agents/skills/smolter/SKILL.md` in full before changing or reviewing this
 
 ## Validation and release
 
+- Write tests with Vitest. Browser interaction tests use the shared Playwright browser fixture.
 - Before committing, run `pnpm lint`, `pnpm typecheck`, and tests appropriate to the changed behavior. For runtime changes, verify coverage, packed consumers, production-browser behavior and sizes. Keep the existing coverage and size gates.
-- `pnpm lint` runs Biome and the AST-based convention check for prohibited async syntax, `any` and padding inside code blocks. Also inspect the diff for ownership and package-boundary rules that syntax checks cannot establish.
+- `pnpm lint` runs Biome and the AST-based convention check for prohibited async syntax, `any`, `else`, inline object types outside named `interface`/`type` declarations, ternary spreads with `{}`, suppression directives (`@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, `biome-ignore`), and padding inside code blocks. Also inspect the diff for ownership and package-boundary rules that syntax checks cannot establish.
 - Update affected guides, generated API references, size tables and changelog. Distinguish reproducible evidence from assumptions and untested consumer behavior.
 - For beta releases, validate locally and push directly to main without a PR to avoid duplicate CI runs. Stable releases retain the PR process. Keep main CI, JSR validation and independent npm publication. A beta release must not move npm `latest`. Verify actual registry availability and package integrity; an accepted or queued upload is not a completed release.
 - Stop temporary servers and browser sessions started for the task. Preserve existing user development processes and unrelated changes.

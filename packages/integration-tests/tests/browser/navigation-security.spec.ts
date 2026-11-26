@@ -2,11 +2,13 @@ import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { resolve } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { build } from "esbuild";
+import { afterEach } from "vitest";
+import { test } from "../helpers/browser.ts";
 
 let server: Server | undefined;
-test.afterEach(() => {
+afterEach(() => {
   server?.closeAllConnections();
   server?.close();
 });

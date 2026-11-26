@@ -1,4 +1,4 @@
-import { createNestedRouter } from "@smolter/core/nested";
+import { type BranchData, createNestedRouter } from "@smolter/core/nested";
 import { resolveData } from "@smolter/core/responses";
 import { describe, expect, it } from "vitest";
 
@@ -413,9 +413,7 @@ it("keeps prototype-named route data as an own property", async () => {
     { id: "__proto__", path: "/", clientLoader: () => data },
   ]);
   await router.navigate("/");
-  const branch = router.getSnapshot().data as {
-    values: Record<string, unknown>;
-  };
+  const branch = router.getSnapshot().data as BranchData;
   expect(Object.hasOwn(branch.values, "__proto__")).toBe(true);
   expect(Object.getPrototypeOf(branch.values)).not.toBe(data);
   expect(branch.values.admin).toBeUndefined();

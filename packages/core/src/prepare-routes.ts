@@ -48,7 +48,9 @@ function observeDeferred(value: unknown, seen = new WeakSet<object>()) {
       observeDeferred(data, seen);
     };
     void observe();
-  } else if (
+    return;
+  }
+  if (
     Array.isArray(value) ||
     Object.getPrototypeOf(value) === Object.prototype
   ) {

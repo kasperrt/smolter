@@ -52,7 +52,14 @@ export function createTasks<N>(
               placeholder: "Task title",
             }),
           ),
-          Button({ type: "submit", disabled: state !== "idle" }, "Create task"),
+          Button(
+            {
+              type: "submit",
+              disabled: state !== "idle",
+              "aria-busy": state !== "idle",
+            },
+            "Create task",
+          ),
         ]),
         h("p", { role: "status" }, message ?? "POST /tasks"),
         ...(preview ? [preview] : []),
@@ -64,7 +71,14 @@ export function createTasks<N>(
       "section",
       { className: "fetcher-preview" },
       h("h2", null, "Fetcher data"),
-      Button({ onClick: load, disabled: state !== "idle" }, "Fetch task 1"),
+      Button(
+        {
+          onClick: load,
+          disabled: state !== "idle",
+          "aria-busy": state !== "idle",
+        },
+        "Fetch task 1",
+      ),
       h(
         "p",
         { "data-testid": "fetcher-data" },
@@ -97,7 +111,14 @@ export function createTasks<N>(
               required: true,
             }),
           ),
-          Button({ type: "submit", disabled: state !== "idle" }, "Save task"),
+          Button(
+            {
+              type: "submit",
+              disabled: state !== "idle",
+              "aria-busy": state !== "idle",
+            },
+            "Save task",
+          ),
           Button(
             {
               type: "submit",
@@ -105,6 +126,7 @@ export function createTasks<N>(
               formNoValidate: true,
               className: "secondary",
               disabled: state !== "idle",
+              "aria-busy": state !== "idle",
             },
             "Delete task",
           ),

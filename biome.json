@@ -5,6 +5,7 @@
       "**",
       "!**/dist",
       "!**/node_modules",
+      "!**/.vitest",
       "!**/playwright-report",
       "!**/test-results",
       "!**/coverage",

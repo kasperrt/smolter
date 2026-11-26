@@ -622,6 +622,11 @@ button {
   border-color: #554064;
 }
 
+.source-tabs button:hover {
+  background: #48375a;
+  color: #f4e6f8;
+}
+
 .source-tabs button[aria-pressed="true"] {
   color: #ffb8e0;
   border-color: #c45c9d;
@@ -1100,6 +1105,7 @@ nav a.active {
   margin: 3px 0 0;
   accent-color: #a42b85;
   flex-shrink: 0;
+  cursor: inherit;
 }
 .size-option span {
   display: grid;
@@ -1112,6 +1118,9 @@ nav a.active {
   color: #765a83;
   font-size: 12px;
   line-height: 1.5;
+}
+.size-option:not(:has(input:disabled)):hover strong {
+  color: #a8126c;
 }
 .size-option:has(input:disabled) {
   cursor: default;

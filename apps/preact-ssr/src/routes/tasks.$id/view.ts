@@ -9,7 +9,7 @@ export default function Task() {
   const fetcher = useFetcher<typeof action>();
   return ui.TaskDetail({
     task: data,
-    link: (href, children) => h(Link, { href: href }, children),
+    link: (href, children) => h(Link, { href }, children),
     state: fetcher.state,
     message:
       fetcher.error?.message ??

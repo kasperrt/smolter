@@ -31,8 +31,8 @@ export function viewportPrefetch(
     cleanup = () => {
       active = false;
       observer?.disconnect();
-      if (typeof release === "function") release();
-      else set(null);
+      if (typeof release === "function") return void release();
+      set(null);
     };
   };
 }

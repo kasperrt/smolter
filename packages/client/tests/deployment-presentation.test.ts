@@ -99,15 +99,17 @@ for (const outcome of [
       );
       expect(router.getSnapshot().data).toBe("Home");
       expect(router.getSnapshot().error).toBeUndefined();
-    } else if (outcome === "navigation") {
+      return;
+    }
+    if (outcome === "navigation") {
       expect(assign).not.toHaveBeenCalled();
       expect(router.getSnapshot().data).toBe("Next");
-    } else {
-      expect(router.getSnapshot().error?.message).toContain("Missing chunk");
-      expect(router.getSnapshot().state).toBe("idle");
-      expect(assign).not.toHaveBeenCalled();
-      expect(reload).toHaveBeenCalledTimes(outcome === "custom" ? 1 : 0);
+      return;
     }
+    expect(router.getSnapshot().error?.message).toContain("Missing chunk");
+    expect(router.getSnapshot().state).toBe("idle");
+    expect(assign).not.toHaveBeenCalled();
+    expect(reload).toHaveBeenCalledTimes(outcome === "custom" ? 1 : 0);
   });
 }
 

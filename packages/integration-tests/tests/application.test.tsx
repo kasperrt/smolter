@@ -1,6 +1,5 @@
 /** @jsxImportSource preact */
-import assert from "node:assert/strict";
-import { afterEach, test, vi } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -55,10 +54,10 @@ test("SSR resolves deferred fields and safely serializes hydration data", async 
     "/assets/client-hash.js",
   );
   const html = await response.text();
-  assert.equal(response.status, 200);
-  assert.match(html, /"count":3/);
-  assert.match(html, /client-hash\.js/);
-  assert.doesNotMatch(html, /<script>bad/);
+  expect(response.status).toBe(200);
+  expect(html).toMatch(/"count":3/);
+  expect(html).toMatch(/client-hash\.js/);
+  expect(html).not.toMatch(/<script>bad/);
 });
 
 test("SSR and fetcher redirects retain cookies and their HTTP semantics", async () => {
@@ -77,11 +76,11 @@ test("SSR and fetcher redirects retain cookies and their HTTP semantics", async 
   const request = new Request("http://local/login");
   const document = await renderApplication(request, routes, root, "/entry.js");
   const transport = await dispatchRoute(request, routes);
-  assert.equal(document.status, 303);
-  assert.equal(document.headers.get("Location"), "/done");
-  assert.match(document.headers.get("Set-Cookie") ?? "", /HttpOnly/);
-  assert.equal(transport.headers.get("X-Smolter-Redirect"), "/done");
-  assert.match(transport.headers.get("Set-Cookie") ?? "", /HttpOnly/);
+  expect(document.status).toBe(303);
+  expect(document.headers.get("Location")).toBe("/done");
+  expect(document.headers.get("Set-Cookie") ?? "").toMatch(/HttpOnly/);
+  expect(transport.headers.get("X-Smolter-Redirect")).toBe("/done");
+  expect(transport.headers.get("Set-Cookie") ?? "").toMatch(/HttpOnly/);
 });
 
 test("resource routes preserve literal paths, content types and response bodies", async () => {
@@ -100,8 +99,8 @@ test("resource routes preserve literal paths, content types and response bodies"
     root,
     "/entry.js",
   );
-  assert.equal(response.headers.get("Content-Type"), "text/plain");
-  assert.equal(await response.text(), "User-agent: *");
+  expect(response.headers.get("Content-Type")).toBe("text/plain");
+  expect(await response.text()).toBe("User-agent: *");
 });
 
 test("route errors keep their status through SSR and browser transport", async () => {
@@ -116,9 +115,9 @@ test("route errors keep their status through SSR and browser transport", async (
   const document = await renderApplication(request, routes, root, "/entry.js");
   const transport = await dispatchRoute(request, routes);
   const error = await normalizeResult(await transport.json());
-  assert.equal(document.status, 404);
-  assert.ok(error instanceof Error);
-  assert.equal((error as Error & { status: number }).status, 404);
+  expect(document.status).toBe(404);
+  expect(error).toBeInstanceOf(Error);
+  expect(error).toHaveProperty("status", 404);
 });
 
 test("PATCH invokes the matched action and preserves validation data", async () => {
@@ -141,7 +140,7 @@ test("PATCH invokes the matched action and preserves validation data", async () 
       },
     ],
   );
-  assert.deepEqual(await response.json(), {
+  expect(await response.json()).toStrictEqual({
     id: "7",
     method: "PATCH",
     name: "updated",
@@ -178,8 +177,8 @@ test("a newer navigation cancels the previous loader and wins", async () => {
   await ready;
   await router.navigate("/fast");
   await slow;
-  assert.equal(aborted, true);
-  assert.equal(router.getSnapshot().data, "fresh");
+  expect(aborted).toBe(true);
+  expect(router.getSnapshot().data).toBe("fresh");
   router.dispose();
 });
 
@@ -202,12 +201,12 @@ test("fetcher reads remain independent and shouldRevalidate controls mutation re
   await router.navigate("/");
   const fetcher = router.createFetcher();
   await fetcher.load("/resource");
-  assert.deepEqual(fetcher.getSnapshot().data, { count: 7 });
-  assert.equal(router.getSnapshot().data, 1);
+  expect(fetcher.getSnapshot().data).toStrictEqual({ count: 7 });
+  expect(router.getSnapshot().data).toBe(1);
   await fetcher.submit("/resource", new FormData(), { method: "PATCH" });
-  assert.equal(loads, 1);
+  expect(loads).toBe(1);
   await router.revalidate();
-  assert.equal(loads, 2);
+  expect(loads).toBe(2);
   fetcher.dispose();
   router.dispose();
 });
@@ -234,17 +233,17 @@ test("lazy routes load only the matched module and retain action/revalidation be
     }),
   ]);
   const router = createDataRouter(routes);
-  assert.equal(imports, 0);
+  expect(imports).toBe(0);
   await routes[0].preload?.();
   await router.navigate("/");
   await router.submit("/", new FormData());
-  assert.equal(imports, 1);
-  assert.equal(unrelatedImports, 0);
-  assert.equal(loads, 1);
-  assert.deepEqual(router.getSnapshot().actionData, { saved: true });
+  expect(imports).toBe(1);
+  expect(unrelatedImports).toBe(0);
+  expect(loads).toBe(1);
+  expect(router.getSnapshot().actionData).toStrictEqual({ saved: true });
   await router.navigate("/other");
-  assert.equal(unrelatedImports, 1);
-  assert.equal(router.getSnapshot().data, "other");
+  expect(unrelatedImports).toBe(1);
+  expect(router.getSnapshot().data).toBe("other");
   router.dispose();
 });
 
@@ -267,8 +266,8 @@ test("cancelling a pending module prevents its data handler from starting", asyn
   await router.navigate("/fast");
   release();
   await slow;
-  assert.equal(loads, 0);
-  assert.equal(router.getSnapshot().data, "fresh");
+  expect(loads).toBe(0);
+  expect(router.getSnapshot().data).toBe("fresh");
   router.dispose();
 });
 
@@ -297,16 +296,16 @@ test("lazy client handlers retain their server callbacks", async (context) => {
     ]),
   );
   await router.navigate("/");
-  assert.deepEqual(router.getSnapshot().data, {
+  expect(router.getSnapshot().data).toStrictEqual({
     source: "client loader",
     server: { count: 4 },
   });
   await router.submit("/", new FormData(), { method: "PATCH" });
-  assert.deepEqual(router.getSnapshot().actionData, {
+  expect(router.getSnapshot().actionData).toStrictEqual({
     source: "client action",
     server: { count: 4 },
   });
-  assert.deepEqual(methods, ["GET", "PATCH"]);
+  expect(methods).toStrictEqual(["GET", "PATCH"]);
   router.dispose();
 });
 
@@ -323,16 +322,16 @@ test("pending navigation retains the committed view and data until ready", async
   await router.navigate("/");
   retainRoute(router, flushSync);
   const room = router.navigate("/room");
-  assert.equal(router.getSnapshot().path, "/");
-  assert.equal(router.getSnapshot().data, "home");
-  assert.equal(router.getSnapshot().loaded, true);
-  assert.equal(router.getSnapshot().state, "loading");
+  expect(router.getSnapshot().path).toBe("/");
+  expect(router.getSnapshot().data).toBe("home");
+  expect(router.getSnapshot().loaded).toBe(true);
+  expect(router.getSnapshot().state).toBe("loading");
   await router.navigate("/watch");
   finish("stale room");
   await room;
-  assert.equal(router.getSnapshot().path, "/watch");
-  assert.equal(router.getSnapshot().data, "watch");
-  assert.equal(router.getSnapshot().state, "idle");
+  expect(router.getSnapshot().path).toBe("/watch");
+  expect(router.getSnapshot().data).toBe("watch");
+  expect(router.getSnapshot().state).toBe("idle");
   router.dispose();
 });
 
@@ -354,7 +353,7 @@ test("completed navigation publishes the destination and data together", async (
   const navigation = router.navigate("/security");
   finish("security");
   await navigation;
-  assert.deepEqual(snapshots, ["/:home", "/security:security"]);
+  expect(snapshots).toStrictEqual(["/:home", "/security:security"]);
   router.dispose();
 });
 
@@ -371,7 +370,7 @@ test("consumer commit callbacks own presentation and cannot apply obsolete or re
   const handler: NonNullable<
     (typeof router.routes)[number]["viewTransition"]
   > = (commit, previous, next) => {
-    assert.equal(previous.data, "home");
+    expect(previous.data).toBe("home");
     destinations.push(new URL(next.url).pathname);
     commits.push(commit);
   };
@@ -379,22 +378,22 @@ test("consumer commit callbacks own presentation and cannot apply obsolete or re
   router.routes[2].viewTransition = handler;
   context.onTestFinished(() => router.dispose());
   await router.navigate("/watch");
-  assert.equal(router.getSnapshot().data, "home");
+  expect(router.getSnapshot().data).toBe("home");
   await router.navigate("/music");
   commits[0]();
-  assert.equal(router.getSnapshot().data, "home");
+  expect(router.getSnapshot().data).toBe("home");
   commits[1]();
-  assert.equal(router.getSnapshot().data, "music");
+  expect(router.getSnapshot().data).toBe("music");
   let notifications = 0;
   router.subscribe(() => notifications++);
   commits[1]();
-  assert.equal(notifications, 0);
-  assert.deepEqual(destinations, ["/watch", "/music"]);
+  expect(notifications).toBe(0);
+  expect(destinations).toStrictEqual(["/watch", "/music"]);
   router.routes[1].viewTransition = (commit) => commits.push(commit);
   await router.navigate("/watch");
   router.dispose();
   commits[2]();
-  assert.equal(router.getSnapshot().data, "music");
+  expect(router.getSnapshot().data).toBe("music");
 });
 
 test("hash navigation keeps loader data without another request", async () => {
@@ -404,9 +403,9 @@ test("hash navigation keeps loader data without another request", async () => {
   );
   await router.navigate("/security");
   await router.navigate("/security#scope");
-  assert.equal(loads, 1);
-  assert.equal(new URL(router.getSnapshot().url).hash, "#scope");
-  assert.equal(router.getSnapshot().data, 1);
+  expect(loads).toBe(1);
+  expect(new URL(router.getSnapshot().url).hash).toBe("#scope");
+  expect(router.getSnapshot().data).toBe(1);
   router.dispose();
 });
 
@@ -454,8 +453,9 @@ test("history commits once after loading and captures the departing scroll posit
   context.onTestFinished(() => {
     names.forEach((name, index) => {
       const descriptor = originals[index];
-      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
-      else Reflect.deleteProperty(globalThis, name);
+      if (descriptor)
+        return Object.defineProperty(globalThis, name, descriptor);
+      Reflect.deleteProperty(globalThis, name);
     });
   });
   let resolve = (_value: string) => {};
@@ -476,17 +476,17 @@ test("history commits once after loading and captures the departing scroll posit
   let updates = 0;
   store.subscribe(() => {
     updates++;
-    assert.equal(browserHistory.state, store.getSnapshot());
+    expect(browserHistory.state).toBe(store.getSnapshot());
   });
   const navigation = router.navigate("/guide");
-  assert.equal(store.getSnapshot().key, "existing");
-  assert.deepEqual(scrollPositions(router).get("existing"), [0, 420]);
-  assert.equal(updates, 0);
+  expect(store.getSnapshot().key).toBe("existing");
+  expect(scrollPositions(router).get("existing")).toStrictEqual([0, 420]);
+  expect(updates).toBe(0);
   resolve("guide");
   await navigation;
-  assert.equal(updates, 1);
-  assert.equal(store.getSnapshot().type, "PUSH");
-  assert.equal(router.getSnapshot().data, "guide");
+  expect(updates).toBe(1);
+  expect(store.getSnapshot().type).toBe("PUSH");
+  expect(router.getSnapshot().data).toBe("guide");
   router.dispose();
 });
 
@@ -503,7 +503,7 @@ test("Await resolves deferred values before rendering children", async () => {
     </Suspense>,
   );
   finish(41);
-  assert.match(await html, /<output>42<\/output>/);
+  expect(await html).toMatch(/<output>42<\/output>/);
 });
 
 test("Await renders its error element for a rejected deferred field", async () => {
@@ -517,8 +517,8 @@ test("Await renders its error element for a rejected deferred field", async () =
       </Await>
     </Suspense>,
   );
-  assert.match(html, /Temporarily unavailable/);
-  assert.doesNotMatch(html, /Unexpected success/);
+  expect(html).toMatch(/Temporarily unavailable/);
+  expect(html).not.toMatch(/Unexpected success/);
 });
 
 test("Await preserves resolved Error objects and empty values as data", async () => {
@@ -530,8 +530,8 @@ test("Await preserves resolved Error objects and empty values as data", async ()
         </Await>
       </Suspense>,
     );
-    assert.match(html, new RegExp(`<output>${String(value)}</output>`));
-    assert.doesNotMatch(html, /Rejected/);
+    expect(html).toMatch(new RegExp(`<output>${String(value)}</output>`));
+    expect(html).not.toMatch(/Rejected/);
   }
 });
 
@@ -542,11 +542,11 @@ test("Await propagates rejection when no local error element exists", async () =
       <Await resolve={Promise.reject(error)}>{() => <p>Ready</p>}</Await>
     </Suspense>,
   );
-  await assert.rejects(Promise.resolve(html), error);
+  await expect(Promise.resolve(html)).rejects.toThrow(error);
 });
 
 test("root revalidation only loads an explicitly configured route", async () => {
-  const { attachRootData } = await import("../../client/src/root-data.ts");
+  const { attachRootData } = await import("@smolter/client/root-data");
   let loads = 0;
   const routes = [
     { path: "/mutation", action: () => ({ saved: true }) },
@@ -565,14 +565,14 @@ test("root revalidation only loads an explicitly configured route", async () => 
     );
     const fetcher = router.createFetcher();
     await fetcher.submit("/mutation", new FormData());
-    assert.deepEqual(store.getSnapshot(), { revision: configured ? 1 : 0 });
-    assert.equal(loads, configured ? 1 : 0);
+    expect(store.getSnapshot()).toStrictEqual({ revision: configured ? 1 : 0 });
+    expect(loads).toBe(configured ? 1 : 0);
     router.dispose();
   }
 });
 
 test("targeting root refreshes root data without refreshing the page", async () => {
-  const { attachRootData } = await import("../../client/src/root-data.ts");
+  const { attachRootData } = await import("@smolter/client/root-data");
   let pageLoads = 0;
   let rootLoads = 0;
   const router = createDataRouter([
@@ -586,13 +586,13 @@ test("targeting root refreshes root data without refreshing the page", async () 
   });
   await router.navigate("/");
   await router.revalidate({ route: "root" });
-  assert.equal(store.getSnapshot(), 1);
-  assert.equal(pageLoads, 1);
+  expect(store.getSnapshot()).toBe(1);
+  expect(pageLoads).toBe(1);
   router.dispose();
 });
 
 test("disposing during root refresh aborts work and leaves root data intact", async () => {
-  const { attachRootData } = await import("../../client/src/root-data.ts");
+  const { attachRootData } = await import("@smolter/client/root-data");
   let finish!: (value: number) => void;
   let signal: AbortSignal | undefined;
   let started!: () => void;
@@ -619,10 +619,10 @@ test("disposing during root refresh aborts work and leaves root data intact", as
   const pending = router.revalidate({ route: "root" });
   await ready;
   router.dispose();
-  assert.equal(signal?.aborted, true);
+  expect(signal?.aborted).toBe(true);
   finish(1);
   await pending;
-  assert.equal(store.getSnapshot(), 0);
+  expect(store.getSnapshot()).toBe(0);
 });
 
 test("retries a failed lazy import and reuses the recovered module", async () => {
@@ -636,15 +636,15 @@ test("retries a failed lazy import and reuses the recovered module", async () =>
   });
   const router = createDataRouter([route]);
   await router.navigate("/");
-  assert.equal(router.getSnapshot().error?.cause, failure);
-  assert.equal(loads, 0);
+  expect(router.getSnapshot().error?.cause).toBe(failure);
+  expect(loads).toBe(0);
   await router.navigate("/");
-  assert.equal(router.getSnapshot().error, undefined);
-  assert.equal(router.getSnapshot().data, 1);
-  assert.equal(imports, 2);
+  expect(router.getSnapshot().error).toBe(undefined);
+  expect(router.getSnapshot().data).toBe(1);
+  expect(imports).toBe(2);
   await router.revalidate();
-  assert.equal(router.getSnapshot().data, 2);
-  assert.equal(imports, 2);
+  expect(router.getSnapshot().data).toBe(2);
+  expect(imports).toBe(2);
   router.dispose();
 });
 
@@ -658,9 +658,9 @@ test("resolves lazy route metadata after its module is available", async () => {
     params: { name: "Ada" },
     location: new URL("https://example.test/people/Ada"),
   };
-  assert.deepEqual(route.meta?.(args), []);
+  expect(route.meta?.(args)).toStrictEqual([]);
   await route.preload?.();
-  assert.deepEqual(route.meta?.(args), [{ title: "Ada" }]);
+  expect(route.meta?.(args)).toStrictEqual([{ title: "Ada" }]);
 });
 
 test("document resource mutations consume the request body and invoke the action once", async () => {
@@ -692,11 +692,11 @@ test("document resource mutations consume the request body and invoke the action
     },
     "/entry.js",
   );
-  assert.equal(mutations, 1);
-  assert.equal(rootLoads, 0);
-  assert.equal(response.status, 201);
-  assert.equal(response.headers.get("X-Mutation"), "created");
-  assert.deepEqual(await response.json(), { id: "7", name: "Ada" });
+  expect(mutations).toBe(1);
+  expect(rootLoads).toBe(0);
+  expect(response.status).toBe(201);
+  expect(response.headers.get("X-Mutation")).toBe("created");
+  expect(await response.json()).toStrictEqual({ id: "7", name: "Ada" });
 });
 
 test("resource routes reject missing handlers instead of rendering a document", async () => {
@@ -706,8 +706,8 @@ test("resource routes reject missing handlers instead of rendering a document", 
     root,
     "/entry.js",
   );
-  assert.equal(response.status, 405);
-  assert.deepEqual(await response.json(), { error: "No handler" });
+  expect(response.status).toBe(405);
+  expect(await response.json()).toStrictEqual({ error: "No handler" });
 });
 
 test("resource data responses preserve HTTP metadata while transport remains decodable", async () => {
@@ -728,13 +728,13 @@ test("resource data responses preserve HTTP metadata while transport remains dec
   const request = new Request("http://local/report");
   const document = await renderApplication(request, routes, root, "/entry.js");
   const transport = await dispatchRoute(request, routes);
-  assert.equal(document.status, 202);
-  assert.equal(document.statusText, "Accepted");
-  assert.equal(document.headers.get("X-Report"), "queued");
-  assert.deepEqual(await document.json(), { ready: true });
-  assert.equal(transport.status, 200);
-  assert.equal(transport.headers.get("X-Report"), "queued");
-  assert.deepEqual(await transport.json(), { ready: true });
+  expect(document.status).toBe(202);
+  expect(document.statusText).toBe("Accepted");
+  expect(document.headers.get("X-Report")).toBe("queued");
+  expect(await document.json()).toStrictEqual({ ready: true });
+  expect(transport.status).toBe(200);
+  expect(transport.headers.get("X-Report")).toBe("queued");
+  expect(await transport.json()).toStrictEqual({ ready: true });
 });
 
 test("document actions redirect once without loading the page", async () => {
@@ -759,11 +759,11 @@ test("document actions redirect once without loading the page", async () => {
     root,
     "/entry.js",
   );
-  assert.equal(actions, 1);
-  assert.equal(loads, 0);
-  assert.equal(response.status, 303);
-  assert.equal(response.headers.get("Location"), "/done");
-  assert.equal(response.headers.get("Set-Cookie"), "saved=1");
+  expect(actions).toBe(1);
+  expect(loads).toBe(0);
+  expect(response.status).toBe(303);
+  expect(response.headers.get("Location")).toBe("/done");
+  expect(response.headers.get("Set-Cookie")).toBe("saved=1");
 });
 
 test("data dispatch resolves plain values and transports rejected handler errors", async () => {
@@ -780,16 +780,20 @@ test("data dispatch resolves plain values and transports rejected handler errors
     new Request("http://local/absent"),
     routes,
   );
-  assert.deepEqual(await plain.json(), { value: 3 });
+  expect(await plain.json()).toStrictEqual({ value: 3 });
   const error = await normalizeResult(await broken.json());
-  assert.ok(error instanceof Error);
-  assert.equal(error.message, "Handler failed");
-  assert.equal(absent.status, 404);
-  assert.deepEqual(await absent.json(), { error: "No route" });
+  expect(error).toBeInstanceOf(Error);
+  expect(error).toHaveProperty("message", "Handler failed");
+  expect(absent.status).toBe(404);
+  expect(await absent.json()).toStrictEqual({ error: "No route" });
 });
 
+interface SavedActionData {
+  saved: string;
+}
+
 function SavedAction() {
-  const result = useActionData<{ saved: string }>();
+  const result = useActionData<SavedActionData>();
   return <output>{result?.saved}</output>;
 }
 
@@ -816,12 +820,12 @@ test("page POST keeps its action result in the SSR hydration snapshot", async ()
     "/entry.js",
   );
   const html = await response.text();
-  assert.equal(actions, 1);
-  assert.equal(loads, 1);
-  assert.equal(response.status, 200);
-  assert.match(html, /<output>name=hello<\/output>/);
-  assert.match(html, /"actionData":\{"saved":"name=hello"\}/);
-  assert.match(html, /"data":\{"count":1\}/);
+  expect(actions).toBe(1);
+  expect(loads).toBe(1);
+  expect(response.status).toBe(200);
+  expect(html).toMatch(/<output>name=hello<\/output>/);
+  expect(html).toMatch(/"actionData":\{"saved":"name=hello"\}/);
+  expect(html).toMatch(/"data":\{"count":1\}/);
 });
 
 test("page validation data retains its status and cookies in the HTML response", async () => {
@@ -844,11 +848,10 @@ test("page validation data retains its status and cookies in the HTML response",
     root,
     "/entry.js",
   );
-  assert.equal(response.status, 422);
-  assert.equal(response.headers.get("Set-Cookie"), "draft=1; HttpOnly");
-  assert.match(response.headers.get("Content-Type") ?? "", /text\/html/);
-  assert.match(
-    await response.text(),
+  expect(response.status).toBe(422);
+  expect(response.headers.get("Set-Cookie")).toBe("draft=1; HttpOnly");
+  expect(response.headers.get("Content-Type") ?? "").toMatch(/text\/html/);
+  expect(await response.text()).toMatch(
     /"actionData":\{"field":"Name is required"\}/,
   );
 });
@@ -866,8 +869,8 @@ test("page action errors are serialized for the route boundary", async () => {
     root,
     "/entry.js",
   );
-  assert.equal(response.status, 500);
-  assert.match(await response.text(), /"message":"Cannot save"/);
+  expect(response.status).toBe(500);
+  expect(await response.text()).toMatch(/"message":"Cannot save"/);
 });
 
 test("page actions can return a non-JSON HTTP response directly", async () => {
@@ -886,8 +889,8 @@ test("page actions can return a non-JSON HTTP response directly", async () => {
     root,
     "/entry.js",
   );
-  assert.equal(response.headers.get("Content-Type"), "text/plain");
-  assert.equal(await response.text(), "Exported");
+  expect(response.headers.get("Content-Type")).toBe("text/plain");
+  expect(await response.text()).toBe("Exported");
 });
 
 test("early hydration includes pending references and an async entry in the initial shell", async () => {
@@ -905,10 +908,10 @@ test("early hydration includes pending references and an async entry in the init
     { earlyHydration: true, nonce: "test-nonce" },
   );
   const html = await response.text();
-  assert.match(html, /__smolterPending/);
-  assert.match(html, /type="module" async/);
-  assert.ok(html.includes(JSON.stringify('[0,"ready",null]')));
-  assert.match(html, /nonce="test-nonce"/);
+  expect(html).toMatch(/__smolterPending/);
+  expect(html).toMatch(/type="module" async/);
+  expect(html).toContain(JSON.stringify('[0,"ready",null]'));
+  expect(html).toMatch(/nonce="test-nonce"/);
 });
 
 test("explicit Await fallback retains settled HTML with ordinary SSR", async () => {
@@ -931,7 +934,7 @@ test("explicit Await fallback retains settled HTML with ordinary SSR", async () 
     "/entry.js",
   );
   const html = await response.text();
-  assert.match(html, /Resolved SSR detail/);
+  expect(html).toMatch(/Resolved SSR detail/);
 });
 
 test("Await renders resolved values without a pending boundary", async () => {
@@ -940,7 +943,7 @@ test("Await renders resolved values without a pending boundary", async () => {
       {(value) => <p>{value}</p>}
     </Await>,
   );
-  assert.equal(html, "<p>ready</p>");
+  expect(html).toBe("<p>ready</p>");
 });
 
 test("renders Preact document content without an optional root module", async () => {
@@ -957,7 +960,7 @@ test("renders Preact document content without an optional root module", async ()
     />,
   );
   router.dispose();
-  assert.match(html, /<main>Standalone route<\/main>/);
+  expect(html).toMatch(/<main>Standalone route<\/main>/);
 });
 
 test("SSR preserves root and route response metadata without unsafe transport headers", async () => {
@@ -992,11 +995,11 @@ test("SSR preserves root and route response metadata without unsafe transport he
     },
     "/entry.js",
   );
-  assert.equal(response.status, 201);
-  assert.equal(response.headers.get("X-Root"), "yes");
-  assert.equal(response.headers.get("X-Page"), "yes");
-  assert.equal(response.headers.get("Content-Length"), null);
-  assert.match(response.headers.get("Set-Cookie") ?? "", /HttpOnly/);
+  expect(response.status).toBe(201);
+  expect(response.headers.get("X-Root")).toBe("yes");
+  expect(response.headers.get("X-Page")).toBe("yes");
+  expect(response.headers.get("Content-Length")).toBe(null);
+  expect(response.headers.get("Set-Cookie") ?? "").toMatch(/HttpOnly/);
   await response.text();
   const missing = await renderApplication(
     new Request("http://local/"),
@@ -1015,7 +1018,7 @@ test("SSR preserves root and route response metadata without unsafe transport he
     root,
     "/entry.js",
   );
-  assert.equal(missing.status, 404);
-  assert.equal(missing.headers.get("X-Robots-Tag"), "noindex");
+  expect(missing.status).toBe(404);
+  expect(missing.headers.get("X-Robots-Tag")).toBe("noindex");
   await missing.text();
 });

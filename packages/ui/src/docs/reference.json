@@ -184,7 +184,7 @@
     "entries": ["react", "preact", "react/nested", "preact/nested"],
     "kind": "API",
     "summary": "Read the active flat route match; this is not a nested layout match chain.",
-    "signature": "function useMatches(): {\n  id: string;\n  data: unknown;\n  params: import(\"@smolter/core\").Params;\n}[];",
+    "signature": "function useMatches(): RouteMatchData[];",
     "fields": [],
     "source": "packages/react/src/outlet.ts"
   },
@@ -204,7 +204,7 @@
     "entries": ["react", "preact", "react/nested", "preact/nested"],
     "kind": "API",
     "summary": "Read the current page navigation or submission state.",
-    "signature": "function useNavigation(): {\n  state: \"idle\" | \"loading\" | \"submitting\";\n  location: URL | undefined;\n};",
+    "signature": "function useNavigation(): PendingNavigation;",
     "fields": [],
     "source": "packages/react/src/route-hooks.ts"
   },
@@ -1292,7 +1292,7 @@
     "entries": ["react", "preact", "react/nested", "preact/nested"],
     "kind": "API",
     "summary": "Read the current router location as a URL.",
-    "signature": "function useURLLocation(): URL & { state: unknown; key: string };",
+    "signature": "function useURLLocation(): HistoryLocation;",
     "fields": [],
     "source": "packages/react/src/route-hooks.ts"
   },
@@ -2035,7 +2035,7 @@
     "entries": ["react/server", "preact/server"],
     "kind": "API",
     "summary": "Dispatch a normalized application URL to its route loader or action and return an HTTP response.",
-    "signature": "function dispatchRoute(\n  request: Request,\n  routes: readonly (Route & { routePath?: string })[],\n  document = false,\n): Promise<Response>;",
+    "signature": "function dispatchRoute(\n  request: Request,\n  routes: readonly ServerRoute[],\n  document = false,\n): Promise<Response>;",
     "fields": [],
     "source": "packages/server/src/dispatch.ts"
   },
