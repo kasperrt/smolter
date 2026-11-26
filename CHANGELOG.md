@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0-alpha.4
+
+- Retry a failed Pages deployment once after ten seconds using the same uploaded artifact. Preserve a failed job when the retry fails and report the successful deployment URL.
+
 ## 0.6.0-alpha.3
 
 - Align all versioned workspace packages with the release version and include them in future version bumps.
