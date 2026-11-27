@@ -82,7 +82,9 @@ export function Link(options: LinkProps): ReactNode {
   const router = useRouter();
   const current = new URL(useSnapshot("url"));
   const destination = resolveApplicationURL(new URL(to, current));
-  const internal = destination.origin === current.origin;
+  const internal =
+    destination.origin === current.origin &&
+    destination.protocol === current.protocol;
   const preload = () => prefetchLink(router, destination, prefetchData);
   const forwarded = "ref" in props ? props.ref : undefined;
   const observe = useMemo(

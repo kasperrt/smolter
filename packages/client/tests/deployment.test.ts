@@ -55,10 +55,14 @@ it("is inert without build metadata or a browser", () => {
   watchDeployment(router, null)();
   watchDeployment(router, { version: "x", manifestURL: "/manifest" })();
 });
-it("checks navigations without caching and skips hash-only or external targets", async () => {
+it("checks navigations without caching and skips hash-only, external, blob, or malformed targets", async () => {
   const { router, fetcher, reload } = setup();
   await router.navigate("/#section");
   await router.navigate("https://elsewhere.test/");
+  await router.navigate(
+    "blob:https://app.test/550e8400-e29b-41d4-a716-446655440000",
+  );
+  await router.navigate("http://[invalid");
   expect(fetcher).not.toHaveBeenCalled();
   await router.navigate("/next?tab=1#heading");
   expect(router.getSnapshot().url).toBe("https://app.test/next?tab=1#heading");

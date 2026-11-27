@@ -8,7 +8,7 @@ import { defineRoute } from "../src/match.ts";
 import { connectNavigation } from "../src/navigation.ts";
 import { createDataRouter } from "../src/router.ts";
 import type { CommitOptions, Snapshot } from "../src/types.ts";
-import { internalURL } from "../src/url.ts";
+import { internalURL, matchesLocation } from "../src/url.ts";
 
 afterEach(() => {
   configureApplication({});
@@ -70,6 +70,37 @@ it("rejects same-origin blob URLs and malformed URLs as internal routes", () => 
     internalURL("https://app.example/", "http://[invalid"),
   ).toBeUndefined();
   expect(internalURL("not-a-url", "/tasks")).toBeUndefined();
+  expect(
+    matchesLocation(
+      new URL("https://app.example/tasks"),
+      new URL("blob:https://app.example/tasks"),
+    ),
+  ).toBe(false);
+});
+
+it("ignores malformed URLs and hands off same-origin blob URLs in connected navigation", async () => {
+  const assign = vi.fn();
+  vi.stubGlobal("location", { origin: "https://app.example", assign });
+  vi.stubGlobal("window", {
+    scrollX: 0,
+    scrollY: 0,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  });
+  vi.stubGlobal("document", {
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  });
+  const router = createDataRouter([defineRoute("/", {})], {
+    url: "https://app.example/",
+  });
+  connectNavigation(router);
+  await router.navigate("http://[invalid");
+  expect(assign).not.toHaveBeenCalled();
+  const blob = "blob:https://app.example/550e8400-e29b-41d4-a716-446655440000";
+  await router.navigate(blob);
+  expect(assign).toHaveBeenCalledExactlyOnceWith(blob);
+  router.dispose();
 });
 
 it("ignores anchor clicks whose href cannot be parsed as a URL", () => {

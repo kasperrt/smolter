@@ -127,5 +127,17 @@ it("prevents default and throws when form action or formaction uses an unsafe pr
     );
     expect(prevented).toBe(true);
   }
+  let prevented = false;
+  const malformedEvent = {
+    currentTarget: {} as HTMLFormElement,
+    defaultPrevented: false,
+    preventDefault() {
+      prevented = true;
+    },
+  };
+  expect(() =>
+    submitForm(router, malformedEvent, null, { action: "http://[invalid" }),
+  ).not.toThrow();
+  expect(prevented).toBe(false);
   router.dispose();
 });

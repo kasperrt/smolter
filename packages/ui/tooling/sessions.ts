@@ -20,7 +20,7 @@ export function createSessionHandler(namespace: string) {
       issued.delete(issued.values().next().value!);
     issued.add(id);
     const session = `${name}=${id}`;
-    response.setHeader(
+    response.appendHeader(
       "Set-Cookie",
       `${session}; HttpOnly; SameSite=Lax; Path=/`,
     );

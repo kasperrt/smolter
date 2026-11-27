@@ -86,10 +86,14 @@ export function connectNavigation(router: Router) {
     ]);
   };
   router.navigate = async (href, options: NavigateOptions = {}) => {
-    const destination = resolveApplicationURL(
-      new URL(href, router.getSnapshot().url),
-    );
-    if (destination.origin !== location.origin) {
+    const base = router.getSnapshot().url;
+    if (!URL.canParse(href, base)) return;
+    const currentURL = new URL(base);
+    const destination = resolveApplicationURL(new URL(href, currentURL));
+    if (
+      destination.origin !== location.origin ||
+      destination.protocol !== currentURL.protocol
+    ) {
       leaveDocument(destination, router);
       return;
     }

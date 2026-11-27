@@ -9,10 +9,9 @@
 - Validate `prerenderPlugin`'s `origin` option as a bare `http:`/`https:` origin, check `Object.hasOwn` when looking up the client manifest entry, reject `\u007f` in decoded output segments, and verify rendered request URLs remain on the configured origin.
 - Reject unsafe RFC 8288 URI-reference characters (`<`, `>`, whitespace, CR/LF, control characters) in `routePreloads` to prevent HTTP `Link` header injection.
 - Use callback replacements in `applicationPlugins`'s dev `transformIndexHtml` hook so `$'`/`` $` ``/`$&` sequences in the Vite client script URL cannot expand HTML into the script tag.
-- Harden `deserialize` snapshot and error reconstruction against non-object snapshots and malformed error payloads, guard malformed URLs with `URL.canParse` in `internalURL`, document link handoff, and nested redirect resolution, and guard `headersSent` in the SSR example servers' outer error handler.
+- Harden `deserialize` snapshot and error reconstruction against non-object snapshots and malformed error payloads, guard malformed URLs with `URL.canParse` in `internalURL`, document link handoff, `connectNavigation`, `submitForm`, `watchDeployment`, and nested redirect resolution, require matching protocols for same-origin checks in `Link`, `matchesLocation`, `connectNavigation`, and `watchDeployment` (preventing same-origin `blob:` URLs from being treated as internal routes), and guard `headersSent` in the SSR example servers' outer error handler.
 - Require `prerenderPlugin`'s `timeout` to be a whole number of milliseconds from 1 to 2147483647. Larger values overflowed `setTimeout` and fired immediately.
-
-- Isolate cookie-less requests to the example SSR entries. Both example hosts now share session handling and replace duplicate or malformed session cookies.
+- Isolate cookie-less requests to the example SSR entries. Both example hosts now share session handling, append `Set-Cookie` without overwriting earlier cookies, and replace duplicate or malformed session cookies.
 
 ### Maintenance
 

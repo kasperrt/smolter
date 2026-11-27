@@ -18,6 +18,14 @@ it("retains an issued session and replaces ambiguous or malformed session cookie
   const first = request("theme=dark");
   const session = first.cookie.split("; ")[1];
   expect(first.issued).toContain(session);
+  const incoming = new IncomingMessage(new Socket());
+  const outgoing = new ServerResponse(incoming);
+  outgoing.setHeader("Set-Cookie", "pref=1; Path=/");
+  ensureSession(incoming, outgoing);
+  expect(outgoing.getHeader("set-cookie")).toEqual([
+    "pref=1; Path=/",
+    expect.stringContaining("__app-session="),
+  ]);
   expect(request(`theme=dark;${session}`).issued).toBeUndefined();
   for (const cookie of [`${session}; ${session}`, `${session}!`]) {
     const next = request(`theme=dark; ${cookie}`);

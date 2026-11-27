@@ -17,6 +17,7 @@ export function matchesLocation(
   return (
     !!location &&
     location.origin === destination.origin &&
+    location.protocol === destination.protocol &&
     (location.pathname === path ||
       (!end && path !== "/" && location.pathname.startsWith(`${path}/`)))
   );
