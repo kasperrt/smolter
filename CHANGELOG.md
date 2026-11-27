@@ -5,15 +5,18 @@
 ### Security
 
 - Validate `internalURL` before updating browser history in `connectHashHistory`, so external, unsafe-protocol, or malformed navigation targets cannot spoof the URL hash or pollute history.
-- Verify the deepest existing ancestor of `privateManifestFile` against resolved public directories before creating subdirectories in `deploymentPlugin`, and write to the canonicalized parent path with `O_NOFOLLOW`.
+- Verify the deepest existing ancestor of `privateManifestFile` against resolved public directories before creating subdirectories in `deploymentPlugin`, and write to the canonicalized parent path. Private manifests and prerendered HTML now replace existing regular files atomically, preserving other hard links. Private manifests use owner-only permissions.
 - Validate `prerenderPlugin`'s `origin` option as a bare `http:`/`https:` origin, check `Object.hasOwn` when looking up the client manifest entry, reject `\u007f` in decoded output segments, and verify rendered request URLs remain on the configured origin.
 - Reject unsafe RFC 8288 URI-reference characters (`<`, `>`, whitespace, CR/LF, control characters) in `routePreloads` to prevent HTTP `Link` header injection.
 - Use callback replacements in `applicationPlugins`'s dev `transformIndexHtml` hook so `$'`/`` $` ``/`$&` sequences in the Vite client script URL cannot expand HTML into the script tag.
 - Harden `deserialize` snapshot and error reconstruction against non-object snapshots and malformed error payloads, guard malformed URLs with `URL.canParse` in `internalURL`, document link handoff, and nested redirect resolution, and guard `headersSent` in the SSR example servers' outer error handler.
 - Require `prerenderPlugin`'s `timeout` to be a whole number of milliseconds from 1 to 2147483647. Larger values overflowed `setTimeout` and fired immediately.
 
+- Isolate cookie-less requests to the example SSR entries. Both example hosts now share session handling and replace duplicate or malformed session cookies.
+
 ### Maintenance
 
+- Enforce TypeScript for root-level scripts and configuration as well as workspace sources.
 - `safeWrapAsync` excludes `Error` from its `data` type, matching its runtime behavior, so callbacks return failures as values. Prerendering and prefetch analysis now return their validation errors instead of throwing them inside the wrapper, which also drops the duplicated `Error:` prefix from prerender failure messages.
 
 ## 0.6.0-alpha.5

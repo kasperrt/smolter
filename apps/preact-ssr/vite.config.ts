@@ -1,9 +1,9 @@
 import { fileRouter } from "@kasperrt/smolter/preact/vite";
 import { demoAssets } from "@smolter/ui/tooling/demo-assets";
+import { sessions } from "@smolter/ui/tooling/sessions";
 import { splitDocumentation } from "@smolter/ui/tooling/split-documentation";
 import { defineConfig } from "vite";
 import { serverRendering } from "./server/render-plugin.ts";
-import { sessions } from "./server/session.ts";
 
 // Rename every client-visible Smolter identifier, including the example session cookie.
 const namespace = "smolter";

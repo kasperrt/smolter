@@ -13,11 +13,12 @@ function initialStore(): Store {
 }
 
 const MAX_SESSIONS = 256;
-const session = new RegExp(`(?:^|; )${namespace}-session=([\\w-]+)`);
+const session = new RegExp(`(?:^|;\\s*)${namespace}-session=([\\w-]+)`);
 const sessions = new Map<string, Store>();
 
 export function readStore(request: Request): Store {
-  const id = request.headers.get("cookie")?.match(session)?.[1] ?? "anonymous";
+  const id = request.headers.get("cookie")?.match(session)?.[1];
+  if (!id) return initialStore();
   const existing = sessions.get(id);
   if (existing) {
     sessions.delete(id);

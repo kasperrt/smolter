@@ -12,9 +12,7 @@ const javascriptFile = /\.(?:[cm]?js|jsx)$/;
 const suppressionComment = new RegExp(
   "(?:\\/\\/|\\/\\*)\\s*(?:@ts-(?:ignore|expect-error|nocheck)|biome-ignore)\\b",
 );
-const files = readdirSync(".", { withFileTypes: true })
-  .filter((entry) => entry.isFile() && sourceFile.test(entry.name))
-  .map((entry) => entry.name);
+const files: string[] = [];
 function inNamedTypeDeclaration(node: ts.Node): boolean {
   let current = node.parent;
   while (current && !ts.isSourceFile(current)) {
@@ -121,11 +119,12 @@ function check(path: string) {
     position += line.length;
   }
 }
-function scan(directory: string) {
+function scan(directory: string, recursive = true) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) {
-      if (!["node_modules", "dist"].includes(entry.name)) scan(path);
+      if (recursive && !["node_modules", "dist"].includes(entry.name))
+        scan(path);
       continue;
     }
     if (javascriptFile.test(path))
@@ -135,6 +134,7 @@ function scan(directory: string) {
     if (sourceFile.test(path)) files.push(path);
   }
 }
+scan(".", false);
 for (const directory of ["packages", "apps", "scripts", "tooling"])
   scan(directory);
 const api = new API({ cwd: process.cwd() });

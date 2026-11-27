@@ -1,11 +1,11 @@
-import { constants } from "node:fs";
-import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 import { safeWrapAsync } from "@smolter/core";
 import { flatRoutes } from "@smolter/files";
 import type { Plugin, ResolvedConfig } from "vite";
+import { writeBuildOutput } from "./build-output.ts";
 
 /** Opt-in HTML generation after the client build and then the SSR build. */
 export interface PrerenderOptions {
@@ -97,13 +97,7 @@ export async function renderPaths(options: RenderOptions): Promise<void> {
         if (destination.startsWith("..") || isAbsolute(destination))
           return new Error("Output directory escapes client output");
       }
-      await writeFile(resolve(target, "index.html"), html, {
-        flag:
-          constants.O_WRONLY |
-          constants.O_CREAT |
-          constants.O_TRUNC |
-          constants.O_NOFOLLOW,
-      });
+      await writeBuildOutput(resolve(target, "index.html"), html);
     });
     if (error)
       throw new Error(`Prerender failed for ${path}: ${error.message}`, {

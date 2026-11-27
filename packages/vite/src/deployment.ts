@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
-import { constants } from "node:fs";
-import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath } from "node:fs/promises";
 import {
   basename,
   dirname,
@@ -11,6 +10,7 @@ import {
 } from "node:path";
 import { safeWrapAsync } from "@smolter/core";
 import type { Plugin } from "vite";
+import { writeBuildOutput } from "./build-output.ts";
 import { configuredNamespace, namespaceConfig } from "./namespace.ts";
 
 /** Deployment manifest configuration. Serve the emitted file with Cache-Control: no-store. */
@@ -207,16 +207,10 @@ export function deploymentPlugin(
         parent = await realpath(next);
         await assertPrivateDirectory(parent, publicDirectories);
       }
-      await writeFile(
+      await writeBuildOutput(
         resolve(parent, basename(privateFile)),
         JSON.stringify({ version: metadata.version, routes: routeTemplates }),
-        {
-          flag:
-            constants.O_WRONLY |
-            constants.O_CREAT |
-            constants.O_TRUNC |
-            constants.O_NOFOLLOW,
-        },
+        0o600,
       );
     },
     generateBundle() {

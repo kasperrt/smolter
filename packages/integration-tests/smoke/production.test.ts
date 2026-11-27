@@ -1,14 +1,30 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { safeWrapAsync } from "@smolter/core";
 import { expect } from "vitest";
 import { test } from "../tests/helpers/browser.ts";
+
+interface ExampleServer {
+  data(request: Request): Promise<Response>;
+}
 
 const examples = [
   { name: "react-ssr", port: 4375 },
   { name: "preact-ssr", port: 4376 },
 ];
 for (const { name, port } of examples) {
+  test(`${name} isolates requests without a session in the built server entry`, async () => {
+    const file = pathToFileURL(resolve("apps", name, "dist/server/server.js"));
+    const server: ExampleServer = await import(file.href);
+    for (let i = 0; i < 2; i++) {
+      const response = await server.data(
+        new Request("http://example.test/examples/counter"),
+      );
+      expect(await response.json()).toEqual({ count: 0, reads: 1 });
+    }
+  });
   test(`${name} supports production hydration, fetchers and mutations`, async ({
     page,
     onTestFinished,
