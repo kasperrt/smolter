@@ -2,6 +2,17 @@
 
 ## 0.6.0-alpha.6
 
+### Features
+
+- Add opt-in route discovery (#60). With `applicationPlugins({ routeDiscovery: { protect, manifestFile } })`, production builds withhold protected routes, and descendants of protected layouts, from the public route table, deployment fingerprints and `.vite/route-assets.json`. Each protected route becomes a separately emitted chunk with an opaque name, recorded only in a private manifest that must live outside client output.
+- `createRequestHandler({ routeDiscovery: { manifest, authorize } })` answers `GET /path.__smolter-routes` with only the protected routes in the matched chain that `authorize` allows. Unknown, public and denied paths, and throwing authorizers, all receive the same private 404. `createRouteDiscovery` and `discoveryTarget` serve other hosts.
+- `virtual:smolter/routes` exports `discover`. `mountApplication(routes, root, { discover })` discovers protected deep links before preload and hydration. Navigations, fetchers, revalidation, Back/Forward, public splat fallbacks and intent or viewport prefetching discover unmatched paths on demand. Concurrent callers share one request, denials are remembered until `router.resetDiscovery()` (call it after logout or a permission change), and a response from another build makes page navigations load the new document without replaying writes. Failed discovered chunk imports reach deployment recovery through `vite:preloadError`. React and Preact, flat and nested routes are supported, including a protected index route under a public layout.
+- `routeDiscoveryClient` and `withRouteDiscovery` live in the new `@kasperrt/smolter/react/discovery` and `/preact/discovery` entries (nested routes use `routeDiscoveryClient` from `/nested`), so lazy-route and application bundles do not carry them.
+
+### Size
+
+- Routers carry no discovery implementation. They receive it only through the `discover` option, and Vite builds without `routeDiscovery` also remove the small router hook, so their Link and router bundles stay within the existing prefetch size budgets. Measured without the Vite plugins (the README table), all-export bundles grow by gzip: React adapter +103 B, Preact adapter +100 B, server transport +95–97 B, common data subsets +109–110 B, applications +154–160 B. Routing-only subsets are unchanged.
+
 ### Security
 
 - Validate `internalURL` before updating browser history in `connectHashHistory`, so external, unsafe-protocol, or malformed navigation targets cannot spoof the URL hash or pollute history.

@@ -1,0 +1,13 @@
+{
+  "slug": "RouteDiscoveryContext",
+  "title": "RouteDiscoveryContext",
+  "summary": "Abort signal and navigation flag for one route discovery request.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "signal aborts when the router is disposed or discovery is reset. navigation is true when a page navigation asked, which lets a stale build load the new document instead; prefetches, fetchers and submissions pass false.",
+      "code": "const discover: RouteDiscovery = async (url, { signal, navigation }) => {\n  const response = await fetch(`${url.pathname}.__smolter-routes`, { signal });\n  return response.ok ? toRoutes(await response.json(), navigation) : [];\n};"
+    }
+  ]
+}

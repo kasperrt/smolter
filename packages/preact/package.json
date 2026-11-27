@@ -11,7 +11,8 @@
     "./client": "./src/client.tsx",
     "./document": "./src/document.tsx",
     "./nested": "./src/nested.tsx",
-    "./lazy-route": "./src/lazy-route.ts"
+    "./lazy-route": "./src/lazy-route.ts",
+    "./discovery": "./src/discovery.ts"
   },
   "dependencies": {
     "@smolter/core": "workspace:*",

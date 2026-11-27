@@ -1,0 +1,13 @@
+{
+  "slug": "DiscoveredRoute",
+  "title": "DiscoveredRoute",
+  "summary": "Browser definition of one authorized route returned by route discovery.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "path, and for nested routes id, parentId, index and pathless, place the route. file is the module URL, exports lists the browser exports to read from it, and styles lists stylesheets to load before it renders. The browser rejects anything but http and https URLs, unknown capabilities and invalid export names.",
+      "code": "const route: DiscoveredRoute = {\n  path: \"/admin\",\n  capabilities: { loader: true },\n  file: \"/assets/route-1c2d4e5f-Ab12Cd34.js\",\n  exports: [\"default\"],\n  styles: [\"/assets/route-1c2d4e5f-Ef56Gh78.css\"],\n};"
+    }
+  ]
+}

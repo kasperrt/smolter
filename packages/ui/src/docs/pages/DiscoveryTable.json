@@ -1,0 +1,13 @@
+{
+  "slug": "DiscoveryTable",
+  "title": "DiscoveryTable",
+  "summary": "Discovery state attached to one router.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "The router calls needs before matching and load when a URL has no route or only a splat. methods are spread onto the router and dispose aborts in-flight requests. Create it through RouteDiscovery.attach.",
+      "code": "const table = discovery.attach(routes, router);"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "slug": "discoveryTarget",
+  "title": "discoveryTarget",
+  "summary": "Read the route path from a route discovery request URL.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Returns",
+      "body": "The route pathname for /path.__smolter-routes, / for /.__smolter-routes, undefined for other URLs, and an Error for protocol-relative or backslash paths.",
+      "code": "discoveryTarget(new URL(\"https://app.example/admin.__smolter-routes\")); // \"/admin\""
+    },
+    {
+      "title": "Namespace",
+      "body": "Pass discoverySuffix for a custom namespace; createRequestHandler does this from its namespace option.",
+      "code": ""
+    },
+    {
+      "title": "Usage",
+      "body": "Use it with createRouteDiscovery in hosts other than Node; createRequestHandler handles discovery requests itself.",
+      "code": ""
+    },
+    {
+      "title": "Security",
+      "body": "The returned path is only matched against the manifest; it never reaches the filesystem or another URL.",
+      "code": ""
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "slug": "createRouteDiscovery",
+  "title": "createRouteDiscovery",
+  "summary": "Answer route discovery requests from the private manifest and a host authorizer.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "createRequestHandler calls this for its routeDiscovery option. Other hosts can call it directly with discoveryTarget: it returns a handler that takes the request and the route path.",
+      "code": "const discover = createRouteDiscovery({ manifest, authorize });\nconst path = discoveryTarget(new URL(request.url));\nif (typeof path === \"string\") return discover(request, path);"
+    },
+    {
+      "title": "Matching",
+      "body": "Flat manifests match in build order; nested manifests match leaves with their layout chains like the browser router. Only protected routes in the matched chain are returned, after authorize allows every one of them.",
+      "code": ""
+    },
+    {
+      "title": "Denials",
+      "body": "Unknown, public and denied paths, and authorizers that throw, return the same 404 { routes: [] }. Non-GET/HEAD methods return 405. Every response is private, no-store.",
+      "code": ""
+    },
+    {
+      "title": "Validation",
+      "body": "The manifest is validated when the handler is created and an invalid one throws a TypeError, so misconfiguration fails at startup rather than per request.",
+      "code": ""
+    }
+  ]
+}

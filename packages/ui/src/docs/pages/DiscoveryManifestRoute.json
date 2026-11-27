@@ -1,0 +1,13 @@
+{
+  "slug": "DiscoveryManifestRoute",
+  "title": "DiscoveryManifestRoute",
+  "summary": "One route in the private discovery manifest.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "path, id, parentId, index and pathless mirror the file route. route is present only for protected routes and holds the browser definition returned to authorized requests.",
+      "code": "const entries: DiscoveryManifestRoute[] = [\n  { path: \"/\" },\n  { path: \"/admin\", route: adminDefinition },\n];"
+    }
+  ]
+}

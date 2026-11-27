@@ -1,0 +1,13 @@
+{
+  "slug": "RouteDiscoveryResponse",
+  "title": "RouteDiscoveryResponse",
+  "summary": "Body of a successful route discovery response.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "build identifies the deployment that produced routes. The browser applies routes only when build matches its own; otherwise a page navigation loads the new document.",
+      "code": "{ \"build\": \"3f2a…\", \"routes\": [{ \"path\": \"/admin\", \"file\": \"/assets/route-1c2d-Ab12.js\" }] }"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "slug": "route-discovery",
+  "title": "route-discovery",
+  "summary": "Keep protected routes out of public JavaScript until the server authorizes them.",
+  "kind": "Guides",
+  "sections": [
+    {
+      "title": "What it hides",
+      "body": "Without discovery, every file route's path, capabilities and chunk import is part of the application JavaScript any visitor downloads. With routeDiscovery, production builds withhold protected routes from the public route table, the deployment manifest fingerprints and .vite/route-assets.json. Each protected route becomes its own chunk with an opaque name that only the private manifest refers to. Loaders and actions are unaffected: they still run on the server and must authorize their own data.",
+      "code": ""
+    },
+    {
+      "title": "Mark protected routes",
+      "body": "Pass protect and a private manifestFile to applicationPlugins. protect receives each route's path and, for nested routes, its id. A protected layout also withholds its descendants, which cannot render without it. A public layout whose index route is protected stays public; the index joins through discovery. The manifest must be outside client output and publicDir, and the build refuses paths that resolve into them, including through symlinks. Route discovery requires splitRoutes, which is the default.",
+      "code": "import { applicationPlugins } from \"@kasperrt/smolter/preact/vite\";\n\nexport default {\n  plugins: applicationPlugins({\n    routeDiscovery: {\n      protect: (route) => route.path.startsWith(\"/admin\"),\n      manifestFile: \"dist/server/route-discovery.json\",\n    },\n  }),\n};"
+    },
+    {
+      "title": "Authorize on the server",
+      "body": "Give createRequestHandler the manifest and an authorize callback. GET /path.__smolter-routes (the suffix follows your namespace) matches the path the way the browser router would and calls authorize for every protected route in the matched chain. When all are allowed it returns only those routes. Unknown, public and denied paths, and authorizers that throw, all receive the same 404 with { routes: [] }, so a denial reveals nothing. Every response is private, no-store. Use createRouteDiscovery directly for hosts other than Node.",
+      "code": "import { readFile } from \"node:fs/promises\";\nimport { createRequestHandler } from \"@kasperrt/smolter/utils/http\";\n\nconst manifest = JSON.parse(\n  await readFile(\"dist/server/route-discovery.json\", \"utf8\"),\n);\n\napp.use(\n  createRequestHandler({\n    build,\n    entry,\n    routeDiscovery: {\n      manifest,\n      authorize: async (request, route) =>\n        route.path.startsWith(\"/admin\") && (await isAdmin(request)),\n    },\n  }),\n);"
+    },
+    {
+      "title": "Mount with discovery",
+      "body": "virtual:smolter/routes exports discover. Pass it to mountApplication: a protected deep link is discovered before its module preloads and hydrates, and later navigations, fetchers, revalidation, Back and Forward discover unmatched paths on demand. A public splat route still asks first, so a catch-all page cannot shadow protected paths. Intent and viewport prefetching discover a link before preloading it.",
+      "code": "import routes, { discover } from \"virtual:smolter/routes\";\nimport { mountApplication } from \"@kasperrt/smolter/preact/client\";\n\nconst router = await mountApplication(routes, root, { discover });\n\nexport async function logout() {\n  await fetch(\"/logout\", { method: \"POST\" });\n  router.resetDiscovery?.();\n  await router.navigate(\"/\");\n}"
+    },
+    {
+      "title": "Logout and permission changes",
+      "body": "Discovered routes and denials are kept per router in memory, never in storage. A denial is remembered until router.resetDiscovery(), which also removes discovered routes and clears prefetched data. Call it after logout, login or a role change, or load a new document. Responses are private, no-store, so shared caches never reuse one session's answer for another.",
+      "code": ""
+    },
+    {
+      "title": "Deployments and recovery",
+      "body": "Each build stamps a deterministic ID into the browser route module and the private manifest. When discovery answers from a newer deployment, a page navigation loads that document instead of mixing builds; fetchers and submissions receive no route, so writes are never replayed. A discovered chunk that fails to load dispatches vite:preloadError, so watchDeployment can check for a new deployment and recover.",
+      "code": ""
+    },
+    {
+      "title": "What stays public",
+      "body": "Protected chunks are ordinary static files: anyone who knows a URL can fetch it, so keep secrets out of browser code and authorize data on the server. Vite's own .vite/manifest.json, when build.manifest is enabled, and source maps list every chunk: do not serve the .vite directory or source maps publicly. Development servers serve every route without discovery.",
+      "code": ""
+    }
+  ]
+}

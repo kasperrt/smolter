@@ -29,6 +29,10 @@
       "@kasperrt/smolter/preact/lazy-route": [
         "./packages/preact/src/lazy-route.ts"
       ],
+      "@kasperrt/smolter/preact/discovery": [
+        "./packages/preact/src/discovery.ts"
+      ],
+      "@smolter/preact/discovery": ["./packages/preact/src/discovery.ts"],
       "@kasperrt/smolter/utils/http": ["./packages/server/src/node.ts"],
       "@kasperrt/smolter/utils/assets": ["./packages/server/src/assets.ts"],
       "@kasperrt/smolter/utils/responses": ["./packages/core/src/responses.ts"],
@@ -42,6 +46,8 @@
       "@smolter/core/presentation": ["./packages/core/src/presentation.ts"],
       "@smolter/core/transport": ["./packages/core/src/transport.ts"],
       "@smolter/core/namespace": ["./packages/core/src/namespace.ts"],
+      "@smolter/core/match": ["./packages/core/src/match.ts"],
+      "@smolter/core/discovery": ["./packages/core/src/discovery.ts"],
       "@smolter/core/intent": ["./packages/core/src/intent.ts"],
       "@smolter/core/prefetch": ["./packages/core/src/prefetch.ts"],
       "@smolter/core/link-prefetch": ["./packages/core/src/link-prefetch.ts"],
@@ -58,12 +64,17 @@
       "@smolter/client/root-data": ["./packages/client/src/root-data.ts"],
       "@smolter/client/hydration": ["./packages/client/src/hydration.ts"],
       "@smolter/client/hash-history": ["./packages/client/src/hash-history.ts"],
+      "@smolter/client/discovery": ["./packages/client/src/discovery.ts"],
       "@smolter/react/router": ["./packages/react/src/router.ts"],
       "@smolter/react/route-types": ["./packages/react/src/route-types.ts"],
       "@kasperrt/smolter/react/document": ["./packages/react/src/document.tsx"],
       "@kasperrt/smolter/react/lazy-route": [
         "./packages/react/src/lazy-route.ts"
       ],
+      "@kasperrt/smolter/react/discovery": [
+        "./packages/react/src/discovery.ts"
+      ],
+      "@smolter/react/discovery": ["./packages/react/src/discovery.ts"],
       "@kasperrt/smolter/react/nested": ["./packages/react/src/nested.tsx"],
       "@kasperrt/smolter/preact/nested": ["./packages/preact/src/nested.tsx"]
     },

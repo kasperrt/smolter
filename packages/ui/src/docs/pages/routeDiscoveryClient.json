@@ -1,0 +1,28 @@
+{
+  "slug": "routeDiscoveryClient",
+  "title": "routeDiscoveryClient",
+  "summary": "Create the browser side of route discovery for a build.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "virtual:smolter/routes exports discover = routeDiscoveryClient(build) when routeDiscovery is configured, importing it from lazy-route for flat routes or nested for nested routes. Pass discover to mountApplication or createRouter.",
+      "code": "import routes, { discover } from \"virtual:smolter/routes\";\nimport { mountApplication } from \"@kasperrt/smolter/preact/client\";\n\nconst router = await mountApplication(routes, root, { discover });\n\nexport async function logout() {\n  await fetch(\"/logout\", { method: \"POST\" });\n  router.resetDiscovery?.();\n  await router.navigate(\"/\");\n}"
+    },
+    {
+      "title": "Requests",
+      "body": "For an unmatched URL it requests /path.__smolter-routes (following your namespace) same-origin with cache: no-store and the router's abort signal, then validates the response before creating lazy routes. Non-2xx and malformed responses yield no routes.",
+      "code": ""
+    },
+    {
+      "title": "Modules and styles",
+      "body": "A discovered route loads its stylesheets, then imports its module and reads only the listed exports. A failed import dispatches vite:preloadError so watchDeployment can recover, then rejects for the route's error boundary.",
+      "code": ""
+    },
+    {
+      "title": "Stale builds",
+      "body": "When the response comes from another build, a page navigation loads the destination as a new document and other callers receive no routes. Writes are never replayed.",
+      "code": ""
+    }
+  ]
+}

@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./root-data": "./src/root-data.ts",
     "./hydration": "./src/hydration.ts",
-    "./hash-history": "./src/hash-history.ts"
+    "./hash-history": "./src/hash-history.ts",
+    "./discovery": "./src/discovery.ts"
   },
   "dependencies": {
     "@smolter/core": "workspace:*"

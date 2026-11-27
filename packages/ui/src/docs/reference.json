@@ -661,8 +661,8 @@
     "title": "RouterOptions",
     "entries": ["react", "preact", "react/nested", "preact/nested"],
     "kind": "Types",
-    "summary": "Initial URL, browser history, and hydration configuration.",
-    "signature": "interface RouterOptions {\n  url?: string;\n  /** Explicitly opt into browser history; leave off for SSR and tests. */\n  browser?: boolean;\n  hydrationData?: Snapshot;\n}",
+    "summary": "Initial URL, browser history, hydration and route discovery configuration.",
+    "signature": "interface RouterOptions {\n  url?: string;\n  /** Explicitly opt into browser history; leave off for SSR and tests. */\n  browser?: boolean;\n  hydrationData?: Snapshot;\n  /** Ask the server for routes that are not in the public route table. */\n  discover?: RouteDiscovery;\n}",
     "fields": [
       {
         "name": "url",
@@ -678,6 +678,11 @@
         "name": "hydrationData",
         "signature": "hydrationData?: Snapshot;",
         "summary": ""
+      },
+      {
+        "name": "discover",
+        "signature": "discover?: RouteDiscovery;",
+        "summary": "Ask the server for routes that are not in the public route table."
       }
     ],
     "source": "packages/core/src/types.ts"
@@ -839,7 +844,7 @@
     "entries": ["react", "preact", "react/nested", "preact/nested"],
     "kind": "Types",
     "summary": "Route navigation, subscriptions, fetchers, and loader revalidation.",
-    "signature": "interface Router {\n  routes: readonly Route[];\n  getSnapshot: () => Snapshot;\n  subscribe: (listener: () => void) => () => void;\n  start: () => () => void;\n  navigate: (url: string, options?: NavigateOptions) => Promise<void>;\n  revalidate: (\n    options?: RevalidateOptions | RevalidationArgs[\"reason\"],\n    context?: RevalidationContext,\n  ) => Promise<void>;\n  /** Register layout data under a route ID. The returned function unregisters it. */\n  registerRevalidator: (id: string, revalidate: Revalidator) => () => void;\n  submit: (\n    url: string,\n    body: FormData,\n    options?: SubmitOptions,\n  ) => Promise<Result>;\n  /** Create an independent fetcher. Framework useFetcher hooks manage disposal automatically. */\n  createFetcher: () => Fetcher;\n  /** Speculatively read route data without navigation; cached for one navigation, at most 30 seconds. */\n  prefetch: (url: string) => Promise<Result>;\n  dispose: () => void;\n}",
+    "signature": "interface Router {\n  routes: readonly Route[];\n  getSnapshot: () => Snapshot;\n  subscribe: (listener: () => void) => () => void;\n  start: () => () => void;\n  navigate: (url: string, options?: NavigateOptions) => Promise<void>;\n  revalidate: (\n    options?: RevalidateOptions | RevalidationArgs[\"reason\"],\n    context?: RevalidationContext,\n  ) => Promise<void>;\n  /** Register layout data under a route ID. The returned function unregisters it. */\n  registerRevalidator: (id: string, revalidate: Revalidator) => () => void;\n  submit: (\n    url: string,\n    body: FormData,\n    options?: SubmitOptions,\n  ) => Promise<Result>;\n  /** Create an independent fetcher. Framework useFetcher hooks manage disposal automatically. */\n  createFetcher: () => Fetcher;\n  /** Speculatively read route data without navigation; cached for one navigation, at most 30 seconds. */\n  prefetch: (url: string) => Promise<Result>;\n  /** With route discovery: discover routes for an unmatched URL. Resolves true when a route now matches it. */\n  discover?: (url: string) => Promise<boolean>;\n  /** With route discovery: forget discovered routes and denials, for example after logout or a permission change. */\n  resetDiscovery?: () => void;\n  dispose: () => void;\n}",
     "fields": [
       {
         "name": "routes",
@@ -890,6 +895,16 @@
         "name": "prefetch",
         "signature": "prefetch: (url: string) => Promise<Result>;",
         "summary": "Speculatively read route data without navigation; cached for one navigation, at most 30 seconds."
+      },
+      {
+        "name": "discover",
+        "signature": "discover?: (url: string) => Promise<boolean>;",
+        "summary": "With route discovery: discover routes for an unmatched URL. Resolves true when a route now matches it."
+      },
+      {
+        "name": "resetDiscovery",
+        "signature": "resetDiscovery?: () => void;",
+        "summary": "With route discovery: forget discovered routes and denials, for example after logout or a permission change."
       },
       {
         "name": "dispose",
@@ -1708,7 +1723,7 @@
     "entries": ["react/client", "preact/client"],
     "kind": "Types",
     "summary": "Browser hydration settings for hash history, deployment recovery and deferred-data timeout.",
-    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 8,000. */\n  deferredTimeout?: number;\n}",
+    "signature": "interface MountApplicationOptions {\n  hash?: boolean;\n  deployment?: DeploymentOptions | null;\n  /** Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 8,000. */\n  deferredTimeout?: number;\n  /** Route discovery from virtual:smolter/routes; protected deep links are discovered before hydration. */\n  discover?: RouteDiscovery;\n}",
     "fields": [
       {
         "name": "hash",
@@ -1724,6 +1739,11 @@
         "name": "deferredTimeout",
         "signature": "deferredTimeout?: number;",
         "summary": "Total initial deferred-data budget in integer milliseconds; not an inactivity timeout. Defaults to 8,000."
+      },
+      {
+        "name": "discover",
+        "signature": "discover?: RouteDiscovery;",
+        "summary": "Route discovery from virtual:smolter/routes; protected deep links are discovered before hydration."
       }
     ],
     "source": "packages/react/src/client.tsx"
@@ -2121,7 +2141,7 @@
     "entries": ["react/vite", "preact/vite"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface ApplicationOptions {\n  directory?: string;\n  framework?: \"react\" | \"preact\";\n  dataEndpoint?: string;\n  /** Maximum development request-body bytes. Defaults to 1 MiB. */\n  maxBodySize?: number;\n  ssr?: boolean;\n  splitRoutes?: boolean;\n  resourceRequest?: (url: string) => boolean;\n  /** Client-visible identifier prefix; see routerPlugin. Defaults to \"smolter\". */\n  namespace?: string;\n}",
+    "signature": "interface ApplicationOptions {\n  directory?: string;\n  framework?: \"react\" | \"preact\";\n  dataEndpoint?: string;\n  /** Maximum development request-body bytes. Defaults to 1 MiB. */\n  maxBodySize?: number;\n  ssr?: boolean;\n  splitRoutes?: boolean;\n  resourceRequest?: (url: string) => boolean;\n  /** Client-visible identifier prefix; see routerPlugin. Defaults to \"smolter\". */\n  namespace?: string;\n  /** Withhold protected routes from production browser output until the server authorizes them. Requires splitRoutes. */\n  routeDiscovery?: RouteDiscoveryBuildOptions;\n}",
     "fields": [
       {
         "name": "directory",
@@ -2162,6 +2182,11 @@
         "name": "namespace",
         "signature": "namespace?: string;",
         "summary": "Client-visible identifier prefix; see routerPlugin. Defaults to \"smolter\"."
+      },
+      {
+        "name": "routeDiscovery",
+        "signature": "routeDiscovery?: RouteDiscoveryBuildOptions;",
+        "summary": "Withhold protected routes from production browser output until the server authorizes them. Requires splitRoutes."
       }
     ],
     "source": "packages/vite/src/application/vite.ts"
@@ -2324,7 +2349,7 @@
     "entries": ["utils/http"],
     "kind": "API",
     "summary": "Node/Express middleware; mount after metrics, tracing and static assets.",
-    "signature": "function createRequestHandler({\n  build,\n  entry,\n  dataEndpoint,\n  maxBodySize,\n  namespace,\n}: RequestHandlerOptions): (\n  incoming: ServerIncomingMessage,\n  outgoing: ServerResponse,\n  next: NextHandler,\n) => Promise<void>;",
+    "signature": "function createRequestHandler({\n  build,\n  entry,\n  dataEndpoint,\n  maxBodySize,\n  namespace,\n  routeDiscovery,\n}: RequestHandlerOptions): (\n  incoming: ServerIncomingMessage,\n  outgoing: ServerResponse,\n  next: NextHandler,\n) => Promise<void>;",
     "fields": [],
     "source": "packages/server/src/handler.ts"
   },
@@ -2355,7 +2380,7 @@
     "entries": ["utils/http"],
     "kind": "Types",
     "summary": "SSR build, browser entry URL and application-scoped data endpoint for Node or Express.",
-    "signature": "interface RequestHandlerOptions {\n  build: ServerBuild;\n  /** Browser entry URL resolved from Vite's production manifest. */\n  entry: string;\n  /** Must match the browser and Vite transport endpoint. */\n  dataEndpoint?: string;\n  /** Maximum request-body bytes, including multipart overhead. Defaults to 1 MiB. */\n  maxBodySize?: number;\n  /** Must match the Vite namespace when this handler is not bundled by Vite. */\n  namespace?: string;\n}",
+    "signature": "interface RequestHandlerOptions {\n  build: ServerBuild;\n  /** Browser entry URL resolved from Vite's production manifest. */\n  entry: string;\n  /** Must match the browser and Vite transport endpoint. */\n  dataEndpoint?: string;\n  /** Maximum request-body bytes, including multipart overhead. Defaults to 1 MiB. */\n  maxBodySize?: number;\n  /** Must match the Vite namespace when this handler is not bundled by Vite. */\n  namespace?: string;\n  /** Serve authorized protected routes from the private discovery manifest. */\n  routeDiscovery?: RouteDiscoveryOptions;\n}",
     "fields": [
       {
         "name": "build",
@@ -2381,6 +2406,11 @@
         "name": "namespace",
         "signature": "namespace?: string;",
         "summary": "Must match the Vite namespace when this handler is not bundled by Vite."
+      },
+      {
+        "name": "routeDiscovery",
+        "signature": "routeDiscovery?: RouteDiscoveryOptions;",
+        "summary": "Serve authorized protected routes from the private discovery manifest."
       }
     ],
     "source": "packages/server/src/handler.ts"
@@ -2512,5 +2542,465 @@
     "signature": "function prerenderPlugin(options: PrerenderOptions): Plugin;",
     "fields": [],
     "source": "packages/vite/src/prerender.ts"
+  },
+  {
+    "slug": "RouteDiscoveryContext",
+    "title": "RouteDiscoveryContext",
+    "entries": ["react", "preact", "react/nested", "preact/nested"],
+    "kind": "Types",
+    "summary": "Context for one route discovery request.",
+    "signature": "interface RouteDiscoveryContext {\n  signal: AbortSignal;\n  /** True when a page navigation asked; a stale build may then reload the document. */\n  navigation: boolean;\n}",
+    "fields": [
+      {
+        "name": "signal",
+        "signature": "signal: AbortSignal;",
+        "summary": ""
+      },
+      {
+        "name": "navigation",
+        "signature": "navigation: boolean;",
+        "summary": "True when a page navigation asked; a stale build may then reload the document."
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "RouteDiscovery",
+    "title": "RouteDiscovery",
+    "entries": ["react", "preact", "react/nested", "preact/nested"],
+    "kind": "Types",
+    "summary": "Route discovery for a router. Create it with withRouteDiscovery or routeDiscoveryClient; routers without it carry no discovery code.",
+    "signature": "interface RouteDiscovery<R extends Route = Route> {\n  attach: (\n    table: Route[],\n    host: DiscoveryHost,\n    cache?: DiscoveryCache,\n    transform?: (routes: readonly R[]) => readonly Route[],\n  ) => DiscoveryTable;\n}",
+    "fields": [
+      {
+        "name": "attach",
+        "signature": "attach: (\n    table: Route[],\n    host: DiscoveryHost,\n    cache?: DiscoveryCache,\n    transform?: (routes: readonly R[]) => readonly Route[],\n  ) => DiscoveryTable;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "DiscoveredCapabilities",
+    "title": "DiscoveredCapabilities",
+    "entries": ["react", "preact", "react/nested", "preact/nested"],
+    "kind": "Types",
+    "summary": "Statically known capabilities of a discovered route module.",
+    "signature": "interface DiscoveredCapabilities {\n  dataEndpoint?: string;\n  loader?: boolean;\n  action?: boolean;\n  clientAction?: boolean;\n  meta?: boolean;\n  shouldRevalidate?: boolean;\n  ErrorBoundary?: boolean;\n}",
+    "fields": [
+      {
+        "name": "dataEndpoint",
+        "signature": "dataEndpoint?: string;",
+        "summary": ""
+      },
+      {
+        "name": "loader",
+        "signature": "loader?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "action",
+        "signature": "action?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "clientAction",
+        "signature": "clientAction?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "meta",
+        "signature": "meta?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "shouldRevalidate",
+        "signature": "shouldRevalidate?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "ErrorBoundary",
+        "signature": "ErrorBoundary?: boolean;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "DiscoveredRoute",
+    "title": "DiscoveredRoute",
+    "entries": ["react", "preact", "react/nested", "preact/nested"],
+    "kind": "Types",
+    "summary": "Browser definition of one authorized route, as returned by route discovery.",
+    "signature": "interface DiscoveredRoute {\n  path: string;\n  id?: string;\n  parentId?: string;\n  index?: boolean;\n  pathless?: boolean;\n  capabilities: DiscoveredCapabilities;\n  /** Module URL of the route's browser chunk. */\n  file: string;\n  /** Browser exports selected from the module. */\n  exports: string[];\n  /** Stylesheet URLs to load before the module renders. */\n  styles: string[];\n}",
+    "fields": [
+      {
+        "name": "path",
+        "signature": "path: string;",
+        "summary": ""
+      },
+      {
+        "name": "id",
+        "signature": "id?: string;",
+        "summary": ""
+      },
+      {
+        "name": "parentId",
+        "signature": "parentId?: string;",
+        "summary": ""
+      },
+      {
+        "name": "index",
+        "signature": "index?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "pathless",
+        "signature": "pathless?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "capabilities",
+        "signature": "capabilities: DiscoveredCapabilities;",
+        "summary": ""
+      },
+      {
+        "name": "file",
+        "signature": "file: string;",
+        "summary": "Module URL of the route's browser chunk."
+      },
+      {
+        "name": "exports",
+        "signature": "exports: string[];",
+        "summary": "Browser exports selected from the module."
+      },
+      {
+        "name": "styles",
+        "signature": "styles: string[];",
+        "summary": "Stylesheet URLs to load before the module renders."
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "RouteDiscoveryResponse",
+    "title": "RouteDiscoveryResponse",
+    "entries": ["react", "preact", "react/nested", "preact/nested"],
+    "kind": "Types",
+    "summary": "Route discovery response; build ties routes to one deployment.",
+    "signature": "interface RouteDiscoveryResponse {\n  build: string;\n  routes: DiscoveredRoute[];\n}",
+    "fields": [
+      {
+        "name": "build",
+        "signature": "build: string;",
+        "summary": ""
+      },
+      {
+        "name": "routes",
+        "signature": "routes: DiscoveredRoute[];",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "createRouteDiscovery",
+    "title": "createRouteDiscovery",
+    "entries": ["react/server", "preact/server"],
+    "kind": "API",
+    "summary": "Answer a route discovery request with only the protected routes this request may see.",
+    "signature": "function createRouteDiscovery({\n  manifest,\n  authorize,\n}: RouteDiscoveryOptions): (\n  request: Request,\n  path: string,\n) => Promise<Response>;",
+    "fields": [],
+    "source": "packages/server/src/discovery.ts"
+  },
+  {
+    "slug": "DiscoveryManifestRoute",
+    "title": "DiscoveryManifestRoute",
+    "entries": ["react/server", "preact/server"],
+    "kind": "Types",
+    "summary": "One route in the private discovery manifest; protected routes carry their browser definition.",
+    "signature": "interface DiscoveryManifestRoute {\n  path: string;\n  id?: string;\n  parentId?: string;\n  index?: boolean;\n  pathless?: boolean;\n  /** Present only for protected routes, which are absent from public browser output. */\n  route?: DiscoveredRoute;\n}",
+    "fields": [
+      {
+        "name": "path",
+        "signature": "path: string;",
+        "summary": ""
+      },
+      {
+        "name": "id",
+        "signature": "id?: string;",
+        "summary": ""
+      },
+      {
+        "name": "parentId",
+        "signature": "parentId?: string;",
+        "summary": ""
+      },
+      {
+        "name": "index",
+        "signature": "index?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "pathless",
+        "signature": "pathless?: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "route",
+        "signature": "route?: DiscoveredRoute;",
+        "summary": "Present only for protected routes, which are absent from public browser output."
+      }
+    ],
+    "source": "packages/server/src/discovery.ts"
+  },
+  {
+    "slug": "discoveryTarget",
+    "title": "discoveryTarget",
+    "entries": ["react/server", "preact/server"],
+    "kind": "API",
+    "summary": "The route pathname of a discovery request, or undefined for other requests.",
+    "signature": "function discoveryTarget(\n  url: URL,\n  suffix: string = discoverySuffix(),\n): string | Error | undefined;",
+    "fields": [],
+    "source": "packages/server/src/discovery.ts"
+  },
+  {
+    "slug": "ProtectedRoute",
+    "title": "ProtectedRoute",
+    "entries": ["react/server", "preact/server"],
+    "kind": "Types",
+    "summary": "The protected route a discovery request would reveal.",
+    "signature": "interface ProtectedRoute {\n  id?: string;\n  path: string;\n}",
+    "fields": [
+      {
+        "name": "id",
+        "signature": "id?: string;",
+        "summary": ""
+      },
+      {
+        "name": "path",
+        "signature": "path: string;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/server/src/discovery.ts"
+  },
+  {
+    "slug": "RouteAuthorizer",
+    "title": "RouteAuthorizer",
+    "entries": ["react/server", "preact/server"],
+    "kind": "Types",
+    "summary": "Decide whether this request may learn about a protected route. Loaders and actions still authorize their own data.",
+    "signature": "type RouteAuthorizer = (\n  request: Request,\n  route: ProtectedRoute,\n) => boolean | Promise<boolean>;",
+    "fields": [],
+    "source": "packages/server/src/discovery.ts"
+  },
+  {
+    "slug": "RouteDiscoveryManifest",
+    "title": "RouteDiscoveryManifest",
+    "entries": ["react/server", "preact/server"],
+    "kind": "Types",
+    "summary": "Private build artifact listing every route in match order. Keep it outside public output.",
+    "signature": "interface RouteDiscoveryManifest {\n  build: string;\n  nested: boolean;\n  routes: DiscoveryManifestRoute[];\n}",
+    "fields": [
+      {
+        "name": "build",
+        "signature": "build: string;",
+        "summary": ""
+      },
+      {
+        "name": "nested",
+        "signature": "nested: boolean;",
+        "summary": ""
+      },
+      {
+        "name": "routes",
+        "signature": "routes: DiscoveryManifestRoute[];",
+        "summary": ""
+      }
+    ],
+    "source": "packages/server/src/discovery.ts"
+  },
+  {
+    "slug": "RouteDiscoveryOptions",
+    "title": "RouteDiscoveryOptions",
+    "entries": ["react/server", "preact/server"],
+    "kind": "Types",
+    "summary": "Private route manifest and host authorization for route discovery.",
+    "signature": "interface RouteDiscoveryOptions {\n  manifest: RouteDiscoveryManifest;\n  authorize: RouteAuthorizer;\n}",
+    "fields": [
+      {
+        "name": "manifest",
+        "signature": "manifest: RouteDiscoveryManifest;",
+        "summary": ""
+      },
+      {
+        "name": "authorize",
+        "signature": "authorize: RouteAuthorizer;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/server/src/discovery.ts"
+  },
+  {
+    "slug": "DiscoverableRoute",
+    "title": "DiscoverableRoute",
+    "entries": ["react/vite", "preact/vite"],
+    "kind": "Types",
+    "summary": "A route considered for withholding from public browser output.",
+    "signature": "interface DiscoverableRoute {\n  path: string;\n  id?: string;\n}",
+    "fields": [
+      {
+        "name": "path",
+        "signature": "path: string;",
+        "summary": ""
+      },
+      {
+        "name": "id",
+        "signature": "id?: string;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/vite/src/application/lazy-files.ts"
+  },
+  {
+    "slug": "RouteDiscoveryBuildOptions",
+    "title": "RouteDiscoveryBuildOptions",
+    "entries": ["react/vite", "preact/vite"],
+    "kind": "Types",
+    "summary": "Withhold routes from public browser output until the server authorizes them.",
+    "signature": "interface RouteDiscoveryBuildOptions {\n  /** Return true for routes (and nested descendants) that anonymous clients must not see. */\n  protect: (route: DiscoverableRoute) => boolean;\n  /** Private manifest for createRequestHandler, relative to the Vite root and outside client output and publicDir. */\n  manifestFile: string;\n}",
+    "fields": [
+      {
+        "name": "protect",
+        "signature": "protect: (route: DiscoverableRoute) => boolean;",
+        "summary": "Return true for routes (and nested descendants) that anonymous clients must not see."
+      },
+      {
+        "name": "manifestFile",
+        "signature": "manifestFile: string;",
+        "summary": "Private manifest for createRequestHandler, relative to the Vite root and outside client output and publicDir."
+      }
+    ],
+    "source": "packages/vite/src/application/lazy-files.ts"
+  },
+  {
+    "slug": "routeDiscoveryClient",
+    "title": "routeDiscoveryClient",
+    "entries": [
+      "react/nested",
+      "preact/nested",
+      "react/discovery",
+      "preact/discovery"
+    ],
+    "kind": "API",
+    "summary": "Route discovery for nested file routes.",
+    "signature": "function nestedRouteDiscovery(\n  build: string,\n): RouteDiscovery<NestedRoute>;",
+    "fields": [],
+    "source": "packages/client/src/discovery.ts"
+  },
+  {
+    "slug": "RouteResolver",
+    "title": "RouteResolver",
+    "entries": ["react", "preact", "react/nested", "preact/nested"],
+    "kind": "Types",
+    "summary": "Resolve authorized route definitions for a URL no known route matches. Return none when unknown or denied.",
+    "signature": "type RouteResolver<R extends Route = Route> = (\n  url: URL,\n  context: RouteDiscoveryContext,\n) => Promise<readonly R[]>;",
+    "fields": [],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "DiscoveryMethods",
+    "title": "DiscoveryMethods",
+    "entries": ["react", "preact", "react/nested", "preact/nested"],
+    "kind": "Types",
+    "summary": "Router methods added when route discovery is configured.",
+    "signature": "interface DiscoveryMethods {\n  discover: (href: string) => Promise<boolean>;\n  resetDiscovery: () => void;\n}",
+    "fields": [
+      {
+        "name": "discover",
+        "signature": "discover: (href: string) => Promise<boolean>;",
+        "summary": ""
+      },
+      {
+        "name": "resetDiscovery",
+        "signature": "resetDiscovery: () => void;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "DiscoveryTable",
+    "title": "DiscoveryTable",
+    "entries": ["react", "preact", "react/nested", "preact/nested"],
+    "kind": "Types",
+    "summary": "Discovery state attached to one router's route table.",
+    "signature": "interface DiscoveryTable {\n  /** Whether no route, or only a splat, matches the URL. */\n  needs: (url: URL) => boolean;\n  load: (url: URL, navigation: boolean) => Promise<boolean>;\n  methods: DiscoveryMethods;\n  dispose: () => void;\n}",
+    "fields": [
+      {
+        "name": "needs",
+        "signature": "needs: (url: URL) => boolean;",
+        "summary": "Whether no route, or only a splat, matches the URL."
+      },
+      {
+        "name": "load",
+        "signature": "load: (url: URL, navigation: boolean) => Promise<boolean>;",
+        "summary": ""
+      },
+      {
+        "name": "methods",
+        "signature": "methods: DiscoveryMethods;",
+        "summary": ""
+      },
+      {
+        "name": "dispose",
+        "signature": "dispose: () => void;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "DiscoveryHost",
+    "title": "DiscoveryHost",
+    "entries": ["react", "preact", "react/nested", "preact/nested"],
+    "kind": "Types",
+    "summary": "The router channel whose current URL resolves discovery requests.",
+    "signature": "interface DiscoveryHost {\n  getSnapshot: () => Pick<Snapshot, \"url\">;\n}",
+    "fields": [
+      {
+        "name": "getSnapshot",
+        "signature": "getSnapshot: () => Pick<Snapshot, \"url\">;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "DiscoveryCache",
+    "title": "DiscoveryCache",
+    "entries": ["react", "preact", "react/nested", "preact/nested"],
+    "kind": "Types",
+    "summary": "Data cleared when discovery resets, such as speculative route data.",
+    "signature": "interface DiscoveryCache {\n  clear: () => void;\n}",
+    "fields": [
+      {
+        "name": "clear",
+        "signature": "clear: () => void;",
+        "summary": ""
+      }
+    ],
+    "source": "packages/core/src/types.ts"
+  },
+  {
+    "slug": "withRouteDiscovery",
+    "title": "withRouteDiscovery",
+    "entries": ["react/discovery", "preact/discovery"],
+    "kind": "API",
+    "summary": "Attach discovery bookkeeping to a router: shared requests, remembered denials, ordered insertion and reset.",
+    "signature": "function withRouteDiscovery<R extends Route>(\n  resolve: RouteResolver<R>,\n): RouteDiscovery<R>;",
+    "fields": [],
+    "source": "packages/core/src/discovery.ts"
   }
 ]

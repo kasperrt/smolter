@@ -31,9 +31,11 @@ export interface LazyRouteOptions {
   ErrorBoundary?: boolean;
 }
 
-type LoadedRoute = RouteModule & Pick<AppRoute, "meta">;
+/** Browser exports of a loaded route module. */
+export type LoadedRoute = RouteModule & Pick<AppRoute, "meta">;
 
-interface LazyAppRoute extends AppRoute {
+/** A lazily imported application route. */
+export interface LazyAppRoute extends AppRoute {
   resolveComponent: () => ComponentType | undefined;
 }
 

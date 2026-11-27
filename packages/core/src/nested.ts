@@ -4,6 +4,7 @@ import {
   resolveBranchURL,
 } from "./branch.ts";
 import { safeWrapAsync } from "./errors.ts";
+import { compareRoutePaths } from "./match.ts";
 import { prepareRoutes } from "./prepare-routes.ts";
 import { createDataRouter } from "./router.ts";
 import type { DataArgs, Route, RouteModule, Router } from "./types.ts";
@@ -22,6 +23,13 @@ export interface NestedRoute extends Route {
   handle?: unknown;
   preload?: () => Promise<void>;
   lazy?: () => Promise<NestedRouteModule>;
+  /** This layout's index route is protected and joins through route discovery. */
+  discoverIndex?: boolean;
+}
+
+/** A matchable leaf with the chain of nested routes it renders. */
+interface BranchRoute extends Route {
+  branch: NestedRoute[];
 }
 
 /** Loader values belonging to one committed route branch. */
@@ -44,12 +52,13 @@ export function createNestedRouter(
   options: NestedRouterOptions = {},
 ): Router {
   enableNestedCapability();
-  definitions = definitions.map((route) => ({ ...route }));
-  const nodes = new Map(definitions.map((route) => [route.id, route]));
+  const nodes = new Map<string, NestedRoute>();
   const listeners = new Set<() => void>();
   const prepared = new Map<string, Route>();
   const pending = new Map<string, Promise<void>>();
-  for (const node of definitions) {
+  const branches = new Map<string, NestedRoute[]>();
+  function addNode(definition: NestedRoute): NestedRoute {
+    const node = { ...definition };
     const preload = node.preload;
     async function load() {
       const result = await safeWrapAsync(async () => {
@@ -66,9 +75,10 @@ export function createNestedRouter(
       if (!pending.has(node.id)) pending.set(node.id, load());
       return pending.get(node.id)!;
     };
+    nodes.set(node.id, node);
+    return node;
   }
-  const branches = new Map<string, NestedRoute[]>();
-  for (const route of definitions) {
+  function chainFor(route: NestedRoute): NestedRoute[] {
     const chain = [route];
     const seen = new Set([route.id]);
     let parentId = route.parentId;
@@ -80,7 +90,7 @@ export function createNestedRouter(
       chain.unshift(parent);
       parentId = parent.parentId;
     }
-    branches.set(route.id, chain);
+    return chain;
   }
   function redirectResult(value: unknown, current: string) {
     if (
@@ -106,136 +116,145 @@ export function createNestedRouter(
   }
   let committed: BranchData | undefined;
   let committedURL: string | undefined;
-  const routes = definitions
-    .filter(
-      (route) =>
-        !definitions.some(
-          (child) => child.parentId === route.id && child.index,
-        ),
-    )
-    .map((route) => {
-      const chain = branches.get(route.id)!;
-      const run = async (args: DataArgs, mutation = false) => {
-        const revalidation = args.revalidation;
-        const leaf = new URL(args.request.url).searchParams.has("index")
-          ? route
-          : ([...chain]
-              .reverse()
-              .find((item) => !item.index && !item.pathless) ?? route);
-        if (mutation || args.reason === "fetcher") {
-          const target = leaf;
-          await target.preload?.();
-          const module = prepared.get(target.id)!;
-          const handler = mutation
-            ? (module.clientAction ?? module.action)
-            : (module.clientLoader ?? module.loader);
-          if (!handler) return mutation ? new Error("No action") : undefined;
-          const result = await safeWrapAsync(() =>
-            handler({
-              ...args,
-              serverLoader: async () => module.loader?.(args),
-              serverAction: async () => module.action?.(args),
-            }),
-          );
-          if (result.error)
-            return Object.assign(result.error, {
-              routeId: target.id,
-              branch: committed ?? {
-                matches: chain.map((node) => node.id),
-                values: {},
-              },
-            });
-          return redirectResult(result.data, args.request.url);
-        }
-        const previous = committed;
-        const currentUrl = new URL(committedURL ?? args.request.url);
-        const nextUrl = new URL(args.request.url);
-        const results = await Promise.all(
-          chain.map(async (node) => {
-            const result = await safeWrapAsync(async () => {
-              await node.preload?.();
-              const module = prepared.get(node.id)!;
-              const reusable =
-                previous?.matches.includes(node.id) &&
-                Object.hasOwn(previous.values, node.id);
-              if (
-                reusable &&
-                revalidation?.targets &&
-                !revalidation.targets.includes(node.id) &&
-                !revalidation.targets.includes(node.path)
-              )
-                return previous!.values[node.id];
-              const changed =
-                currentUrl.pathname !== nextUrl.pathname ||
-                currentUrl.search !== nextUrl.search;
-              if (
-                reusable &&
-                // A hash-only navigation reuses loaded layout data.
-                ((!revalidation &&
-                  !changed &&
-                  currentUrl.hash !== nextUrl.hash) ||
-                  module.shouldRevalidate?.(
-                    revalidation ?? {
-                      currentUrl,
-                      nextUrl,
-                      url: nextUrl,
-                      reason: "navigation",
-                      defaultShouldRevalidate: changed,
-                    },
-                  ) === false)
-              )
-                return previous!.values[node.id];
-              const handler = module.clientLoader ?? module.loader;
-              return handler?.({
-                ...args,
-                serverLoader: async () => module.loader?.(args),
-              });
-            });
-            return { id: node.id, ...result };
+  function leafRoute(route: NestedRoute): BranchRoute {
+    const chain = branches.get(route.id)!;
+    const run = async (args: DataArgs, mutation = false) => {
+      const revalidation = args.revalidation;
+      const leaf = new URL(args.request.url).searchParams.has("index")
+        ? route
+        : ([...chain].reverse().find((item) => !item.index && !item.pathless) ??
+          route);
+      if (mutation || args.reason === "fetcher") {
+        const target = leaf;
+        await target.preload?.();
+        const module = prepared.get(target.id)!;
+        const handler = mutation
+          ? (module.clientAction ?? module.action)
+          : (module.clientLoader ?? module.loader);
+        if (!handler) return mutation ? new Error("No action") : undefined;
+        const result = await safeWrapAsync(() =>
+          handler({
+            ...args,
+            serverLoader: async () => module.loader?.(args),
+            serverAction: async () => module.action?.(args),
           }),
         );
-        const branch: BranchData = {
-          matches: chain.map((node) => node.id),
-          values: {},
-        };
-        for (const result of results) {
-          if (result.error)
-            return Object.assign(result.error, { routeId: result.id, branch });
-          if (
-            result.data instanceof Response &&
-            result.data.headers.has("Location")
-          )
-            return redirectResult(result.data, args.request.url);
-          Object.defineProperty(branch.values, result.id, {
-            value: result.data,
-            enumerable: true,
-            writable: true,
-            configurable: true,
+        if (result.error)
+          return Object.assign(result.error, {
+            routeId: target.id,
+            branch: committed ?? {
+              matches: chain.map((node) => node.id),
+              values: {},
+            },
           });
-        }
-        return branch;
+        return redirectResult(result.data, args.request.url);
+      }
+      const previous = committed;
+      const currentUrl = new URL(committedURL ?? args.request.url);
+      const nextUrl = new URL(args.request.url);
+      const results = await Promise.all(
+        chain.map(async (node) => {
+          const result = await safeWrapAsync(async () => {
+            await node.preload?.();
+            const module = prepared.get(node.id)!;
+            const reusable =
+              previous?.matches.includes(node.id) &&
+              Object.hasOwn(previous.values, node.id);
+            if (
+              reusable &&
+              revalidation?.targets &&
+              !revalidation.targets.includes(node.id) &&
+              !revalidation.targets.includes(node.path)
+            )
+              return previous!.values[node.id];
+            const changed =
+              currentUrl.pathname !== nextUrl.pathname ||
+              currentUrl.search !== nextUrl.search;
+            if (
+              reusable &&
+              // A hash-only navigation reuses loaded layout data.
+              ((!revalidation &&
+                !changed &&
+                currentUrl.hash !== nextUrl.hash) ||
+                module.shouldRevalidate?.(
+                  revalidation ?? {
+                    currentUrl,
+                    nextUrl,
+                    url: nextUrl,
+                    reason: "navigation",
+                    defaultShouldRevalidate: changed,
+                  },
+                ) === false)
+            )
+              return previous!.values[node.id];
+            const handler = module.clientLoader ?? module.loader;
+            return handler?.({
+              ...args,
+              serverLoader: async () => module.loader?.(args),
+            });
+          });
+          return { id: node.id, ...result };
+        }),
+      );
+      const branch: BranchData = {
+        matches: chain.map((node) => node.id),
+        values: {},
       };
-      return {
-        ...route,
-        clientLoader: (args: DataArgs) => run(args),
-        clientAction: (args: DataArgs) => run(args, true),
-        branch: chain,
-        revalidationIds: chain.flatMap((node) => [node.id, node.path]),
-        shouldRevalidate: () => true,
-      };
-    });
-  routes.sort((left, right) => {
-    const a = left.path.replace(/\/$/, "").split("/");
-    const b = right.path.replace(/\/$/, "").split("/");
-    const rank = (part: string | undefined) =>
-      part === "*" ? 0 : part?.startsWith(":") ? 1 : part === undefined ? 2 : 3;
-    for (let index = 0; index < Math.max(a.length, b.length); index++) {
-      const difference = rank(b[index]) - rank(a[index]);
-      if (difference) return difference;
-    }
-    return right.branch.length - left.branch.length;
+      for (const result of results) {
+        if (result.error)
+          return Object.assign(result.error, { routeId: result.id, branch });
+        if (
+          result.data instanceof Response &&
+          result.data.headers.has("Location")
+        )
+          return redirectResult(result.data, args.request.url);
+        Object.defineProperty(branch.values, result.id, {
+          value: result.data,
+          enumerable: true,
+          writable: true,
+          configurable: true,
+        });
+      }
+      return branch;
+    };
+    return {
+      ...route,
+      clientLoader: (args: DataArgs) => run(args),
+      clientAction: (args: DataArgs) => run(args, true),
+      branch: chain,
+      revalidationIds: chain.flatMap((node) => [node.id, node.path]),
+      shouldRevalidate: () => true,
+    };
+  }
+  // Index routes, and layouts whose index is discovered later, are not matched directly.
+  const isLeaf = (route: NestedRoute) =>
+    !route.discoverIndex &&
+    ![...nodes.values()].some(
+      (child) => child.parentId === route.id && child.index,
+    );
+  function register(definitions: readonly NestedRoute[]): BranchRoute[] {
+    const added = definitions
+      .filter((definition) => !nodes.has(definition.id))
+      .map(addNode);
+    for (const route of added) branches.set(route.id, chainFor(route));
+    return added.filter(isLeaf).map(leafRoute);
+  }
+  const routes = register(definitions);
+  routes.sort(
+    (left, right) =>
+      compareRoutePaths(left.path, right.path) ||
+      right.branch.length - left.branch.length,
+  );
+  const discover = options.discover;
+  const router = createDataRouter(routes, {
+    ...options,
+    ...(discover && {
+      discover: {
+        attach: (table, host, cache) =>
+          discover.attach(table, host, cache, register),
+      },
+    }),
   });
-  const router = createDataRouter(routes, options);
   const subscribe = router.subscribe;
   router.subscribe = (listener) => {
     listeners.add(listener);

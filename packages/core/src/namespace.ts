@@ -26,3 +26,8 @@ export function validNamespace(value: string): string {
 export function dataSuffix(name: string = namespace): string {
   return `.__${name}`;
 }
+
+/** Route discovery endpoint suffix, for example /admin.__smolter-routes. */
+export function discoverySuffix(name: string = namespace): string {
+  return `.__${name}-routes`;
+}

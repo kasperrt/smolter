@@ -23,7 +23,9 @@
     "./transport": "./src/transport.ts",
     "./nested": "./src/nested.ts",
     "./view-transition": "./src/view-transition.ts",
-    "./namespace": "./src/namespace.ts"
+    "./namespace": "./src/namespace.ts",
+    "./match": "./src/match.ts",
+    "./discovery": "./src/discovery.ts"
   },
   "devDependencies": {
     "vitest": "catalog:"

@@ -1,17 +1,10 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, realpath } from "node:fs/promises";
-import {
-  basename,
-  dirname,
-  isAbsolute,
-  relative,
-  resolve,
-  sep,
-} from "node:path";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { safeWrapAsync } from "@smolter/core";
 import type { Plugin } from "vite";
-import { writeBuildOutput } from "./build-output.ts";
 import { configuredNamespace, namespaceConfig } from "./namespace.ts";
+import { within, writePrivateFile } from "./private-file.ts";
 
 /** Deployment manifest configuration. Serve the emitted file with Cache-Control: no-store. */
 export interface DeploymentPluginOptions {
@@ -46,22 +39,6 @@ interface DeploymentMetadata {
   manifestURL: string;
   shared?: string;
   routes?: RouteFingerprint[];
-}
-
-function within(directory: string, file: string): boolean {
-  const path = relative(directory, file);
-  return !isAbsolute(path) && path !== ".." && !path.startsWith(`..${sep}`);
-}
-
-async function assertPrivateDirectory(
-  directory: string,
-  publicDirectories: readonly string[],
-): Promise<void> {
-  for (const candidate of publicDirectories) {
-    const { data } = await safeWrapAsync(() => realpath(candidate));
-    if (data && within(data, directory))
-      throw new Error("privateManifestFile resolves inside a public directory");
-  }
 }
 
 /** Emit deterministic build and route dependency identities for deployment recovery. */
@@ -191,26 +168,11 @@ export function deploymentPlugin(
     },
     async writeBundle() {
       if (!enabled || !privateFile) return;
-      const missing: string[] = [];
-      let current = dirname(privateFile);
-      let resolved = await safeWrapAsync(() => realpath(current));
-      while (resolved.error) {
-        missing.unshift(basename(current));
-        current = dirname(current);
-        resolved = await safeWrapAsync(() => realpath(current));
-      }
-      let parent = resolved.data!;
-      await assertPrivateDirectory(parent, publicDirectories);
-      for (const segment of missing) {
-        const next = resolve(parent, segment);
-        await mkdir(next, { recursive: true });
-        parent = await realpath(next);
-        await assertPrivateDirectory(parent, publicDirectories);
-      }
-      await writeBuildOutput(
-        resolve(parent, basename(privateFile)),
+      await writePrivateFile(
+        privateFile,
         JSON.stringify({ version: metadata.version, routes: routeTemplates }),
-        0o600,
+        publicDirectories,
+        "privateManifestFile",
       );
     },
     generateBundle() {

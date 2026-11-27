@@ -29,7 +29,13 @@ const guideGroups = [
   {
     title: "Server & build",
     description: "SSR, file routes and hosting",
-    slugs: ["server-rendering", "virtual-routes", "express", "deployments"],
+    slugs: [
+      "server-rendering",
+      "virtual-routes",
+      "express",
+      "deployments",
+      "route-discovery",
+    ],
   },
 ];
 

@@ -28,6 +28,11 @@ export interface FileRouterOptions {
   namespace?: string;
 }
 
+/** Inter-plugin state published by the lazy route plugin. */
+export interface LazyRoutesAPI {
+  routeDiscovery: boolean;
+}
+
 /** Build-time flat route discovery and the optional server data transport. */
 export function routerPlugin({
   directory = "src/routes",
@@ -43,6 +48,7 @@ export function routerPlugin({
   let projectRoot: string;
   let devServer: ViteDevServer | undefined;
   let suffix = dataSuffix();
+  let discoveryEnabled = false;
   const clientFiles = new Set<string>();
   const publicId = "virtual:smolter/routes";
   const virtualId = `\0${publicId}`;
@@ -60,9 +66,23 @@ export function routerPlugin({
       };
     },
     transform(code, id) {
+      if (
+        /\/core\/(?:src\/)?discovery-support\.[jt]s$/.test(id) &&
+        code.includes("@smolter/route-discovery")
+      )
+        return discoveryEnabled
+          ? code
+          : "export const attachDiscovery = undefined;";
       return prefetch.transform(code, id);
     },
     configResolved(config) {
+      // applicationPlugins({ routeDiscovery }) keeps router discovery support; other builds drop it.
+      const lazy = config.plugins.find(
+        (plugin) => plugin.name === "smolter-lazy-routes",
+      );
+      discoveryEnabled = Boolean(
+        (lazy?.api as LazyRoutesAPI | undefined)?.routeDiscovery,
+      );
       suffix = dataSuffix(configuredNamespace(config));
       prefetch.configure(config.root);
       projectRoot = config.root;
@@ -181,7 +201,7 @@ export function routerPlugin({
           projectRoot,
           options?.ssr ? serverRoutes : clientRoutes,
         ).replaceAll("\\", "/");
-        return `export { routes as default } from ${JSON.stringify(entry)};`;
+        return `export { routes as default } from ${JSON.stringify(entry)}; export const discover = undefined;`;
       }
       const routes = await flatRoutes(root);
       if (routes instanceof Error) return this.error(routes.message);
@@ -241,7 +261,7 @@ export function routerPlugin({
         imports.unshift(
           `import { serverRoute } from "@kasperrt/smolter/${framework}/client";`,
         );
-      return `${imports.join("\n")}\nexport default [${definitions.join(",\n")}];\n`;
+      return `${imports.join("\n")}\nexport const discover = undefined;\nexport default [${definitions.join(",\n")}];\n`;
     },
     configureServer(server) {
       devServer = server;

@@ -1,0 +1,28 @@
+{
+  "slug": "withRouteDiscovery",
+  "title": "withRouteDiscovery",
+  "summary": "Turn a route resolver into router discovery with shared requests, remembered denials and ordered insertion.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Usage",
+      "body": "routeDiscoveryClient builds on this for file routes. Use it directly for manual route arrays: the resolver receives the unmatched URL and returns authorized routes, or none.",
+      "code": "import { createDataRouter } from \"@kasperrt/smolter/preact\";\nimport { withRouteDiscovery } from \"@kasperrt/smolter/preact/discovery\";\n\nconst router = createDataRouter(routes, {\n  discover: withRouteDiscovery(async (url, { signal }) => {\n    const response = await fetch(`/routes?path=${url.pathname}`, { signal });\n    return response.ok ? toRoutes(await response.json()) : [];\n  }),\n});"
+    },
+    {
+      "title": "Behavior",
+      "body": "Concurrent callers for one path share a request. A path that resolves to no matching route is remembered as denied until router.resetDiscovery(); rejected requests are not remembered. Discovered routes are inserted ahead of less specific patterns, so a public splat cannot shadow them.",
+      "code": ""
+    },
+    {
+      "title": "Route table",
+      "body": "The router adds discovered routes to the routes array it was given, which its renderers share. Pass an array the application owns; mountApplication and nested routers already do.",
+      "code": ""
+    },
+    {
+      "title": "Builds",
+      "body": "Vite builds keep router discovery support only with applicationPlugins({ routeDiscovery }); other builds remove it, which keeps routers that never discover at their previous size. Use it without the Vite plugins, or with routeDiscovery configured.",
+      "code": ""
+    }
+  ]
+}

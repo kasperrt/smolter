@@ -98,6 +98,10 @@
       "types": "./dist/preact/lazy-route.d.ts",
       "import": "./dist/preact/lazy-route.js"
     },
+    "./preact/discovery": {
+      "types": "./dist/preact/discovery.d.ts",
+      "import": "./dist/preact/discovery.js"
+    },
     "./preact/document": {
       "types": "./dist/preact/document.d.ts",
       "import": "./dist/preact/document.js"
@@ -109,6 +113,10 @@
     "./react/lazy-route": {
       "types": "./dist/react/lazy-route.d.ts",
       "import": "./dist/react/lazy-route.js"
+    },
+    "./react/discovery": {
+      "types": "./dist/react/discovery.d.ts",
+      "import": "./dist/react/discovery.js"
     },
     "./react/nested": {
       "types": "./dist/react/nested.d.ts",
@@ -151,7 +159,7 @@
       "optional": true
     }
   },
-  "author": "Kasper Rynning-Tønnesen <kasperrt@users.noreply.github.com> (https://github.com/kasperrt)",
+  "author": "Kasper Rynning-T\u00f8nnesen <kasperrt@users.noreply.github.com> (https://github.com/kasperrt)",
   "homepage": "https://kasperrt.github.io/smolter/",
   "bugs": {
     "url": "https://github.com/kasperrt/smolter/issues"
