@@ -1,95 +1,36 @@
 # Changelog
 
-## 0.6.0-alpha.6
+## 0.6.0
 
-### Features
+### Routing and production builds
 
-- Add opt-in route discovery (#60). With `applicationPlugins({ routeDiscovery: { protect, manifestFile } })`, production builds withhold protected routes, and descendants of protected layouts, from the public route table, deployment fingerprints and `.vite/route-assets.json`. Each protected route becomes a separately emitted chunk with an opaque name, recorded only in a private manifest that must live outside client output.
-- `createRequestHandler({ routeDiscovery: { manifest, authorize } })` answers `GET /path.__smolter-routes` with only the protected routes in the matched chain that `authorize` allows. Unknown, public and denied paths, and throwing authorizers, all receive the same private 404. `createRouteDiscovery` and `discoveryTarget` serve other hosts.
-- `virtual:smolter/routes` exports `discover`. `mountApplication(routes, root, { discover })` discovers protected deep links before preload and hydration. Navigations, fetchers, revalidation, Back/Forward, public splat fallbacks and intent or viewport prefetching discover unmatched paths on demand. Concurrent callers share one request, denials are remembered until `router.resetDiscovery()` (call it after logout or a permission change), and a response from another build makes page navigations load the new document without replaying writes. Failed discovered chunk imports reach deployment recovery through `vite:preloadError`. React and Preact, flat and nested routes are supported, including a protected index route under a public layout.
-- `routeDiscoveryClient` and `withRouteDiscovery` live in the new `@kasperrt/smolter/react/discovery` and `/preact/discovery` entries (nested routes use `routeDiscoveryClient` from `/nested`), so lazy-route and application bundles do not carry them.
+- React and Preact applications can discover protected routes on demand. Configure `routeDiscovery.protect` in Vite, pass the private manifest and an `authorize` callback to `createRequestHandler`, and pass `discover` to `mountApplication`. This works with deep links, navigation and prefetching for flat and nested routes. Call `router.resetDiscovery()` when permissions change.
+- Protected routes are omitted from the public route table. Keep the discovery manifest, Vite build metadata and source maps private. Anyone with a static chunk URL can fetch it, so loaders and actions still need their own authorization checks.
+- Use `prerenderPlugin` to generate HTML from a production SSR entry for an explicit list of paths. Redirects and non-HTML responses are skipped.
+- Set `manifestMode: "version-only"` to expose only the deployment version. `manifestFile` supports custom names, including extensionless paths. The `namespace` option customizes data URLs, headers and hydration identifiers. Use the same namespace in the Vite build and in separately configured request handlers.
 
-### Size
+### Security and compatibility
 
-- Routers carry no discovery implementation. They receive it only through the `discover` option, and Vite builds without `routeDiscovery` also remove the small router hook, so their Link and router bundles stay within the existing prefetch size budgets. Measured without the Vite plugins (the README table), all-export bundles grow by gzip: React adapter +103 B, Preact adapter +100 B, server transport +95–97 B, common data subsets +109–110 B, applications +154–160 B. Routing-only subsets are unchanged.
-
-### Security
-
-- Validate `internalURL` before updating browser history in `connectHashHistory`, so external, unsafe-protocol, or malformed navigation targets cannot spoof the URL hash or pollute history.
-- Verify the deepest existing ancestor of `privateManifestFile` against resolved public directories before creating subdirectories in `deploymentPlugin`, and write to the canonicalized parent path. Private manifests and prerendered HTML now replace existing regular files atomically, preserving other hard links. Private manifests use owner-only permissions.
-- Validate `prerenderPlugin`'s `origin` option as a bare `http:`/`https:` origin, check `Object.hasOwn` when looking up the client manifest entry, reject `\u007f` in decoded output segments, and verify rendered request URLs remain on the configured origin.
-- Reject unsafe RFC 8288 URI-reference characters (`<`, `>`, whitespace, CR/LF, control characters) in `routePreloads` to prevent HTTP `Link` header injection.
-- Use callback replacements in `applicationPlugins`'s dev `transformIndexHtml` hook so `$'`/`` $` ``/`$&` sequences in the Vite client script URL cannot expand HTML into the script tag.
-- Harden `deserialize` snapshot and error reconstruction against non-object snapshots and malformed error payloads, guard malformed URLs with `URL.canParse` in `internalURL`, document link handoff, `connectNavigation`, `submitForm`, `watchDeployment`, and nested redirect resolution, require matching protocols for same-origin checks in `Link`, `matchesLocation`, `connectNavigation`, and `watchDeployment` (preventing same-origin `blob:` URLs from being treated as internal routes), and guard `headersSent` in the SSR example servers' outer error handler.
-- Require `prerenderPlugin`'s `timeout` to be a whole number of milliseconds from 1 to 2147483647. Larger values overflowed `setTimeout` and fired immediately.
-- Isolate cookie-less requests to the example SSR entries. Both example hosts now share session handling, append `Set-Cookie` without overwriting earlier cookies, and replace duplicate or malformed session cookies.
-
-### Maintenance
-
-- Enforce TypeScript for root-level scripts and configuration as well as workspace sources.
-- `safeWrapAsync` excludes `Error` from its `data` type, matching its runtime behavior, so callbacks return failures as values. Prerendering and prefetch analysis now return their validation errors instead of throwing them inside the wrapper, which also drops the duplicated `Error:` prefix from prerender failure messages.
-
-## 0.6.0-alpha.5
-
-- Add opt-in `prerenderPlugin` for React and Preact builds. Require an explicit list of paths or a callback selecting static and concrete dynamic URLs, and render HTML through the built SSR entry after the client build. Isolated workers handle SSR timers, bounded completion and path-specific errors; redirects and non-HTML resources are skipped.
-- Add `manifestMode: "version-only"` for public deployment checks without deployment route lists in the manifest or virtual browser metadata, plus an optional private route-template artifact. Application route definitions remain public; permission-aware route discovery is tracked separately in #60.
-- Emit extensionless deployment manifests such as `__appm` directly, preserving base-derived public URLs and filename safety checks.
-- Allow optional leading underscores in custom namespaces, such as `__app`, across Vite builds, SSR and data transport. Keep the 32-character limit and require a lowercase ASCII letter after the prefix, followed only by lowercase letters or digits.
-
-## 0.6.0-alpha.4
-
-- Retry a failed Pages deployment once after ten seconds using the same uploaded artifact. Preserve a failed job when the retry fails and report the successful deployment URL.
-
-## 0.6.0-alpha.3
-
-- Align all versioned workspace packages with the release version and include them in future version bumps.
-- Update development dependencies to the latest versions eligible under the repository release-age policy. Retain the React transform version required by the Vite React plugin.
-- Clarify fixed-entry SSR rendering for static analysis and verify HTML-safe JSON-LD serialization.
-
-## 0.6.0-alpha.2
-
-- Convert repository scripts, SSR example servers, benchmarks and test fixtures to TypeScript. Add a prerelease increment command.
-- React and Preact share named types for navigation state and route matches. The convention check enforces early returns and named object types in function signatures.
-- Browser integration, packed-consumer, production SSR and hosted-site tests now run with Vitest. Use `pnpm smoke router.spec.ts` to run the example navigation suite on its own.
-
-## 0.6.0-alpha.1
-
-### Features
-
-- A `namespace` option on `applicationPlugins`, `fileRouter`/`routerPlugin` and `deploymentPlugin` renames every client-visible Smolter identifier from Vite configuration. With `namespace: "app"`, data requests use `/path.__app`, redirects use `X-app-Redirect`, the hydration script is `#app-data`, deferred data uses `window.__appDeferred` and `__app*` sentinels, streaming attributes are `data-app-stream`/`data-app-preserve`, recovery uses the `app:deployment` session key, and the deployment manifest is `app-manifest.json`. Vite compiles the value into browser and SSR bundles, so a production browser build contains no `smolter` identifier. Names are limited to 32 lowercase letters or digits starting with a letter. The default stays `smolter`, so existing applications are unchanged.
-- `deploymentPlugin({ manifestFile })` sets the emitted manifest name independently; the default `manifestURL` follows it.
-- `createRequestHandler({ namespace })` matches the Vite namespace when the handler is imported outside the Vite build, and `namespace` from `@kasperrt/smolter/utils` exposes the compiled value for application-owned names. The SSR examples derive their session cookie, hydration script and data suffix from one `namespace` constant in `vite.config.ts`.
+- The Node adapter validates request targets and hosts, rejects text-decoded upload streams, and preserves cookies set by earlier middleware. Upload middleware must pass raw bytes for body-size enforcement. Mutation checks also validate the referring origin when the Origin header is absent.
+- Navigation, forms, hash history and deployment recovery validate URL protocols and origins. SSR stops running loaders after the first redirect, and private responses override CDN cache directives.
+- Hydration validates serialized errors and reserved markers. Custom bootstrap code should select the JSON script by both ID and type, using `script#smolter-data[type="application/json"]` with the default namespace.
+- Build tooling enforces route-directory and server-module boundaries, validates prerender origins and output paths, and writes private manifests atomically with owner-only permissions. Route preload headers reject unsafe characters.
 
 ### Performance
 
-- The production React and Preact SSR examples ship documentation navigation in the browser entry and load article content through the route loader. This removes about 332 kB of JavaScript from the initial counter page in each example. The shared font now transfers as a 14,932-byte WOFF2.
-- The production React and Preact SSR example servers serve hashed `/assets/` files precompressed with Brotli or gzip (negotiated through `Accept-Encoding`, with `Vary`) and `Cache-Control: public, max-age=31536000, immutable`, keep them in memory instead of reading them on every request, and send SVG as `image/svg+xml`. The React entry script now transfers 74,045 bytes instead of 287,569, and the Preact entry 22,051 instead of 84,065. In six cold Chromium loads with 4× CPU throttling, 80 ms latency and 400 kB/s downlink, median hydration completed at 451 ms instead of 1,016 ms (React) and 343 ms instead of 488 ms (Preact); the first counter update moved from 1,313 to 748 ms and from 771 to 630 ms; LCP moved from 376 to 346 ms and from 364 to 340 ms. TTFB was unchanged. Library runtime and bundle sizes are unchanged.
-- Document hydration skips the per-property JSON reviver for snapshots without potential protocol tags or Unicode escapes. The application bundles grow by 16–18 bytes gzip.
-- Deferred hydration settlement revives received values in place instead of re-serializing and re-parsing them with `JSON.parse(JSON.stringify(...))`. `mountApplication` skips awaiting route preloading when the matched route has no `preload` handler, starts lazy preloads synchronously, and invokes Preact `hydrate()` synchronously without yielding while preserved head nodes are detached.
-- `send()` pipes directly to Node `ServerResponse` when middleware does not expose `flush()`, `renderDocument` wraps only the matched route loader and skips root-loader promises when no root loader is defined, `matchRoutes` skips parameter allocation on length mismatches, `serializeData` uses `replaceAll` escaping, and streaming SSR helpers share a module-level `TextEncoder`.
-- The production React and Preact SSR example servers compress HTML responses with Brotli (quality 4, text mode) or gzip (`Vary: Accept-Encoding`, keeping `Cache-Control: private, no-store`), cache all build assets including fonts in memory, inline the small shared stylesheet into SSR HTML, and dispose request-scoped routers after rendering. The shared UI removes redundant plain-text `<span>` wrappers in syntax-highlighted code blocks, omits repetitive tooltip strings from `aria-hidden` sidebar support badges, caches grouped sidebar data, excludes unused raw route files from the example source globs, and orders emitted stylesheets before module scripts in example/site HTML builds. Under matched cold Chromium loads (4× CPU, 80 ms RTT, 400 kB/s down, 5-run medians), Preact SSR `/docs/getting-started` LCP moved from 484 ms to 304 ms (hydration 529 ms → 322 ms, total transfer 159 kB → 47 kB), React SSR `/docs/getting-started` LCP moved from 656 ms to 300 ms (hydration 671 ms → 435 ms, total transfer 214 kB → 99 kB), and `/` & `/examples/counter` FCP/LCP dropped 60–64 ms on both frameworks.
+- Hydration skips unnecessary JSON processing and starts matched route preloads synchronously. The SSR examples lazy-load guide content, compress responses and cache hashed assets. In matched cold Chromium runs on the getting-started guide, median transfer fell from 214 to 99 kB for React and from 159 to 47 kB for Preact.
+- Vite removes discovery support from builds that omit it. In the README benchmarks without the Vite plugins, discovery added 154–160 bytes gzip to full application bundles during alpha.6.
 
-### Security
+### Prerelease history
 
-- The React and Preact SSR examples send `Cache-Control: private, no-store` on session-specific HTML in development and production.
-- The Node adapter rejects text-decoded upload streams before buffering and closes connections on body-limit rejections. Middleware must preserve raw request bytes for byte-limit enforcement.
-- Request schemes other than `http` and `https` are rejected. Host headers that use percent-encoding, non-ASCII characters, or a name other than the parsed host (such as `app.example%2eevil.com` or `0x7f000001`) return 400 instead of becoming a different origin. Backslash and protocol-relative request targets are rejected. `send()` no longer copies `Content-Length` or `Transfer-Encoding`, so a response cannot desynchronize Node's framing.
-- Reject missing, malformed and path- or userinfo-bearing `Host` headers and non-origin-form request targets with `400` before dispatch. `GET`/`HEAD` bodies are no longer buffered.
-- `data()` wrappers carry a non-enumerable symbol marker, so loader JSON containing `"__routeData": true` can no longer set response headers or status.
-- `requestPolicy` rejects any `Sec-Fetch-Site` other than `same-origin`/`none` and checks the `Referer` origin when `Origin` is absent.
-- SSR stops at the first loader redirect, so destination loaders no longer run and their cookies cannot overwrite the redirect's. Invalid error statuses fall back to `500`.
-- `send()` appends response `Set-Cookie` headers to cookies set by earlier middleware, and any `no-store` directive neutralizes targeted CDN cache headers.
-- Hash history keeps fragments on `location.origin`; deployment recovery only reloads same-origin `http:`/`https:` URLs.
-- Navigation and forms reject `vbscript:` and `data:` as well as `javascript:`; `internalURL` requires a matching protocol; `<Form>` validates `action` and blocks native submission to unsafe `action`/`formaction` URLs.
-- Hydration escapes user objects that collide with internal sentinels and validates sentinel and error shapes.
-- Hydration reads and finalizes only `script#smolter-data[type="application/json"]`, so user markup that reuses the id (for example sanitized HTML that keeps `id` attributes) can no longer supply or capture hydration data. A named `__smolterDeferred` element no longer breaks deferred streaming. Custom bootstrap code should use the same selector.
-- Template and metadata replacements use callbacks so `$'`/`` $` ``/`$&` in data are not expanded. Vite browser-boundary checks cover `.server/` directories and `.server.json` case-insensitively, and route modules must resolve inside the routes directory.
-
-### Size
-
-- The hydration element and deferred-queue checks add, in matched gzip sizes: React application +41 B, React lazy application +42 B, Preact application +34 B, Preact file-routed application +37 B. Routing-only and common data subsets are unchanged. Size tables also reflect the earlier hardening in this release.
-- Namespace support adds, in matched gzip sizes: React adapter +37 B, Preact adapter +41 B, server transport +53–54 B, React application +74 B, React lazy application +67 B, Preact application +69 B, Preact file-routed application +64 B. Routing-only and common data subsets are unchanged.
-- Hydration, preload fast-path and `matchRoutes` updates change matched gzip sizes by: routing-only +7 B, common data +10–11 B, complete adapters +7–8 B, application bundles +43–47 B.
+| Version | Changes introduced |
+| --- | --- |
+| 0.6.0-alpha.1 | Custom namespaces and manifest names, faster SSR example loads, and request and hydration hardening |
+| 0.6.0-alpha.2 | TypeScript scripts and fixtures, shared navigation types, and Vitest integration tests |
+| 0.6.0-alpha.3 | Synchronized workspace versions, dependency updates, and SSR documentation |
+| 0.6.0-alpha.4 | Retry for failed documentation site deployments |
+| 0.6.0-alpha.5 | Prerendering, version-only deployment manifests, extensionless manifest paths, and leading underscores in namespaces |
+| 0.6.0-alpha.6 | Authorized route discovery, safer build outputs and navigation, and isolated SSR example sessions |
 
 ## 0.5.6
 
