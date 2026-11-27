@@ -422,3 +422,22 @@ it("keeps prototype-named route data as an own property", async () => {
   });
   router.dispose();
 });
+
+it("handles malformed redirect locations without crashing before router validation", async () => {
+  const router = createNestedRouter(
+    [
+      {
+        id: "bad",
+        path: "/platform/bad",
+        clientLoader: () =>
+          new Response(null, {
+            status: 302,
+            headers: { Location: "http://[invalid" },
+          }),
+      },
+    ],
+    { basename: "/platform" },
+  );
+  await expect(router.navigate("/bad")).rejects.toThrow(TypeError);
+  router.dispose();
+});

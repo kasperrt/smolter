@@ -1,0 +1,13 @@
+{
+  "slug": "DiscoveredCapabilities",
+  "title": "DiscoveredCapabilities",
+  "summary": "Statically known capabilities of a discovered route module.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "loader and action tell the browser to proxy those handlers to the server; clientAction, meta, shouldRevalidate and ErrorBoundary are present before the module loads; dataEndpoint selects a legacy data endpoint. The build derives these from the route's exports.",
+      "code": "const capabilities: DiscoveredCapabilities = { loader: true, meta: true };"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import type { Router } from "@smolter/core";
+import { internalURL } from "@smolter/core/url";
 
 /** Resolve a hash-history route fragment strictly onto the current origin. */
 export function hashURL(hash: string, origin = location.origin): URL {
@@ -15,21 +16,24 @@ export function hashURL(hash: string, origin = location.origin): URL {
   return resolved.origin === origin ? resolved : new URL("/", origin);
 }
 
-const hashFor = (url: string, base: string) => {
-  const target = new URL(url, base);
-  return `#${target.pathname}${target.search}${target.hash}`;
-};
+const toHash = (target: URL) =>
+  `#${target.pathname}${target.search}${target.hash}`;
 
 export function connectHashHistory(router: Router) {
   const read = router.getSnapshot;
   const navigate = router.navigate;
   router.navigate = async (url, options) => {
-    const hash = hashFor(url, router.getSnapshot().url);
-    history[options?.replace ? "replaceState" : "pushState"](null, "", hash);
+    const target = internalURL(read().url, url);
+    if (target)
+      history[options?.replace ? "replaceState" : "pushState"](
+        null,
+        "",
+        toHash(target),
+      );
     await navigate(url, options);
   };
   const unsubscribe = router.subscribe(() => {
-    const hash = hashFor(read().url, read().url);
+    const hash = toHash(new URL(read().url));
     // Redirects commit inside the router rather than through navigate().
     if (location.hash !== hash) history.replaceState(history.state, "", hash);
   });

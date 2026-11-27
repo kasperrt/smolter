@@ -1,0 +1,18 @@
+{
+  "slug": "RouteDiscovery",
+  "title": "RouteDiscovery",
+  "summary": "Resolve authorized route definitions for a URL that no known route matches.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "The router calls discover when no route matches a URL, or only a splat does. Return the routes to add, or none when the path is unknown or denied. The router inserts them by specificity, shares one request between concurrent callers and remembers a denial until resetDiscovery. Rejections are not remembered, so a later attempt retries.",
+      "code": "const router = createDataRouter(routes, { discover });"
+    },
+    {
+      "title": "Generated discovery",
+      "body": "applicationPlugins builds discover for you in virtual:smolter/routes. Write your own only for manual route arrays; the Vite plugins keep the router's discovery support only when routeDiscovery is configured, so manual discovery needs a build without them or with routeDiscovery set.",
+      "code": ""
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "slug": "RouteAuthorizer",
+  "title": "RouteAuthorizer",
+  "summary": "Decide whether a request may learn about a protected route.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Return or resolve true to reveal the route. Returning false, rejecting or throwing all deny without detail. It controls only what the browser learns about routes; loaders and actions must still authorize their data.",
+      "code": "authorize: async (request, route) => (await session(request))?.roles.includes(\"admin\") ?? false,"
+    }
+  ]
+}

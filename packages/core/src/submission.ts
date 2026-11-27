@@ -79,7 +79,7 @@ export function submitForm(
   fetcher?: Fetcher,
 ): void {
   const action = submitter?.getAttribute("formaction") ?? options.action;
-  if (action !== undefined) {
+  if (action !== undefined && URL.canParse(action, router.getSnapshot().url)) {
     const resolved = new URL(action, router.getSnapshot().url);
     if (isUnsafeProtocol(resolved.protocol)) {
       event.preventDefault();

@@ -5,9 +5,10 @@ import {
   resolveApplicationURL,
 } from "../src/environment.ts";
 import { defineRoute } from "../src/match.ts";
+import { connectNavigation } from "../src/navigation.ts";
 import { createDataRouter } from "../src/router.ts";
 import type { CommitOptions, Snapshot } from "../src/types.ts";
-import { internalURL } from "../src/url.ts";
+import { internalURL, matchesLocation } from "../src/url.ts";
 
 afterEach(() => {
   configureApplication({});
@@ -58,13 +59,94 @@ it.each([
   expect(handoff).not.toHaveBeenCalled();
 });
 
-it("rejects same-origin blob URLs as internal routes", () => {
+it("rejects same-origin blob URLs and malformed URLs as internal routes", () => {
   expect(
     internalURL(
       "https://app.example/",
       "blob:https://app.example/550e8400-e29b-41d4-a716-446655440000",
     ),
   ).toBeUndefined();
+  expect(
+    internalURL("https://app.example/", "http://[invalid"),
+  ).toBeUndefined();
+  expect(internalURL("not-a-url", "/tasks")).toBeUndefined();
+  expect(
+    matchesLocation(
+      new URL("https://app.example/tasks"),
+      new URL("blob:https://app.example/tasks"),
+    ),
+  ).toBe(false);
+});
+
+it("ignores malformed URLs and hands off same-origin blob URLs in connected navigation", async () => {
+  const assign = vi.fn();
+  vi.stubGlobal("location", { origin: "https://app.example", assign });
+  vi.stubGlobal("window", {
+    scrollX: 0,
+    scrollY: 0,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  });
+  vi.stubGlobal("document", {
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  });
+  const router = createDataRouter([defineRoute("/", {})], {
+    url: "https://app.example/",
+  });
+  connectNavigation(router);
+  await router.navigate("http://[invalid");
+  expect(assign).not.toHaveBeenCalled();
+  const blob = "blob:https://app.example/550e8400-e29b-41d4-a716-446655440000";
+  await router.navigate(blob);
+  expect(assign).toHaveBeenCalledExactlyOnceWith(blob);
+  router.dispose();
+});
+
+it("ignores anchor clicks whose href cannot be parsed as a URL", () => {
+  const listeners = new Map<string, (event: MouseEvent) => void>();
+  class FakeElement {
+    closest() {
+      return this;
+    }
+  }
+  class FakeAnchor extends FakeElement {
+    href = "http://[invalid";
+    target = "";
+    hasAttribute() {
+      return false;
+    }
+  }
+  vi.stubGlobal("Element", FakeElement);
+  vi.stubGlobal("HTMLAnchorElement", FakeAnchor);
+  vi.stubGlobal("window", {
+    scrollX: 0,
+    scrollY: 0,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  });
+  vi.stubGlobal("document", {
+    addEventListener: (type: string, listener: (event: MouseEvent) => void) =>
+      listeners.set(type, listener),
+    removeEventListener: (type: string) => listeners.delete(type),
+  });
+  const router = createDataRouter([defineRoute("/", {})], {
+    url: "https://app.example/",
+  });
+  connectNavigation(router);
+  const click = listeners.get("click");
+  expect(() =>
+    click?.({
+      target: new FakeAnchor(),
+      defaultPrevented: false,
+      button: 0,
+      metaKey: false,
+      ctrlKey: false,
+      altKey: false,
+      shiftKey: false,
+    } as unknown as MouseEvent),
+  ).not.toThrow();
+  router.dispose();
 });
 
 it.each([

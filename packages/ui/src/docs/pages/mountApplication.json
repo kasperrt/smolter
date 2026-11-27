@@ -58,6 +58,11 @@
       "title": "React and Preact",
       "body": "Use react/client with React DOM 19+ or preact/client with Preact 11+. Both install scoped transport, root revalidation, retained navigation, browser or hash history, and deployment recovery before loading the initial route. Use matching server/client renderer imports. Neither entry bundles the other renderer.",
       "code": ""
+    },
+    {
+      "title": "Route discovery",
+      "body": "Pass discover from virtual:smolter/routes when routeDiscovery is configured. A protected deep link is discovered before its module preloads and the document hydrates; later unmatched paths are discovered on demand. See the route discovery guide.",
+      "code": "import routes, { discover } from \"virtual:smolter/routes\";\n\nawait mountApplication(routes, root, { discover });"
     }
   ]
 }

@@ -1,0 +1,13 @@
+{
+  "slug": "DiscoveryCache",
+  "title": "DiscoveryCache",
+  "summary": "Data cleared when discovery resets.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "The router passes its speculative data cache, so resetDiscovery also drops prefetched loader data for routes that may no longer be authorized.",
+      "code": "discovery.attach(routes, router, { clear: () => cache.clear() });"
+    }
+  ]
+}

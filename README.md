@@ -678,18 +678,18 @@ a claim of identical features.
 | --- | ---: |
 | `React Router 8.5.1: declarative routing subset` | 13012 |
 | `React Router 8.5.1: data routing subset` | 30841 |
-| `React: routing-only named exports` | 1908 |
-| `Preact: routing-only named exports` | 1897 |
-| `@kasperrt/smolter/react` | 5984 |
-| `@kasperrt/smolter/preact` | 6609 |
-| `@kasperrt/smolter/react + server transport (named client exports)` | 7778 |
-| `@kasperrt/smolter/preact + server transport` | 8403 |
-| `@kasperrt/smolter/react + client + document (application)` | 11285 |
-| `@kasperrt/smolter/react + client + document + lazy-route` | 11610 |
-| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 11923 |
-| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 12244 |
-| `React: common routing/data exports` | 4098 |
-| `Preact: common routing/data exports` | 4081 |
+| `React: routing-only named exports` | 1940 |
+| `Preact: routing-only named exports` | 1930 |
+| `@kasperrt/smolter/react` | 6131 |
+| `@kasperrt/smolter/preact` | 6756 |
+| `@kasperrt/smolter/react + server transport (named client exports)` | 7964 |
+| `@kasperrt/smolter/preact + server transport` | 8593 |
+| `@kasperrt/smolter/react + client + document (application)` | 11552 |
+| `@kasperrt/smolter/react + client + document + lazy-route` | 11877 |
+| `@kasperrt/smolter/preact + client + document (application without lazy routes)` | 12180 |
+| `@kasperrt/smolter/preact + client + document + lazy-route (file-routed application)` | 12504 |
+| `React: common routing/data exports` | 4249 |
+| `Preact: common routing/data exports` | 4231 |
 | `wouter 3.13.0: routing subset (Router, Route, Switch, Link, useParams, useLocation)` | 2854 |
 | `wouter-preact 3.13.0: same routing subset` | 2211 |
 | `wouter@3.13.0` | 3091 |
@@ -799,6 +799,33 @@ pnpm add /absolute/path/to/kasperrt-smolter-0.0.1.tgz
 ```
 
 Workspace structure and rendering checks are documented in [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## Route discovery
+
+Every file route normally ships in the browser route table. To keep protected routes out of public JavaScript until the server authorizes them, configure `routeDiscovery` and pass the generated `discover` to `mountApplication`:
+
+```ts
+// vite.config.ts
+applicationPlugins({
+  routeDiscovery: {
+    protect: (route) => route.path.startsWith("/admin"),
+    manifestFile: "dist/server/route-discovery.json",
+  },
+});
+
+// server
+createRequestHandler({
+  build,
+  entry,
+  routeDiscovery: { manifest, authorize: (request, route) => isAdmin(request) },
+});
+
+// browser
+import routes, { discover } from "virtual:smolter/routes";
+const router = await mountApplication(routes, root, { discover });
+```
+
+Unknown, public and denied discovery requests receive the same private 404. Call `router.resetDiscovery()` after logout or a permission change. Protected chunks are still static files, and loaders must keep authorizing their own data. Do not serve `.vite/` or source maps publicly. Vite builds without `routeDiscovery` remove the router's discovery support. See the [route discovery guide](https://kasperrt.github.io/smolter/docs/route-discovery).
 
 ## Deployment updates
 

@@ -1,0 +1,13 @@
+{
+  "slug": "ProtectedRoute",
+  "title": "ProtectedRoute",
+  "summary": "The protected route a discovery request would reveal.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "path is the route pattern; id is present for nested file routes. Authorize by role or permission, not by exact URL, since the same pattern serves every matching path.",
+      "code": "const authorize: RouteAuthorizer = (request, route: ProtectedRoute) =>\n  route.path.startsWith(\"/admin\") && isAdmin(request);"
+    }
+  ]
+}

@@ -1,7 +1,16 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { safeWrapAsync } from "@smolter/core";
-import { dataSuffix, validNamespace } from "@smolter/core/namespace";
+import {
+  dataSuffix,
+  discoverySuffix,
+  validNamespace,
+} from "@smolter/core/namespace";
 import { dataTarget, requestURL } from "@smolter/core/transport";
+import {
+  createRouteDiscovery,
+  discoveryTarget,
+  type RouteDiscoveryOptions,
+} from "./discovery.ts";
 import { send, webRequest } from "./http.ts";
 import { privateResponse } from "./private-response.ts";
 
@@ -22,6 +31,8 @@ export interface RequestHandlerOptions {
   maxBodySize?: number;
   /** Must match the Vite namespace when this handler is not bundled by Vite. */
   namespace?: string;
+  /** Serve authorized protected routes from the private discovery manifest. */
+  routeDiscovery?: RouteDiscoveryOptions;
 }
 
 /** Node request with optional Express protocol and original URL information. */
@@ -41,14 +52,16 @@ export function createRequestHandler({
   dataEndpoint,
   maxBodySize,
   namespace,
+  routeDiscovery,
 }: RequestHandlerOptions): (
   incoming: ServerIncomingMessage,
   outgoing: ServerResponse,
   next: NextHandler,
 ) => Promise<void> {
-  const suffix = dataSuffix(
-    namespace === undefined ? undefined : validNamespace(namespace),
-  );
+  const name = namespace === undefined ? undefined : validNamespace(namespace);
+  const suffix = dataSuffix(name);
+  const routeSuffix = discoverySuffix(name);
+  const discover = routeDiscovery && createRouteDiscovery(routeDiscovery);
   return async (
     incoming: ServerIncomingMessage,
     outgoing: ServerResponse,
@@ -64,6 +77,18 @@ export function createRequestHandler({
           }),
           outgoing,
         );
+        return;
+      }
+      // requestURL has already rejected protocol-relative and malformed targets.
+      const discoveryPath = discover && discoveryTarget(url, routeSuffix);
+      if (discover && typeof discoveryPath === "string") {
+        const request = await webRequest(
+          incoming,
+          outgoing,
+          discoveryPath,
+          maxBodySize,
+        );
+        await send(await discover(request, discoveryPath), outgoing);
         return;
       }
       const target = dataTarget(url, dataEndpoint, suffix);

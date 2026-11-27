@@ -55,6 +55,24 @@ export function matchRoutes(
   }
 }
 
+// Static segments outrank the end of a pattern, then parameters, then splats.
+function segmentRank(part: string | undefined): number {
+  if (part === "*") return 0;
+  if (part?.startsWith(":")) return 1;
+  return part === undefined ? 2 : 3;
+}
+
+/** Order route patterns so more specific patterns match first. */
+export function compareRoutePaths(left: string, right: string): number {
+  const a = left.replace(/\/$/, "").split("/");
+  const b = right.replace(/\/$/, "").split("/");
+  for (let index = 0; index < Math.max(a.length, b.length); index++) {
+    const difference = segmentRank(b[index]) - segmentRank(a[index]);
+    if (difference) return difference;
+  }
+  return 0;
+}
+
 // Page, fetcher and speculative reads share the same request contract.
 export function callRoute(
   match: Match,

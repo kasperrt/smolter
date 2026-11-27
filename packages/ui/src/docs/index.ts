@@ -71,6 +71,7 @@ export const docs: DocPage[] = [
     "virtual-routes",
     "express",
     "deployments",
+    "route-discovery",
   ].map((slug) => authored.find((page) => page.slug === slug)!),
   ...reference.map((entry) => ({
     ...entry,

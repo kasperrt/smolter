@@ -58,4 +58,23 @@ it("preloads only the first matching route's files under the configured asset ba
   );
   expect(routePreloads(routes, "/empty", "/")).toBe("");
   expect(routePreloads(routes, "/missing", "/")).toBe("");
+  for (const [candidate, base] of [
+    [{ path: "/bad", files: ["assets/a.js>; rel=evil"] }, "/"],
+    [{ path: "/bad", files: ["assets/a.js\r\nX-Injected: 1"] }, "/"],
+    [{ path: "/bad", files: [], styles: ["assets/a.css bad"] }, "/"],
+    [{ path: "/bad", files: ["assets/a.js"] }, "/app>; rel=evil/"],
+  ] as const)
+    expect(() =>
+      routePreloads(
+        [
+          {
+            path: candidate.path,
+            files: [...candidate.files],
+            ...("styles" in candidate && { styles: [...candidate.styles] }),
+          },
+        ],
+        "/bad",
+        base,
+      ),
+    ).toThrow("Unsafe preload asset URL");
 });

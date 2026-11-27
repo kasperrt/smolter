@@ -6,7 +6,7 @@ import { routerPlugin } from "@smolter/vite";
 import type { Plugin, UserConfig } from "vite";
 import { configuredNamespace } from "../namespace.ts";
 import { browserBoundary } from "./browser-boundary.ts";
-import { lazyFiles } from "./lazy-files.ts";
+import { lazyFiles, type RouteDiscoveryBuildOptions } from "./lazy-files.ts";
 
 export interface ApplicationOptions {
   directory?: string;
@@ -19,6 +19,8 @@ export interface ApplicationOptions {
   resourceRequest?: (url: string) => boolean;
   /** Client-visible identifier prefix; see routerPlugin. Defaults to "smolter". */
   namespace?: string;
+  /** Withhold protected routes from production browser output until the server authorizes them. Requires splitRoutes. */
+  routeDiscovery?: RouteDiscoveryBuildOptions;
 }
 export const preactConfig: UserConfig = {
   resolve: {
@@ -52,7 +54,10 @@ export function applicationPlugins({
   splitRoutes = true,
   resourceRequest,
   namespace,
+  routeDiscovery,
 }: ApplicationOptions = {}): Plugin[] {
+  if (routeDiscovery && !splitRoutes)
+    throw new TypeError("routeDiscovery requires splitRoutes");
   let suffix = dataSuffix();
   const application: Plugin = {
     name: "smolter-application",
@@ -79,8 +84,8 @@ export function applicationPlugins({
         )?.[0];
         if (!client) return html;
         return html
-          .replace(client, "")
-          .replace("</body>", `${client.trim()}</body>`);
+          .replace(client, () => "")
+          .replace("</body>", () => `${client.trim()}</body>`);
       },
     },
     configureServer(server) {
@@ -167,7 +172,9 @@ export function applicationPlugins({
   return [
     application,
     browserBoundary(),
-    ...(splitRoutes ? [lazyFiles(directory, dataEndpoint, framework)] : []),
+    ...(splitRoutes
+      ? [lazyFiles(directory, dataEndpoint, framework, routeDiscovery)]
+      : []),
     routerPlugin({
       directory,
       framework,

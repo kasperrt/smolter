@@ -50,6 +50,10 @@ it.each(["react", "preact"])(
             new URL("../../../dist/core/errors.js", import.meta.url).href,
           )
           .replace(
+            "@smolter/ui/tooling/sessions",
+            new URL("../../ui/tooling/sessions.ts", import.meta.url).href,
+          )
+          .replace(
             "createServer(async (incoming",
             "const server = createServer(async (incoming",
           )}\nserver.on("listening", () => process.send(server.address().port));\n`,

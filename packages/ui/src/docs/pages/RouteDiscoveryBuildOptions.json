@@ -1,0 +1,18 @@
+{
+  "slug": "RouteDiscoveryBuildOptions",
+  "title": "RouteDiscoveryBuildOptions",
+  "summary": "Withhold protected routes from public browser output until the server authorizes them.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Configuration",
+      "body": "protect decides which routes anonymous clients must not see; manifestFile is the private manifest for createRequestHandler, relative to the Vite root. Pass both to applicationPlugins({ routeDiscovery }).",
+      "code": "import { applicationPlugins } from \"@kasperrt/smolter/preact/vite\";\n\nexport default {\n  plugins: applicationPlugins({\n    routeDiscovery: {\n      protect: (route) => route.path.startsWith(\"/admin\"),\n      manifestFile: \"dist/server/route-discovery.json\",\n    },\n  }),\n};"
+    },
+    {
+      "title": "Scope",
+      "body": "Only production client builds withhold routes; development serves every route. A protected nested layout withholds its descendants. The manifest path must resolve outside client output and publicDir.",
+      "code": ""
+    }
+  ]
+}

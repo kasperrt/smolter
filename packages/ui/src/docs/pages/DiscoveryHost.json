@@ -1,0 +1,13 @@
+{
+  "slug": "DiscoveryHost",
+  "title": "DiscoveryHost",
+  "summary": "The router channel whose current URL resolves discovery requests.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Discovery reads getSnapshot().url to resolve relative hrefs passed to router.discover.",
+      "code": "discovery.attach(routes, { getSnapshot: () => router.getSnapshot() });"
+    }
+  ]
+}

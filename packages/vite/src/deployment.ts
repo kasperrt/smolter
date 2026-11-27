@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
-import { constants } from "node:fs";
-import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { safeWrapAsync } from "@smolter/core";
 import type { Plugin } from "vite";
 import { configuredNamespace, namespaceConfig } from "./namespace.ts";
+import { within, writePrivateFile } from "./private-file.ts";
 
 /** Deployment manifest configuration. Serve the emitted file with Cache-Control: no-store. */
 export interface DeploymentPluginOptions {
@@ -39,11 +39,6 @@ interface DeploymentMetadata {
   manifestURL: string;
   shared?: string;
   routes?: RouteFingerprint[];
-}
-
-function within(directory: string, file: string): boolean {
-  const path = relative(directory, file);
-  return !isAbsolute(path) && path !== ".." && !path.startsWith(`..${sep}`);
 }
 
 /** Emit deterministic build and route dependency identities for deployment recovery. */
@@ -173,25 +168,11 @@ export function deploymentPlugin(
     },
     async writeBundle() {
       if (!enabled || !privateFile) return;
-      await mkdir(dirname(privateFile), { recursive: true });
-      const parent = await realpath(dirname(privateFile));
-      for (const directory of publicDirectories) {
-        const { data } = await safeWrapAsync(() => realpath(directory));
-        if (data && within(data, parent))
-          throw new Error(
-            "privateManifestFile resolves inside a public directory",
-          );
-      }
-      await writeFile(
+      await writePrivateFile(
         privateFile,
         JSON.stringify({ version: metadata.version, routes: routeTemplates }),
-        {
-          flag:
-            constants.O_WRONLY |
-            constants.O_CREAT |
-            constants.O_TRUNC |
-            constants.O_NOFOLLOW,
-        },
+        publicDirectories,
+        "privateManifestFile",
       );
     },
     generateBundle() {

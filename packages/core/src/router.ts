@@ -3,6 +3,7 @@ import {
   nestedCapability,
   resolveBranchURL,
 } from "./branch.ts";
+import { attachDiscovery } from "./discovery-support.ts";
 import { safeWrapAsync } from "./errors.ts";
 import { callRoute, matchRoutes } from "./match.ts";
 import { dataPrefetch } from "./prefetch.ts";
@@ -54,6 +55,17 @@ export function createDataRouter(
   const prefetched =
     typeof dataPrefetch === "function"
       ? dataPrefetch(routes, () => main.getSnapshot().url)
+      : undefined;
+  // Discovery code arrives with the discover option and adds authorized routes to
+  // this router's array. Vite builds without routeDiscovery fold this to undefined.
+  const discovery =
+    typeof attachDiscovery === "function" && options.discover
+      ? attachDiscovery(
+          options.discover,
+          routes as Route[],
+          { getSnapshot: () => main.getSnapshot() },
+          prefetched,
+        )
       : undefined;
   const revalidators = new Set<RevalidationTask>();
   const refresh = (
@@ -115,6 +127,11 @@ export function createDataRouter(
       const url = internalURL(main.getSnapshot().url, href);
       if (nestedCapability && url)
         resolveBranchURL(url, (options as NestedRouterOptions).basename);
+      if (url && discovery?.needs(url)) {
+        emit(body ? "submitting" : "loading");
+        await discovery.load(url, navigation === true);
+        if (signal.aborted) return {};
+      }
       const match = url && matchRoutes(routes, url.pathname);
       const commit = () => {
         if (local || !url) return;
@@ -358,7 +375,9 @@ export function createDataRouter(
     createFetcher() {
       return channel({ state: "idle" }, true);
     },
+    ...discovery?.methods,
     dispose() {
+      discovery?.dispose();
       if (typeof dataPrefetch === "function") prefetched!.clear();
       for (const refresh of revalidators) refresh.dispose?.();
       revalidators.clear();

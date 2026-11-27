@@ -4,6 +4,7 @@ import {
   safeWrapAsync,
 } from "@smolter/core";
 import { holdRouteError } from "@smolter/core/presentation";
+import { internalURL } from "@smolter/core/url";
 import { deploymentCheck } from "./deployment-check.ts";
 
 interface WatcherState {
@@ -89,9 +90,9 @@ export function watchDeployment(
     );
   };
   const guarded: NavigationRouter["navigate"] = async (href, operation) => {
-    const target = new URL(href, read().url);
+    const target = internalURL(read().url, href);
     const current = ++state.sequence;
-    if (target.origin === location.origin && !samePage(target)) {
+    if (target && target.origin === location.origin && !samePage(target)) {
       if (known(target) && (await reload(target, () => canReload(current))))
         return;
       void changed(target);

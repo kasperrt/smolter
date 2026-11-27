@@ -15,10 +15,15 @@ export function prefetchLink(
   destination: URL,
   data: boolean,
 ) {
-  const route = matchRoutes(router.routes, destination.pathname)?.route as
-    | PreloadableRoute
-    | undefined;
-  void safeWrapAsync(() => route?.preload?.());
-  if (data && "prefetch" in router)
-    void (router as Router).prefetch(destination.href);
+  const prefetch = async () => {
+    // Protected links are discovered (and authorized) before their module preloads.
+    await (router as Router).discover?.(destination.href);
+    const route = matchRoutes(router.routes, destination.pathname)?.route as
+      | PreloadableRoute
+      | undefined;
+    if (data && "prefetch" in router)
+      void (router as Router).prefetch(destination.href);
+    await route?.preload?.();
+  };
+  void safeWrapAsync(prefetch);
 }

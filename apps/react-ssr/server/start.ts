@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { readdir, readFile, realpath } from "node:fs/promises";
 import { createServer } from "node:http";
 import { extname, resolve } from "node:path";
@@ -6,6 +5,7 @@ import { promisify } from "node:util";
 import { brotliCompress, constants, gzip } from "node:zlib";
 import { createRequestHandler } from "@kasperrt/smolter/utils/http";
 import { safeWrapAsync } from "@smolter/core";
+import { createSessionHandler } from "@smolter/ui/tooling/sessions";
 import type * as ServerBuild from "../src/server.ts";
 
 interface Asset {
@@ -86,8 +86,7 @@ function acceptedEncoding(header = "") {
   return (["br", "gzip"] as const).find((name) => (weights.get(name) ?? 0) > 0);
 }
 
-const session = `${namespace}-session`;
-const sessionPattern = new RegExp(`(?:^|; )${session}=([\\w-]+)`);
+const ensureSession = createSessionHandler(namespace);
 const application = createRequestHandler({
   namespace,
   entry: "",
@@ -123,9 +122,6 @@ const application = createRequestHandler({
     handleDataRequest: data,
   },
 });
-
-const MAX_SESSIONS = 256;
-const issuedSessions = new Set();
 
 createServer(async (incoming, outgoing) => {
   const handle = async () => {
@@ -172,26 +168,12 @@ createServer(async (incoming, outgoing) => {
       outgoing.end(encoding ? asset.data[encoding] : asset.data.body);
       return;
     }
-    const cookieHeader = incoming.headers.cookie ?? "";
-    const existing = cookieHeader.match(sessionPattern)?.[1];
-    if (!existing || !issuedSessions.has(existing)) {
-      const id = randomUUID();
-      if (issuedSessions.size >= MAX_SESSIONS)
-        issuedSessions.delete(issuedSessions.values().next().value);
-      issuedSessions.add(id);
-      const others = cookieHeader
-        .split(/;\s*/)
-        .filter((part) => part && !part.startsWith(`${session}=`));
-      incoming.headers.cookie = [...others, `${session}=${id}`].join("; ");
-      outgoing.setHeader(
-        "Set-Cookie",
-        `${session}=${id}; HttpOnly; SameSite=Lax; Path=/`,
-      );
-    }
+    ensureSession(incoming, outgoing);
     await application(incoming, outgoing, () => {
       outgoing.writeHead(500).end("Request failed");
     });
   };
   const { error } = await safeWrapAsync(handle);
-  if (error) outgoing.writeHead(500).end("Request failed");
+  if (error && !outgoing.headersSent)
+    outgoing.writeHead(500).end("Request failed");
 }).listen(Number(process.env.PORT ?? 3000), "127.0.0.1");

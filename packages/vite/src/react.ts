@@ -17,6 +17,10 @@ export function routerPlugin(options: FileRouterOptions = {}): Plugin {
 /** File routing is the default; this alias keeps configuration explicit. */
 export const fileRouter = routerPlugin;
 
+export type {
+  DiscoverableRoute,
+  RouteDiscoveryBuildOptions,
+} from "./application/lazy-files.ts";
 export type { ApplicationOptions } from "./application/vite.ts";
 export {
   type DeploymentPluginOptions,

@@ -119,12 +119,62 @@ export interface Snapshot {
   leaving?: true;
 }
 
-/** Initial URL, browser history, and hydration configuration. */
+/** Context for one route discovery request. */
+export interface RouteDiscoveryContext {
+  signal: AbortSignal;
+  /** True when a page navigation asked; a stale build may then reload the document. */
+  navigation: boolean;
+}
+
+/** Resolve authorized route definitions for a URL no known route matches. Return none when unknown or denied. */
+export type RouteResolver<R extends Route = Route> = (
+  url: URL,
+  context: RouteDiscoveryContext,
+) => Promise<readonly R[]>;
+
+/** Router methods added when route discovery is configured. */
+export interface DiscoveryMethods {
+  discover: (href: string) => Promise<boolean>;
+  resetDiscovery: () => void;
+}
+
+/** Discovery state attached to one router's route table. */
+export interface DiscoveryTable {
+  /** Whether no route, or only a splat, matches the URL. */
+  needs: (url: URL) => boolean;
+  load: (url: URL, navigation: boolean) => Promise<boolean>;
+  methods: DiscoveryMethods;
+  dispose: () => void;
+}
+
+/** Route discovery for a router. Create it with withRouteDiscovery or routeDiscoveryClient; routers without it carry no discovery code. */
+export interface RouteDiscovery<R extends Route = Route> {
+  attach: (
+    table: Route[],
+    host: DiscoveryHost,
+    cache?: DiscoveryCache,
+    transform?: (routes: readonly R[]) => readonly Route[],
+  ) => DiscoveryTable;
+}
+
+/** The router channel whose current URL resolves discovery requests. */
+export interface DiscoveryHost {
+  getSnapshot: () => Pick<Snapshot, "url">;
+}
+
+/** Data cleared when discovery resets, such as speculative route data. */
+export interface DiscoveryCache {
+  clear: () => void;
+}
+
+/** Initial URL, browser history, hydration and route discovery configuration. */
 export interface RouterOptions {
   url?: string;
   /** Explicitly opt into browser history; leave off for SSR and tests. */
   browser?: boolean;
   hydrationData?: Snapshot;
+  /** Ask the server for routes that are not in the public route table. */
+  discover?: RouteDiscovery;
 }
 
 /** Options for replacing rather than appending a browser history entry. */
@@ -197,5 +247,42 @@ export interface Router {
   createFetcher: () => Fetcher;
   /** Speculatively read route data without navigation; cached for one navigation, at most 30 seconds. */
   prefetch: (url: string) => Promise<Result>;
+  /** With route discovery: discover routes for an unmatched URL. Resolves true when a route now matches it. */
+  discover?: (url: string) => Promise<boolean>;
+  /** With route discovery: forget discovered routes and denials, for example after logout or a permission change. */
+  resetDiscovery?: () => void;
   dispose: () => void;
+}
+
+/** Statically known capabilities of a discovered route module. */
+export interface DiscoveredCapabilities {
+  dataEndpoint?: string;
+  loader?: boolean;
+  action?: boolean;
+  clientAction?: boolean;
+  meta?: boolean;
+  shouldRevalidate?: boolean;
+  ErrorBoundary?: boolean;
+}
+
+/** Browser definition of one authorized route, as returned by route discovery. */
+export interface DiscoveredRoute {
+  path: string;
+  id?: string;
+  parentId?: string;
+  index?: boolean;
+  pathless?: boolean;
+  capabilities: DiscoveredCapabilities;
+  /** Module URL of the route's browser chunk. */
+  file: string;
+  /** Browser exports selected from the module. */
+  exports: string[];
+  /** Stylesheet URLs to load before the module renders. */
+  styles: string[];
+}
+
+/** Route discovery response; build ties routes to one deployment. */
+export interface RouteDiscoveryResponse {
+  build: string;
+  routes: DiscoveredRoute[];
 }

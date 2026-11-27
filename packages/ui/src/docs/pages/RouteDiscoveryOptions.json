@@ -1,0 +1,13 @@
+{
+  "slug": "RouteDiscoveryOptions",
+  "title": "RouteDiscoveryOptions",
+  "summary": "Private manifest and host authorizer for route discovery.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "manifest is the parsed file written to routeDiscovery.manifestFile. authorize decides per request whether a protected route may be revealed.",
+      "code": "import { readFile } from \"node:fs/promises\";\nimport { createRequestHandler } from \"@kasperrt/smolter/utils/http\";\n\nconst manifest = JSON.parse(\n  await readFile(\"dist/server/route-discovery.json\", \"utf8\"),\n);\n\napp.use(\n  createRequestHandler({\n    build,\n    entry,\n    routeDiscovery: {\n      manifest,\n      authorize: async (request, route) =>\n        route.path.startsWith(\"/admin\") && (await isAdmin(request)),\n    },\n  }),\n);"
+    }
+  ]
+}

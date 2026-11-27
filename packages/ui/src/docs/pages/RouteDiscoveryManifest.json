@@ -1,0 +1,13 @@
+{
+  "slug": "RouteDiscoveryManifest",
+  "title": "RouteDiscoveryManifest",
+  "summary": "Private build artifact listing every route in match order.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Handling",
+      "body": "Read it at startup from the path given to routeDiscovery.manifestFile. It contains protected route definitions and chunk URLs, so keep it out of public output and never send it to clients. build must match the browser build being served.",
+      "code": "const manifest: RouteDiscoveryManifest = JSON.parse(\n  await readFile(\"dist/server/route-discovery.json\", \"utf8\"),\n);"
+    }
+  ]
+}

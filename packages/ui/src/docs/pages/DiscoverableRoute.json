@@ -1,0 +1,13 @@
+{
+  "slug": "DiscoverableRoute",
+  "title": "DiscoverableRoute",
+  "summary": "The route passed to routeDiscovery.protect.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Fields",
+      "body": "path is the route pattern, such as /admin/users/:id. Nested file routes also pass their id, such as routes/admin.users.$id, so you can protect a layout by identity.",
+      "code": "protect: (route) => route.id?.startsWith(\"routes/admin\") ?? false,"
+    }
+  ]
+}

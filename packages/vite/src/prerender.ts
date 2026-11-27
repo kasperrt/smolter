@@ -1,11 +1,11 @@
-import { constants } from "node:fs";
-import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 import { safeWrapAsync } from "@smolter/core";
 import { flatRoutes } from "@smolter/files";
 import type { Plugin, ResolvedConfig } from "vite";
+import { writeBuildOutput } from "./build-output.ts";
 
 /** Opt-in HTML generation after the client build and then the SSR build. */
 export interface PrerenderOptions {
@@ -19,7 +19,7 @@ export interface PrerenderOptions {
   paths: string[] | ((staticPaths: string[]) => string[] | Promise<string[]>);
   /** Origin for build-time requests. Defaults to https://prerender.invalid. */
   origin?: string;
-  /** Maximum worker lifetime in milliseconds. Defaults to 60000. */
+  /** Maximum worker lifetime in whole milliseconds, from 1 to 2147483647. Defaults to 60000. */
   timeout?: number;
 }
 
@@ -49,6 +49,7 @@ export async function renderPaths(options: RenderOptions): Promise<void> {
     pathToFileURL(options.serverEntry).href
   );
   const root = await realpath(options.outDir);
+  const expectedOrigin = new URL(options.origin).origin;
   for (const path of options.paths) {
     const { error } = await safeWrapAsync(async () => {
       if (
@@ -56,7 +57,7 @@ export async function renderPaths(options: RenderOptions): Promise<void> {
         path.startsWith("//") ||
         /[?#\\\u0000-\u0020]/.test(path)
       )
-        throw new Error(
+        return new Error(
           "Expected an absolute URL pathname without a query or fragment",
         );
       const segments = path.split("/").filter(Boolean).map(decodeURIComponent);
@@ -65,21 +66,23 @@ export async function renderPaths(options: RenderOptions): Promise<void> {
           (segment) =>
             segment === "." ||
             segment === ".." ||
-            /[\\/\u0000-\u001f:]/.test(segment),
+            /[\\/\u0000-\u001f\u007f:]/.test(segment),
         )
       )
-        throw new Error("Unsafe output pathname");
+        return new Error("Unsafe output pathname");
       const url = new URL(
         `${options.base.replace(/\/$/, "")}${path}`,
         options.origin,
       );
+      if (url.origin !== expectedOrigin)
+        return new Error("Unsafe output pathname");
       const response = await entry.default(
         new Request(url, { headers: { Accept: "text/html" } }),
         options.clientEntry,
       );
       if (response.status >= 300 && response.status < 400) return;
       if (!response.ok)
-        throw new Error(`Render returned HTTP ${response.status}`);
+        return new Error(`Render returned HTTP ${response.status}`);
       if (
         !/^text\/html(?:;|$)/i.test(response.headers.get("Content-Type") ?? "")
       )
@@ -92,15 +95,9 @@ export async function renderPaths(options: RenderOptions): Promise<void> {
         target = await realpath(directory);
         const destination = relative(root, target);
         if (destination.startsWith("..") || isAbsolute(destination))
-          throw new Error("Output directory escapes client output");
+          return new Error("Output directory escapes client output");
       }
-      await writeFile(resolve(target, "index.html"), html, {
-        flag:
-          constants.O_WRONLY |
-          constants.O_CREAT |
-          constants.O_TRUNC |
-          constants.O_NOFOLLOW,
-      });
+      await writeBuildOutput(resolve(target, "index.html"), html);
     });
     if (error)
       throw new Error(`Prerender failed for ${path}: ${error.message}`, {
@@ -193,23 +190,38 @@ export function prerenderPlugin(options: PrerenderOptions): Plugin {
       const manifest: ClientManifest = JSON.parse(
         await readFile(resolve(outDir, ".vite/manifest.json"), "utf8"),
       );
-      const clientEntry =
-        manifest[options.clientEntry ?? "src/entry.client.tsx"];
+      const entryKey = options.clientEntry ?? "src/entry.client.tsx";
+      const clientEntry = Object.hasOwn(manifest, entryKey)
+        ? manifest[entryKey]
+        : undefined;
       if (!clientEntry?.isEntry)
         throw new Error(
           "Prerender client entry is missing from the Vite manifest; build the client first",
         );
       const base = new URL(config.base, "https://prerender.invalid").pathname;
+      const rawOrigin = options.origin ?? "https://prerender.invalid";
+      if (!URL.canParse(rawOrigin))
+        throw new Error("Prerender origin must be an http or https origin");
+      const parsedOrigin = new URL(rawOrigin);
+      if (
+        (parsedOrigin.protocol !== "http:" &&
+          parsedOrigin.protocol !== "https:") ||
+        parsedOrigin.origin !== rawOrigin.replace(/\/$/, "")
+      )
+        throw new Error("Prerender origin must be an http or https origin");
       const timeout = options.timeout ?? 60_000;
-      if (!Number.isFinite(timeout) || timeout <= 0)
-        throw new Error("Prerender timeout must be positive");
+      // Larger delays overflow setTimeout and would fire immediately.
+      if (!Number.isInteger(timeout) || timeout < 1 || timeout > 2_147_483_647)
+        throw new Error(
+          "Prerender timeout must be an integer between 1 and 2147483647 ms",
+        );
       await renderInWorker(
         {
           serverEntry,
           outDir,
           paths: [...new Set(paths)],
           base,
-          origin: options.origin ?? "https://prerender.invalid",
+          origin: parsedOrigin.origin,
           clientEntry: `${config.base}${clientEntry.file}`,
         },
         timeout,

@@ -41,6 +41,7 @@ import {
   useMemo,
 } from "./runtime.ts";
 
+export { nestedRouteDiscovery as routeDiscoveryClient } from "@smolter/client/discovery";
 export * from "./index.ts";
 /** A nested route module with client document metadata. */
 export interface NestedRoute extends CoreNestedRoute {

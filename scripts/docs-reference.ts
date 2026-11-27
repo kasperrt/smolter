@@ -47,6 +47,8 @@ for (const entry of [
   "preact",
   "react/nested",
   "preact/nested",
+  "react/discovery",
+  "preact/discovery",
   "react/client",
   "preact/client",
   "preact/document",

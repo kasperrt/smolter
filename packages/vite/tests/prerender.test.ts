@@ -126,11 +126,15 @@ it("renders HTML, skips redirects and resources, and reports per-path errors", a
     "/a?b",
     "/%2e%2e/escape",
     "/a%2fb",
+    "/a%7fb",
     "/%zz",
   ])
     await expect(renderPaths({ ...options, paths: [path] })).rejects.toThrow(
       `Prerender failed for ${path}`,
     );
+  await expect(
+    renderPaths({ ...options, base: "//evil.example", paths: ["/"] }),
+  ).rejects.toThrow("Unsafe output pathname");
   await mkdir(resolve(root, "outside"));
   await symlink(resolve(root, "outside"), resolve(options.outDir, "escape"));
   await expect(
@@ -182,9 +186,22 @@ it("rejects invalid setup and leaves unwritten builds alone", async (context) =>
   await expect(
     build(config(root, true, { clientEntry: "missing" })),
   ).rejects.toThrow("client entry is missing");
-  await expect(build(config(root, true, { timeout: 0 }))).rejects.toThrow(
-    "timeout must be positive",
-  );
+  await expect(
+    build(config(root, true, { clientEntry: "toString" })),
+  ).rejects.toThrow("client entry is missing");
+  for (const origin of [
+    "javascript:alert(1)",
+    "not-a-url",
+    "https://user:pass@example.com",
+    "https://example.com/path",
+  ])
+    await expect(build(config(root, true, { origin }))).rejects.toThrow(
+      "Prerender origin must be an http or https origin",
+    );
+  for (const timeout of [0, -1, 1.5, Number.NaN, 2_147_483_648])
+    await expect(build(config(root, true, { timeout }))).rejects.toThrow(
+      "timeout must be an integer between 1 and 2147483647 ms",
+    );
   await expect(build({ ...config(root, true), base: "./" })).rejects.toThrow(
     "absolute Vite base",
   );

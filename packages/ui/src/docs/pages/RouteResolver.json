@@ -1,0 +1,13 @@
+{
+  "slug": "RouteResolver",
+  "title": "RouteResolver",
+  "summary": "Resolve authorized routes for a URL no known route matches.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "Return the routes to add, or none when the path is unknown or denied. Rejections are not remembered as denials. Wrap a resolver with withRouteDiscovery to use it as a router's discover option.",
+      "code": "const resolve: RouteResolver = async (url, { signal }) =>\n  (await fetch(`/routes?path=${url.pathname}`, { signal })).ok ? [admin] : [];"
+    }
+  ]
+}

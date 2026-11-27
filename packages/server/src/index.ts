@@ -103,4 +103,13 @@ export async function handleRequest(
   return privateResponse(await dispatchRequest(routes, request));
 }
 
+export {
+  createRouteDiscovery,
+  type DiscoveryManifestRoute,
+  discoveryTarget,
+  type ProtectedRoute,
+  type RouteAuthorizer,
+  type RouteDiscoveryManifest,
+  type RouteDiscoveryOptions,
+} from "./discovery.ts";
 export { dispatchRoute } from "./dispatch.ts";

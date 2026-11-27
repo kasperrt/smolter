@@ -150,9 +150,17 @@ it("fingerprints shared and per-route dependencies independently in production o
 });
 
 it("keeps route templates private in version-only mode and refreshes the private build file", async (context) => {
-  const { mkdir, mkdtemp, readFile, rm, symlink } = await import(
-    "node:fs/promises"
-  );
+  const {
+    access,
+    link,
+    mkdir,
+    mkdtemp,
+    readFile,
+    rm,
+    stat,
+    symlink,
+    writeFile,
+  } = await import("node:fs/promises");
   const { tmpdir } = await import("node:os");
   const { resolve } = await import("node:path");
   const root = await mkdtemp(resolve(tmpdir(), "smolter-private-manifest-"));
@@ -204,7 +212,15 @@ it("keeps route templates private in version-only mode and refreshes the private
   expect(
     JSON.parse(await readFile(resolve(root, "private/routes.json"), "utf8")),
   ).toEqual({ version: publicManifest.version, routes: ["/admin"] });
+  const publicCopy = resolve(root, "public/previous.json");
+  await mkdir(resolve(root, "public"), { recursive: true });
+  await writeFile(resolve(root, "private/routes.json"), "previous output");
+  await link(resolve(root, "private/routes.json"), publicCopy);
   await compilePrivate("private/routes.json");
+  expect(await readFile(publicCopy, "utf8")).toBe("previous output");
+  expect((await stat(resolve(root, "private/routes.json"))).mode & 0o777).toBe(
+    0o600,
+  );
   await expect(compilePrivate("client/private.json")).rejects.toThrow(
     "outside client output",
   );
@@ -220,4 +236,8 @@ it("keeps route templates private in version-only mode and refreshes the private
   await expect(compilePrivate("linked/routes.json")).rejects.toThrow(
     "resolves inside a public directory",
   );
+  await expect(compilePrivate("linked/nested/routes.json")).rejects.toThrow(
+    "resolves inside a public directory",
+  );
+  await expect(access(resolve(root, "public/nested"))).rejects.toThrow();
 });

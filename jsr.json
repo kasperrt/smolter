@@ -1,6 +1,6 @@
 {
   "name": "@kasperrt/smolter",
-  "version": "0.6.0-alpha.5",
+  "version": "0.6.0-alpha.6",
   "exports": {
     "./react": "./.generated/react/index.ts",
     "./preact": "./.generated/preact/index.ts",
@@ -13,9 +13,11 @@
     "./utils/assets": "./.generated/server/assets.ts",
     "./utils/responses": "./.generated/core/responses.ts",
     "./preact/lazy-route": "./.generated/preact/lazy-route.ts",
+    "./preact/discovery": "./.generated/preact/discovery.ts",
     "./preact/document": "./.generated/preact/document.tsx",
     "./react/document": "./.generated/react/document.tsx",
     "./react/lazy-route": "./.generated/react/lazy-route.ts",
+    "./react/discovery": "./.generated/react/discovery.ts",
     "./react/nested": "./.generated/react/nested.tsx",
     "./preact/nested": "./.generated/preact/nested.tsx"
   },

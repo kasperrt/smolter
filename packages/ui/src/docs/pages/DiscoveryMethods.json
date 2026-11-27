@@ -1,0 +1,13 @@
+{
+  "slug": "DiscoveryMethods",
+  "title": "DiscoveryMethods",
+  "summary": "Router methods present when route discovery is configured.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Contract",
+      "body": "discover(href) discovers an unmatched URL and resolves true when a route then matches it. resetDiscovery() forgets discovered routes, remembered denials and prefetched data; call it after logout or a permission change.",
+      "code": "router.resetDiscovery?.();"
+    }
+  ]
+}

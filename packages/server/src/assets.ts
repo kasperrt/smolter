@@ -12,6 +12,15 @@ export interface RouteAssets {
   styles?: string[];
 }
 
+const unsafeLinkTarget = /[<>\r\n\u0000-\u0020\u007f]/;
+
+function preloadTarget(prefix: string, file: string): string {
+  const target = `${prefix}/${file}`;
+  if (unsafeLinkTarget.test(target))
+    throw new Error("Unsafe preload asset URL");
+  return target;
+}
+
 /** Collect matched-route JavaScript and stylesheet assets from the production route manifest. */
 export function routePreloads(
   routes: RouteAssets[],
@@ -23,10 +32,11 @@ export function routePreloads(
   const prefix = base.replace(/\/$/, "");
   return [
     ...(route?.styles ?? []).map(
-      (file) => `<${prefix}/${file}>; rel=preload; as=style; crossorigin`,
+      (file) =>
+        `<${preloadTarget(prefix, file)}>; rel=preload; as=style; crossorigin`,
     ),
     ...(route?.files ?? []).map(
-      (file) => `<${prefix}/${file}>; rel=modulepreload`,
+      (file) => `<${preloadTarget(prefix, file)}>; rel=modulepreload`,
     ),
   ].join(", ");
 }
