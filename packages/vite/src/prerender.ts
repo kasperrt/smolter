@@ -49,6 +49,7 @@ export async function renderPaths(options: RenderOptions): Promise<void> {
     pathToFileURL(options.serverEntry).href
   );
   const root = await realpath(options.outDir);
+  const expectedOrigin = new URL(options.origin).origin;
   for (const path of options.paths) {
     const { error } = await safeWrapAsync(async () => {
       if (
@@ -65,7 +66,7 @@ export async function renderPaths(options: RenderOptions): Promise<void> {
           (segment) =>
             segment === "." ||
             segment === ".." ||
-            /[\\/\u0000-\u001f:]/.test(segment),
+            /[\\/\u0000-\u001f\u007f:]/.test(segment),
         )
       )
         throw new Error("Unsafe output pathname");
@@ -73,6 +74,8 @@ export async function renderPaths(options: RenderOptions): Promise<void> {
         `${options.base.replace(/\/$/, "")}${path}`,
         options.origin,
       );
+      if (url.origin !== expectedOrigin)
+        throw new Error("Unsafe output pathname");
       const response = await entry.default(
         new Request(url, { headers: { Accept: "text/html" } }),
         options.clientEntry,
@@ -193,13 +196,25 @@ export function prerenderPlugin(options: PrerenderOptions): Plugin {
       const manifest: ClientManifest = JSON.parse(
         await readFile(resolve(outDir, ".vite/manifest.json"), "utf8"),
       );
-      const clientEntry =
-        manifest[options.clientEntry ?? "src/entry.client.tsx"];
+      const entryKey = options.clientEntry ?? "src/entry.client.tsx";
+      const clientEntry = Object.hasOwn(manifest, entryKey)
+        ? manifest[entryKey]
+        : undefined;
       if (!clientEntry?.isEntry)
         throw new Error(
           "Prerender client entry is missing from the Vite manifest; build the client first",
         );
       const base = new URL(config.base, "https://prerender.invalid").pathname;
+      const rawOrigin = options.origin ?? "https://prerender.invalid";
+      if (!URL.canParse(rawOrigin))
+        throw new Error("Prerender origin must be an http or https origin");
+      const parsedOrigin = new URL(rawOrigin);
+      if (
+        (parsedOrigin.protocol !== "http:" &&
+          parsedOrigin.protocol !== "https:") ||
+        parsedOrigin.origin !== rawOrigin.replace(/\/$/, "")
+      )
+        throw new Error("Prerender origin must be an http or https origin");
       const timeout = options.timeout ?? 60_000;
       if (!Number.isFinite(timeout) || timeout <= 0)
         throw new Error("Prerender timeout must be positive");
@@ -209,7 +224,7 @@ export function prerenderPlugin(options: PrerenderOptions): Plugin {
           outDir,
           paths: [...new Set(paths)],
           base,
-          origin: options.origin ?? "https://prerender.invalid",
+          origin: parsedOrigin.origin,
           clientEntry: `${config.base}${clientEntry.file}`,
         },
         timeout,

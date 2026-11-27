@@ -89,7 +89,9 @@ export function createNestedRouter(
       !options.basename
     )
       return value;
-    const destination = new URL(value.headers.get("Location")!, current);
+    const location = value.headers.get("Location")!;
+    if (!URL.canParse(location, current)) return value;
+    const destination = new URL(location, current);
     const base = options.basename.replace(/\/$/, "");
     if (
       destination.origin !== new URL(current).origin ||

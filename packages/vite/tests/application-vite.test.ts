@@ -120,3 +120,20 @@ for (const framework of ["react", "preact"] as const) {
     }
   });
 }
+
+it("moves the Vite client script without expanding replacement patterns in the base path", () => {
+  const plugin = applicationPlugins()[0];
+  const transform = plugin.transformIndexHtml;
+  if (!transform || typeof transform !== "object")
+    throw new Error("Expected transformIndexHtml hook");
+  const html =
+    '<!doctype html><html><head><script type="module" src="/$\'/app/@vite/client"></script><title>SSR</title></head><body><main>Ready</main></body></html>';
+  const result = transform.handler.call({} as never, html, {
+    path: "/",
+    filename: "index.html",
+    server: {} as never,
+  });
+  expect(result).toBe(
+    '<!doctype html><html><head><title>SSR</title></head><body><main>Ready</main><script type="module" src="/$\'/app/@vite/client"></script></body></html>',
+  );
+});

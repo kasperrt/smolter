@@ -79,8 +79,8 @@ export function applicationPlugins({
         )?.[0];
         if (!client) return html;
         return html
-          .replace(client, "")
-          .replace("</body>", `${client.trim()}</body>`);
+          .replace(client, () => "")
+          .replace("</body>", () => `${client.trim()}</body>`);
       },
     },
     configureServer(server) {

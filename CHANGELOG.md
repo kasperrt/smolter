@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Security
+
+- Validate `internalURL` before updating browser history in `connectHashHistory`, so external, unsafe-protocol, or malformed navigation targets cannot spoof the URL hash or pollute history.
+- Verify the deepest existing ancestor of `privateManifestFile` against resolved public directories before creating subdirectories in `deploymentPlugin`, and write to the canonicalized parent path with `O_NOFOLLOW`.
+- Validate `prerenderPlugin`'s `origin` option as a bare `http:`/`https:` origin, check `Object.hasOwn` when looking up the client manifest entry, reject `\u007f` in decoded output segments, and verify rendered request URLs remain on the configured origin.
+- Reject unsafe RFC 8288 URI-reference characters (`<`, `>`, whitespace, CR/LF, control characters) in `routePreloads` to prevent HTTP `Link` header injection.
+- Use callback replacements in `applicationPlugins`'s dev `transformIndexHtml` hook so `$'`/`` $` ``/`$&` sequences in the Vite client script URL cannot expand HTML into the script tag.
+- Harden `deserialize` snapshot and error reconstruction against non-object snapshots and malformed error payloads, guard malformed URLs with `URL.canParse` in `internalURL`, document link handoff, and nested redirect resolution, and guard `headersSent` in the SSR example servers' outer error handler.
+
 ## 0.6.0-alpha.5
 
 - Add opt-in `prerenderPlugin` for React and Preact builds. Require an explicit list of paths or a callback selecting static and concrete dynamic URLs, and render HTML through the built SSR entry after the client build. Isolated workers handle SSR timers, bounded completion and path-specific errors; redirects and non-HTML resources are skipped.

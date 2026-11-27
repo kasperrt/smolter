@@ -121,7 +121,8 @@ export function connectNavigation(router: Router) {
       event.target instanceof Element ? event.target.closest("a[href]") : null;
     if (
       !(anchor instanceof HTMLAnchorElement) ||
-      !navigationClick(event, anchor)
+      !navigationClick(event, anchor) ||
+      !URL.canParse(anchor.href)
     )
       return;
     const target = resolveApplicationURL(new URL(anchor.href));

@@ -150,7 +150,7 @@ it("fingerprints shared and per-route dependencies independently in production o
 });
 
 it("keeps route templates private in version-only mode and refreshes the private build file", async (context) => {
-  const { mkdir, mkdtemp, readFile, rm, symlink } = await import(
+  const { access, mkdir, mkdtemp, readFile, rm, symlink } = await import(
     "node:fs/promises"
   );
   const { tmpdir } = await import("node:os");
@@ -220,4 +220,8 @@ it("keeps route templates private in version-only mode and refreshes the private
   await expect(compilePrivate("linked/routes.json")).rejects.toThrow(
     "resolves inside a public directory",
   );
+  await expect(compilePrivate("linked/nested/routes.json")).rejects.toThrow(
+    "resolves inside a public directory",
+  );
+  await expect(access(resolve(root, "public/nested"))).rejects.toThrow();
 });

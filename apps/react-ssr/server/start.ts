@@ -193,5 +193,6 @@ createServer(async (incoming, outgoing) => {
     });
   };
   const { error } = await safeWrapAsync(handle);
-  if (error) outgoing.writeHead(500).end("Request failed");
+  if (error && !outgoing.headersSent)
+    outgoing.writeHead(500).end("Request failed");
 }).listen(Number(process.env.PORT ?? 3000), "127.0.0.1");

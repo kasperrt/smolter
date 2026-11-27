@@ -1,5 +1,6 @@
 /** Resolve an internal URL; external links remain the browser's responsibility. */
 export function internalURL(base: string, href = base): URL | undefined {
+  if (!URL.canParse(base) || !URL.canParse(href, base)) return;
   const origin = new URL(base);
   const url = new URL(href, origin);
   if (url.origin === origin.origin && url.protocol === origin.protocol)
