@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0-alpha.6
 
 ### Security
 
@@ -10,6 +10,11 @@
 - Reject unsafe RFC 8288 URI-reference characters (`<`, `>`, whitespace, CR/LF, control characters) in `routePreloads` to prevent HTTP `Link` header injection.
 - Use callback replacements in `applicationPlugins`'s dev `transformIndexHtml` hook so `$'`/`` $` ``/`$&` sequences in the Vite client script URL cannot expand HTML into the script tag.
 - Harden `deserialize` snapshot and error reconstruction against non-object snapshots and malformed error payloads, guard malformed URLs with `URL.canParse` in `internalURL`, document link handoff, and nested redirect resolution, and guard `headersSent` in the SSR example servers' outer error handler.
+- Require `prerenderPlugin`'s `timeout` to be a whole number of milliseconds from 1 to 2147483647. Larger values overflowed `setTimeout` and fired immediately.
+
+### Maintenance
+
+- `safeWrapAsync` excludes `Error` from its `data` type, matching its runtime behavior, so callbacks return failures as values. Prerendering and prefetch analysis now return their validation errors instead of throwing them inside the wrapper, which also drops the duplicated `Error:` prefix from prerender failure messages.
 
 ## 0.6.0-alpha.5
 

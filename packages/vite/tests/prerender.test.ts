@@ -198,9 +198,10 @@ it("rejects invalid setup and leaves unwritten builds alone", async (context) =>
     await expect(build(config(root, true, { origin }))).rejects.toThrow(
       "Prerender origin must be an http or https origin",
     );
-  await expect(build(config(root, true, { timeout: 0 }))).rejects.toThrow(
-    "timeout must be positive",
-  );
+  for (const timeout of [0, -1, 1.5, Number.NaN, 2_147_483_648])
+    await expect(build(config(root, true, { timeout }))).rejects.toThrow(
+      "timeout must be an integer between 1 and 2147483647 ms",
+    );
   await expect(build({ ...config(root, true), base: "./" })).rejects.toThrow(
     "absolute Vite base",
   );

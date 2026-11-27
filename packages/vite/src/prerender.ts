@@ -19,7 +19,7 @@ export interface PrerenderOptions {
   paths: string[] | ((staticPaths: string[]) => string[] | Promise<string[]>);
   /** Origin for build-time requests. Defaults to https://prerender.invalid. */
   origin?: string;
-  /** Maximum worker lifetime in milliseconds. Defaults to 60000. */
+  /** Maximum worker lifetime in whole milliseconds, from 1 to 2147483647. Defaults to 60000. */
   timeout?: number;
 }
 
@@ -57,7 +57,7 @@ export async function renderPaths(options: RenderOptions): Promise<void> {
         path.startsWith("//") ||
         /[?#\\\u0000-\u0020]/.test(path)
       )
-        throw new Error(
+        return new Error(
           "Expected an absolute URL pathname without a query or fragment",
         );
       const segments = path.split("/").filter(Boolean).map(decodeURIComponent);
@@ -69,20 +69,20 @@ export async function renderPaths(options: RenderOptions): Promise<void> {
             /[\\/\u0000-\u001f\u007f:]/.test(segment),
         )
       )
-        throw new Error("Unsafe output pathname");
+        return new Error("Unsafe output pathname");
       const url = new URL(
         `${options.base.replace(/\/$/, "")}${path}`,
         options.origin,
       );
       if (url.origin !== expectedOrigin)
-        throw new Error("Unsafe output pathname");
+        return new Error("Unsafe output pathname");
       const response = await entry.default(
         new Request(url, { headers: { Accept: "text/html" } }),
         options.clientEntry,
       );
       if (response.status >= 300 && response.status < 400) return;
       if (!response.ok)
-        throw new Error(`Render returned HTTP ${response.status}`);
+        return new Error(`Render returned HTTP ${response.status}`);
       if (
         !/^text\/html(?:;|$)/i.test(response.headers.get("Content-Type") ?? "")
       )
@@ -95,7 +95,7 @@ export async function renderPaths(options: RenderOptions): Promise<void> {
         target = await realpath(directory);
         const destination = relative(root, target);
         if (destination.startsWith("..") || isAbsolute(destination))
-          throw new Error("Output directory escapes client output");
+          return new Error("Output directory escapes client output");
       }
       await writeFile(resolve(target, "index.html"), html, {
         flag:
@@ -216,8 +216,11 @@ export function prerenderPlugin(options: PrerenderOptions): Plugin {
       )
         throw new Error("Prerender origin must be an http or https origin");
       const timeout = options.timeout ?? 60_000;
-      if (!Number.isFinite(timeout) || timeout <= 0)
-        throw new Error("Prerender timeout must be positive");
+      // Larger delays overflow setTimeout and would fire immediately.
+      if (!Number.isInteger(timeout) || timeout < 1 || timeout > 2_147_483_647)
+        throw new Error(
+          "Prerender timeout must be an integer between 1 and 2147483647 ms",
+        );
       await renderInWorker(
         {
           serverEntry,

@@ -2468,7 +2468,7 @@
     "entries": ["react/vite", "preact/vite"],
     "kind": "Types",
     "summary": "Opt-in HTML generation after the client build and then the SSR build.",
-    "signature": "interface PrerenderOptions {\n  /** Client output directory relative to Vite root. Defaults to dist/client. */\n  clientOutDir?: string;\n  /** Client entry key in the Vite manifest. Defaults to src/entry.client.tsx. */\n  clientEntry?: string;\n  /** Route directory relative to Vite root. Defaults to src/routes. */\n  directory?: string;\n  /** Filter static routes and add concrete dynamic paths, without the Vite base. */\n  paths: string[] | ((staticPaths: string[]) => string[] | Promise<string[]>);\n  /** Origin for build-time requests. Defaults to https://prerender.invalid. */\n  origin?: string;\n  /** Maximum worker lifetime in milliseconds. Defaults to 60000. */\n  timeout?: number;\n}",
+    "signature": "interface PrerenderOptions {\n  /** Client output directory relative to Vite root. Defaults to dist/client. */\n  clientOutDir?: string;\n  /** Client entry key in the Vite manifest. Defaults to src/entry.client.tsx. */\n  clientEntry?: string;\n  /** Route directory relative to Vite root. Defaults to src/routes. */\n  directory?: string;\n  /** Filter static routes and add concrete dynamic paths, without the Vite base. */\n  paths: string[] | ((staticPaths: string[]) => string[] | Promise<string[]>);\n  /** Origin for build-time requests. Defaults to https://prerender.invalid. */\n  origin?: string;\n  /** Maximum worker lifetime in whole milliseconds, from 1 to 2147483647. Defaults to 60000. */\n  timeout?: number;\n}",
     "fields": [
       {
         "name": "clientOutDir",
@@ -2498,7 +2498,7 @@
       {
         "name": "timeout",
         "signature": "timeout?: number;",
-        "summary": "Maximum worker lifetime in milliseconds. Defaults to 60000."
+        "summary": "Maximum worker lifetime in whole milliseconds, from 1 to 2147483647. Defaults to 60000."
       }
     ],
     "source": "packages/vite/src/prerender.ts"

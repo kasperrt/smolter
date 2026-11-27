@@ -26,7 +26,7 @@
     },
     {
       "title": "Build-time isolation",
-      "body": "SSR rendering runs in a worker that is terminated after completion or failure, including modules with live timers. timeout bounds the entire worker run (default 60000 ms). origin sets the origin of build-time requests (default https://prerender.invalid). The paths callback runs in the build process and must close any resources it opens. Prerendered HTML is public: use build-time data appropriate for every visitor and do not rely on session cookies.",
+      "body": "SSR rendering runs in a worker that is terminated after completion or failure, including modules with live timers. timeout bounds the entire worker run in whole milliseconds, from 1 to 2147483647 (default 60000 ms); other values fail the build. origin sets the origin of build-time requests (default https://prerender.invalid). The paths callback runs in the build process and must close any resources it opens. Prerendered HTML is public: use build-time data appropriate for every visitor and do not rely on session cookies.",
       "code": "prerenderPlugin({\n  paths: [\"/\", \"/about\"],\n  origin: \"https://example.com\",\n  timeout: 120_000,\n});"
     }
   ]

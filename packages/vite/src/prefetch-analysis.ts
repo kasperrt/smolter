@@ -164,10 +164,10 @@ export async function analyzePrefetch(
     const snapshot = api.updateSnapshot({ openProjects: [virtualConfig] });
     const project = snapshot.getProject(virtualConfig);
     if (!project)
-      throw new Error("TypeScript did not open the prefetch analysis project");
+      return new Error("TypeScript did not open the prefetch analysis project");
     const { program, checker } = project;
     const diagnostic = program.getConfigFileParsingDiagnostics()[0];
-    if (diagnostic) throw new Error(diagnostic.text);
+    if (diagnostic) return new Error(diagnostic.text);
     const result: PrefetchCapabilities = {
       intent: false,
       viewport: false,
