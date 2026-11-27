@@ -18,6 +18,9 @@ const entries = Object.fromEntries(
   }),
 );
 
+// The prerender worker imports this private module outside the bundler graph.
+entries["vite/prerender"] = resolve(source, "vite/prerender.ts");
+
 export default defineConfig({
   plugins: [portableSources()],
   build: {

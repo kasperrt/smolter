@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0-alpha.5
+
+- Add opt-in `prerenderPlugin` for React and Preact builds. Require an explicit list of paths or a callback selecting static and concrete dynamic URLs, and render HTML through the built SSR entry after the client build. Isolated workers handle SSR timers, bounded completion and path-specific errors; redirects and non-HTML resources are skipped.
+- Add `manifestMode: "version-only"` for public deployment checks without deployment route lists in the manifest or virtual browser metadata, plus an optional private route-template artifact. Application route definitions remain public; permission-aware route discovery is tracked separately in #60.
+- Emit extensionless deployment manifests such as `__appm` directly, preserving base-derived public URLs and filename safety checks.
+- Allow optional leading underscores in custom namespaces, such as `__app`, across Vite builds, SSR and data transport. Keep the 32-character limit and require a lowercase ASCII letter after the prefix, followed only by lowercase letters or digits.
+
 ## 0.6.0-alpha.4
 
 - Retry a failed Pages deployment once after ten seconds using the same uploaded artifact. Preserve a failed job when the retry fails and report the successful deployment URL.

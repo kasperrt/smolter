@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import ts from "typescript";
@@ -71,4 +71,44 @@ export const Page = () => <Link to="/item" ${attributes}>Item</Link>;`,
       );
     }
   }
+});
+
+test("packed prerender worker renders explicitly selected routes", async () => {
+  const tooling = `@kasperrt/smolter/${process.env.SMOLTER_PACKED_FRAMEWORK}/vite`;
+  const { prerenderPlugin, deploymentPlugin } = await import(tooling);
+  const root = resolve("prerender-fixture");
+  mkdirSync(root, { recursive: true });
+  writeFileSync(
+    resolve(root, "entry.client.ts"),
+    'console.log("packed prerender");',
+  );
+  writeFileSync(
+    resolve(root, "entry.server.ts"),
+    'setInterval(() => {}, 1000); export default (request: Request, entry: string) => new Response(`<h1>${new URL(request.url).pathname}</h1><script src="${entry}"></script>`, { headers: { "Content-Type": "text/html" } });',
+  );
+  for (const ssr of [false, true])
+    await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      base: "/docs/",
+      plugins: [
+        deploymentPlugin({ namespace: "__app", manifestFile: "__appm" }),
+        prerenderPlugin({
+          paths: ["/selected"],
+          clientEntry: "entry.client.ts",
+        }),
+      ],
+      build: {
+        outDir: ssr ? "dist/server" : "dist/client",
+        ...(ssr && { ssr: "entry.server.ts" }),
+        rollupOptions: { input: ssr ? "entry.server.ts" : "entry.client.ts" },
+      },
+    });
+  expect(
+    readFileSync(resolve(root, "dist/client/selected/index.html"), "utf8"),
+  ).toContain("/docs/selected");
+  expect(
+    JSON.parse(readFileSync(resolve(root, "dist/client/__appm"), "utf8")),
+  ).toHaveProperty("version");
 });

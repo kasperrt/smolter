@@ -1,0 +1,33 @@
+{
+  "slug": "prerenderPlugin",
+  "title": "prerenderPlugin",
+  "summary": "Opt in to production HTML generation for explicitly selected routes.",
+  "kind": "API",
+  "sections": [
+    {
+      "title": "Select routes explicitly",
+      "body": "Import from /preact/vite or /react/vite. Adding the plugin does not select routes automatically: paths is required. Use a list of concrete URL pathnames without the Vite base. An empty list generates nothing. SPA builds without this plugin are unchanged.",
+      "code": "import { defineConfig } from \"vite\";\nimport {\n  applicationPlugins,\n  prerenderPlugin,\n} from \"@kasperrt/smolter/preact/vite\";\n\nexport default defineConfig(({ isSsrBuild }) => ({\n  plugins: [\n    ...applicationPlugins(),\n    prerenderPlugin({ paths: [\"/\", \"/about\"] }),\n  ],\n  build: {\n    outDir: isSsrBuild ? \"dist/server\" : \"dist/client\",\n    rollupOptions: {\n      input: isSsrBuild\n        ? \"src/entry.server.tsx\"\n        : \"src/entry.client.tsx\",\n    },\n  },\n}));"
+    },
+    {
+      "title": "Build order and SSR entry",
+      "body": "Run the client build first, then vite build --ssr src/entry.server.tsx. The plugin enables the client manifest and runs after the SSR output is written. The SSR entry must default-export (request: Request, entry: string) => Response | Promise<Response>, as used by renderApplication. It receives the hashed browser entry URL from .vite/manifest.json and a request with the Vite base path. The default client entry is src/entry.client.tsx and the default client output is dist/client; set clientEntry and clientOutDir for other layouts. Absolute base paths and asset-host URLs are supported; relative bases are rejected.",
+      "code": "vite build\nvite build --ssr src/entry.server.tsx"
+    },
+    {
+      "title": "Discover candidates and select dynamic URLs",
+      "body": "Instead of a list, provide an async paths callback. Its argument contains static flat-file paths discovered from src/routes (or directory), excluding dynamic parameters and splats. Return only routes that are safe to publish, adding concrete post, version or pagination paths from your build-time data. Preview, private and user-specific routes should be omitted. Duplicate path strings are rendered once.",
+      "code": "prerenderPlugin({\n  paths: async (staticPaths) => {\n    const publishedPaths = await readPublishedPaths();\n    return [\n      ...staticPaths.filter((path) => [\"/\", \"/about\"].includes(path)),\n      ...publishedPaths,\n    ];\n  },\n});"
+    },
+    {
+      "title": "Output and failures",
+      "body": "Successful text/html responses become <clientOutDir>/<path>/index.html. Redirects and non-HTML resources are skipped. Non-success responses, renderer exceptions and write failures fail the build and identify the affected path. Path traversal, encoded separators and output symlink escapes are rejected. Serve the client output under the configured base; the base is not duplicated on disk. The plugin does not copy server response headers or generate redirect rules. Publish only after the whole build succeeds.",
+      "code": ""
+    },
+    {
+      "title": "Build-time isolation",
+      "body": "SSR rendering runs in a worker that is terminated after completion or failure, including modules with live timers. timeout bounds the entire worker run (default 60000 ms). origin sets the origin of build-time requests (default https://prerender.invalid). The paths callback runs in the build process and must close any resources it opens. Prerendered HTML is public: use build-time data appropriate for every visitor and do not rely on session cookies.",
+      "code": "prerenderPlugin({\n  paths: [\"/\", \"/about\"],\n  origin: \"https://example.com\",\n  timeout: 120_000,\n});"
+    }
+  ]
+}

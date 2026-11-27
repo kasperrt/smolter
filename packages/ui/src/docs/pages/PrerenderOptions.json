@@ -1,0 +1,13 @@
+{
+  "slug": "PrerenderOptions",
+  "title": "PrerenderOptions",
+  "summary": "Explicit route selection and build inputs for opt-in prerendering.",
+  "kind": "Types",
+  "sections": [
+    {
+      "title": "Route selection",
+      "body": "paths is required: pass concrete pathnames or an async callback selecting from discovered static paths. An empty list renders nothing. Configure directory only for callback discovery. The default client entry is src/entry.client.tsx and client output is dist/client. See prerenderPlugin for the two-build setup, output safety and worker lifetime.",
+      "code": "import type { PrerenderOptions } from \"@kasperrt/smolter/preact/vite\";\n\nconst options: PrerenderOptions = {\n  paths: [\"/\", \"/about\"],\n  clientOutDir: \"build/client\",\n  clientEntry: \"src/entry.client.tsx\",\n  origin: \"https://example.com\",\n  timeout: 60_000,\n};"
+    }
+  ]
+}
