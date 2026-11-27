@@ -21,7 +21,7 @@ export interface FileRouterOptions {
   serverRoutes?: string;
   framework?: "react" | "preact";
   /**
-   * Client-visible identifier prefix: lowercase letters and digits, defaulting to "smolter".
+   * Client-visible identifier prefix: optional leading underscores, then lowercase letters and digits (32 characters maximum), defaulting to "smolter".
    * It names the `.__${namespace}` data suffix, `X-${namespace}-Redirect` header,
    * `${namespace}-data` hydration script, deferred globals and stream attributes.
    */

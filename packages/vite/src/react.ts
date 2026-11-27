@@ -32,3 +32,5 @@ import {
 export function applicationPlugins(options: ApplicationOptions = {}): Plugin[] {
   return plugins({ ...options, framework: "react" });
 }
+
+export { type PrerenderOptions, prerenderPlugin } from "./prerender.ts";

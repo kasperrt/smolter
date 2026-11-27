@@ -19,7 +19,7 @@
     "version:release": "node scripts/version.ts release",
     "pack:smoke": "vitest run --config vitest.smoke.config.ts packed.test.ts",
     "build:examples": "pnpm --filter \"@smolter/example-*\" build",
-    "smoke:production": "vitest run --config vitest.smoke.config.ts production.test.ts",
+    "smoke:production": "vitest run --config vitest.smoke.config.ts production.test.ts prerender.test.ts",
     "jsr:check": "node scripts/jsr.ts",
     "build:site": "pnpm size && pnpm --filter @smolter/example-preact build --mode hosted",
     "smoke:site": "vitest run --config vitest.smoke.config.ts site.test.ts",
@@ -37,7 +37,7 @@
     "preact": "catalog:",
     "preact-render-to-string": "catalog:"
   },
-  "version": "0.6.0-alpha.4",
+  "version": "0.6.0-alpha.5",
   "description": "A tiny typed data router for React and Preact.",
   "sideEffects": false,
   "license": "MIT",

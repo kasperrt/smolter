@@ -2065,7 +2065,7 @@
     "entries": ["react/vite", "preact/vite"],
     "kind": "Types",
     "summary": "",
-    "signature": "interface FileRouterOptions {\n  directory?: string;\n  dataEndpoint?: string;\n  /** Maximum development request-body bytes. Defaults to 1 MiB. */\n  maxBodySize?: number;\n  clientRoutes?: string;\n  serverRoutes?: string;\n  framework?: \"react\" | \"preact\";\n  /**\n   * Client-visible identifier prefix: lowercase letters and digits, defaulting to \"smolter\".\n   * It names the `.__${namespace}` data suffix, `X-${namespace}-Redirect` header,\n   * `${namespace}-data` hydration script, deferred globals and stream attributes.\n   */\n  namespace?: string;\n}",
+    "signature": "interface FileRouterOptions {\n  directory?: string;\n  dataEndpoint?: string;\n  /** Maximum development request-body bytes. Defaults to 1 MiB. */\n  maxBodySize?: number;\n  clientRoutes?: string;\n  serverRoutes?: string;\n  framework?: \"react\" | \"preact\";\n  /**\n   * Client-visible identifier prefix: optional leading underscores, then lowercase letters and digits (32 characters maximum), defaulting to \"smolter\".\n   * It names the `.__${namespace}` data suffix, `X-${namespace}-Redirect` header,\n   * `${namespace}-data` hydration script, deferred globals and stream attributes.\n   */\n  namespace?: string;\n}",
     "fields": [
       {
         "name": "directory",
@@ -2100,7 +2100,7 @@
       {
         "name": "namespace",
         "signature": "namespace?: string;",
-        "summary": "Client-visible identifier prefix: lowercase letters and digits, defaulting to \"smolter\".\nIt names the `.__${namespace}` data suffix, `X-${namespace}-Redirect` header,\n`${namespace}-data` hydration script, deferred globals and stream attributes."
+        "summary": "Client-visible identifier prefix: optional leading underscores, then lowercase letters and digits (32 characters maximum), defaulting to \"smolter\".\nIt names the `.__${namespace}` data suffix, `X-${namespace}-Redirect` header,\n`${namespace}-data` hydration script, deferred globals and stream attributes."
       }
     ],
     "source": "packages/vite/src/index.ts"
@@ -2172,12 +2172,22 @@
     "entries": ["react/vite", "preact/vite"],
     "kind": "Types",
     "summary": "Deployment manifest configuration. Serve the emitted file with Cache-Control: no-store.",
-    "signature": "interface DeploymentPluginOptions {\n  /** Public URL, optionally on an asset host. Defaults to Vite base + manifestFile. */\n  manifestURL?: string;\n  /** Change when independently deployed server contracts become incompatible. */\n  compatibility?: string;\n  /** Emitted manifest file name. Defaults to `${namespace}-manifest.json`. */\n  manifestFile?: string;\n  /** Client-visible identifier prefix; see routerPlugin. Defaults to \"smolter\". */\n  namespace?: string;\n}",
+    "signature": "interface DeploymentPluginOptions {\n  /** Public URL, optionally on an asset host. Defaults to Vite base + manifestFile. */\n  manifestURL?: string;\n  /** Omit route fingerprints from public metadata. Defaults to full. */\n  manifestMode?: \"full\" | \"version-only\";\n  /** Optional private JSON route-template file, outside client output and publicDir. */\n  privateManifestFile?: string;\n  /** Change when independently deployed server contracts become incompatible. */\n  compatibility?: string;\n  /** Emitted manifest file name, optionally extensionless. Defaults to `${namespace}-manifest.json`. */\n  manifestFile?: string;\n  /** Client-visible identifier prefix; see routerPlugin. Defaults to \"smolter\". */\n  namespace?: string;\n}",
     "fields": [
       {
         "name": "manifestURL",
         "signature": "manifestURL?: string;",
         "summary": "Public URL, optionally on an asset host. Defaults to Vite base + manifestFile."
+      },
+      {
+        "name": "manifestMode",
+        "signature": "manifestMode?: \"full\" | \"version-only\";",
+        "summary": "Omit route fingerprints from public metadata. Defaults to full."
+      },
+      {
+        "name": "privateManifestFile",
+        "signature": "privateManifestFile?: string;",
+        "summary": "Optional private JSON route-template file, outside client output and publicDir."
       },
       {
         "name": "compatibility",
@@ -2187,7 +2197,7 @@
       {
         "name": "manifestFile",
         "signature": "manifestFile?: string;",
-        "summary": "Emitted manifest file name. Defaults to `${namespace}-manifest.json`."
+        "summary": "Emitted manifest file name, optionally extensionless. Defaults to `${namespace}-manifest.json`."
       },
       {
         "name": "namespace",
@@ -2451,5 +2461,56 @@
     "signature": "const namespace: string;",
     "fields": [],
     "source": "packages/core/src/namespace.ts"
+  },
+  {
+    "slug": "PrerenderOptions",
+    "title": "PrerenderOptions",
+    "entries": ["react/vite", "preact/vite"],
+    "kind": "Types",
+    "summary": "Opt-in HTML generation after the client build and then the SSR build.",
+    "signature": "interface PrerenderOptions {\n  /** Client output directory relative to Vite root. Defaults to dist/client. */\n  clientOutDir?: string;\n  /** Client entry key in the Vite manifest. Defaults to src/entry.client.tsx. */\n  clientEntry?: string;\n  /** Route directory relative to Vite root. Defaults to src/routes. */\n  directory?: string;\n  /** Filter static routes and add concrete dynamic paths, without the Vite base. */\n  paths: string[] | ((staticPaths: string[]) => string[] | Promise<string[]>);\n  /** Origin for build-time requests. Defaults to https://prerender.invalid. */\n  origin?: string;\n  /** Maximum worker lifetime in milliseconds. Defaults to 60000. */\n  timeout?: number;\n}",
+    "fields": [
+      {
+        "name": "clientOutDir",
+        "signature": "clientOutDir?: string;",
+        "summary": "Client output directory relative to Vite root. Defaults to dist/client."
+      },
+      {
+        "name": "clientEntry",
+        "signature": "clientEntry?: string;",
+        "summary": "Client entry key in the Vite manifest. Defaults to src/entry.client.tsx."
+      },
+      {
+        "name": "directory",
+        "signature": "directory?: string;",
+        "summary": "Route directory relative to Vite root. Defaults to src/routes."
+      },
+      {
+        "name": "paths",
+        "signature": "paths: string[] | ((staticPaths: string[]) => string[] | Promise<string[]>);",
+        "summary": "Filter static routes and add concrete dynamic paths, without the Vite base."
+      },
+      {
+        "name": "origin",
+        "signature": "origin?: string;",
+        "summary": "Origin for build-time requests. Defaults to https://prerender.invalid."
+      },
+      {
+        "name": "timeout",
+        "signature": "timeout?: number;",
+        "summary": "Maximum worker lifetime in milliseconds. Defaults to 60000."
+      }
+    ],
+    "source": "packages/vite/src/prerender.ts"
+  },
+  {
+    "slug": "prerenderPlugin",
+    "title": "prerenderPlugin",
+    "entries": ["react/vite", "preact/vite"],
+    "kind": "API",
+    "summary": "Render static HTML through the built default SSR export in an isolated worker.",
+    "signature": "function prerenderPlugin(options: PrerenderOptions): Plugin;",
+    "fields": [],
+    "source": "packages/vite/src/prerender.ts"
   }
 ]

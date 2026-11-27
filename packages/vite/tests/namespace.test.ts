@@ -59,12 +59,18 @@ const sources = Object.entries({
 it("rejects namespaces and manifest names that cannot form safe identifiers", async () => {
   for (const namespace of ["", "App", "1app", "a-b", 'x"y', "a".repeat(33)])
     expect(() => namespaceConfig(namespace)).toThrow(
-      "namespace must start with a lowercase letter",
+      "namespace must start with optional underscores",
     );
   for (const options of [
     { manifestFile: "../manifest.json" },
     { manifestFile: "assets/manifest.json" },
     { manifestFile: "manifest.js" },
+    { manifestFile: "" },
+    { manifestFile: ".hidden" },
+    { manifestFile: "a\\b" },
+    { manifestFile: "a?b" },
+    { manifestFile: "a".repeat(129) },
+    { manifestFile: "a".repeat(129) + ".json" },
     { define: { __SMOLTER_NAMESPACE__: '"</script>"' } },
   ])
     await expect(
@@ -81,40 +87,43 @@ it("rejects namespaces and manifest names that cannot form safe identifiers", as
     ).rejects.toThrow(/manifestFile must be|namespace must start/);
 });
 
-it("emits a custom deployment manifest name at the configured URL", async () => {
-  const result = await build({
-    configFile: false,
-    logLevel: "silent",
-    base: "/assets/",
-    plugins: [
-      {
-        name: "entry",
-        resolveId: (id) => (id === "entry" ? "\0entry" : undefined),
-        load: (id) =>
-          id === "\0entry"
-            ? 'import deployment from "virtual:smolter/deployment"; console.log(deployment);'
-            : undefined,
-      },
-      deploymentPlugin({ manifestFile: "build-info.json", namespace: "app" }),
-    ],
-    build: { write: false, minify: false, rollupOptions: { input: "entry" } },
-  });
-  if (!("output" in result)) throw new Error("Expected build output");
-  expect(result.output.map((item) => item.fileName)).toContain(
-    "build-info.json",
-  );
-  const code = result.output
-    .map((item) => (item.type === "chunk" ? item.code : ""))
-    .join("\n");
-  expect(code).toContain("/assets/build-info.json");
-  expect(code).not.toMatch(/smolter/i);
-});
+it.each(["build-info.json", "build.info.json", "__appm", "a".repeat(128)])(
+  "emits manifest %s at the configured URL",
+  async (manifestFile) => {
+    const result = await build({
+      configFile: false,
+      logLevel: "silent",
+      base: "/assets/",
+      plugins: [
+        {
+          name: "entry",
+          resolveId: (id) => (id === "entry" ? "\0entry" : undefined),
+          load: (id) =>
+            id === "\0entry"
+              ? 'import deployment from "virtual:smolter/deployment"; console.log(deployment);'
+              : undefined,
+        },
+        deploymentPlugin({ manifestFile, namespace: "__app" }),
+      ],
+      build: { write: false, minify: false, rollupOptions: { input: "entry" } },
+    });
+    if (!("output" in result)) throw new Error("Expected build output");
+    expect(result.output.map((item) => item.fileName)).toContain(manifestFile);
+    const code = result.output
+      .map((item) => (item.type === "chunk" ? item.code : ""))
+      .join("\n");
+    expect(code).toContain(`/assets/${manifestFile}`);
+    expect(code).not.toMatch(/smolter/i);
+  },
+);
 
-it("serves SSR documents, deferred data and transport under a custom namespace", async (context) => {
-  const root = await fixture(context);
-  await writeFile(
-    join(root, "src/entry.server.tsx"),
-    `
+it.for(["app", "__app"])(
+  "serves SSR documents, deferred data and transport under namespace %s",
+  async (namespace, context) => {
+    const root = await fixture(context);
+    await writeFile(
+      join(root, "src/entry.server.tsx"),
+      `
     import routes from "virtual:smolter/routes";
     import { h } from "preact";
     import { Outlet } from "@kasperrt/smolter/preact";
@@ -128,78 +137,82 @@ it("serves SSR documents, deferred data and transport under a custom namespace",
       return renderApplication(request, routes, root, entry, { earlyHydration: true });
     }
   `,
-  );
-  const server = await createServer({
-    root,
-    configFile: false,
-    logLevel: "silent",
-    resolve: { alias: sources },
-    plugins: applicationPlugins({ framework: "preact", namespace: "app" }),
-    server: { port: 0 },
-  });
-  context.onTestFinished(() => server.close());
-  await server.listen();
-  const origin = server.resolvedUrls!.local[0];
-  const html = await (
-    await fetch(origin, { headers: { Accept: "text/html" } })
-  ).text();
-  expect(html).toContain('id="app-data"');
-  expect(html).toContain("window.__appDeferred");
-  expect(html).toContain("__appPending");
-  expect(html).not.toMatch(identifiers);
-  const data = await fetch(new URL("/.__app", origin));
-  expect(data.status).toBe(200);
-  expect(await data.json()).toEqual({ ready: true, later: 1 });
-  const redirect = await fetch(new URL("/login.__app", origin));
-  expect(redirect.headers.get("X-app-Redirect")).toBe("/");
-  expect([...redirect.headers.keys()].join()).not.toMatch(identifiers);
-  const legacy = await fetch(new URL("/.__smolter", origin), {
-    headers: { Accept: "application/json" },
-  });
-  expect(legacy.headers.get("Content-Type") ?? "").not.toContain(
-    "application/json",
-  );
-});
+    );
+    const server = await createServer({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      resolve: { alias: sources },
+      plugins: applicationPlugins({ framework: "preact", namespace }),
+      server: { port: 0 },
+    });
+    context.onTestFinished(() => server.close());
+    await server.listen();
+    const origin = server.resolvedUrls!.local[0];
+    const html = await (
+      await fetch(origin, { headers: { Accept: "text/html" } })
+    ).text();
+    expect(html).toContain(`id="${namespace}-data"`);
+    expect(html).toContain(`window.__${namespace}Deferred`);
+    expect(html).toContain(`__${namespace}Pending`);
+    expect(html).not.toMatch(identifiers);
+    const data = await fetch(new URL(`/.__${namespace}`, origin));
+    expect(data.status).toBe(200);
+    expect(await data.json()).toEqual({ ready: true, later: 1 });
+    const redirect = await fetch(new URL(`/login.__${namespace}`, origin));
+    expect(redirect.headers.get(`X-${namespace}-Redirect`)).toBe("/");
+    expect([...redirect.headers.keys()].join()).not.toMatch(identifiers);
+    const legacy = await fetch(new URL("/.__smolter", origin), {
+      headers: { Accept: "application/json" },
+    });
+    expect(legacy.headers.get("Content-Type") ?? "").not.toContain(
+      "application/json",
+    );
+  },
+);
 
-it("builds browser output and the deployment manifest without default identifiers", async (context) => {
-  const root = await fixture(context);
-  await writeFile(
-    join(root, "index.html"),
-    '<!doctype html><html><body><script type="module" src="/main.ts"></script></body></html>',
-  );
-  await writeFile(
-    join(root, "main.ts"),
-    `
+it.for(["app", "__app"])(
+  "builds browser output and the deployment manifest under namespace %s",
+  async (namespace, context) => {
+    const root = await fixture(context);
+    await writeFile(
+      join(root, "index.html"),
+      '<!doctype html><html><body><script type="module" src="/main.ts"></script></body></html>',
+    );
+    await writeFile(
+      join(root, "main.ts"),
+      `
     import routes from "virtual:smolter/routes";
     import deployment from "virtual:smolter/deployment";
     import { mountApplication } from "@kasperrt/smolter/preact/client";
     await mountApplication(routes, undefined, { deployment });
   `,
-  );
-  const result = await build({
-    root,
-    configFile: false,
-    logLevel: "silent",
-    resolve: { alias: sources },
-    plugins: [
-      ...applicationPlugins({
-        framework: "preact",
-        namespace: "app",
-        ssr: false,
-      }),
-      deploymentPlugin(),
-    ],
-    build: { write: false },
-  });
-  if (!("output" in result)) throw new Error("Expected build output");
-  const names = result.output.map((item) => item.fileName);
-  expect(names).toContain("app-manifest.json");
-  const code = result.output
-    .map((item) => (item.type === "chunk" ? item.code : String(item.source)))
-    .join("\n");
-  expect(code).toMatch(/[`"']app[`"']/);
-  expect(code).toContain("/app-manifest.json");
-  // The browser output carries no Smolter identifier at all, only the namespace.
-  expect(code).not.toMatch(/smolter/i);
-  expect(names.join()).not.toMatch(/smolter/i);
-});
+    );
+    const result = await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      resolve: { alias: sources },
+      plugins: [
+        ...applicationPlugins({
+          framework: "preact",
+          namespace,
+          ssr: false,
+        }),
+        deploymentPlugin(),
+      ],
+      build: { write: false },
+    });
+    if (!("output" in result)) throw new Error("Expected build output");
+    const names = result.output.map((item) => item.fileName);
+    expect(names).toContain(`${namespace}-manifest.json`);
+    const code = result.output
+      .map((item) => (item.type === "chunk" ? item.code : String(item.source)))
+      .join("\n");
+    expect(code).toContain(namespace);
+    expect(code).toContain(`/${namespace}-manifest.json`);
+    // The browser output carries no Smolter identifier at all, only the namespace.
+    expect(code).not.toMatch(/smolter/i);
+    expect(names.join()).not.toMatch(/smolter/i);
+  },
+);

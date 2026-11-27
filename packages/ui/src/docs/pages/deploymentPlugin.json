@@ -16,8 +16,18 @@
     },
     {
       "title": "Hosting and base paths",
-      "body": "The default public URL is Vite base plus manifestFile, which defaults to ${namespace}-manifest.json (smolter-manifest.json without a namespace). manifestFile must be a .json file name without directories. Set manifestURL explicitly for a relative base or reverse proxy. Your host must serve the emitted file at that URL with Cache-Control: no-store, before fallback routes. Cross-origin reads require CORS.",
+      "body": "The default public URL is Vite base plus manifestFile, which defaults to ${namespace}-manifest.json (smolter-manifest.json without a namespace). manifestFile may be extensionless or end in .json, with a stem of up to 128 ASCII letters, digits, underscores or hyphens, starting with a letter, digit or underscore. JSON stems may also contain dots. Directories and other extensions are rejected. For example, manifestFile: \"__appm\" emits __appm directly. Set manifestURL explicitly for a relative base or reverse proxy. Your host must serve the emitted file at that URL with Cache-Control: no-store, before fallback routes. Cross-origin reads require CORS.",
       "code": "deploymentPlugin({ manifestURL: \"/admin/smolter-manifest.json\" });"
+    },
+    {
+      "title": "Version-only public metadata",
+      "body": "Set manifestMode to version-only to emit exactly {version} in the public manifest. The virtual browser module contains version and manifestURL, with no deployment route list or shared/per-route fingerprints. Recovery conservatively treats any changed build as incompatible instead of retaining routes whose fingerprints match. This does not hide route definitions, lazy chunk indexes or prefetch hints compiled into your application. It is not on-demand route discovery or authorization.",
+      "code": "deploymentPlugin({\n  manifestMode: \"version-only\",\n  manifestFile: \"__appm\",\n  privateManifestFile: \"build/private/route-templates.json\",\n});"
+    },
+    {
+      "title": "Private route templates and discovery",
+      "body": "privateManifestFile optionally writes {version, routes: string[]} after a client build, outside client output and publicDir. It uses generated route metadata from applicationPlugins with splitRoutes enabled; manual/eager route tables without that metadata produce an empty list. Keep this file outside all static hosting roots and out of server output directories that a later SSR build empties. It is not emitted when build.write is false. Full permission-aware discovery, including session-safe caching, protected deep links and nested/index route delivery, is tracked separately in issue #60. Until then, enforce authorization for documents, loaders and actions; compact manifests do not conceal compiled routes.",
+      "code": "// Example client output: build/client\n// Example server output: build/server\n// Private telemetry artifact: build/private/route-templates.json"
     },
     {
       "title": "Connect the client",

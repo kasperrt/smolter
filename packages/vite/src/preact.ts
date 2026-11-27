@@ -27,3 +27,5 @@ export {
   type DeploymentPluginOptions,
   deploymentPlugin,
 } from "./deployment.ts";
+
+export { type PrerenderOptions, prerenderPlugin } from "./prerender.ts";

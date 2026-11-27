@@ -148,3 +148,76 @@ it("fingerprints shared and per-route dependencies independently in production o
   const contract = await compileRoutes("contract");
   expect(contract.shared).not.toBe(before.shared);
 });
+
+it("keeps route templates private in version-only mode and refreshes the private build file", async (context) => {
+  const { mkdir, mkdtemp, readFile, rm, symlink } = await import(
+    "node:fs/promises"
+  );
+  const { tmpdir } = await import("node:os");
+  const { resolve } = await import("node:path");
+  const root = await mkdtemp(resolve(tmpdir(), "smolter-private-manifest-"));
+  context.onTestFinished(() => rm(root, { recursive: true, force: true }));
+  const fixture: Plugin = {
+    name: "private-route-metadata",
+    resolveId: (id) =>
+      id === "virtual:smolter/routes" ? `\0${id}` : undefined,
+    load(id) {
+      if (id === "\0entry")
+        return 'import "virtual:smolter/routes"; import deployment from "virtual:smolter/deployment"; console.log(deployment);';
+      if (id === "\0virtual:smolter/routes")
+        return {
+          code: 'console.log("route metadata");',
+          meta: {
+            smolterRoutes: [{ path: "/admin", id: "\0virtual:smolter/routes" }],
+          },
+        };
+    },
+  };
+  const compilePrivate = async (privateManifestFile: string, write = true) =>
+    build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [
+        fixture,
+        entry,
+        deploymentPlugin({
+          manifestMode: "version-only",
+          privateManifestFile,
+          manifestFile: "__appm",
+        }),
+      ],
+      build: { outDir: "client", write, rollupOptions: { input: "entry" } },
+    });
+  const result = await compilePrivate("private/routes.json");
+  if (!("output" in result)) throw new Error("Missing output");
+  const publicManifest = JSON.parse(
+    await readFile(resolve(root, "client/__appm"), "utf8"),
+  );
+  expect(Object.keys(publicManifest)).toEqual(["version"]);
+  const code = result.output
+    .filter((item) => item.type === "chunk")
+    .map((item) => item.code)
+    .join("\n");
+  expect(code).toContain(publicManifest.version);
+  expect(code).not.toMatch(/\/admin|fingerprint|shared/);
+  expect(
+    JSON.parse(await readFile(resolve(root, "private/routes.json"), "utf8")),
+  ).toEqual({ version: publicManifest.version, routes: ["/admin"] });
+  await compilePrivate("private/routes.json");
+  await expect(compilePrivate("client/private.json")).rejects.toThrow(
+    "outside client output",
+  );
+  await expect(compilePrivate("public/private.json")).rejects.toThrow(
+    "outside client output",
+  );
+  await compilePrivate("unwritten/routes.json", false);
+  await expect(
+    readFile(resolve(root, "unwritten/routes.json")),
+  ).rejects.toThrow();
+  await mkdir(resolve(root, "public"), { recursive: true });
+  await symlink(resolve(root, "public"), resolve(root, "linked"));
+  await expect(compilePrivate("linked/routes.json")).rejects.toThrow(
+    "resolves inside a public directory",
+  );
+});
